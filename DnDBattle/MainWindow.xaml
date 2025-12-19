@@ -1,0 +1,144 @@
+﻿<Window x:Class="DnDBattle.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:DnDBattle"
+        xmlns:controls="clr-namespace:DnDBattle.Controls"
+        xmlns:views="clr-namespace:DnDBattle.Views"
+        Title="DnD Battle Builder" Height="800" Width="1200">
+    <DockPanel LastChildFill="True">
+        <Menu DockPanel.Dock="Top" Background="#FF2D2D30" Foreground="White">
+            <MenuItem Header="_File">
+                <MenuItem Header="Import Tokens..." Click="MenuImport_Click"/>
+                <MenuItem Header="Export Bank..." Click="MenuExportBank_Click"/>
+                <MenuItem Header="Save Encounter..." Click="MenuSaveEncounter_Click"/>
+                <MenuItem Header="Load Encounter..." Click="MenuLoadEncounter_Click"/>
+                <MenuItem Header="Import SRD Pack..." Click="MenuImportSrdPack_Click"/>
+                <Separator/>
+                <MenuItem Header="Exit" Click="MenuExit_Click"/>
+            </MenuItem>
+            
+            <MenuItem Header="_Options">
+                <MenuItem Header="Settings..." Click="MenuOptions_Click" />
+                <MenuItem Header="Grid Settings..." Click="MenuGridSettings_Click" />
+                <MenuItem Header="Toggle Live Mode" IsCheckable="True" IsChecked="{x:Static local:Options.LiveMode}" Click="MenuToggleLiveMode_Click"/>
+            </MenuItem>
+        </Menu>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="320"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Sidebar: scrollable so expanders reflow and collapse moves content up -->
+            <Border Grid.Column="0" Background="#FF1E1E1E" Padding="8">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock Text="Encounter" FontSize="18" Margin="4" Foreground="White"/>
+                        <Button Content="Add Token" Command="{Binding AddTokenCommand}" Margin="0,8" Foreground="Black"/>
+                        <Button Content="Add Creature" Command="{Binding OpenCreatureBrowserCommand}" Margin="0,8" Foreground="Black"/>
+                        <Button Content="Load Map Image" Command="{Binding LoadMapCommand}" Margin="0,8" Foreground="Black"/>
+
+                        <Expander Header="Token Editor" IsExpanded="True" Margin="0,8" Foreground="White">
+                            <views:TokenEditorView DataContext="{Binding SelectedToken}" />
+                        </Expander>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                            <Button Content="Spawn Edited Token" Click="SpawnEditedToken_Click" Width="140" Margin="0,0,6,0" Foreground="Black"/>
+                            <Button Content="Save Edited to Bank" Click="SaveEditedToBank_Click" Width="140" Foreground="Black"/>
+                        </StackPanel>
+
+                        <StackPanel Margin="0,8">
+                            <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                                <Button Content="Roll All" Command="{Binding RollAllInitiativeCommand}" Width="80" />
+                                <Button Content="Next Turn" Command="{Binding NextTurnCommand}" Width="80" Margin="6,0,0,0" />
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,8">
+                                <Button Content="Commit Move" Click="CommitMove_Click" Width="120" Foreground="Black"/>
+                                <CheckBox Content="Lock to Grid" IsChecked="{Binding ElementName=BattleGrid, Path=LockToGrid}" Margin="6,0,0,0" Foreground="White" />
+                            </StackPanel>
+
+                            <Button Content="Add Sample Obstacle" Click="AddSampleObstacle_Click" Width="150" Margin="6,0,0,0" Foreground="Black"/>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,8">
+                                <Button Content="Undo" Click="Undo_Click" Width="60"/>
+                                <Button Content="Redo" Click="Redo_Click" Width="60" Margin="6,0,0,0"/>
+                                <Button Content="Add Light" Click="AddLight_Click" Width="80" Margin="8,0,0,0"/>
+                                <ToggleButton x:Name="ToggleDrawObstacle" Content="Draw Obstacle" Margin="8,0,0,0" Width="110"
+                                              Checked="ToggleDrawObstacle_Checked" Unchecked="ToggleDrawObstacle_Unchecked"/>
+                            </StackPanel>
+
+                            <Border Background="White" BorderBrush="Black" BorderThickness="1" Margin="0,8,0,0">
+                                <ListBox ItemsSource="{Binding ActionLog}" Height="120" Foreground="Black">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding}" FontFamily="Consolas" FontSize="12"/>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </Border>
+                        </StackPanel>
+
+                        <Expander Header="Creature Bank" IsExpanded="True" Margin="0,8" Foreground="White">
+                            <ListBox x:Name="CreatureBankList"
+                                     ItemsSource="{Binding CreatureBank}"
+                                     SelectedItem="{Binding SelectedBankItem}"
+                                     SelectedValuePath="Id"
+                                     MouseDoubleClick="CreatureBankList_MouseDoubleClick"
+                                     Foreground="Black"
+                                     PreviewMouseMove="CreatureBankList_PreviewMouseMove">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Margin="4">
+                                            <Image Source="{Binding Image}" Width="36" Height="36" Margin="2"/>
+                                            <TextBlock Text="{Binding Name}" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Expander>
+
+                        <Expander Header="Combat Tracker" IsExpanded="True" Margin="0,8" Foreground="White">
+                            <ListBox ItemsSource="{Binding Tokens}" SelectedItem="{Binding SelectedToken}" Foreground="Black">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Margin="4">
+                                            <TextBlock Text="{Binding Name}" Width="120"/>
+                                            <TextBlock Text="HP:" Foreground="Gray" Width="28"/>
+                                            <TextBlock Text="{Binding HP}" Foreground="DarkGreen" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Expander>
+
+                        <StatusBar DockPanel.Dock="Bottom" Grid.ColumnSpan="2" Height="24" VerticalAlignment="Bottom">
+                            <StatusBarItem>
+                                <TextBlock x:Name="Status_Cursor" Text="Cell: -,-" />
+                            </StatusBarItem>
+                            <StatusBarItem>
+                                <TextBlock x:Name="Status_Mode" Text="Mode: Normal" />
+                            </StatusBarItem>
+                            <StatusBarItem>
+                                <TextBlock x:Name="Status_Undo" Text="Undo: 0" />
+                            </StatusBarItem>
+                        </StatusBar>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- Main Area -->
+            <Grid Grid.Column="1" Background="#FF2D2D30">
+                <controls:BattleGridControl x:Name="BattleGrid"
+                                            HorizontalAlignment="Stretch"
+                                            VerticalAlignment="Stretch"
+                                            GridCellSize="{Binding GridCellSize}"
+                                            Tokens="{Binding Tokens}"
+                                            MapImageSource="{Binding MapImageSource}"
+                                            SelectedToken="{Binding SelectedToken}" />
+            </Grid>
+        </Grid>
+    </DockPanel>
+</Window>

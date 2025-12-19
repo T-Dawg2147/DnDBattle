@@ -1,0 +1,45 @@
+﻿<UserControl x:Class="DnDBattle.Controls.BattleGridControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:DnDBattle.Controls">
+    <Grid>
+        <Grid.Resources>
+            <Storyboard x:Key="TurnPulseStoryboard" RepeatBehavior="Forever">
+                <DoubleAnimation Storyboard.TargetName="TurnHighlightScale" Storyboard.TargetProperty="ScaleX"
+                                 From="1.0" To="1.2" Duration="0:0:0.6" AutoReverse="True" />
+                <DoubleAnimation Storyboard.TargetName="TurnHighlightScale" Storyboard.TargetProperty="ScaleY"
+                                 From="1.0" To="1.2" Duration="0:0:0.6" AutoReverse="True" />
+                <DoubleAnimation Storyboard.TargetName="TurnHighlightEllipse" Storyboard.TargetProperty="Opacity"
+                                 From="0.6" To="1.0" Duration="0:0:0.6" AutoReverse="True" />
+            </Storyboard>
+        </Grid.Resources>
+
+        <Border Background="Transparent" ClipToBounds="True">
+            <Canvas x:Name="RenderCanvas" Background="Transparent"
+                    PreviewMouseWheel="RenderCanvas_MouseWheel"
+                    PreviewMouseLeftButtonDown="RenderCanvas_MouseLeftButtonDown"
+                    PreviewMouseLeftButtonUp="RenderCanvas_MouseLeftButtonUp"
+                    PreviewMouseMove="RenderCanvas_MouseMove"
+                    PreviewMouseRightButtonDown="RenderCanvas_MouseRightButtonDown"
+                    PreviewMouseDown="RenderCanvas_PreviewMouseDown"
+                    PreviewMouseUp="RenderCanvas_PreviewMouseUp"
+                    AllowDrop="True"
+                    Drop="RenderCanvas_Drop">
+
+                <!-- Map image -->
+                <Image x:Name="MapImage" Canvas.Left="0" Canvas.Top="0" />
+
+                <!-- Grid host -->
+                <local:GridVisualHost x:Name="GridHost" IsHitTestVisible="False" />
+
+                <!-- Turn highlight ellipse (Storyboard targets) -->
+                <Ellipse x:Name="TurnHighlightEllipse" Width="0" Height="0" Visibility="Collapsed"
+                         Fill="Transparent" Stroke="#FFD7B700" StrokeThickness="4" Opacity="0.8" IsHitTestVisible="False">
+                    <Ellipse.RenderTransform>
+                        <ScaleTransform x:Name="TurnHighlightScale" ScaleX="1" ScaleY="1" CenterX="0.5" CenterY="0.5" />
+                    </Ellipse.RenderTransform>
+                </Ellipse>
+            </Canvas>
+        </Border>
+    </Grid>
+</UserControl>

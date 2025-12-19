@@ -1,0 +1,115 @@
+﻿using System.Text.RegularExpressions;
+
+namespace DnDBattle.Utils
+{
+    public class DiceResult
+    {
+        public int Total { get; set; }
+        public List<int> Individual { get; set; } = new List<int>();
+    }
+
+    public static class DiceRoller
+    {
+        static Random _rng = new Random();
+
+        public static DiceResult Old_RollExpression(string expr)
+        {
+            expr = expr.Replace(" ", "").ToLower();
+            var m = Regex.Match(expr, @"^(\d*)d(\d+)([+-]\d+)?$");
+            if (!m.Success)
+            {
+                if (int.TryParse(expr, out int val)) return new DiceResult { Total = val, Individual = new List<int> { val } };
+                return new DiceResult { Total = 1, Individual = new List<int> { 1 } };
+            }
+
+            int count = string.IsNullOrEmpty(m.Groups[1].Value) ? 1 : int.Parse(m.Groups[1].Value);
+            int sides = int.Parse(m.Groups[3].Value);
+            int mod = 0;
+            if (m.Groups[3].Success) mod = int.Parse(m.Groups[3].Value);
+
+            var res = new DiceResult();
+            for (int i = 0; i < count; i++)
+            {
+                int roll = _rng.Next(1, sides + 1);
+                res.Individual.Add(roll);
+            }
+            res.Total = res.Individual.Sum() + mod;
+            return res;
+        }
+
+        public static DiceResult RollExpression(string expr)
+        {
+            var res = new DiceResult();
+            
+            if (string.IsNullOrWhiteSpace(expr))
+            {
+                res.Total = 1;
+                res.Individual.Add(1);
+                return res;
+            }
+
+            expr = expr.Trim().ToLowerInvariant();
+
+            if (int.TryParse(expr, out int plain))
+            {
+                res.Total = plain;
+                res.Individual.Add(plain);
+                return res;
+            }
+
+            var m = Regex.Match(expr, @"^(\d*)d(\d+)([+-]\d+)?$");
+            if (!m.Success)
+            {
+                int dIndex = expr.IndexOf('d');
+                if (dIndex > 0 && dIndex < expr.Length - 1)
+                {
+                    string countPart = expr.Substring(0, dIndex);
+                    string rest = expr.Substring(dIndex + 1);
+                    
+                    var subMatch = Regex.Match(rest, @"^(\d+)([+-]\d+)?$");
+                    if (subMatch.Success && int.TryParse(countPart, out int altCount))
+                    {
+                        int sidesSub = int.Parse(subMatch.Groups[1].Value);
+                        int modSub = 0;
+                        if (subMatch.Groups[2].Success) int.TryParse(subMatch.Groups[2].Value, out modSub);
+                        return RollDice(altCount, sidesSub, modSub);
+                    }
+                }
+
+                res.Total = 1;
+                res.Individual.Add(1);
+                return res;
+            }
+
+            int count = 1;
+            if (m.Groups[1].Success && !string.IsNullOrEmpty(m.Groups[1].Value))
+                if (!int.TryParse(m.Groups[1].Value, out count) || count < 1) count = 1;
+
+            int sides = 20;
+            if (m.Groups[2].Success && !string.IsNullOrEmpty(m.Groups[2].Value))
+                if (!int.TryParse(m.Groups[2].Value, out sides) || sides < 1) sides = 20;
+
+            int mod = 0;
+            if (m.Groups[3].Success && !string.IsNullOrEmpty(m.Groups[3].Value))
+                int.TryParse(m.Groups[3].Value, out mod);
+
+            return RollDice(count, sides, mod);
+        }
+
+        private static DiceResult RollDice(int count, int sides, int modifier)
+        {
+            var res = new DiceResult();
+
+            count = Math.Min(Math.Max(1, count), 100);
+            sides = Math.Min(Math.Max(1, sides), 10000);
+
+            for (int i = 0; i < count; i++)
+            {
+                int roll = _rng.Next(1, sides + 1);
+                res.Individual.Add(roll);
+            }
+            res.Total = res.Individual.Sum() + modifier;
+            return res;
+        }
+    }
+}
