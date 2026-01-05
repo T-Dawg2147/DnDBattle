@@ -16,8 +16,6 @@ using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
 
-//
-
 namespace DnDBattle.Controls
 {
     public partial class BattleGridControl : UserControl
