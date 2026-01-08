@@ -263,6 +263,7 @@ namespace DnDBattle.Controls
             foreach (var c in existing) RenderCanvas.Children.Remove(c);
 
             if (Tokens == null) return;
+
             foreach (var token in Tokens)
             {
                 var img = new Image
@@ -272,72 +273,171 @@ namespace DnDBattle.Controls
                     Stretch = Stretch.UniformToFill,
                     Source = token.Image ?? LoadDefaultTokenImage(),
                     Tag = token,
-                    ToolTip = CreateTokenTooltop(token)
+                    ToolTip = CreateTokenTooltip(token)  // Add this line
                 };
+
                 img.MouseLeftButtonDown += Token_MouseLeftButtonDown;
                 img.MouseMove += Token_MouseMove;
                 img.MouseLeftButtonUp += Token_MouseLeftButtonUp;
                 RenderCanvas.Children.Add(img);
                 Canvas.SetZIndex(img, 100);
             }
+
             LayoutTokens();
             UpdateGridVisual();
             RedrawLighting();
         }
 
-        private ToolTip CreateTokenTooltop(Token token)
+        // Add this new method to create rich tooltips
+        private ToolTip CreateTokenTooltip(Token token)
         {
-            var tooltip = new ToolTip()
+            var tooltip = new ToolTip
             {
-                Background = new SolidColorBrush(Color.FromRgb(45, 45,48)),
+                Background = new SolidColorBrush(Color.FromRgb(45, 45, 48)),
                 Foreground = Brushes.White,
-                BorderBrush = new SolidColorBrush(Color.FromRgb(100, 100, 100)),
+                BorderBrush = new SolidColorBrush(Color.FromRgb(80, 80, 80)),
                 BorderThickness = new Thickness(1),
-                Padding = new Thickness(8)
+                Padding = new Thickness(10)
             };
 
-            var stack = new StackPanel();
+            var stack = new StackPanel { MinWidth = 150 };
 
-            stack.Children.Add(new TextBlock()
+            // Name (bold, larger)
+            stack.Children.Add(new TextBlock
             {
                 Text = token.Name,
                 FontWeight = FontWeights.Bold,
-                FontSize = 14
+                FontSize = 14,
+                Margin = new Thickness(0, 0, 0, 5)
             });
 
-            stack.Children.Add(new TextBlock()
+            // Type and CR
+            stack.Children.Add(new TextBlock
             {
-                Text = $"{token.Type} | CR {token.ChallengeRating}",
-                Foreground = new SolidColorBrush(Color.FromRgb(180, 180, 180)),
-                FontSize = 11
+                Text = $"{token.Type} • CR {token.ChallengeRating}",
+                Foreground = new SolidColorBrush(Color.FromRgb(170, 170, 170)),
+                FontSize = 11,
+                Margin = new Thickness(0, 0, 0, 8)
             });
 
-            var hpPanel = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 5, 0, 0) };
-            hpPanel.Children.Add(new TextBlock { Text = "HP:  ", FontSize = 11 });
-            hpPanel.Children.Add(new TextBlock()
+            // HP Bar visual
+            var hpGrid = new Grid { Height = 16, Margin = new Thickness(0, 0, 0, 5) };
+            hpGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(30) });
+            hpGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            var hpLabel = new TextBlock
             {
-                Text = $"{token.HP}/{token.MaxHP}",
+                Text = "HP:",
+                FontSize = 11,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            Grid.SetColumn(hpLabel, 0);
+            hpGrid.Children.Add(hpLabel);
+
+            // HP bar background
+            var hpBarBg = new Border
+            {
+                Background = new SolidColorBrush(Color.FromRgb(60, 60, 60)),
+                CornerRadius = new CornerRadius(3),
+                Height = 14
+            };
+            Grid.SetColumn(hpBarBg, 1);
+            hpGrid.Children.Add(hpBarBg);
+
+            // HP bar fill
+            double hpPercent = token.MaxHP > 0 ? (double)Math.Max(0, token.HP) / token.MaxHP : 0;
+            var hpColor = hpPercent > 0.5 ? Color.FromRgb(76, 175, 80) :    // Green
+                          hpPercent > 0.25 ? Color.FromRgb(255, 193, 7) :   // Yellow
+                          Color.FromRgb(244, 67, 54);                        // Red
+
+            var hpBarFill = new Border
+            {
+                Background = new SolidColorBrush(hpColor),
+                CornerRadius = new CornerRadius(3),
+                Height = 14,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Width = 100 * hpPercent
+            };
+            Grid.SetColumn(hpBarFill, 1);
+            hpGrid.Children.Add(hpBarFill);
+
+            // HP text overlay
+            var hpText = new TextBlock
+            {
+                Text = $"{token.HP} / {token.MaxHP}",
+                FontSize = 10,
                 FontWeight = FontWeights.Bold,
-                Foreground = token.HP > token.MaxHP / 2 ? Brushes.LightGreen :
-                             token.HP > token.MaxHP / 4 ? Brushes.Yellow : Brushes.OrangeRed
-            });
-            stack.Children.Add(hpPanel);
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            Grid.SetColumn(hpText, 1);
+            hpGrid.Children.Add(hpText);
 
-            stack.Children.Add(new TextBlock()
+            stack.Children.Add(hpGrid);
+
+            // AC and Speed
+            var statsPanel = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 3, 0, 0) };
+            statsPanel.Children.Add(new TextBlock
             {
                 Text = $"AC: {token.ArmorClass}",
-                FontSize = 11
+                FontSize = 11,
+                Margin = new Thickness(0, 0, 15, 0)
             });
+            statsPanel.Children.Add(new TextBlock
+            {
+                Text = $"Speed: {token.Speed}",
+                FontSize = 11,
+                Foreground = new SolidColorBrush(Color.FromRgb(170, 170, 170))
+            });
+            stack.Children.Add(statsPanel);
+
+            // Initiative (if set)
+            if (token.Initiative > 0)
+            {
+                stack.Children.Add(new TextBlock
+                {
+                    Text = $"Initiative: {token.Initiative}",
+                    FontSize = 11,
+                    Margin = new Thickness(0, 3, 0, 0),
+                    Foreground = new SolidColorBrush(Color.FromRgb(100, 181, 246))
+                });
+            }
+
 
             if (token.Conditions != Models.Condition.None)
             {
-                stack.Children.Add(new TextBlock()
+                stack.Children.Add(new TextBlock
                 {
-                    Text = $"Conditions: {token.ConditionsDisplay}",
+                    Text = $"⚠ {token. ConditionsDisplay}",
                     FontSize = 10,
-                    Foreground = Brushes.Orange,
-                    Margin = new Thickness(0, 3, 0, 0)
+                    Foreground = new SolidColorBrush(Color.FromRgb(255, 152, 0)),
+                    Margin = new Thickness(0, 5, 0, 0),
+                    TextWrapping = TextWrapping.Wrap,
+                    MaxWidth = 180
                 });
+            }
+
+            // Tags (if any)
+            if (token.Tags != null && token.Tags.Count > 0)
+            {
+                var tagsPanel = new WrapPanel { Margin = new Thickness(0, 8, 0, 0) };
+                foreach (var tag in token.Tags.Take(5)) // Limit to 5 tags
+                {
+                    tagsPanel.Children.Add(new Border
+                    {
+                        Background = new SolidColorBrush(Color.FromRgb(45, 90, 39)),
+                        CornerRadius = new CornerRadius(3),
+                        Padding = new Thickness(5, 2, 5, 2),
+                        Margin = new Thickness(0, 0, 4, 0),
+                        Child = new TextBlock
+                        {
+                            Text = tag,
+                            FontSize = 9,
+                            Foreground = Brushes.White
+                        }
+                    });
+                }
+                stack.Children.Add(tagsPanel);
             }
 
             tooltip.Content = stack;

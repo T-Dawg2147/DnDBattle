@@ -1,4 +1,5 @@
 ﻿using DnDBattle.Models;
+using DnDBattle.Views;
 using Microsoft.Data.Sqlite;
 using System;
 using System.Collections.Generic;
@@ -133,7 +134,7 @@ namespace DnDBattle.Services
                 cmd.Parameters.AddWithValue("@Type", creature.Type ?? "");
                 cmd.Parameters.AddWithValue("@Alignment", creature.Alignment ?? "");
                 cmd.Parameters.AddWithValue("@ChallengeRating", creature.ChallengeRating ?? "");
-                cmd.Parameters.AddWithValue("ArmorClass", creature.ArmorClass);
+                cmd.Parameters.AddWithValue("@ArmorClass", creature.ArmorClass);
                 cmd.Parameters.AddWithValue("@MaxHP", creature.MaxHP);
                 cmd.Parameters.AddWithValue("@HitDice", creature.HitDice ?? "1d4");
                 cmd.Parameters.AddWithValue("@InitiativeModifier", creature.InitiativeModifier);
@@ -264,6 +265,38 @@ namespace DnDBattle.Services
             cmd.CommandText = "DELETE FROM Creatures WHERE Id = @Id";
             cmd.Parameters.AddWithValue("@Id", id);
             await cmd.ExecuteNonQueryAsync();
+        }
+
+        public async Task ClearAllCreaturesAsync()
+        {
+            using var transaction = _conn.BeginTransaction();
+
+            try
+            {
+                var deleteTagsCmd = _conn.CreateCommand();
+                deleteTagsCmd.CommandText = "DELETE FROM CreatureTags";
+                await deleteTagsCmd.ExecuteNonQueryAsync();
+
+                var deleteActionsCmd = _conn.CreateCommand();
+                deleteActionsCmd.CommandText = "DELETE FROM CreatureActions";
+                await deleteActionsCmd.ExecuteNonQueryAsync();
+
+                var deleteCreaturesCmd = _conn.CreateCommand();
+                deleteCreaturesCmd.CommandText = "DELETE FROM Creatures";
+                await deleteCreaturesCmd.ExecuteNonQueryAsync();
+
+                var deleteOrphanTagsCmd = _conn.CreateCommand();
+                deleteOrphanTagsCmd.CommandText = @"
+                    DELETE FROM Tags WHERE Id NOT IN (SELECT DISTINCT TagId FROM CreatureTags)";
+                await deleteOrphanTagsCmd.ExecuteNonQueryAsync();
+
+                transaction.Commit();
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
         }
 
         #endregion
@@ -622,70 +655,43 @@ namespace DnDBattle.Services
             return totalImported;
         }
 
-        private Token ConvertJsonToToken(JsonCreatureDto jc)
+        /// <summary>
+        /// Adds a creature from a JSON element. 
+        /// Only skips if the exact same JSON ID already exists in the database.
+        /// </summary>
+        public async Task<AddCreatureResult> AddCreatureFromJsonElementAsync(
+            System.Text.Json.JsonElement element,
+            string category,
+            string sourceFile)
         {
-            return new Token
+            try
             {
-                Id = !string.IsNullOrEmpty(jc.Id) ? Guid.Parse(jc.Id) : Guid.NewGuid(),
-                Name = jc.Name ?? "Unknown",
-                Size = jc.Size ?? "",
-                Type = jc.Type ?? "",
-                Alignment = jc.Alignment ?? "",
-                ChallengeRating = jc.ChallengeRating ?? "",
-                ArmorClass = jc.ArmorClass,
-                MaxHP = jc.MaxHP,
-                HP = jc.MaxHP,
-                HitDice = jc.HitDice ?? "",
-                InitiativeModifier = jc.InitiativeMod,
-                Speed = jc.Speed ?? "",
-                Str = jc.Str,
-                Dex = jc.Dex,
-                Con = jc.Con,
-                Int = jc.Int,
-                Wis = jc.Wis,
-                Cha = jc.Cha,
-                Skills = jc.Skills ?? new List<string>(),
-                Senses = jc.Senses ?? "",
-                Languages = jc.Languages ?? "",
-                Immunities = jc.Immunities ?? "",
-                Resistances = jc.Resistances ?? "",
-                Vulnerabilities = jc.Vulnerabilities ?? "",
-                Traits = jc.Traits ?? "",
-                Notes = jc.Notes ?? "",
-                Actions = jc.Actions?.Select(a => new Models.Action
+                var token = ParseCreatureFromJsonElement(element);
+
+                if (token == null || string.IsNullOrWhiteSpace(token.Name))
+                    return AddCreatureResult.Skipped;
+
+                // Check if this exact ID already exists
+                var existingCmd = _conn.CreateCommand();
+                existingCmd.CommandText = "SELECT COUNT(*) FROM Creatures WHERE Id = @Id";
+                existingCmd.Parameters.AddWithValue("@Id", token.Id.ToString());
+                var existingCount = Convert.ToInt32(await existingCmd.ExecuteScalarAsync());
+
+                if (existingCount > 0)
                 {
-                    Name = a.Name ?? "",
-                    AttackBonus = a.AttackBonus,
-                    DamageExpression = a.DamageExpression ?? "",
-                    Range = a.Range ?? "",
-                    Description = a.Description ?? ""
-                }).ToList() ?? new List<Models.Action>(),
-                BonusActions = jc.BonusActions?.Select(a => new Models.Action
-                {
-                    Name = a.Name ?? "",
-                    AttackBonus = a.AttackBonus,
-                    DamageExpression = a.DamageExpression ?? "",
-                    Range = a.Range ?? "",
-                    Description = a.Description ?? ""
-                }).ToList() ?? new List<Models.Action>(),
-                Reactions = jc.Reactions?.Select(a => new Models.Action
-                {
-                    Name = a.Name ?? "",
-                    AttackBonus = a.AttackBonus,
-                    DamageExpression = a.DamageExpression ?? "",
-                    Range = a.Range ?? "",
-                    Description = a.Description ?? ""
-                }).ToList() ?? new List<Models.Action>(),
-                LegendaryActions = jc.LegendaryActions?.Select(a => new Models.Action
-                {
-                    Name = a.Name ?? "",
-                    AttackBonus = a.AttackBonus,
-                    DamageExpression = a.DamageExpression ?? "",
-                    Range = a.Range ?? "",
-                    Description = a.Description ?? ""
-                }).ToList() ?? new List<Models.Action>(),
-                Tags = new List<string>() // Tags start empty, users add them
-            };
+                    // This exact ID already exists - it's a duplicate
+                    return AddCreatureResult.Skipped;
+                }
+
+                // Add the creature with its original ID
+                await AddCreatureAsync(token, category, sourceFile);
+                return AddCreatureResult.Added;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error adding creature: {ex.Message}");
+                return AddCreatureResult.Error;
+            }
         }
 
         #endregion
@@ -864,6 +870,13 @@ namespace DnDBattle.Services
         }
 
         #endregion
+    }
+
+    public enum AddCreatureResult
+    {
+        Added,
+        Skipped,
+        Error
     }
 
     public class JsonCreatureDto

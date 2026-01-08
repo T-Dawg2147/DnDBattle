@@ -47,6 +47,9 @@
         <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
             <TextBlock x:Name="TxtStatus" Foreground="#999" VerticalAlignment="Center"
                        Margin="0,0,15,0"/>
+            <Button x:Name="BtnClear" Content="Clear Database" Width="110"
+                    Margin="0,0,10,0" Click="BtnClear_Click"
+                    ToolTip="Delete all creatures from the database"/>
             <Button x:Name="BtnImport" Content="Import All" Width="100" 
                     Margin="0,0,10,0" Click="BtnImport_Click" IsEnabled="False"/>
             <Button x:Name="BtnClose" Content="Close" Width="80" Click="BtnClose_Click"/>
