@@ -114,7 +114,7 @@ namespace DnDBattle.Views
                 BtnImport.IsEnabled = true;
                 BtnBrowse.IsEnabled = true;
             }
-        }It s
+        }
 
         private void BtnClose_Click(object sender, RoutedEventArgs e)
         {

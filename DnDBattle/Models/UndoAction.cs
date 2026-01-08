@@ -181,7 +181,6 @@ namespace DnDBattle.Models
         public void Do() => _grid.RemoveLightPublic(_light);
         public void Undo() => _grid.AddLight(_light);
     }
-    #endregion
 
     #region Batch actions
 
