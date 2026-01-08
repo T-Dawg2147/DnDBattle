@@ -5,17 +5,9 @@ using DnDBattle.Views;
 using Microsoft.Win32;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
 using System.Text.Json;
 using System.Windows;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Threading;
 
 namespace DnDBattle
@@ -63,7 +55,7 @@ namespace DnDBattle
             Status_Mode.Text = $"Mode: {(Options.LiveMode ? "Live" : "Normal")}, AutoAOO: {(Options.AutoResolveAOOs ? "On" : "Off")}";
         }
 
-        private void MainWindow_PreviewKeyDown(object sender, KeyEventArgs e)
+        private void MainWindow_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
             if (BattleGrid == null) return;
             double step = BattleGrid.GridCellSize * 3;
@@ -163,7 +155,7 @@ namespace DnDBattle
                 SizeInSquares = edited.SizeInSquares
             };
 
-            var centerScreen = new Point(BattleGrid.ActualWidth / 2.0, BattleGrid.ActualHeight / 2.0);
+            var centerScreen = new System.Windows.Point(BattleGrid.ActualWidth / 2.0, BattleGrid.ActualHeight / 2.0);
             var world = BattleGrid.ScreenToWorldPublic(centerScreen);
             int gx = (int)Math.Floor(world.X / BattleGrid.GridCellSize);
             int gy = (int)Math.Floor(world.Y / BattleGrid.GridCellSize);
@@ -219,7 +211,7 @@ namespace DnDBattle
 
         private void MenuImportSrdPack_Click(object sender, RoutedEventArgs e)
         {
-            var dlg = new OpenFileDialog
+            var dlg = new Microsoft.Win32.OpenFileDialog
             {
                 Title = "Select SRD Pack Directory",
                 Filter = "JSON file|*.json|All files|*.*",
@@ -231,7 +223,7 @@ namespace DnDBattle
                 var files = dlg.FileNames;
                 if (files.Length == 0)
                 {
-                    MessageBox.Show("No JSON files found in the selected folder.", "Import Failed", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    System.Windows.MessageBox.Show("No JSON files found in the selected folder.", "Import Failed", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
@@ -248,14 +240,49 @@ namespace DnDBattle
                             vm.CreatureBank.Add(creature);
                         }
 
-                        MessageBox.Show($"Loaded {creatures.Count} creatures from '{categoryName}'", "Import Successful", MessageBoxButton.OK, MessageBoxImage.Information);
+                        System.Windows.MessageBox.Show($"Loaded {creatures.Count} creatures from '{categoryName}'", "Import Successful", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show($"Failed to load '{categoryName}': {ex.Message}", "Import Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        System.Windows.MessageBox.Show($"Failed to load '{categoryName}': {ex.Message}", "Import Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                     }
                 }
             }
+        }
+
+        private void MenuImportDatabase_Click(object sender, RoutedEventArgs e)
+        {
+            var window = new Views.DatabaseImportWindow()
+            {
+                Owner = this
+            };
+            window.ShowDialog();
+
+            ReloadCreatureBankFromDatabase();
+        }
+
+        private async void MenuReloadDatabase_Click(object sender, RoutedEventArgs e)
+        {
+            await ReloadCreatureBankFromDatabase();
+            MessageBox.Show($"Creature bank reloaded from database.", "Reload Complete",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private async void MenuDatabaseStats_Click(object sender, RoutedEventArgs e)
+        {
+            using var db = new Services.CreatureDatabaseService();
+            var count = await db.GetCreatureCountAsync();
+            var categories = await db.GetAllCategoriesAsync();
+            var types = await db.GetAllTypesAsync();
+            var tags = await db.GetAllTagsAsync();
+
+            var stats = $"Database Statistics:\n\n" +
+                        $"Total Creatures: {count}" +
+                        $"Categories: {categories.Count - 1}\n" +
+                        $"Types: {types.Count - 1}" +
+                        $"Tags: {tags.Count}";
+
+            MessageBox.Show(stats, "Database Statistics", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void MenuExit_Click(object sender, RoutedEventArgs e) =>
@@ -263,7 +290,7 @@ namespace DnDBattle
         
         private void MenuImport_Click(object sender, RoutedEventArgs e)
         {
-            var dlg = new OpenFileDialog { Filter = "JSON file|*.json|All files|*.*" };
+            var dlg = new Microsoft.Win32.OpenFileDialog { Filter = "JSON file|*.json|All files|*.*" };
             if (dlg.ShowDialog() != true) return;
 
             List<Token> imported;
@@ -273,7 +300,7 @@ namespace DnDBattle
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to import file: {ex.Message}", "Import Error", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                System.Windows.MessageBox.Show($"Failed to import file: {ex.Message}", "Import Error", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 return;
             }
 
@@ -312,7 +339,7 @@ namespace DnDBattle
             if (Options.LiveMode) Options.AutoResolveAOOs = false;
         }
 
-        private void CreatureBankList_PreviewMouseMove(object sender, MouseEventArgs e)
+        private void CreatureBankList_PreviewMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
         {
             if (e.LeftButton != MouseButtonState.Pressed) return;
             if (!(DataContext is MainViewModel vm)) return;
@@ -320,7 +347,7 @@ namespace DnDBattle
             var item = lb.SelectedItem as Token;
             if (item == null) return;
 
-            DragDrop.DoDragDrop(lb, new DataObject("DnDBattle.Token", item), DragDropEffects.Copy);
+            DragDrop.DoDragDrop(lb, new System.Windows.DataObject("DnDBattle.Token", item), System.Windows.DragDropEffects.Copy);
         }
 
         private void CreatureBankList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
@@ -356,7 +383,7 @@ namespace DnDBattle
         {
             if (!(DataContext is MainViewModel vm)) return;
 
-            var dlg = new SaveFileDialog()
+            var dlg = new Microsoft.Win32.SaveFileDialog()
             {
                 Filter = "Creature Bank JSON|*.json",
                 FileName = "creature_bank.json"
@@ -367,11 +394,11 @@ namespace DnDBattle
             try
             {
                 TokenExportService.ExportTokensToJson(dlg.FileName, vm.CreatureBank);
-                MessageBox.Show("Creature bank exported.", "Export", MessageBoxButton.OK, MessageBoxImage.Information);
+                System.Windows.MessageBox.Show("Creature bank exported.", "Export", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to export creature bank: {ex.Message}", "Export Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.MessageBox.Show($"Failed to export creature bank: {ex.Message}", "Export Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
         }
@@ -382,23 +409,23 @@ namespace DnDBattle
 
         private void MenuSaveEncounter_Click(object sender, RoutedEventArgs e)
         {
-            var dlg = new SaveFileDialog { Filter = "Encounter JSON|*.json" };
+            var dlg = new Microsoft.Win32.SaveFileDialog { Filter = "Encounter JSON|*.json" };
             if (dlg.ShowDialog() != true) return;
             var dto = BattleGrid.GetEncounterDto();
             try
             {
                 EncounterService.SaveEncounterToFile(dto, dlg.FileName);
-                MessageBox.Show("Saved encounter.", "Save", MessageBoxButton.OK, MessageBoxImage.Information);
+                System.Windows.MessageBox.Show("Saved encounter.", "Save", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to save: {ex.Message}", "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.MessageBox.Show($"Failed to save: {ex.Message}", "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
         private void MenuLoadEncounter_Click(object sender, RoutedEventArgs e)
         {
-            var dlg = new OpenFileDialog { Filter = "Encounter JSON|*.json" };
+            var dlg = new Microsoft.Win32.OpenFileDialog { Filter = "Encounter JSON|*.json" };
             if (dlg.ShowDialog() != true) return;
             try
             {
@@ -407,7 +434,19 @@ namespace DnDBattle
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to load: {ex.Message}", "Load Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.MessageBox.Show($"Failed to load: {ex.Message}", "Load Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void MenuEncounterTemplates_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is MainViewModel vm)
+            {
+                var window = new Views.EncounterTemplateWindow(vm)
+                {
+                    Owner = this
+                };
+                window.ShowDialog();
             }
         }
 
@@ -434,7 +473,7 @@ namespace DnDBattle
             else
             {
                 // center of viewport -> convert using public wrapper
-                var centerScreen = new Point(BattleGrid.ActualWidth / 2.0, BattleGrid.ActualHeight / 2.0);
+                var centerScreen = new System.Windows.Point(BattleGrid.ActualWidth / 2.0, BattleGrid.ActualHeight / 2.0);
                 var world = BattleGrid.ScreenToWorldPublic(centerScreen);
                 cx = Math.Floor(world.X / BattleGrid.GridCellSize);
                 cy = Math.Floor(world.Y / BattleGrid.GridCellSize);
@@ -442,6 +481,20 @@ namespace DnDBattle
 
             var light = new LightSource { CenterGrid = new System.Windows.Point(cx, cy), RadiusSquares = 8, Intensity = 1.0 };
             BattleGrid.AddLight(light);
+        }
+
+        private async Task ReloadCreatureBankFromDatabase()
+        {
+            if (!(DataContext is MainViewModel vm)) return;
+
+            using var db = new Services.CreatureDatabaseService();
+            var creatures = await db.SearchCreaturesAsync(sortBy: "Name");
+
+            vm.CreatureBank.Clear();
+            foreach (var creature in creatures)
+            {
+                vm.CreatureBank.Add(creature);
+            }
         }
 
         private void AutosaveNow()

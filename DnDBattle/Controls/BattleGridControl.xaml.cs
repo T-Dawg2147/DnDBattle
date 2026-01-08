@@ -271,7 +271,8 @@ namespace DnDBattle.Controls
                     Height = GridCellSize * token.SizeInSquares,
                     Stretch = Stretch.UniformToFill,
                     Source = token.Image ?? LoadDefaultTokenImage(),
-                    Tag = token
+                    Tag = token,
+                    ToolTip = CreateTokenTooltop(token)
                 };
                 img.MouseLeftButtonDown += Token_MouseLeftButtonDown;
                 img.MouseMove += Token_MouseMove;
@@ -282,6 +283,65 @@ namespace DnDBattle.Controls
             LayoutTokens();
             UpdateGridVisual();
             RedrawLighting();
+        }
+
+        private ToolTip CreateTokenTooltop(Token token)
+        {
+            var tooltip = new ToolTip()
+            {
+                Background = new SolidColorBrush(Color.FromRgb(45, 45,48)),
+                Foreground = Brushes.White,
+                BorderBrush = new SolidColorBrush(Color.FromRgb(100, 100, 100)),
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(8)
+            };
+
+            var stack = new StackPanel();
+
+            stack.Children.Add(new TextBlock()
+            {
+                Text = token.Name,
+                FontWeight = FontWeights.Bold,
+                FontSize = 14
+            });
+
+            stack.Children.Add(new TextBlock()
+            {
+                Text = $"{token.Type} | CR {token.ChallengeRating}",
+                Foreground = new SolidColorBrush(Color.FromRgb(180, 180, 180)),
+                FontSize = 11
+            });
+
+            var hpPanel = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 5, 0, 0) };
+            hpPanel.Children.Add(new TextBlock { Text = "HP:  ", FontSize = 11 });
+            hpPanel.Children.Add(new TextBlock()
+            {
+                Text = $"{token.HP}/{token.MaxHP}",
+                FontWeight = FontWeights.Bold,
+                Foreground = token.HP > token.MaxHP / 2 ? Brushes.LightGreen :
+                             token.HP > token.MaxHP / 4 ? Brushes.Yellow : Brushes.OrangeRed
+            });
+            stack.Children.Add(hpPanel);
+
+            stack.Children.Add(new TextBlock()
+            {
+                Text = $"AC: {token.ArmorClass}",
+                FontSize = 11
+            });
+
+            if (token.Conditions != Models.Condition.None)
+            {
+                stack.Children.Add(new TextBlock()
+                {
+                    Text = $"Conditions: {token.ConditionsDisplay}",
+                    FontSize = 10,
+                    Foreground = Brushes.Orange,
+                    Margin = new Thickness(0, 3, 0, 0)
+                });
+            }
+
+            tooltip.Content = stack;
+            return tooltip;
         }
 
         private ImageSource LoadDefaultTokenImage()
@@ -1221,6 +1281,53 @@ namespace DnDBattle.Controls
                 return inv as MatrixTransform;
             }
             catch { return null; }
+        }
+
+        private Point WorldToScreen(Point worldPoint)
+        {
+            return new Point(
+                (worldPoint.X * _zoom.ScaleX) + _pan.X,
+                (worldPoint.Y * _zoom.ScaleY) + _pan.Y);
+        }
+
+        private Token CloneTokenForPlacement(Token prototype)
+        {
+            return new Token
+            {
+                Id = Guid.NewGuid(),
+                Name = prototype.Name,
+                Size = prototype.Size,
+                Type = prototype.Type,
+                Alignment = prototype.Alignment,
+                ChallengeRating = prototype.ChallengeRating,
+                ArmorClass = prototype.ArmorClass,
+                MaxHP = prototype.MaxHP,
+                HP = prototype.MaxHP,
+                HitDice = prototype.HitDice,
+                InitiativeModifier = prototype.InitiativeModifier,
+                Speed = prototype.Speed,
+                Str = prototype.Str,
+                Dex = prototype.Dex,
+                Con = prototype.Con,
+                Int = prototype.Int,
+                Wis = prototype.Wis,
+                Cha = prototype.Cha,
+                Skills = prototype.Skills != null ? new List<string>(prototype.Skills) : new List<string>(),
+                Senses = prototype.Senses,
+                Languages = prototype.Languages,
+                Immunities = prototype.Immunities,
+                Resistances = prototype.Resistances,
+                Vulnerabilities = prototype.Vulnerabilities,
+                Traits = prototype.Traits,
+                Actions = prototype.Actions != null ? new List<Models.Action>(prototype.Actions) : new List<Models.Action>(),
+                BonusActions = prototype.BonusActions != null ? new List<Models.Action>(prototype.BonusActions) : new List<Models.Action>(),
+                Reactions = prototype.Reactions != null ? new List<Models.Action>(prototype.Reactions) : new List<Models.Action>(),
+                LegendaryActions = prototype.LegendaryActions != null ? new List<Models.Action>(prototype.LegendaryActions) : new List<Models.Action>(),
+                Notes = prototype.Notes,
+                IconPath = prototype.IconPath,
+                SizeInSquares = prototype.SizeInSquares,
+                Tags = prototype.Tags != null ? new List<string>(prototype.Tags) : new List<string>()
+            };
         }
         #endregion
     }

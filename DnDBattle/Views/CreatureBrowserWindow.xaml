@@ -55,6 +55,21 @@
                       ScrollViewer.IsDeferredScrollingEnabled="True"
                       SelectionMode="Single"
                       MouseDoubleClick="LvResults_MouseDoubleClick">
+
+                <ListView.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Add Tag..." Click="ContextMenu_AddTag_Click"/>
+                        <MenuItem Header="Remove Tag..." Click="ContextMenu_RemoveTag_Click"/>
+                        <Separator/>
+                        <MenuItem Header="Quick Tags">
+                            <MenuItem Header="Mark as Favourite" Click="ContextMenu_QuickTag_Favourite"/>
+                            <MenuItem Header="Mark as Boss" Click="ContextMenu_QuickTag_Boss"/>
+                            <MenuItem Header="Mark as Monster" Click="ContextMenu_QuickTag_Monster"/>
+                            <MenuItem Header="Mark as NPC" Click="ContextMenu_QuickTag_NPC"/>
+                        </MenuItem>
+                    </ContextMenu>
+                </ListView.ContextMenu>
+
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <Grid Margin="2">

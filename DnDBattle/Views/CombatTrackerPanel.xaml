@@ -1,0 +1,140 @@
+﻿<UserControl x:Class="DnDBattle.Views.CombatTrackerPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:DnDBattle.Views"
+             Background="#2D2D30">
+
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="HPFullBrush" Color="#4CAF50"/>
+        <SolidColorBrush x:Key="HPMidBrush" Color="#FFC107"/>
+        <SolidColorBrush x:Key="HPLowBrush" Color="#F44336"/>
+        <SolidColorBrush x:Key="TempHPBrush" Color="#2196F3"/>
+    </UserControl.Resources>
+    
+    <Grid x:Name="MainGrid" Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,10">
+            <TextBlock x:Name="TxtCreatureName" Text="No Creature Selected"
+                       FontSize="18" FontWeight="Bold" Foreground="White"/>
+            <TextBlock x:Name="TxtCreatureInfo" Text="Select a token to manage combat"
+                       FontSize="12" Foreground="#999"/>
+        </StackPanel>
+
+        <GroupBox Grid.Row="1" Header="Hit Points" Foreground="White" Margin="0,0,0,10">
+            <StackPanel Margin="5">
+                <!-- HP Bar -->
+                <Grid Height="25" Margin="0,0,0,8">
+                    <Border Background="#444" CornerRadius="3"/>
+                    <Border x:Name="TempHPBar" Background="{StaticResource TempHPBrush}"
+                            CornerRadius="3" HorizontalAlignment="Left"/>
+                    <Border x:Name="HPBar" Background="{StaticResource HPFullBrush}"
+                            CornerRadius="3" HorizontalAlignment="Left"/>
+                    <TextBlock x:Name="TxtHPDisplay" Text="0 / 0"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               FontWeight="Bold" Foreground="White"/>
+                </Grid>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Orientation="Horizontal">
+                        <Button Content="-1" Width="35" Margin="0,0,3,0"
+                                Click="BtnDamage_Click" Tag="1" ToolTip="1 Damage"/>
+                        <Button Content="-5" Width="35" Margin="0,0,3,0"
+                                Click="BtnDamage_Click" Tag="5" ToolTip="5 Damage"/>
+                        <Button Content="-10" Width="40" Margin="0,0,3,0"
+                                Click="BtnDamage_Click" Tag="10" ToolTip="10 Damage"/>
+                        <TextBox x:Name="TxtCustomDamage" Width="45" Margin="0,0,3,0"
+                                 VerticalContentAlignment="Center" Text="0"/>
+                        <Button Content="Dmg" Width="40" Click="BtnCustomDamage_Click"
+                                ToolTip="Apply custom damage"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Heal" Width="40" Margin="0,0,3,0"
+                                Click="BtnCustomHeal_Click" ToolTip="Apply custom healing"/>
+                        <TextBox x:Name="TxtCustomHeal" Width="45" Margin="0,0,3,0"
+                                 VerticalContentAlignment="Center" Text="0"/>
+                        <Button Content="+10" Width="40" Margin="0,0,3,0"
+                                Click="BtnHeal_Click" Tag="10" ToolTip="Heal 10"/>
+                        <Button Content="+5" Width="35" Margin="0,0,3,0"
+                                Click="BtnHeal_Click" Tag="5" ToolTip="Heal 5"/>
+                        <Button Content="+1" Width="35" Margin="0,0,3,0"
+                                Click="BtnDamage_Click" Tag="1" ToolTip="Heal 1"/>
+                    </StackPanel>
+                </Grid>
+
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                    <TextBlock Text="Temp HP:" Foreground="White" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <TextBox x:Name="TxtTempHP" Width="50" VerticalContentAlignment="Center" Text="0"/>
+                    <Button Content="Set" Width="40" Margin="5,0,0,0" Click="BtnSetTempHP_Click"/>
+                    <Button Content="Clear" Width="40" Margin="5,0,0,0" Click="BtnClearTempHP_Click"/>
+                </StackPanel>
+            </StackPanel>
+        </GroupBox>
+
+        <GroupBox x:Name="DeathSavesGroup" Grid.Row="2" Header="Death Saving Throws"
+                  Foreground="White" Margin="0,0,0,10" Visibility="Collapsed">
+            <Grid Margin="5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Successes" Foreground="#4CAF50" FontWeight="Bold" Margin="0,0,0,5"/>
+                    <StackPanel Orientation="Horizontal">
+                        <CheckBox x:Name="ChkSuccess1" Margin="0,0,5,0" Click="DeathSave_Click"/>
+                        <CheckBox x:Name="ChkSuccess2" Margin="0,0,5,0" Click="DeathSave_Click"/>
+                        <CheckBox x:Name="ChkSuccess3" Margin="0,0,5,0" Click="DeathSave_Click"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1">
+                    <TextBlock Text="Failures" Foreground="#F44336" FontWeight="Bold" Margin="0,0,0,5"/>
+                    <StackPanel Orientation="Horizontal">
+                        <CheckBox x:Name="ChkFailure1" Margin="0,0,5,0" Click="DeathSave_Click"/>
+                        <CheckBox x:Name="ChkFailure2" Margin="0,0,5,0" Click="DeathSave_Click"/>
+                        <CheckBox x:Name="ChkFailure3" Margin="0,0,5,0" Click="DeathSave_Click"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </GroupBox>
+
+        <GroupBox Grid.Row="3" Header="Conditions" Foreground="White" Margin="0,0,0,10">
+            <WrapPanel x:Name="ConditionsPanel" Margin="5">
+            </WrapPanel>
+        </GroupBox>
+
+        <GroupBox Grid.Row="4" Header="Concentration" Foreground="White" Margin="0,0,0,10">
+            <StackPanel Orientation="Horizontal" Margin="5">
+                <CheckBox x:Name="ChkConcentrating" Content="Concentrating on:" 
+                          Foreground="White" VerticalAlignment="Center"
+                          Checked="ChkConcentrating_Changed" Unchecked="ChkConcentrating_Changed"/>
+                <TextBox x:Name="TxtConcentrationSpell" Width="150" Margin="8,0,0,0" 
+                         VerticalContentAlignment="Center" IsEnabled="False"
+                         TextChanged="TxtConcentrationSpell_Changed"/>
+                <Button Content="Con.  Check" Width="80" Margin="8,0,0,0" 
+                        Click="BtnConcentrationCheck_Click" ToolTip="Roll concentration saving throw"/>
+            </StackPanel>
+        </GroupBox>
+
+        <StackPanel Grid.Row="5" Orientation="Horizontal">
+            <Button Content="Roll Initiative" Width="100" Margin="0,0,5,0" Click="BtnRollInitiative_Click"/>
+            <Button Content="Reset Combat" Width="100" Margin="0,0,5,0" Click="BtnResetCombat_Click"
+                    ToolTip="Reset HP to max, clear conditions and death saves"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

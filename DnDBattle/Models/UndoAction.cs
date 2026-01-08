@@ -181,4 +181,107 @@ namespace DnDBattle.Models
         public void Do() => _grid.RemoveLightPublic(_light);
         public void Undo() => _grid.AddLight(_light);
     }
+    #endregion
+
+    #region Batch actions
+
+    public class BatchTagAction : IUndoabaleAction
+    {
+        private readonly List<Token> _tokens;
+        private readonly string _tag;
+        private readonly bool _isAdd;
+
+        public string Description => $"{(_isAdd ? "Add" : "Remove")} tag '{_tag}' from {_tokens.Count} creatures.";
+
+        public BatchTagAction(List<Token> tokens, string tag, bool isAdd)
+        {
+            _tokens = tokens;
+            _tag = tag;
+            _isAdd = isAdd;
+        }
+
+        public void Do()
+        {
+            foreach (var t in _tokens)
+            {
+                if (_isAdd && !t.Tags.Contains(_tag)) t.Tags.Add(_tag);
+                else if (!_isAdd) t.Tags.Remove(_tag);
+            }
+        }
+
+        public void Undo()
+        {
+            foreach (var t in _tokens)
+            {
+                if (_isAdd) t.Tags.Contains(_tag);
+                else if (!t.Tags.Contains(_tag)) t.Tags.Add(_tag);
+            }
+        }
+
+    }
+
+    public class BatchTokenAddAction : IUndoabaleAction
+    {
+        private readonly MainViewModel _vm;
+        private readonly List<Token> _tokens;
+
+        public string Description => $"Add {_tokens.Count} Tokens";
+
+        public BatchTokenAddAction(MainViewModel vm, List<Token> tokens)
+        {
+            _vm = vm;
+            _tokens = tokens;
+        }
+
+        public void Do()
+        {
+            foreach (var token in _tokens)
+            {
+                if (!_vm.Tokens.Contains(token))
+                    _vm.Tokens.Add(token);
+            }
+        }
+
+        public void Undo()
+        {
+            foreach (var token in _tokens)
+            {
+                if (_vm.Tokens.Contains(token))
+                    _vm.Tokens.Remove(token);
+            }
+        }
+    }
+
+    public class BatchRemoveAction : IUndoabaleAction
+    {
+        private readonly MainViewModel _vm;
+        private readonly List<Token> _tokens;
+
+        public string Description => $"Remove {_tokens.Count} Tokens";
+
+        public BatchRemoveAction(MainViewModel vm, List<Token> tokens)
+        {
+            _vm = vm;
+            _tokens = new List<Token>();
+        }
+
+        public void Do()
+        {
+            foreach (var token in _tokens)
+            {
+                if (_vm.Tokens.Contains(token))
+                    _vm.Tokens.Remove(token);
+            }
+        }
+
+        public void Undo()
+        {
+            foreach (var token in _tokens)
+            {
+                if (!_vm.Tokens.Contains(token))
+                    _vm.Tokens.Add(token);
+            }
+        }
+    }
+    #endregion
 }

@@ -6,21 +6,30 @@
         xmlns:views="clr-namespace:DnDBattle.Views"
         Title="DnD Battle Builder" Height="800" Width="1200">
     <DockPanel LastChildFill="True">
-        <Menu DockPanel.Dock="Top" Background="#FF2D2D30" Foreground="White">
+        <Menu DockPanel.Dock="Top" Background="#1E1E" Foreground="White">
             <MenuItem Header="_File">
-                <MenuItem Header="Import Tokens..." Click="MenuImport_Click"/>
-                <MenuItem Header="Export Bank..." Click="MenuExportBank_Click"/>
+                <MenuItem Header="Import Tokens..." Click="MenuImport_Click" Foreground="Black"/> <!-- Obsolete -->
+                <MenuItem Header="Export Bank..." Click="MenuExportBank_Click"/> <!-- Obsolete -->
                 <MenuItem Header="Save Encounter..." Click="MenuSaveEncounter_Click"/>
                 <MenuItem Header="Load Encounter..." Click="MenuLoadEncounter_Click"/>
                 <MenuItem Header="Import SRD Pack..." Click="MenuImportSrdPack_Click"/>
                 <Separator/>
+                <MenuItem Header="_Options">
+                    <MenuItem Header="Settings..." Click="MenuOptions_Click" />
+                    <MenuItem Header="Grid Settings..." Click="MenuGridSettings_Click" />
+                    <MenuItem Header="Toggle Live Mode" IsCheckable="True" IsChecked="{x:Static local:Options.LiveMode}" Click="MenuToggleLiveMode_Click"/>
+                </MenuItem>
+                <Separator/>
                 <MenuItem Header="Exit" Click="MenuExit_Click"/>
             </MenuItem>
-            
-            <MenuItem Header="_Options">
-                <MenuItem Header="Settings..." Click="MenuOptions_Click" />
-                <MenuItem Header="Grid Settings..." Click="MenuGridSettings_Click" />
-                <MenuItem Header="Toggle Live Mode" IsCheckable="True" IsChecked="{x:Static local:Options.LiveMode}" Click="MenuToggleLiveMode_Click"/>
+
+            <MenuItem Header="Encounter Templates" Click="MenuEncounterTemplates_Click"/>
+
+            <MenuItem Header="Database">
+                <MenuItem Header="Import JSON to Database..." Click="MenuImportDatabase_Click"/>
+                <MenuItem Header="Reload from Database" Click="MenuReloadDatabase_Click"/>
+                <Separator/>
+                <MenuItem Header="Database Statistics" Click="MenuDatabaseStats_Click"/>
             </MenuItem>
         </Menu>
 
@@ -35,17 +44,17 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
                         <TextBlock Text="Encounter" FontSize="18" Margin="4" Foreground="White"/>
-                        <Button Content="Add Token" Command="{Binding AddTokenCommand}" Margin="0,8" Foreground="Black"/>
-                        <Button Content="Add Creature" Command="{Binding OpenCreatureBrowserCommand}" Margin="0,8" Foreground="Black"/>
-                        <Button Content="Load Map Image" Command="{Binding LoadMapCommand}" Margin="0,8" Foreground="Black"/>
+                        <Button Content="Add Token" Command="{Binding AddTokenCommand}" Margin="0,8"/>
+                        <Button Content="Add Creature" Command="{Binding OpenCreatureBrowserCommand}" Margin="0,8"/>
+                        <Button Content="Load Map Image" Command="{Binding LoadMapCommand}" Margin="0,8"/>
 
                         <Expander Header="Token Editor" IsExpanded="True" Margin="0,8" Foreground="White">
                             <views:TokenEditorView DataContext="{Binding SelectedToken}" />
                         </Expander>
 
                         <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                            <Button Content="Spawn Edited Token" Click="SpawnEditedToken_Click" Width="140" Margin="0,0,6,0" Foreground="Black"/>
-                            <Button Content="Save Edited to Bank" Click="SaveEditedToBank_Click" Width="140" Foreground="Black"/>
+                            <Button Content="Spawn Edited Token" Click="SpawnEditedToken_Click" Width="140" Margin="0,0,6,0"/>
+                            <Button Content="Save Edited to Bank" Click="SaveEditedToBank_Click" Width="140"/>
                         </StackPanel>
 
                         <StackPanel Margin="0,8">

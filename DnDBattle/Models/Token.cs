@@ -111,6 +111,47 @@ namespace DnDBattle.Models
         private string _vulnerabilities;
         public string Vulnerabilities { get => _vulnerabilities; set => SetProperty(ref _vulnerabilities, value); }
 
+        // === Combat Tracking Properties ===
+
+        // Conditions
+        private Condition _conditions = Condition.None;
+        public Condition Conditions
+        {
+            get => _conditions;
+            set => SetProperty(ref _conditions, value);
+        }
+
+        // Death Saving Throws
+        private int _deathSaveSuccesses = 0;
+        public int DeathSaveSuccesses
+        {
+            get => _deathSaveSuccesses;
+            set => SetProperty(ref _deathSaveSuccesses, value);
+        }
+
+        private int _deathSaveFailures = 0;
+        public int DeathSaveFailures
+        {
+            get => _deathSaveFailures;
+            set => SetProperty(ref _deathSaveFailures, value);
+        }
+
+        // Temporary HP
+        private int _tempHP = 0;
+        public int TempHP
+        {
+            get => _tempHP;
+            set => SetProperty(ref _tempHP, value);
+        }
+
+        // Concentration spell name
+        private string _concentrationSpell;
+        public string ConcentrationSpell
+        {
+            get => _concentrationSpell;
+            set => SetProperty(ref _concentrationSpell, value);
+        }        
+
         // Icon path
         private ImageSource _image;
         public ImageSource Image { get => _image; set => SetProperty(ref _image, value); }
@@ -133,5 +174,49 @@ namespace DnDBattle.Models
         public Dictionary<string, object> Extras { get; set; } = new Dictionary<string, object>();
 
         public List<string> Tags { get; set; } = new List<string>();
+
+        public List<string> EncounterTags { get; set; } = new List<string>();
+
+        // Helper Properties
+        public bool IsUnconscious => HP <= 0 && !IsPlayer;
+        public bool IsDying => HP <= 0 && IsPlayer && DeathSaveSuccesses < 3 && DeathSaveFailures < 3;
+        public bool IsStable => HP <= 0 && IsPlayer && DeathSaveSuccesses >= 3;
+        public bool IsDead => (HP <= 0 && IsPlayer && DeathSaveFailures >= 3) || HP <= -MaxHP;
+
+        public string ConditionsDisplay => Conditions.ToDisplayString();
+
+        // Helper Methods
+        public bool HasTag(string tag) => Tags.Contains(tag, StringComparer.OrdinalIgnoreCase);
+        public bool HasEncounterTag(string tag) => EncounterTags.Contains(tag, StringComparer.OrdinalIgnoreCase);
+
+        public bool HasCondition(Condition condition) => Conditions.HasFlag(condition);
+
+        public void AddCondition(Condition condition)
+        {
+            Conditions |= condition;
+            OnPropertyChanged(nameof(ConditionsDisplay));
+        }
+
+        public void RemoveCondition(Condition condition)
+        {
+            Conditions &= ~condition;
+            OnPropertyChanged(nameof(ConditionsDisplay));
+        }
+
+        public void ToggleCondition(Condition condition)
+        {
+            if (HasCondition(condition))
+                RemoveCondition(condition);
+            else
+            {
+                AddCondition(condition);
+            }
+        }
+
+        public void ResetDeathSaves()
+        {
+            DeathSaveSuccesses = 0;
+            DeathSaveFailures = 0;
+        }
     }
 }

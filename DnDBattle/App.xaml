@@ -33,6 +33,10 @@
             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
         </Style>
 
+        <Style TargetType="MenuItem">
+            <Setter Property="Foreground" Value="Black"/>
+        </Style>
+
         <!-- Button text explicitly black (some nested TextBlock styles previously overrode it) -->
         <Style TargetType="Button">
             <Setter Property="Foreground" Value="Black"/>
