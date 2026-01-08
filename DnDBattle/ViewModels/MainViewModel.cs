@@ -85,6 +85,7 @@ namespace DnDBattle.ViewModels
 
         #endregion
 
+        private CreatureDatabaseService _dbService;
         public string SearchText { get; set; } = "";
         public string SelectedCategory { get; set; } = "All";
 
@@ -111,6 +112,8 @@ namespace DnDBattle.ViewModels
 
         public MainViewModel()
         {
+            _dbService = new CreatureDatabaseService();
+
             AddTokenCommand = new RelayCommand(AddToken);
             LoadMapCommand = new RelayCommand(LoadMap);
             RollDiceCommand = new RelayCommand(RollDice);
@@ -125,6 +128,31 @@ namespace DnDBattle.ViewModels
             OpenCreatureBrowserCommand = new RelayCommand(OpenCreatureBrowser);
 
             _initiativeManager = new InitiativeManager(Tokens);
+
+            _ = LoadCreaturesFromDatabaseAsync();
+        }
+
+        public async Task LoadCreaturesFromDatabaseAsync()
+        {
+            try
+            {
+                var creatures = await _dbService.SearchCreaturesAsync(sortBy: "Name", limit: 10000);
+
+                Application.Current?.Dispatcher.Invoke(() =>
+                {
+                    CreatureBank.Clear();
+                    foreach (var creature in creatures)
+                    {
+                        CreatureBank.Add(creature);
+                    }
+
+                    RefreshCreatureBankView();
+                });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error loading creatures from database: {ex.Message}");
+            }
         }
 
         private void AddToken()
@@ -232,6 +260,11 @@ namespace DnDBattle.ViewModels
         }
 
         public void RefreshCreatureBankView() => CreatureBankView.Refresh();
+
+        public async Task RefreshCreatureBankViewAsync()
+        {
+            await LoadCreaturesFromDatabaseAsync();
+        }
 
         private void Log(string source, string message)
         {

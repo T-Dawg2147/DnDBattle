@@ -220,7 +220,7 @@ namespace DnDBattle.Views
             if (DataContext is MainViewModel viewModel)
             {
                 viewModel.SelectedCategory = CmbCategory.SelectedItem as string ?? "All";
-                viewModel.RefreshCreatureBankView();
+                viewModel.RefreshCreatureBankViewAsync();
             }
         }
 
@@ -234,7 +234,7 @@ namespace DnDBattle.Views
             if (DataContext is MainViewModel viewModel)
             {
                 viewModel.SearchText = TxtSearch.Text.Trim();
-                viewModel.RefreshCreatureBankView();
+                viewModel.RefreshCreatureBankViewAsync();
             }
             ApplyFilters();
         }
