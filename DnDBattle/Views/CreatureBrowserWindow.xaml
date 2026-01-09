@@ -4,113 +4,304 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:DnDBattle.Views"
-             xmlns:vm="clr-namespace:DnDBattle.ViewModels"
              mc:Ignorable="d" 
-             MinWidth="700" MinHeight="480" Background="DarkSlateGray">
-    <Grid Margin="8">
+             MinWidth="800" MinHeight="550" Background="#2D2D30">
+
+    <UserControl.Resources>
+        <!-- TreeView Item Style -->
+        <Style x:Key="GroupHeaderStyle" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="#4FC3F7"/>
+            <Setter Property="Margin" Value="0,2"/>
+        </Style>
+
+        <!-- Creature count badge -->
+        <Style x:Key="CountBadgeStyle" TargetType="Border">
+            <Setter Property="Background" Value="#3E3E42"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="6,2"/>
+            <Setter Property="Margin" Value="8,0,0,0"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="10">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="0,0,0,8">
-            <TextBox x:Name="TxtSearch" Width="220" Margin="0,0,8,0" VerticalAlignment="Center" 
-                     TextChanged="TxtSearch_TextChanged" Foreground="White"/>
-            <ComboBox x:Name="CmbCategory" Width="160" Margin="0,0,8,0" VerticalAlignment="Center"
-                      ItemsSource="{Binding Categories}" 
-                      SelectedItem="{Binding SelectedCategory}" 
-                      SelectionChanged="CmbCategory_SelectionChanged"/>
-            <ComboBox x:Name="CmbType" Width="100" Margin="0,0,8,0" VerticalAlignment="Center" 
-                      SelectionChanged="CmbType_SelectionChanged"/>
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0">
-                <TextBlock Text="CR:" VerticalAlignment="Center" Margin="2" Foreground="White"/>
-                <TextBox x:Name="TxtCRMin" Width="48" Margin="4,0" TextChanged="FilterNumeric_TextChanged" Foreground="White"/>
-                <TextBlock Text="—" VerticalAlignment="Center" Foreground="White"/>
-                <TextBox x:Name="TxtCRMax" Width="48" Margin="4,0" TextChanged="FilterNumeric_TextChanged" Foreground="White"/>
+        <!-- Header with Search and Filters -->
+        <Grid Grid.Row="0" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Search Box -->
+            <Grid Grid.Column="0">
+                <TextBox x:Name="TxtSearch" 
+                         Padding="30,8,10,8" 
+                         FontSize="14"
+                         Background="#1E1E1E"
+                         Foreground="White"
+                         BorderBrush="#444"
+                         TextChanged="TxtSearch_TextChanged">
+                </TextBox>
+                <TextBlock Text="🔍" 
+                           IsHitTestVisible="False"
+                           VerticalAlignment="Center"
+                           Margin="10,0,0,0"
+                           Foreground="#888"/>
+                <TextBlock Text="Search creatures..." 
+                           IsHitTestVisible="False"
+                           VerticalAlignment="Center"
+                           Margin="35,0,0,0"
+                           Foreground="#666"
+                           Visibility="{Binding Text. Length, ElementName=TxtSearch, Converter={StaticResource InverseBoolToVisibilityConverter}, FallbackValue=Visible}">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Text, ElementName=TxtSearch}" Value="">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                                </Style.Triggers>
+                        </Style>
+                        </TextBlock.Style>
+                </TextBlock>
+            </Grid>
+
+            <!-- Group By Selector -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="15,0,0,0">
+                <TextBlock Text="Group by:" Foreground="#AAA" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <ComboBox x:Name="CmbGroupBy" Width="140" SelectionChanged="CmbGroupBy_SelectionChanged">
+                    <ComboBoxItem Tag="Type" IsSelected="True">Type</ComboBoxItem>
+                    <ComboBoxItem Tag="ChallengeRating">Challenge Rating</ComboBoxItem>
+                    <ComboBoxItem Tag="Size">Size</ComboBoxItem>
+                    <ComboBoxItem Tag="Category">Source Category</ComboBoxItem>
+                    <ComboBoxItem Tag="None">No Grouping</ComboBoxItem>
+                </ComboBox>
             </StackPanel>
+        </Grid>
 
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0">
-                <TextBlock Text="HP:" VerticalAlignment="Center" Margin="2" Foreground="White"/>
-                <TextBox x:Name="TxtHPMin" Width="48" Margin="4,0" TextChanged="FilterNumeric_TextChanged" Foreground="White"/>
-                <TextBlock Text="—" VerticalAlignment="Center" Foreground="White"/>
-                <TextBox x:Name="TxtHPMax" Width="48" Margin="4,0" TextChanged="FilterNumeric_TextChanged" Foreground="White"/>
+        <!-- Filter Bar -->
+        <Border Grid.Row="1" Background="#252526" CornerRadius="4" Padding="10,8" Margin="0,0,0,10">
+            <StackPanel Orientation="Horizontal">
+                <!-- CR Filter -->
+                <TextBlock Text="CR:" Foreground="#AAA" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                <TextBox x:Name="TxtCRMin" Width="40" Margin="0,0,3,0" 
+                         TextChanged="FilterChanged" Background="#1E1E1E" Foreground="White"/>
+                <TextBlock Text="—" Foreground="#666" VerticalAlignment="Center" Margin="0,0,3,0"/>
+                <TextBox x:Name="TxtCRMax" Width="40" Margin="0,0,15,0"
+                         TextChanged="FilterChanged" Background="#1E1E1E" Foreground="White"/>
+
+                <!-- HP Filter -->
+                <TextBlock Text="HP:" Foreground="#AAA" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                <TextBox x:Name="TxtHPMin" Width="45" Margin="0,0,3,0"
+                         TextChanged="FilterChanged" Background="#1E1E1E" Foreground="White"/>
+                <TextBlock Text="—" Foreground="#666" VerticalAlignment="Center" Margin="0,0,3,0"/>
+                <TextBox x:Name="TxtHPMax" Width="45" Margin="0,0,15,0"
+                         TextChanged="FilterChanged" Background="#1E1E1E" Foreground="White"/>
+
+                <!-- Size Filter -->
+                <TextBlock Text="Size:" Foreground="#AAA" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                <ComboBox x:Name="CmbSizeFilter" Width="100" Margin="0,0,15,0" 
+                          SelectionChanged="FilterChanged">
+                    <ComboBoxItem Content="All" IsSelected="True"/>
+                    <ComboBoxItem Content="Tiny"/>
+                    <ComboBoxItem Content="Small"/>
+                    <ComboBoxItem Content="Medium"/>
+                    <ComboBoxItem Content="Large"/>
+                    <ComboBoxItem Content="Huge"/>
+                    <ComboBoxItem Content="Gargantuan"/>
+                </ComboBox>
+
+                <!-- Clear Filters -->
+                <Button Content="Clear Filters" Padding="10,3" Click="BtnClearFilters_Click"/>
+
+                <!-- Creature Count -->
+                <TextBlock x:Name="TxtCreatureCount" Foreground="#888" 
+                           VerticalAlignment="Center" Margin="20,0,0,0"/>
             </StackPanel>
-
-            <ComboBox x:Name="CmbSort" Width="160" VerticalAlignment="Center" SelectionChanged="CmbSort_SelectionChanged">
-                <ComboBoxItem Tag="Name">Sort: Name</ComboBoxItem>
-                <ComboBoxItem Tag="CR">Sort: Challenge Rating</ComboBoxItem>
-                <ComboBoxItem Tag="MaxHP">Sort: Max HP</ComboBoxItem>
-            </ComboBox>
-
-            <ToggleButton x:Name="ToggleSortDesc" Content="Desc" Margin="8,0,0,0" VerticalAlignment="Center" Checked="ToggleSort_Checked" Unchecked="ToggleSort_Checked"/>
-        </StackPanel>
-
-        <!-- Result list (virtualized) -->
-        <Border Grid.Row="1" BorderThickness="1" BorderBrush="#444" Background="{StaticResource AppDarkBg}">
-            <ListView x:Name="LvResults" Margin="6"
-                      ItemsSource="{Binding CreatureBankView}"
-                      VirtualizingPanel.IsVirtualizing="True"
-                      VirtualizingPanel.VirtualizationMode="Recycling"
-                      ScrollViewer.IsDeferredScrollingEnabled="True"
-                      SelectionMode="Single"
-                      MouseDoubleClick="LvResults_MouseDoubleClick">
-
-                <ListView.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem Header="Add Tag..." Click="ContextMenu_AddTag_Click"/>
-                        <MenuItem Header="Remove Tag..." Click="ContextMenu_RemoveTag_Click"/>
-                        <Separator/>
-                        <MenuItem Header="Quick Tags">
-                            <MenuItem Header="Mark as Favourite" Click="ContextMenu_QuickTag_Favourite"/>
-                            <MenuItem Header="Mark as Boss" Click="ContextMenu_QuickTag_Boss"/>
-                            <MenuItem Header="Mark as Monster" Click="ContextMenu_QuickTag_Monster"/>
-                            <MenuItem Header="Mark as NPC" Click="ContextMenu_QuickTag_NPC"/>
-                        </MenuItem>
-                    </ContextMenu>
-                </ListView.ContextMenu>
-
-                <ListView.ItemTemplate>
-                    <DataTemplate>
-                        <Grid Margin="2">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="44"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="70"/>
-                                <ColumnDefinition Width="70"/>
-                                <ColumnDefinition Width="86"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-
-                            <Border Width="40" Height="40" Background="#222" CornerRadius="3" Grid.Column="0">
-                                <Image Source="{Binding IconPath}" Stretch="Uniform" />
-                            </Border>
-
-                            <StackPanel Grid.Column="1" Orientation="Vertical" Margin="8,0">
-                                <TextBlock Text="{Binding Name}" FontWeight="Bold" Foreground="White"/>
-                                <TextBlock FontSize="11" Foreground="#bbb" Text="{Binding Type}" />
-                            </StackPanel>
-
-                            <TextBlock Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" Text="{Binding ChallengeRating}"/>
-                            <TextBlock Grid.Column="3" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" Text="{Binding MaxHP}"/>
-                            <TextBlock Grid.Column="4" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#ccc" Text="{Binding Speed}" />
-
-                            <Button Grid.Column="5" Content="Add" Width="64" Margin="6,0,0,0" Click="BtnAdd_Click" Tag="{Binding}" />
-                        </Grid>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-
-                <ListView.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <VirtualizingStackPanel Background="#FF2D2D30"/>
-                    </ItemsPanelTemplate>
-                </ListView.ItemsPanel>
-            </ListView>
         </Border>
 
+        <!-- Main Content:  TreeView + Details Panel -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="350" MinWidth="250"/>
+                <ColumnDefinition Width="5"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- TreeView -->
+            <Border Grid.Column="0" Background="#1E1E1E" CornerRadius="4">
+                <TreeView x:Name="CreatureTree" 
+                          Background="Transparent"
+                          BorderThickness="0"
+                          Padding="5"
+                          SelectedItemChanged="CreatureTree_SelectedItemChanged"
+                          MouseDoubleClick="CreatureTree_MouseDoubleClick">
+                    <TreeView.Resources>
+                        <!-- Style for group nodes -->
+                        <HierarchicalDataTemplate x:Key="GroupTemplate" ItemsSource="{Binding Creatures}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding GroupName}" Style="{StaticResource GroupHeaderStyle}"/>
+                                <Border Style="{StaticResource CountBadgeStyle}">
+                                    <TextBlock Text="{Binding Count}" Foreground="#AAA" FontSize="11"/>
+                                </Border>
+                            </StackPanel>
+                            <HierarchicalDataTemplate.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <Border Grid.Column="0" Width="24" Height="24" 
+                                                Background="#333" CornerRadius="3" Margin="0,0,8,0">
+                                            <Image Source="{Binding IconPath}" Stretch="Uniform"/>
+                                        </Border>
+
+                                        <TextBlock Grid.Column="1" Text="{Binding Name}" 
+                                                   Foreground="White" VerticalAlignment="Center"/>
+
+                                        <TextBlock Grid.Column="2" VerticalAlignment="Center"
+                                                   Foreground="#888" FontSize="11" Margin="10,0,0,0">
+                                            <Run Text="CR "/>
+                                            <Run Text="{Binding ChallengeRating}"/>
+                                        </TextBlock>
+                                    </Grid>
+                                </DataTemplate>
+                            </HierarchicalDataTemplate.ItemTemplate>
+                        </HierarchicalDataTemplate>
+                    </TreeView.Resources>
+                </TreeView>
+            </Border>
+
+            <!-- Splitter -->
+            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" 
+                          Background="#2D2D30" Cursor="SizeWE"/>
+
+            <!-- Details Panel -->
+            <Border Grid.Column="2" Background="#1E1E1E" CornerRadius="4" Margin="5,0,0,0">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="15">
+                    <StackPanel x:Name="DetailsPanel">
+                        <!-- Placeholder when nothing selected -->
+                        <TextBlock x:Name="TxtNoSelection" 
+                                   Text="Select a creature to view details"
+                                   Foreground="#666" FontSize="14"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,50,0,0"/>
+
+                        <!-- Creature Details (hidden until selection) -->
+                        <StackPanel x:Name="CreatureDetails" Visibility="Collapsed">
+                            <!-- Name and Type -->
+                            <TextBlock x:Name="TxtCreatureName" FontSize="22" FontWeight="Bold" 
+                                       Foreground="White" Margin="0,0,0,5"/>
+                            <TextBlock x:Name="TxtCreatureSubtitle" FontSize="12" 
+                                       Foreground="#AAA" FontStyle="Italic" Margin="0,0,0,15"/>
+
+                            <!-- Stats Bar -->
+                            <Border Background="#252526" CornerRadius="4" Padding="15,10" Margin="0,0,0,15">
+                                <UniformGrid Columns="4">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="AC" Foreground="#888" FontSize="10" HorizontalAlignment="Center"/>
+                                        <TextBlock x:Name="TxtAC" Foreground="White" FontSize="18" 
+                                                   FontWeight="Bold" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="HP" Foreground="#888" FontSize="10" HorizontalAlignment="Center"/>
+                                        <TextBlock x:Name="TxtHP" Foreground="#4CAF50" FontSize="18" 
+                                                   FontWeight="Bold" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="CR" Foreground="#888" FontSize="10" HorizontalAlignment="Center"/>
+                                        <TextBlock x:Name="TxtCR" Foreground="#FFC107" FontSize="18" 
+                                                   FontWeight="Bold" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="Speed" Foreground="#888" FontSize="10" HorizontalAlignment="Center"/>
+                                        <TextBlock x:Name="TxtSpeed" Foreground="White" FontSize="14" 
+                                                   HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </UniformGrid>
+                            </Border>
+
+                            <!-- Ability Scores -->
+                            <TextBlock Text="Ability Scores" Foreground="#4FC3F7" FontWeight="Bold" 
+                                       FontSize="12" Margin="0,0,0,8"/>
+                            <Border Background="#252526" CornerRadius="4" Padding="10" Margin="0,0,0,15">
+                                <UniformGrid Columns="6">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="STR" Foreground="#888" FontSize="10" HorizontalAlignment="Center"/>
+                                        <TextBlock x:Name="TxtStr" Foreground="White" FontSize="16" 
+                                                   FontWeight="Bold" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="DEX" Foreground="#888" FontSize="10" HorizontalAlignment="Center"/>
+                                        <TextBlock x:Name="TxtDex" Foreground="White" FontSize="16" 
+                                                   FontWeight="Bold" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="CON" Foreground="#888" FontSize="10" HorizontalAlignment="Center"/>
+                                        <TextBlock x:Name="TxtCon" Foreground="White" FontSize="16" 
+                                                   FontWeight="Bold" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="INT" Foreground="#888" FontSize="10" HorizontalAlignment="Center"/>
+                                        <TextBlock x:Name="TxtInt" Foreground="White" FontSize="16" 
+                                                   FontWeight="Bold" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="WIS" Foreground="#888" FontSize="10" HorizontalAlignment="Center"/>
+                                        <TextBlock x:Name="TxtWis" Foreground="White" FontSize="16" 
+                                                   FontWeight="Bold" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="CHA" Foreground="#888" FontSize="10" HorizontalAlignment="Center"/>
+                                        <TextBlock x:Name="TxtCha" Foreground="White" FontSize="16" 
+                                                   FontWeight="Bold" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </UniformGrid>
+                            </Border>
+
+                            <!-- Traits -->
+                            <StackPanel x:Name="TraitsSection" Margin="0,0,0,15">
+                                <TextBlock Text="Traits" Foreground="#4FC3F7" FontWeight="Bold" 
+                                           FontSize="12" Margin="0,0,0,8"/>
+                                <TextBlock x:Name="TxtTraits" Foreground="#CCC" TextWrapping="Wrap"/>
+                            </StackPanel>
+
+                            <!-- Actions -->
+                            <StackPanel x:Name="ActionsSection" Margin="0,0,0,15">
+                                <TextBlock Text="Actions" Foreground="#F44336" FontWeight="Bold" 
+                                           FontSize="12" Margin="0,0,0,8"/>
+                                <ItemsControl x:Name="ActionsList"/>
+                            </StackPanel>
+
+                            <!-- Add to Map Button -->
+                            <Button x:Name="BtnAddToMap" Content="➕ Add to Battle Map" 
+                                    Padding="15,10" FontSize="14" Margin="0,20,0,0"
+                                    Click="BtnAddToMap_Click"
+                                    HorizontalAlignment="Stretch"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+
         <!-- Footer -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
-            <Button Content="Close" Click="BtnClose_Click" Width="90" Margin="8,0"/>
-        </StackPanel>
+        <Border Grid.Row="3" Margin="0,10,0,0">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Reload from Database" Padding="15,8" Margin="0,0,10,0"
+                        Click="BtnReload_Click"/>
+                <Button Content="Close" Padding="15,8" Click="BtnClose_Click"/>
+            </StackPanel>
+        </Border>
     </Grid>
 </UserControl>

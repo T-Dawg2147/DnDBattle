@@ -6,6 +6,8 @@
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <converter:BoolToBrushConverter x:Key="BoolToBrushConverter" TrueBrush="#FF333333" FalseBrush="Transparent"/>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <converter:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
         <SolidColorBrush x:Key="AppDarkBg" Color="#FF2D2D30" />
         <SolidColorBrush x:Key="AppPanelBg" Color="#FF1E1E1E" />
 

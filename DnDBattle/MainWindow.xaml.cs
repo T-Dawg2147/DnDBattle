@@ -38,10 +38,20 @@ namespace DnDBattle
             if (Options.EnabledPeriodicAutosave)
                 _autosaveTimer.Start();
 
+            Loaded += MainWindow_Loaded;
+
             this.PreviewKeyDown += MainWindow_PreviewKeyDown;
             this.Closing += (s, e) => Services.OptionsService.SaveOptions();
 
             Closing += (s, e) => AutosaveNow();
+        }
+
+        private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is ViewModels.MainViewModel vm)
+            {
+                await vm.LoadCreaturesFromDatabaseAsync();
+            }
         }
 
         private void UndoManager_StateChanged(object sender, EventArgs e)

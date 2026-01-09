@@ -27,6 +27,7 @@ namespace DnDBattle.ViewModels
         public ObservableCollection<string> DiceHistory { get; } = new ObservableCollection<string>();
 
         #region Properties
+
         private Token _selectedToken;
         public Token SelectedToken
         {
@@ -83,6 +84,30 @@ namespace DnDBattle.ViewModels
             }
         }
 
+        private bool _isLoading;
+        public bool IsLoading
+        {
+            get => _isLoading;
+            set
+            {
+                _isLoading = value;
+                OnPropertyChanged(nameof(IsLoading));
+            }
+        }
+
+        private string _loadingMessage;
+        public string LoadingMessage
+        {
+            get => _loadingMessage;
+            set
+            {
+                _loadingMessage = value;
+                OnPropertyChanged(nameof(LoadingMessage));
+            }
+        }
+
+
+
         #endregion
 
         private CreatureDatabaseService _dbService;
@@ -128,30 +153,48 @@ namespace DnDBattle.ViewModels
             OpenCreatureBrowserCommand = new RelayCommand(OpenCreatureBrowser);
 
             _initiativeManager = new InitiativeManager(Tokens);
-
-            _ = LoadCreaturesFromDatabaseAsync();
         }
 
         public async Task LoadCreaturesFromDatabaseAsync()
         {
+            IsLoading = true;
+            LoadingMessage = "Connecting to database...";
+
             try
             {
-                var creatures = await _dbService.SearchCreaturesAsync(sortBy: "Name", limit: 10000);
-
-                Application.Current?.Dispatcher.Invoke(() =>
+                await Task.Run(async () =>
                 {
-                    CreatureBank.Clear();
-                    foreach (var creature in creatures)
+                    await Application.Current.Dispatcher.InvokeAsync(() =>
                     {
-                        CreatureBank.Add(creature);
-                    }
+                        LoadingMessage = "Loading creatures from datsbase";
+                    });
 
+                    var creatures = await _dbService.SearchCreaturesAsync(sortBy: "Name", limit: 10000);
+
+                    await Application.Current.Dispatcher.InvokeAsync(() =>
+                    {
+                        LoadingMessage = $"Adding {creatures.Count} creatures...";
+
+                        CreatureBank.Clear();
+                        foreach (var creature in creatures)
+                        {
+                            CreatureBank.Add(creature);
+                        }
+                    });
+                });
+
+                Application.Current.Dispatcher.Invoke(() =>
+                {
                     RefreshCreatureBankView();
                 });
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error loading creatures from database: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error loading creatures: {ex.Message}");
+            }
+            finally
+            {
+                IsLoading = false;
             }
         }
 
