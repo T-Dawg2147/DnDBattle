@@ -37,6 +37,7 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="320"/>
                 <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
             <!-- Sidebar: scrollable so expanders reflow and collapse moves content up -->
@@ -44,7 +45,6 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
                         <TextBlock Text="Encounter" FontSize="18" Margin="4" Foreground="White"/>
-                        <Button Content="Add Token" Command="{Binding AddTokenCommand}" Margin="0,8"/>
                         <Button Content="Add Creature" Command="{Binding OpenCreatureBrowserCommand}" Margin="0,8"/>
                         <Button Content="Load Map Image" Command="{Binding LoadMapCommand}" Margin="0,8"/>
 
@@ -88,25 +88,6 @@
                                 </ListBox>
                             </Border>
                         </StackPanel>
-
-                        <Expander Header="Creature Bank" IsExpanded="True" Margin="0,8" Foreground="White">
-                            <ListBox x:Name="CreatureBankList"
-                                     ItemsSource="{Binding CreatureBank}"
-                                     SelectedItem="{Binding SelectedBankItem}"
-                                     SelectedValuePath="Id"
-                                     MouseDoubleClick="CreatureBankList_MouseDoubleClick"
-                                     Foreground="Black"
-                                     PreviewMouseMove="CreatureBankList_PreviewMouseMove">
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal" Margin="4">
-                                            <Image Source="{Binding Image}" Width="36" Height="36" Margin="2"/>
-                                            <TextBlock Text="{Binding Name}" VerticalAlignment="Center" Margin="8,0,0,0"/>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
-                        </Expander>
 
                         <Expander Header="Combat Tracker" IsExpanded="True" Margin="0,8" Foreground="White">
                             <ListBox ItemsSource="{Binding Tokens}" SelectedItem="{Binding SelectedToken}" Foreground="Black">
@@ -165,6 +146,10 @@
                         Margin="0,10,0,0"/>
                 </StackPanel>
             </Border>
+
+            <views:CombatTrackerPanel Grid.Column="2" 
+                          DataContext="{Binding}"
+                          Width="280"/>
         </Grid>
     </DockPanel>
 </Window>

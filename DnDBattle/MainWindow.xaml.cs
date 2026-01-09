@@ -349,40 +349,6 @@ namespace DnDBattle
             if (Options.LiveMode) Options.AutoResolveAOOs = false;
         }
 
-        private void CreatureBankList_PreviewMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
-        {
-            if (e.LeftButton != MouseButtonState.Pressed) return;
-            if (!(DataContext is MainViewModel vm)) return;
-            var lb = CreatureBankList;
-            var item = lb.SelectedItem as Token;
-            if (item == null) return;
-
-            DragDrop.DoDragDrop(lb, new System.Windows.DataObject("DnDBattle.Token", item), System.Windows.DragDropEffects.Copy);
-        }
-
-        private void CreatureBankList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
-        {
-            if (!(DataContext is MainViewModel vm)) return;
-            var proto = vm.SelectedBankItem;
-            if (proto == null) return;
-
-            var editable = new Token()
-            {
-                Name = proto.Name,
-                ArmorClass = proto.ArmorClass,
-                HP = proto.HP,
-                InitiativeModifier = proto.InitiativeModifier,
-                Speed = proto.Speed,
-                Image = proto.Image,
-                IsPlayer = proto.IsPlayer,
-                SizeInSquares = proto.SizeInSquares,
-                Actions = proto.Actions != null ? new List<Models.Action>(proto.Actions) : new List<Models.Action>()
-
-            };
-
-            vm.SelectedToken = editable;
-        }
-
         private async void CommitMove_Click(object sender, RoutedEventArgs e)
         {
             if (BattleGrid != null)
@@ -548,27 +514,6 @@ namespace DnDBattle
                 catch (Exception ex)
                 {
                     Debug.WriteLine($"Failed to save CreatureBank: {ex.Message}");
-                }
-            }
-        }
-
-        protected override void OnInitialized(EventArgs e)
-        {
-            base.OnInitialized(e);
-
-            if (DataContext is MainViewModel vm && File.Exists(CreatureBankPath))
-            {
-                try
-                {
-                    var json = File.ReadAllText(CreatureBankPath);
-                    var creatures = JsonSerializer.Deserialize<List<Token>>(json);
-                    foreach (var creature in creatures)
-                        vm.CreatureBank.Add(creature);
-                    Debug.WriteLine($"Loaded CreatureBank from {CreatureBankPath}");
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"Failed to load CreatureBank: {ex.Message}");
                 }
             }
         }

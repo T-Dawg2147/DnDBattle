@@ -113,6 +113,18 @@ namespace DnDBattle.Models
 
         // === Combat Tracking Properties ===
 
+        // Current Turn
+        private bool _isCurrentTurn;
+        public bool IsCurrentTurn
+        {
+            get => _isCurrentTurn;
+            set
+            {
+                _isCurrentTurn = value;
+                OnPropertyChanged(nameof(IsCurrentTurn));
+            }
+        }
+
         // Conditions
         private Condition _conditions = Condition.None;
         public Condition Conditions

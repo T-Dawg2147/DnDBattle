@@ -11,6 +11,8 @@ using System.Windows.Data;
 using System.DirectoryServices;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Diagnostics;
+using System.Windows.Media.Animation;
 
 namespace DnDBattle.Views
 {
@@ -26,6 +28,9 @@ namespace DnDBattle.Views
         private string _currentGrouping = "Type";
         private bool _isInitialized = false;
 
+        private Storyboard _spinningStoryboard;
+        private bool _isLoading = false;
+
         public CreatureBrowserWindow()
         {
             InitializeComponent();
@@ -34,100 +39,108 @@ namespace DnDBattle.Views
 
         private async void CreatureBrowserWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            _vm = DataContext as MainViewModel;
-            if (_vm == null) return;
+            Debug.WriteLine("CreatureBrowserWindow_Loaded called");
 
+            _vm = DataContext as MainViewModel;
             _isInitialized = true;
 
-            await LoadCreaturesFromDatabase();
+            if (_vm == null)
+            {
+                Debug.WriteLine("ViewModel is null!");
+                return;
+            }
+
+            if (_vm.CreatureBank != null && _vm.CreatureBank.Count > 0)
+            {
+                Debug.WriteLine($"Using {_vm.CreatureBank.Count} creatures from ViewModel");
+
+                _allCreatures = _vm.CreatureBank.ToList();
+                _filteredCreatures = new List<Token>(_allCreatures);
+
+                UpdateTreeView();
+                UpdateCreatureCount();
+            }
+            else
+            {
+                Debug.WriteLine("ViewModel has no creatures, loading from database...");
+                await LoadCreaturesFromDatabase();
+            }
         }
 
         #region Data Loading
 
-        /*private async Task LoadCreaturesFromDatabase()
-        {
-            if (!_isInitialized) return;
-            try
-            {
-                using (var dbService = new CreatureDatabaseService())
-                {
-                    _allCreatures = await dbService.SearchCreaturesAsync(sortBy: "Name", limit: 10000);
-                }
-                _filteredCreatures = new List<Token>(_allCreatures);
-
-                await Dispatcher.InvokeAsync(() =>
-                {
-                    UpdateTreeView();
-                    UpdateCreatureCount();
-                });
-                
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error loading creatures: {ex.Message}", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }*/
-
-        // DEBUG METHOD
         private async System.Threading.Tasks.Task LoadCreaturesFromDatabase()
         {
             if (!_isInitialized) return;
 
             try
             {
-                using (var dbService = new CreatureDatabaseService())
+                SetLoadingState(true, "Loading from database...");
+
+                List<Token> loadedCreatures = null;
+
+                await System.Threading.Tasks.Task.Run(async () =>
                 {
-                    _allCreatures = await System.Threading.Tasks.Task.Run(async () =>
+                    using (var dbService = new CreatureDatabaseService())
                     {
-                        return await dbService.SearchCreaturesAsync(
+                        loadedCreatures = await dbService.SearchCreaturesAsync(
                             sortBy: "Name",
                             limit: 10000);
-                    });
-                }
-
-                // DEBUG: Log some info about the creatures
-                System.Diagnostics.Debug.WriteLine($"Loaded {_allCreatures.Count} creatures");
-
-                // Check what types we have
-                var types = _allCreatures
-                    .GroupBy(c => c.Type ?? "NULL")
-                    .Select(g => $"{g.Key}: {g.Count()}")
-                    .ToList();
-
-                System.Diagnostics.Debug.WriteLine("Types found:");
-                foreach (var t in types)
-                {
-                    System.Diagnostics.Debug.WriteLine($"  {t}");
-                }
-
-                // Check first few creatures
-                foreach (var c in _allCreatures.Take(5))
-                {
-                    System.Diagnostics.Debug.WriteLine($"Creature: {c.Name}, Type: '{c.Type}', CR: '{c.ChallengeRating}'");
-                }
-
-                _filteredCreatures = new List<Token>(_allCreatures);
+                    }
+                });
 
                 await Dispatcher.InvokeAsync(() =>
                 {
+                    _allCreatures = loadedCreatures ?? new List<Token>();
+                    _filteredCreatures = new List<Token>(_allCreatures);
+
+                    // Also update the ViewModel so it's cached for next time
+                    if (_vm != null && _vm.CreatureBank.Count == 0)
+                    {
+                        foreach (var creature in _allCreatures)
+                        {
+                            _vm.CreatureBank.Add(creature);
+                        }
+                    }
+
                     UpdateTreeView();
                     UpdateCreatureCount();
                 });
+
+                SetLoadingState(false);
             }
             catch (Exception ex)
             {
+                SetLoadingState(false);
+                System.Diagnostics.Debug.WriteLine($"Error loading creatures: {ex.Message}");
                 MessageBox.Show($"Error loading creatures: {ex.Message}", "Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-
         private async void BtnReload_Click(object sender, RoutedEventArgs e)
         {
+            var result = MessageBox.Show(
+                "Reload all creatures from the database?\n\nThis will refresh the creature list with any changes made to the datebase.",
+                "Reload Creatures",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result != MessageBoxResult.Yes) return;
+
+            if (_vm != null)
+            {
+                _vm.CreatureBank.Clear();
+            }
+
+            _allCreatures.Clear();
+            _filteredCreatures.Clear();
+            CreatureTree?.Items.Clear();
+
             await LoadCreaturesFromDatabase();
-            MessageBox.Show($"Reloaded {_allCreatures.Count} creatures from database.", "Reload Complete", 
-                MessageBoxButton.OK, MessageBoxImage.Information);
+
+            MessageBox.Show($"Reloaded {_allCreatures.Count} creatures from database.",
+                "Reload Complete", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         #endregion
@@ -666,6 +679,29 @@ namespace DnDBattle.Views
                 SizeInSquares = prototype.SizeInSquares,
                 Tags = prototype.Tags != null ? new List<string>(prototype.Tags) : new List<string>()
             };
+        }
+
+        private void SetLoadingState(bool isLoading, string status = "Loading...", int current = 0, int total = 0)
+        {
+            _isLoading = isLoading;
+
+            Dispatcher.Invoke(() =>
+            {
+                if (LoadingStatusBar != null)
+                {
+                    LoadingStatusBar.Visibility = isLoading ? Visibility.Visible : Visibility.Collapsed;
+                }
+
+                if (TxtLoadingStatus != null)
+                {
+                    TxtLoadingStatus.Text = status;
+                }
+
+                if (TxtLoadingProgress != null)
+                {
+                    TxtLoadingProgress.Text = total > 0 ? $"{current:N0} / {total:N0}" : "";
+                }
+            });
         }
 
         #endregion

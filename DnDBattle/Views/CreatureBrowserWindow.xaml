@@ -137,50 +137,59 @@
             </Grid.ColumnDefinitions>
 
             <!-- TreeView -->
-            <Border Grid.Column="0" Background="#1E1E1E" CornerRadius="4">
+            <Border Grid.Row="0" Background="#1E1E1E" CornerRadius="4,4,0,0">
                 <TreeView x:Name="CreatureTree" 
-                          Background="Transparent"
-                          BorderThickness="0"
-                          Padding="5"
-                          SelectedItemChanged="CreatureTree_SelectedItemChanged"
-                          MouseDoubleClick="CreatureTree_MouseDoubleClick">
-                    <TreeView.Resources>
-                        <!-- Style for group nodes -->
-                        <HierarchicalDataTemplate x:Key="GroupTemplate" ItemsSource="{Binding Creatures}">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="{Binding GroupName}" Style="{StaticResource GroupHeaderStyle}"/>
-                                <Border Style="{StaticResource CountBadgeStyle}">
-                                    <TextBlock Text="{Binding Count}" Foreground="#AAA" FontSize="11"/>
-                                </Border>
-                            </StackPanel>
-                            <HierarchicalDataTemplate.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid Margin="0,2">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-
-                                        <Border Grid.Column="0" Width="24" Height="24" 
-                                                Background="#333" CornerRadius="3" Margin="0,0,8,0">
-                                            <Image Source="{Binding IconPath}" Stretch="Uniform"/>
-                                        </Border>
-
-                                        <TextBlock Grid.Column="1" Text="{Binding Name}" 
-                                                   Foreground="White" VerticalAlignment="Center"/>
-
-                                        <TextBlock Grid.Column="2" VerticalAlignment="Center"
-                                                   Foreground="#888" FontSize="11" Margin="10,0,0,0">
-                                            <Run Text="CR "/>
-                                            <Run Text="{Binding ChallengeRating}"/>
-                                        </TextBlock>
-                                    </Grid>
-                                </DataTemplate>
-                            </HierarchicalDataTemplate.ItemTemplate>
-                        </HierarchicalDataTemplate>
-                    </TreeView.Resources>
+                  Background="Transparent"
+                  BorderThickness="0"
+                  Padding="5"
+                  VirtualizingPanel.IsVirtualizing="True"
+                  VirtualizingPanel.VirtualizationMode="Recycling"
+                  SelectedItemChanged="CreatureTree_SelectedItemChanged"
+                  MouseDoubleClick="CreatureTree_MouseDoubleClick">
                 </TreeView>
+            </Border>
+
+            <!-- Loading Status Bar -->
+            <Border x:Name="LoadingStatusBar" Grid.Row="1" 
+            Background="#252526" 
+            CornerRadius="0,0,4,4"
+            Padding="10,8"
+            Visibility="Collapsed">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Spinning indicator -->
+                    <Border Grid.Column="0" Width="16" Height="16" Margin="0,0,10,0">
+                        <Border.RenderTransform>
+                            <RotateTransform x:Name="SpinnerRotation" CenterX="8" CenterY="8"/>
+                        </Border.RenderTransform>
+                        <Ellipse Width="16" Height="16" 
+                         StrokeThickness="2" 
+                         Stroke="#4FC3F7"
+                         StrokeDashArray="3,2"/>
+                    </Border>
+
+                    <!-- Status text -->
+                    <TextBlock x:Name="TxtLoadingStatus" 
+                       Grid.Column="1"
+                       Text="Loading creatures..."
+                       Foreground="#AAA"
+                       FontSize="12"
+                       VerticalAlignment="Center"/>
+
+                    <!-- Progress count -->
+                    <TextBlock x:Name="TxtLoadingProgress" 
+                       Grid.Column="2"
+                       Text="0 / 0"
+                       Foreground="#4FC3F7"
+                       FontSize="12"
+                       FontWeight="Bold"
+                       VerticalAlignment="Center"/>
+                </Grid>
             </Border>
 
             <!-- Splitter -->

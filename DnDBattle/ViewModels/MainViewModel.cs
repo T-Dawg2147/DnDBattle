@@ -110,6 +110,56 @@ namespace DnDBattle.ViewModels
 
         #endregion
 
+        #region Combat State
+
+        private bool _isInCombat;
+        public bool IsInCombat
+        {
+            get => _isInCombat;
+            set
+            {
+                _isInCombat = value;
+                OnPropertyChanged(nameof(IsInCombat));
+            }
+        }
+
+        private int _currentRound;
+        public int CurrentRound
+        {
+            get => _currentRound;
+            set
+            {
+                _currentRound = value;
+                OnPropertyChanged(nameof(CurrentRound));
+            }
+        }
+
+        private int _currentTurnIndex;
+        public int CurrentTurnIndex
+        {
+            get => _currentTurnIndex;
+            set
+            {
+                _currentTurnIndex = value;
+                OnPropertyChanged(nameof(CurrentTurnIndex));
+            }
+        }
+
+        public string CombatButtonText => IsInCombat ? "End Combat" : "Start Combat";
+        public bool CanStartCombat => Tokens.Count > 0;
+
+        private ObservableCollection<Token> _initativeOrder = new ObservableCollection<Token>();
+        public ObservableCollection<Token> InitiativeOrder
+        {
+            get => _initativeOrder;
+            set
+            {
+                SetProperty(ref _initativeOrder, value);
+            }
+        }
+
+        #endregion
+
         private CreatureDatabaseService _dbService;
         public string SearchText { get; set; } = "";
         public string SelectedCategory { get; set; } = "All";
@@ -120,7 +170,6 @@ namespace DnDBattle.ViewModels
         public IRelayCommand RollDiceCommand { get; }
 
         public IRelayCommand RollAllInitiativeCommand { get; }
-        public IRelayCommand NextTurnCommand { get; }
 
         public IRelayCommand ToggleRulerCommand { get; }
         public IRelayCommand AddObstacleCommand { get; }
@@ -130,29 +179,49 @@ namespace DnDBattle.ViewModels
 
         #endregion
 
-        private InitiativeManager _initiativeManager;
+        #region Combat Commands
 
-        public ObservableCollection<Token> InitiativeOrder => 
-            new ObservableCollection<Token>(Tokens.OrderByDescending(t => t.Initiative).ToList());
+        public IRelayCommand StartCombatCommand { get; }
+        public IRelayCommand EndCombatCommand { get; }
+        public IRelayCommand ToggleCombatCommand { get; }
+        public IRelayCommand NextTurnCommand { get; }
+        public IRelayCommand PreviousTurnCommand { get; }
+        public IRelayCommand RerollInitiativeCommand { get; }
+
+        #endregion
+
+        private InitiativeManager _initiativeManager;
 
         public MainViewModel()
         {
             _dbService = new CreatureDatabaseService();
 
-            AddTokenCommand = new RelayCommand(AddToken);
             LoadMapCommand = new RelayCommand(LoadMap);
             RollDiceCommand = new RelayCommand(RollDice);
-
-            RollAllInitiativeCommand = new RelayCommand(RollAllInitiative);
-            NextTurnCommand = new RelayCommand(NextTurn);
-
             ToggleRulerCommand = new RelayCommand(ToggleRuler);
             AddObstacleCommand = new RelayCommand(AddSampleObstacle);
             AddLightCommand = new RelayCommand(AddSampleLight);
-
             OpenCreatureBrowserCommand = new RelayCommand(OpenCreatureBrowser);
 
+            // Combat Commands
+            ToggleCombatCommand = new RelayCommand(ToggleCombat);
+            StartCombatCommand = new RelayCommand(StartCombat, () => CanStartCombat);
+            EndCombatCommand = new RelayCommand(EndCombat);
+            NextTurnCommand = new RelayCommand(NextTurn, () => IsInCombat);
+            PreviousTurnCommand = new RelayCommand(PreviousTurn, () => IsInCombat);
+            RollAllInitiativeCommand = new RelayCommand(RollAllInitiative);
+            RerollInitiativeCommand = new RelayCommand(RerollSingleInitiative);
+
             _initiativeManager = new InitiativeManager(Tokens);
+
+            Tokens.CollectionChanged += (s, e) =>
+            {
+                OnPropertyChanged(nameof(CanStartCombat));
+                if (IsInCombat)
+                {
+                    RefreshInitiativeOrder();
+                }
+            };
         }
 
         public async Task LoadCreaturesFromDatabaseAsync()
@@ -198,15 +267,6 @@ namespace DnDBattle.ViewModels
             }
         }
 
-        private void AddToken()
-        {
-            var t = new Token { Name = "New Token", GridX = 0, GridY = 0, HP = 10 };
-            Tokens.Add(t);
-            SelectedToken = t;
-            Log("System", $"Added token {t.Name}");
-            OnPropertyChanged(nameof(InitiativeOrder));
-        }
-
         private void LoadMap()
         {
             var dlg = new OpenFileDialog();
@@ -225,28 +285,176 @@ namespace DnDBattle.ViewModels
             Log("Dice", $"{DiceExpression} -> {result.Total} ({string.Join(", ", result.Individual)})");
         }
 
-        private void RollAllInitiative()
+        #region Combat Methods
+
+        private void ToggleCombat()
         {
-            // Test default dice set to 1d20.
-            var rolls = _initiativeManager.RollAll();
-            foreach (var r in rolls)
+            if (IsInCombat)
+                EndCombat();
+            else
+                StartCombat();
+        }
+
+        private void StartCombat()
+        {
+            if (Tokens.Count == 0)
             {
-                Log("Initiative", $"{r.Token.Name} rolled {r.Roll} + {r.Modifier} => {r.Total}");
+                MessageBox.Show(
+                    "Add some creatures to the battle map before starting combat! ",
+                    "No Creatures",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            Log("Combat", "⚔️ Combat Started!");
+
+            RollAllInitiative();
+
+            RefreshInitiativeOrder();
+
+            IsInCombat = true;
+            CurrentRound = 1;
+            CurrentTurnIndex = 0;
+
+            Log("Combat", $"Round {CurrentRound} begins!");
+
+            if (InitiativeOrder.Count > 0)
+            {
+                var firstToken = InitiativeOrder[0];
+                firstToken.IsCurrentTurn = true;
+                CurrentTurnToken = firstToken;
+                SelectedToken = firstToken;
+                Log("Turn", $"🎯 {firstToken.Name}'s turn (Initiative: {firstToken.Initiative})");
             }
 
             OnPropertyChanged(nameof(InitiativeOrder));
         }
 
-        private void NextTurn()
+        private void EndCombat()
         {
-            _initiativeManager.NextTurn();
-            var ct = _initiativeManager.CurrentToken;
-            if (ct != null)
+            Log("Combat", "🏁 Combat Ended!");
+
+            IsInCombat = false;
+            CurrentRound = 0;
+            CurrentTurnIndex = 0;
+
+            foreach (var token in Tokens)
             {
-                SelectedToken = ct;
-                Log("Turn", $"Now {ct.Name}'s turn (Initiative {ct.Initiative})");
+                token.IsCurrentTurn = false;
+            }
+
+            CurrentTurnToken = null;
+            OnPropertyChanged(nameof(InitiativeOrder));
+        }
+
+        private void RollAllInitiative()
+        {
+            Log("Initiative", "🎲 Rolling initiative for all creatures...");
+
+            foreach (var token in Tokens)
+            {
+                var roll = DiceRoller.RollExpression("1d20");
+                token.Initiative = roll.Total + token.InitiativeModifier;
+
+                Log("Initiatie", $"  {token.Name}:  {roll.Total} + {token.InitiativeModifier} = {token.Initiative}");
+            }
+
+            RefreshInitiativeOrder();
+            OnPropertyChanged(nameof(InitiativeOrder));
+        }
+
+        private void RerollSingleInitiative()
+        {
+            if (SelectedToken == null) return;
+
+            var roll = DiceRoller.RollExpression("1d20");
+            SelectedToken.Initiative = roll.Total + SelectedToken.InitiativeModifier;
+
+            Log("Initiative", $"🎲 {SelectedToken.Name} rerolled:  {roll.Total} + {SelectedToken.InitiativeModifier} = {SelectedToken.Initiative}");
+
+            RefreshInitiativeOrder();
+            OnPropertyChanged(nameof(InitiativeOrder));
+        }
+
+        private void RefreshInitiativeOrder()
+        {
+            var sorted = Tokens
+                .OrderByDescending(t => t.Initiative)
+                .ThenByDescending(t => t.InitiativeModifier)
+                .ThenBy(t => t.Name)
+                .ToList();
+
+            InitiativeOrder.Clear();
+            foreach (var token in sorted)
+            {
+                InitiativeOrder.Add(token);
             }
         }
+
+        private void NextTurn()
+        {
+            if (!IsInCombat || InitiativeOrder.Count == 0) return;
+
+            if (CurrentTurnIndex >= 0 && CurrentTurnIndex < InitiativeOrder.Count)
+            {
+                InitiativeOrder[CurrentTurnIndex].IsCurrentTurn = false;
+            }
+
+            CurrentTurnIndex++;
+
+            if (CurrentTurnIndex >= InitiativeOrder.Count)
+            {
+                CurrentTurnIndex = 0;
+                CurrentRound++;
+                Log("Combat", $"⚔️ Round {CurrentRound} begins!");
+            }
+
+            UpdateCurrentTurnToken();
+        }
+
+        private void PreviousTurn()
+        {
+            if (!IsInCombat || InitiativeOrder.Count == 0) return;
+
+            if (CurrentTurnIndex >= 0 && CurrentTurnIndex < InitiativeOrder.Count)
+            {
+                InitiativeOrder[CurrentTurnIndex].IsCurrentTurn = false;
+            }
+
+            CurrentTurnIndex--;
+
+            if (CurrentTurnIndex < 0)
+            {
+                if (CurrentRound > 1)
+                {
+                    CurrentRound--;
+                    CurrentTurnIndex = InitiativeOrder.Count - 1;
+                    Log("Combat", "⚔️ Back to Round {CurrentRound}");
+                }
+                else
+                {
+                    CurrentTurnIndex = 0;
+                }
+            }
+
+            UpdateCurrentTurnToken();
+        }
+
+        private void UpdateCurrentTurnToken()
+        {
+            if (!IsInCombat || InitiativeOrder.Count == 0) return;
+
+            if (CurrentTurnIndex >= 0 && CurrentTurnIndex < InitiativeOrder.Count)
+            {
+                var token = InitiativeOrder[CurrentTurnIndex];
+                token.IsCurrentTurn = true;
+                CurrentTurnToken = token;
+                SelectedToken = token;
+                Log("Turn", $"🎯 {token.Name}'s turn");
+            }
+        }
+
+        #endregion
 
         private bool _rulerEnabled = false;
         public bool RulerEnabled { get => _rulerEnabled; set => SetProperty(ref _rulerEnabled, value); }
