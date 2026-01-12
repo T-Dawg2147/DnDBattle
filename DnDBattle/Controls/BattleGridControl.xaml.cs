@@ -121,6 +121,14 @@ namespace DnDBattle.Controls
             UpdateGridVisual();
             RebuildTokenVisuals();
             RedrawLighting();
+
+            if (DataContext is MainViewModel vm)
+            {
+                vm.RequestTokenVisualsRefresh += () =>
+                {
+                    Dispatcher.Invoke(() => RebuildTokenVisuals());
+                };
+            }
         }
 
         private void AddVisualOverlay(DrawingVisual visual, int zIndex, bool makeBlur = false)
@@ -1505,62 +1513,6 @@ namespace DnDBattle.Controls
             return screenPt;
         }
 
-        private MatrixTransform _transform_group_inverse_helper()
-        {
-            try
-            {
-                var inv = _transformGroup.Inverse;
-                return inv as MatrixTransform;
-            }
-            catch { return null; }
-        }
-
-        private Point WorldToScreen(Point worldPoint)
-        {
-            return new Point(
-                (worldPoint.X * _zoom.ScaleX) + _pan.X,
-                (worldPoint.Y * _zoom.ScaleY) + _pan.Y);
-        }
-
-        private Token CloneTokenForPlacement(Token prototype)
-        {
-            return new Token
-            {
-                Id = Guid.NewGuid(),
-                Name = prototype.Name,
-                Size = prototype.Size,
-                Type = prototype.Type,
-                Alignment = prototype.Alignment,
-                ChallengeRating = prototype.ChallengeRating,
-                ArmorClass = prototype.ArmorClass,
-                MaxHP = prototype.MaxHP,
-                HP = prototype.MaxHP,
-                HitDice = prototype.HitDice,
-                InitiativeModifier = prototype.InitiativeModifier,
-                Speed = prototype.Speed,
-                Str = prototype.Str,
-                Dex = prototype.Dex,
-                Con = prototype.Con,
-                Int = prototype.Int,
-                Wis = prototype.Wis,
-                Cha = prototype.Cha,
-                Skills = prototype.Skills != null ? new List<string>(prototype.Skills) : new List<string>(),
-                Senses = prototype.Senses,
-                Languages = prototype.Languages,
-                Immunities = prototype.Immunities,
-                Resistances = prototype.Resistances,
-                Vulnerabilities = prototype.Vulnerabilities,
-                Traits = prototype.Traits,
-                Actions = prototype.Actions != null ? new List<Models.Action>(prototype.Actions) : new List<Models.Action>(),
-                BonusActions = prototype.BonusActions != null ? new List<Models.Action>(prototype.BonusActions) : new List<Models.Action>(),
-                Reactions = prototype.Reactions != null ? new List<Models.Action>(prototype.Reactions) : new List<Models.Action>(),
-                LegendaryActions = prototype.LegendaryActions != null ? new List<Models.Action>(prototype.LegendaryActions) : new List<Models.Action>(),
-                Notes = prototype.Notes,
-                IconPath = prototype.IconPath,
-                SizeInSquares = prototype.SizeInSquares,
-                Tags = prototype.Tags != null ? new List<string>(prototype.Tags) : new List<string>()
-            };
-        }
         #endregion
     }
 }

@@ -18,6 +18,8 @@ namespace DnDBattle.ViewModels
 {
     public class MainViewModel : ObservableObject
     {
+        public event System.Action RequestTokenVisualsRefresh;
+
         public ObservableCollection<Token> Tokens { get; } = new ObservableCollection<Token>();
         public ObservableCollection<Token> CreatureBank { get; } = new ObservableCollection<Token>();
         public ObservableCollection<Obstacle> Obstacles { get; } = new ObservableCollection<Obstacle>();
@@ -118,8 +120,15 @@ namespace DnDBattle.ViewModels
             get => _isInCombat;
             set
             {
-                _isInCombat = value;
-                OnPropertyChanged(nameof(IsInCombat));
+                if (SetProperty(ref _isInCombat, value))
+                {
+                    OnPropertyChanged(nameof(CombatButtonText));
+                    OnPropertyChanged(nameof(CanStartCombat));
+
+                    (NextTurnCommand as RelayCommand)?.NotifyCanExecuteChanged();
+                    (PreviousTurnCommand as RelayCommand)?.NotifyCanExecuteChanged();
+                    (ToggleCombatCommand as RelayCommand)?.NotifyCanExecuteChanged();
+                }
             }
         }
 
@@ -149,7 +158,7 @@ namespace DnDBattle.ViewModels
         public bool CanStartCombat => Tokens.Count > 0;
 
         private ObservableCollection<Token> _initativeOrder = new ObservableCollection<Token>();
-        public ObservableCollection<Token> InitiativeOrder
+        public ObservableCollection<Token> InitiativeOrderList
         {
             get => _initativeOrder;
             set
@@ -205,12 +214,11 @@ namespace DnDBattle.ViewModels
 
             // Combat Commands
             ToggleCombatCommand = new RelayCommand(ToggleCombat);
-            StartCombatCommand = new RelayCommand(StartCombat, () => CanStartCombat);
+            StartCombatCommand = new RelayCommand(StartCombat);
             EndCombatCommand = new RelayCommand(EndCombat);
-            NextTurnCommand = new RelayCommand(NextTurn, () => IsInCombat);
-            PreviousTurnCommand = new RelayCommand(PreviousTurn, () => IsInCombat);
+            NextTurnCommand = new RelayCommand(NextTurn);
+            PreviousTurnCommand = new RelayCommand(PreviousTurn);
             RollAllInitiativeCommand = new RelayCommand(RollAllInitiative);
-            RerollInitiativeCommand = new RelayCommand(RerollSingleInitiative);
 
             _initiativeManager = new InitiativeManager(Tokens);
 
@@ -299,52 +307,79 @@ namespace DnDBattle.ViewModels
         {
             if (Tokens.Count == 0)
             {
-                MessageBox.Show(
-                    "Add some creatures to the battle map before starting combat! ",
+                System.Windows.MessageBox.Show(
+                    "Add some creatures to the battle map before starting combat!",
                     "No Creatures",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Information);
                 return;
             }
 
             Log("Combat", "⚔️ Combat Started!");
 
-            RollAllInitiative();
+            // Roll initiative for all tokens
+            foreach (var token in Tokens)
+            {
+                var roll = DiceRoller.RollExpression("1d20");
+                token.Initiative = roll.Total + token.InitiativeModifier;
+                Log("Initiative", $"  {token.Name}:  {roll.Total} + {token.InitiativeModifier} = {token.Initiative}");
+            }
 
+            // Sort and set up initiative order
             RefreshInitiativeOrder();
 
-            IsInCombat = true;
+            // Set combat state AFTER rolling
             CurrentRound = 1;
             CurrentTurnIndex = 0;
+            IsInCombat = true;  // This triggers property changed notifications
 
             Log("Combat", $"Round {CurrentRound} begins!");
 
-            if (InitiativeOrder.Count > 0)
+            // Set first turn
+            if (InitiativeOrderList.Count > 0)
             {
-                var firstToken = InitiativeOrder[0];
+                // Clear all turn markers first
+                foreach (var t in Tokens)
+                {
+                    t.IsCurrentTurn = false;
+                }
+
+                var firstToken = InitiativeOrderList[0];
                 firstToken.IsCurrentTurn = true;
                 CurrentTurnToken = firstToken;
                 SelectedToken = firstToken;
                 Log("Turn", $"🎯 {firstToken.Name}'s turn (Initiative: {firstToken.Initiative})");
             }
 
-            OnPropertyChanged(nameof(InitiativeOrder));
+            // Force UI refresh
+            OnPropertyChanged(nameof(InitiativeOrderList));
+            OnPropertyChanged(nameof(InitiativeOrderList));
+            OnPropertyChanged(nameof(CombatButtonText));
+
+            // Request battle grid to refresh token visuals
+            RequestTokenVisualsRefresh?.Invoke();
         }
 
         private void EndCombat()
         {
             Log("Combat", "🏁 Combat Ended!");
 
-            IsInCombat = false;
-            CurrentRound = 0;
-            CurrentTurnIndex = 0;
-
+            // Clear turn indicators
             foreach (var token in Tokens)
             {
                 token.IsCurrentTurn = false;
             }
 
             CurrentTurnToken = null;
+            CurrentRound = 0;
+            CurrentTurnIndex = 0;
+            IsInCombat = false;  // This triggers property changed
+
             OnPropertyChanged(nameof(InitiativeOrder));
+            OnPropertyChanged(nameof(InitiativeOrderList));
+            OnPropertyChanged(nameof(CombatButtonText));
+
+            RequestTokenVisualsRefresh?.Invoke();
         }
 
         private void RollAllInitiative()
@@ -360,7 +395,7 @@ namespace DnDBattle.ViewModels
             }
 
             RefreshInitiativeOrder();
-            OnPropertyChanged(nameof(InitiativeOrder));
+            OnPropertyChanged(nameof(InitiativeOrderList));
         }
 
         private void RerollSingleInitiative()
@@ -373,7 +408,7 @@ namespace DnDBattle.ViewModels
             Log("Initiative", $"🎲 {SelectedToken.Name} rerolled:  {roll.Total} + {SelectedToken.InitiativeModifier} = {SelectedToken.Initiative}");
 
             RefreshInitiativeOrder();
-            OnPropertyChanged(nameof(InitiativeOrder));
+            OnPropertyChanged(nameof(InitiativeOrderList));
         }
 
         private void RefreshInitiativeOrder()
@@ -384,52 +419,82 @@ namespace DnDBattle.ViewModels
                 .ThenBy(t => t.Name)
                 .ToList();
 
-            InitiativeOrder.Clear();
+            InitiativeOrderList.Clear();
             foreach (var token in sorted)
             {
-                InitiativeOrder.Add(token);
+                InitiativeOrderList.Add(token);
             }
+
+            OnPropertyChanged(nameof(InitiativeOrderList));
+            OnPropertyChanged(nameof(InitiativeOrder));
         }
 
         private void NextTurn()
         {
-            if (!IsInCombat || InitiativeOrder.Count == 0) return;
-
-            if (CurrentTurnIndex >= 0 && CurrentTurnIndex < InitiativeOrder.Count)
+            if (!IsInCombat || InitiativeOrderList.Count == 0)
             {
-                InitiativeOrder[CurrentTurnIndex].IsCurrentTurn = false;
+                System.Diagnostics.Debug.WriteLine("NextTurn: Not in combat or no tokens");
+                return;
             }
 
+            System.Diagnostics.Debug.WriteLine($"NextTurn: Current index = {CurrentTurnIndex}");
+
+            // Clear current turn marker
+            foreach (var t in Tokens)
+            {
+                t.IsCurrentTurn = false;
+            }
+
+            // Advance turn
             CurrentTurnIndex++;
 
-            if (CurrentTurnIndex >= InitiativeOrder.Count)
+            // Check if we've gone through everyone - new round! 
+            if (CurrentTurnIndex >= InitiativeOrderList.Count)
             {
                 CurrentTurnIndex = 0;
                 CurrentRound++;
                 Log("Combat", $"⚔️ Round {CurrentRound} begins!");
             }
 
-            UpdateCurrentTurnToken();
+            // Set new current turn
+            if (CurrentTurnIndex >= 0 && CurrentTurnIndex < InitiativeOrderList.Count)
+            {
+                var token = InitiativeOrderList[CurrentTurnIndex];
+                token.IsCurrentTurn = true;
+                CurrentTurnToken = token;
+                SelectedToken = token;
+                Log("Turn", $"🎯 {token.Name}'s turn");
+
+                System.Diagnostics.Debug.WriteLine($"NextTurn: Now {token.Name}'s turn");
+            }
+
+            OnPropertyChanged(nameof(InitiativeOrderList));
+
+            // Refresh token visuals to update current turn highlighting
+            RequestTokenVisualsRefresh?.Invoke();
         }
 
         private void PreviousTurn()
         {
-            if (!IsInCombat || InitiativeOrder.Count == 0) return;
+            if (!IsInCombat || InitiativeOrderList.Count == 0) return;
 
-            if (CurrentTurnIndex >= 0 && CurrentTurnIndex < InitiativeOrder.Count)
+            // Clear current turn marker
+            foreach (var t in Tokens)
             {
-                InitiativeOrder[CurrentTurnIndex].IsCurrentTurn = false;
+                t.IsCurrentTurn = false;
             }
 
+            // Go back
             CurrentTurnIndex--;
 
+            // Check if we need to go to previous round
             if (CurrentTurnIndex < 0)
             {
                 if (CurrentRound > 1)
                 {
                     CurrentRound--;
-                    CurrentTurnIndex = InitiativeOrder.Count - 1;
-                    Log("Combat", "⚔️ Back to Round {CurrentRound}");
+                    CurrentTurnIndex = InitiativeOrderList.Count - 1;
+                    Log("Combat", $"⚔️ Back to Round {CurrentRound}");
                 }
                 else
                 {
@@ -437,16 +502,27 @@ namespace DnDBattle.ViewModels
                 }
             }
 
-            UpdateCurrentTurnToken();
+            // Set new current turn
+            if (CurrentTurnIndex >= 0 && CurrentTurnIndex < InitiativeOrderList.Count)
+            {
+                var token = InitiativeOrderList[CurrentTurnIndex];
+                token.IsCurrentTurn = true;
+                CurrentTurnToken = token;
+                SelectedToken = token;
+                Log("Turn", $"🎯 {token.Name}'s turn");
+            }
+
+            OnPropertyChanged(nameof(InitiativeOrderList));
+            RequestTokenVisualsRefresh?.Invoke();
         }
 
         private void UpdateCurrentTurnToken()
         {
-            if (!IsInCombat || InitiativeOrder.Count == 0) return;
+            if (!IsInCombat || InitiativeOrderList.Count == 0) return;
 
-            if (CurrentTurnIndex >= 0 && CurrentTurnIndex < InitiativeOrder.Count)
+            if (CurrentTurnIndex >= 0 && CurrentTurnIndex < InitiativeOrderList.Count)
             {
-                var token = InitiativeOrder[CurrentTurnIndex];
+                var token = InitiativeOrderList[CurrentTurnIndex];
                 token.IsCurrentTurn = true;
                 CurrentTurnToken = token;
                 SelectedToken = token;
