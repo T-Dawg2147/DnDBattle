@@ -127,7 +127,21 @@
                 <Separator/>
                 <MenuItem Header="Grid Settings..." Click="MenuGridSettings_Click"/>
             </MenuItem>
+
+            <Rectangle Width="1" Fill="#444" Margin="8,2"/>
+
+            <MenuItem Header="🧱 Walls" Foreground="White">
+                <MenuItem Header="Draw Solid Wall" Click="DrawSolidWall_Click"/>
+                <MenuItem Header="Draw Door" Click="DrawDoor_Click"/>
+                <MenuItem Header="Draw Window" Click="DrawWindow_Click"/>
+                <MenuItem Header="Draw Half Wall" Click="DrawHalfWall_Click"/>
+                <Separator/>
+                <MenuItem Header="Stop Drawing" Click="StopWallDraw_Click"/>
+                <Separator/>
+                <MenuItem Header="Clear All Walls" Click="ClearAllWalls_Click"/>
+            </MenuItem>
         </Menu>
+        
 
         <!-- ==================== TOOLBAR ==================== -->
         <Border Grid.Row="1" Background="#252526" Padding="8,6">
@@ -271,9 +285,7 @@
                                 <Button Content="💡 Add Light Source" Click="AddLight_Click"
                                         Style="{StaticResource ModernButton}"
                                         HorizontalAlignment="Stretch" Margin="0,8,0,0"/>
-                                <Button Content="🧱 Add Obstacle" Click="AddSampleObstacle_Click"
-                                        Style="{StaticResource ModernButton}"
-                                        HorizontalAlignment="Stretch" Margin="0,8,0,0"/>
+                                <Button Content="🧱 Add Obstacle OBSOLETE"/>
                             </StackPanel>
                         </Border>
 

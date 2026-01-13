@@ -320,6 +320,11 @@ namespace DnDBattle.ViewModels
 
             Log("Combat", "⚔️ Combat Started!");
 
+            foreach (var token in Tokens)
+            {
+                token.ResetMovementForNewTurn();
+            }
+
             // Roll initiative for all tokens
             foreach (var token in Tokens)
             {
@@ -440,9 +445,7 @@ namespace DnDBattle.ViewModels
                 return;
             }
 
-            System.Diagnostics.Debug.WriteLine($"NextTurn: Current index = {CurrentTurnIndex}");
-
-            // Clear current turn marker
+            // Clear current turn marker from previous token
             foreach (var t in Tokens)
             {
                 t.IsCurrentTurn = false;
@@ -457,6 +460,12 @@ namespace DnDBattle.ViewModels
                 CurrentTurnIndex = 0;
                 CurrentRound++;
                 Log("Combat", $"⚔️ Round {CurrentRound} begins!");
+
+                // Reset movement for ALL tokens at the start of a new round
+                foreach (var t in Tokens)
+                {
+                    t.ResetMovementForNewTurn();
+                }
             }
 
             // Set new current turn
@@ -464,16 +473,13 @@ namespace DnDBattle.ViewModels
             {
                 var token = InitiativeOrderList[CurrentTurnIndex];
                 token.IsCurrentTurn = true;
+                token.ResetMovementForNewTurn(); // Reset this token's movement for their turn
                 CurrentTurnToken = token;
                 SelectedToken = token;
-                Log("Turn", $"🎯 {token.Name}'s turn");
-
-                System.Diagnostics.Debug.WriteLine($"NextTurn: Now {token.Name}'s turn");
+                Log("Turn", $"🎯 {token.Name}'s turn ({token.SpeedSquares} squares of movement)");
             }
 
             OnPropertyChanged(nameof(InitiativeOrderList));
-
-            // Refresh token visuals to update current turn highlighting
             RequestTokenVisualsRefresh?.Invoke();
         }
 

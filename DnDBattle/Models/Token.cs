@@ -70,7 +70,8 @@ namespace DnDBattle.Models
         private int _cha;
         public int Cha { get => _cha; set => SetProperty(ref _cha, value); }
 
-        // Derived / UI placement fields
+        #region Monement Tracking
+
         private int _gridX;
         public int GridX { get => _gridX; set => SetProperty(ref _gridX, value); }
 
@@ -78,6 +79,41 @@ namespace DnDBattle.Models
         public int GridY { get => _gridY; set => SetProperty(ref _gridY, value); }
 
         public int SizeInSquares { get; set; } = 1;
+
+        private int _movementUsedThisTurn;
+        public int MovementUsedThisTurn
+        {
+            get => _movementUsedThisTurn;
+            set
+            {
+                _movementUsedThisTurn = value;
+                OnPropertyChanged(nameof(MovementUsedThisTurn));
+                OnPropertyChanged(nameof(MovementRemainingThisTurn));
+                OnPropertyChanged(nameof(CanMoveThisTurn));
+                OnPropertyChanged(nameof(MovementStatusText));
+            }
+        }
+
+        public int MovementRemainingThisTurn => Math.Max(0, SpeedSquares - MovementUsedThisTurn);
+
+        public bool CanMoveThisTurn => MovementRemainingThisTurn > 0;
+
+        public string MovementStatusText => $"{MovementRemainingThisTurn} / {SpeedSquares} squares";
+
+        public void ResetMovementForNewTurn() =>
+            MovementUsedThisTurn = 0;
+
+        public bool TryUseMovement(int squares)
+        {
+            if (squares <= MovementRemainingThisTurn)
+            {
+                MovementUsedThisTurn += squares;
+                return true;
+            }
+            return false;
+        }
+
+        #endregion
 
         // Traits/features (will remain text to allow anything as input)
         private string _traits;

@@ -6,9 +6,11 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Configuration;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Automation.Provider;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -59,6 +61,9 @@ namespace DnDBattle.Controls
         private readonly DrawingVisual _lightingVisual = new DrawingVisual();
         private readonly DrawingVisual _obstacleDrawVisual = new DrawingVisual();
 
+        private readonly WallService _wallService = new WallService();
+        private readonly DrawingVisual _wallVisual = new DrawingVisual();
+
         private TranslateTransform _pan = new TranslateTransform();
         private ScaleTransform _zoom = new ScaleTransform(1, 1);
         private TransformGroup _transformGroup = new TransformGroup();
@@ -73,6 +78,17 @@ namespace DnDBattle.Controls
         private int _selectedVertexIndex = -1;
         private bool _isDraggingVertex = false;
         private Point _vertexDragOriginalPos;
+
+        // Wall Drawing State
+        private bool _wallDrawMode = false;
+        private Point? _wallDrawStart = null;
+        private Point _wallDrawPreview;
+        private WallType _currentWallType = WallType.Solid;
+        private Wall _selectedWall = null;
+        private bool _isDraggingWallEndpoint = false;
+        private bool _draggingWallIsStart = false;
+
+        public WallService WallService => _wallService;
 
         // undo / redo stacks for obstacle operations
         private readonly Stack<Models.ObstacleAction> _undoStack = new Stack<Models.ObstacleAction>();
@@ -114,7 +130,9 @@ namespace DnDBattle.Controls
             AddVisualOverlay(_movementVisual, 60);
             AddVisualOverlay(_pathVisual, 65);
             AddVisualOverlay(_obstacleDrawVisual, 75);
+            AddVisualOverlay(_wallVisual, 70);
 
+            _wallService.WallsChanged += () => RedrawWalls();
             Loaded += BattleGridControl_Loaded;
 
             // Allow dropping token prototypes from the Creature Bank
@@ -314,33 +332,89 @@ namespace DnDBattle.Controls
                 _draggingVisual.ReleaseMouseCapture();
                 var left = Canvas.GetLeft(_draggingVisual);
                 var top = Canvas.GetTop(_draggingVisual);
-                int gridX, gridY;
+                int newGridX, newGridY;
+
                 if (LockToGrid)
                 {
-                    gridX = (int)Math.Round(left / GridCellSize);
-                    gridY = (int)Math.Round(top / GridCellSize);
-                    Canvas.SetLeft(_draggingVisual, gridX * GridCellSize);
-                    Canvas.SetTop(_draggingVisual, gridY * GridCellSize);
+                    newGridX = (int)Math.Round(left / GridCellSize);
+                    newGridY = (int)Math.Round(top / GridCellSize);
                 }
                 else
                 {
-                    // keep pixel position but update token grid coords based on fractional position
-                    gridX = (int)Math.Floor(left / GridCellSize);
-                    gridY = (int)Math.Floor(top / GridCellSize);
+                    newGridX = (int)Math.Floor(left / GridCellSize);
+                    newGridY = (int)Math.Floor(top / GridCellSize);
                 }
 
                 if (_draggingVisual.Tag is Token token)
                 {
-                    token.GridX = gridX;
-                    token.GridY = gridY;
+                    int oldX = _dragStartGridX;
+                    int oldY = _dragStartGridY;
 
-                    if (token.GridX != _dragStartGridX || token.GridY != _dragStartGridY)
+                    // Calculate Manhattan distance moved
+                    int distanceMoved = Math.Abs(newGridX - oldX) + Math.Abs(newGridY - oldY);
+
+                    // Check if we're in combat and it's this token's turn
+                    bool isInCombat = false;
+                    bool isTokensTurn = false;
+                    MainViewModel vm = null;
+
+                    if (Application.Current?.MainWindow?.DataContext is MainViewModel mainVm)
                     {
-                        if (Application.Current?.MainWindow?.DataContext is MainViewModel vm)
+                        vm = mainVm;
+                        isInCombat = vm.IsInCombat;
+                        isTokensTurn = token.IsCurrentTurn;
+                    }
+
+                    // Enforce movement limits during combat on the token's turn
+                    if (isInCombat && isTokensTurn && distanceMoved > 0)
+                    {
+                        if (distanceMoved > token.MovementRemainingThisTurn)
                         {
-                            var act = new TokenMoveAction(vm, token, _dragStartGridX, _dragStartGridY, token.GridX, token.GridY);
+                            // Can't move that far - snap back! 
+                            Canvas.SetLeft(_draggingVisual, oldX * GridCellSize);
+                            Canvas.SetTop(_draggingVisual, oldY * GridCellSize);
+
+                            MessageBox.Show(
+                                $"{token.Name} can only move {token.MovementRemainingThisTurn} more squares this turn!\n\n" +
+                                $"Speed: {token.SpeedSquares} squares\n" +
+                                $"Already moved: {token.MovementUsedThisTurn} squares\n" +
+                                $"Remaining: {token.MovementRemainingThisTurn} squares\n" +
+                                $"Attempted: {distanceMoved} squares",
+                                "Movement Limit Exceeded",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Warning);
+
+                            _isDraggingToken = false;
+                            _draggingVisual = null;
+                            e.Handled = true;
+                            return;
+                        }
+
+                        // Use the movement
+                        token.MovementUsedThisTurn += distanceMoved;
+
+                        // Log the movement
+                        AddToActionLog("Movement", $"{token.Name} moved {distanceMoved} squares ({token.MovementRemainingThisTurn} remaining)");
+                    }
+
+                    // Snap to grid if enabled
+                    if (LockToGrid)
+                    {
+                        Canvas.SetLeft(_draggingVisual, newGridX * GridCellSize);
+                        Canvas.SetTop(_draggingVisual, newGridY * GridCellSize);
+                    }
+
+                    // Update token position
+                    token.GridX = newGridX;
+                    token.GridY = newGridY;
+
+                    // Record undo action if position changed
+                    if (newGridX != oldX || newGridY != oldY)
+                    {
+                        if (vm != null)
+                        {
+                            var act = new TokenMoveAction(vm, token, oldX, oldY, newGridX, newGridY);
                             UndoManager.Record(act, performNow: false);
-                            UndoManager.Record(act, performNow: true);
                         }
                     }
                 }
@@ -636,6 +710,64 @@ namespace DnDBattle.Controls
                 });
             }
 
+            bool showMovement = false;
+            if (Application.Current?.MainWindow?.DataContext is MainViewModel vm && vm.IsInCombat)
+            {
+                showMovement = true;
+            }
+
+            if (showMovement)
+            {
+                var movementPanel = new StackPanel { Margin = new Thickness(0, 8, 0, 0) };
+
+                var movementHeader = new Grid();
+                movementHeader.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                movementHeader.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+                movementHeader.Children.Add(new TextBlock
+                {
+                    Text = "Movement",
+                    FontSize = 10,
+                    Foreground = new SolidColorBrush(Color.FromRgb(130, 130, 130))
+                });
+
+                var movementText = new TextBlock
+                {
+                    Text = $"{token.MovementRemainingThisTurn} / {token.SpeedSquares}",
+                    FontSize = 10,
+                    FontWeight = FontWeights.Bold,
+                    HorizontalAlignment = HorizontalAlignment.Right,
+                    Foreground = token.CanMoveThisTurn
+                        ? new SolidColorBrush(Color.FromRgb(100, 181, 246))
+                        : new SolidColorBrush(Color.FromRgb(244, 67, 54))
+                };
+                Grid.SetColumn(movementText, 1);
+                movementHeader.Children.Add(movementText);
+                movementPanel.Children.Add(movementHeader);
+
+                // Movement bar
+                double movePercent = token.SpeedSquares > 0
+                    ? (double)token.MovementRemainingThisTurn / token.SpeedSquares
+                    : 0;
+
+                var moveBarGrid = new Grid { Height = 6, Margin = new Thickness(0, 4, 0, 0) };
+                moveBarGrid.Children.Add(new Border
+                {
+                    Background = new SolidColorBrush(Color.FromRgb(50, 50, 50)),
+                    CornerRadius = new CornerRadius(3)
+                });
+                moveBarGrid.Children.Add(new Border
+                {
+                    Background = new SolidColorBrush(Color.FromRgb(100, 181, 246)),
+                    CornerRadius = new CornerRadius(3),
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    Width = Math.Max(0, 156 * movePercent)
+                });
+                movementPanel.Children.Add(moveBarGrid);
+
+                stack.Children.Add(movementPanel);
+            }
+
             // Conditions
             if (token.Conditions != Models.Condition.None)
             {
@@ -820,6 +952,36 @@ namespace DnDBattle.Controls
 
         private void RenderCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+            var worldPt = ScreenToWorld(e.GetPosition(RenderCanvas));
+            var gridPoint = new Point(
+                worldPt.X / GridCellSize,
+                worldPt.Y / GridCellSize);
+
+            // Wall drawing mode
+            if (_wallDrawMode)
+            {
+                // Snap to grid intersections if LockToGrid
+                if (LockToGrid)
+                {
+                    gridPoint = new Point(Math.Round(gridPoint.X), Math.Round(gridPoint.Y));
+                }
+
+                HandleWallDrawClick(gridPoint, e);
+                e.Handled = true;
+                return;
+            }
+
+            // Check for wall selection/interaction
+            if (!_drawObstacleMode)
+            {
+                HandleWallSelection(gridPoint);
+                if (_selectedWall != null)
+                {
+                    e.Handled = true;
+                    return;
+                }
+            }
+
             Debug.WriteLine("RenderCanvas clicked; draw mode=" + _drawObstacleMode);
             if (_drawObstacleMode)
             {
@@ -836,7 +998,6 @@ namespace DnDBattle.Controls
             }
 
             // obstacle hit test: select vertex/obstacle if present
-            var worldPt = ScreenToWorld(e.GetPosition(RenderCanvas));
             var clickedGrid = new Point(worldPt.X / GridCellSize, worldPt.Y / GridCellSize);
             var found = HitTestObstacle(clickedGrid, out int vertexIdx);
             if (found != null)
@@ -873,6 +1034,13 @@ namespace DnDBattle.Controls
 
         private void RenderCanvas_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
+            if (_isDraggingWallEndpoint)
+            {
+                _isDraggingWallEndpoint = false;
+                AddToActionLog("Wall", $"Moved wall endpoint");
+                return;
+            }
+
             if (_isDraggingVertex && _selectedObstacle != null && _selectedVertexIndex >= 0)
             {
                 var newPos = _selectedObstacle.PolygonGridPoints[_selectedVertexIndex];
@@ -892,8 +1060,60 @@ namespace DnDBattle.Controls
             }
         }
 
+        private void RenderCanvas_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            var worldPt = ScreenToWorld(e.GetPosition(RenderCanvas));
+            var gridPoint = new Point(
+                worldPt.X / GridCellSize,
+                worldPt.Y / GridCellSize);
+
+            var hitWall = _wallService.HitTest(gridPoint, 0.5);
+            if (hitWall != null && hitWall.WallType == WallType.Door)
+            {
+                hitWall.IsOpen = !hitWall.IsOpen;
+                AddToActionLog("Door", $"{hitWall.Label} is now {(hitWall.IsOpen ? "OPEN" : "CLOSED")}");
+                RedrawWalls();
+                RedrawLighting();
+                e.Handled = true;
+            }
+        }
+
         private void RenderCanvas_MouseMove(object sender, MouseEventArgs e)
         {
+            var worldPt = ScreenToWorld(e.GetPosition(RenderCanvas));
+            var gridPoint = new Point(
+                worldPt.X / GridCellSize,
+                worldPt.Y / GridCellSize);
+
+            // Wall drawing preview
+            if (_wallDrawMode && _wallDrawStart.HasValue)
+            {
+                if (LockToGrid)
+                {
+                    gridPoint = new Point(Math.Round(gridPoint.X), Math.Round(gridPoint.Y));
+                }
+                _wallDrawPreview = gridPoint;
+                RedrawWalls();
+            }
+
+            // Wall endpoint dragging
+            if (_isDraggingWallEndpoint && _selectedWall != null)
+            {
+                if (LockToGrid)
+                {
+                    gridPoint = new Point(Math.Round(gridPoint.X), Math.Round(gridPoint.Y));
+                }
+
+                if (_draggingWallIsStart)
+                    _selectedWall.StartPoint = gridPoint;
+                else
+                    _selectedWall.EndPoint = gridPoint;
+
+                RedrawWalls();
+                RedrawLighting();
+                return;
+            }
+
             if (_isDraggingVertex && _selectedObstacle != null && _selectedVertexIndex >= 0 && e.LeftButton == MouseButtonState.Pressed)
             {
                 var world = ScreenToWorld(e.GetPosition(RenderCanvas));
@@ -919,6 +1139,36 @@ namespace DnDBattle.Controls
 
         private void RenderCanvas_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
+            if (_wallDrawMode)
+            {
+                // Cancel wall drawing
+                _wallDrawStart = null;
+                RedrawWalls();
+                e.Handled = true;
+                return;
+            }
+
+            if (_selectedWall != null)
+            {
+                // Delete selected wall
+                var result = MessageBox.Show(
+                    $"Delete wall '{_selectedWall.Label}'?",
+                    "Delete Wall",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    _wallService.RemoveWall(_selectedWall);
+                    AddToActionLog("Wall", $"Deleted {_selectedWall.Label}");
+                    _selectedWall = null;
+                    RedrawWalls();
+                    RedrawLighting();
+                }
+                e.Handled = true;
+                return;
+            }
+
             if (_drawObstacleMode) { _currentDrawVertices.Clear(); RedrawObstacleDrawVisual(); return; }
             if (_selectedObstacle != null)
             {
@@ -1024,43 +1274,113 @@ namespace DnDBattle.Controls
         {
             using (var dc = _obstacleDrawVisual.RenderOpen())
             {
-                var fillBrush = new SolidColorBrush(Color.FromArgb(90, 200, 100, 20)); fillBrush.Freeze();
-                var stroke = new Pen(Brushes.Orange, 1.8); stroke.Freeze();
+                // More visible obstacle fill and stroke
+                var fillBrush = new SolidColorBrush(Color.FromArgb(150, 139, 69, 19)); // Brown, semi-transparent
+                var strokeBrush = new SolidColorBrush(Color.FromArgb(255, 255, 140, 0)); // Orange
+                fillBrush.Freeze();
 
+                var stroke = new Pen(strokeBrush, 3.0); // Thicker stroke
+                stroke.Freeze();
+
+                // Draw existing obstacles
                 foreach (var o in _obstacles)
                 {
                     if (o.PolygonGridPoints.Count < 3) continue;
+
                     var pg = new PathGeometry();
-                    var pf = new PathFigure { StartPoint = new Point(o.PolygonGridPoints[0].X * GridCellSize, o.PolygonGridPoints[0].Y * GridCellSize), IsClosed = true };
-                    for (int i = 1; i < o.PolygonGridPoints.Count; i++) pf.Segments.Add(new LineSegment(new Point(o.PolygonGridPoints[i].X * GridCellSize, o.PolygonGridPoints[i].Y * GridCellSize), true));
+                    var startPoint = new Point(
+                        o.PolygonGridPoints[0].X * GridCellSize + GridCellSize / 2,
+                        o.PolygonGridPoints[0].Y * GridCellSize + GridCellSize / 2);
+                    var pf = new PathFigure { StartPoint = startPoint, IsClosed = true, IsFilled = true };
+
+                    for (int i = 1; i < o.PolygonGridPoints.Count; i++)
+                    {
+                        var point = new Point(
+                            o.PolygonGridPoints[i].X * GridCellSize + GridCellSize / 2,
+                            o.PolygonGridPoints[i].Y * GridCellSize + GridCellSize / 2);
+                        pf.Segments.Add(new LineSegment(point, true));
+                    }
                     pg.Figures.Add(pf);
                     dc.DrawGeometry(fillBrush, stroke, pg);
 
+                    // Draw vertex handles if this obstacle is selected
                     if (_selectedObstacle == o)
                     {
-                        var handleBrush = new SolidColorBrush(Color.FromArgb(220, 255, 200, 0)); handleBrush.Freeze();
+                        var handleBrush = new SolidColorBrush(Color.FromArgb(255, 255, 215, 0)); // Gold
+                        handleBrush.Freeze();
+                        var handlePen = new Pen(Brushes.Black, 2);
+                        handlePen.Freeze();
+
                         foreach (var v in o.PolygonGridPoints)
                         {
-                            var r = new Rect(v.X * GridCellSize - 4, v.Y * GridCellSize - 4, 8, 8);
-                            dc.DrawRectangle(handleBrush, new Pen(Brushes.Black, 1), r);
+                            var handleRect = new Rect(
+                                v.X * GridCellSize + GridCellSize / 2 - 6,
+                                v.Y * GridCellSize + GridCellSize / 2 - 6,
+                                12, 12);
+                            dc.DrawRectangle(handleBrush, handlePen, handleRect);
                         }
                     }
                 }
 
+                // Draw current drawing vertices (when in draw mode)
                 if (_currentDrawVertices.Count > 0)
                 {
-                    var pen = new Pen(Brushes.Yellow, 2); pen.Freeze();
-                    var fg = new SolidColorBrush(Color.FromArgb(170, 255, 240, 120)); fg.Freeze();
-                    var pg = new PathGeometry();
-                    var pf = new PathFigure { StartPoint = new Point(_currentDrawVertices[0].X * GridCellSize + GridCellSize / 2, _currentDrawVertices[0].Y * GridCellSize + GridCellSize / 2), IsClosed = false };
-                    for (int i = 1; i < _currentDrawVertices.Count; i++) pf.Segments.Add(new LineSegment(new Point(_currentDrawVertices[i].X * GridCellSize + GridCellSize / 2, _currentDrawVertices[i].Y * GridCellSize + GridCellSize / 2), true));
-                    pg.Figures.Add(pf);
-                    dc.DrawGeometry(null, pen, pg);
+                    var drawingPen = new Pen(Brushes.Yellow, 3);
+                    drawingPen.Freeze();
+                    var drawingFill = new SolidColorBrush(Color.FromArgb(100, 255, 255, 0)); // Yellow tint
+                    drawingFill.Freeze();
 
+                    // Draw lines connecting vertices
+                    if (_currentDrawVertices.Count >= 2)
+                    {
+                        var pg = new PathGeometry();
+                        var startPt = new Point(
+                            _currentDrawVertices[0].X * GridCellSize + GridCellSize / 2,
+                            _currentDrawVertices[0].Y * GridCellSize + GridCellSize / 2);
+                        var pf = new PathFigure { StartPoint = startPt, IsClosed = false };
+
+                        for (int i = 1; i < _currentDrawVertices.Count; i++)
+                        {
+                            var pt = new Point(
+                                _currentDrawVertices[i].X * GridCellSize + GridCellSize / 2,
+                                _currentDrawVertices[i].Y * GridCellSize + GridCellSize / 2);
+                            pf.Segments.Add(new LineSegment(pt, true));
+                        }
+                        pg.Figures.Add(pf);
+                        dc.DrawGeometry(null, drawingPen, pg);
+                    }
+
+                    // Draw vertex markers
                     foreach (var v in _currentDrawVertices)
                     {
-                        var rect = new Rect(v.X * GridCellSize, v.Y * GridCellSize, GridCellSize, GridCellSize);
-                        dc.DrawRectangle(fg, new Pen(Brushes.Black, 1), rect);
+                        var rect = new Rect(
+                            v.X * GridCellSize + GridCellSize / 4,
+                            v.Y * GridCellSize + GridCellSize / 4,
+                            GridCellSize / 2,
+                            GridCellSize / 2);
+                        dc.DrawRectangle(drawingFill, new Pen(Brushes.Yellow, 2), rect);
+                    }
+
+                    // Show hint text
+                    if (_currentDrawVertices.Count >= 1)
+                    {
+                        var lastPt = _currentDrawVertices[^1];
+                        var textPoint = new Point(
+                            lastPt.X * GridCellSize + GridCellSize,
+                            lastPt.Y * GridCellSize);
+
+                        var formattedText = new FormattedText(
+                            _currentDrawVertices.Count < 3
+                                ? $"Click to add points ({_currentDrawVertices.Count}/3 min)\nDouble-click to finish"
+                                : "Double-click to finish\nRight-click to cancel",
+                            System.Globalization.CultureInfo.CurrentCulture,
+                            FlowDirection.LeftToRight,
+                            new Typeface("Segoe UI"),
+                            12,
+                            Brushes.White,
+                            1.0);
+
+                        dc.DrawText(formattedText, textPoint);
                     }
                 }
             }
@@ -1075,6 +1395,233 @@ namespace DnDBattle.Controls
             _currentDrawVertices.Clear(); _drawObstacleMode = false;
             RedrawObstacleDrawVisual(); RedrawMovementOverlay(); RedrawLighting();
         }
+        #endregion
+
+        #region Wall Drawing
+
+        public void SetWallDrawMode(bool enabled, WallType wallType = WallType.Solid)
+        {
+            _wallDrawMode = enabled;
+            _currentWallType = wallType;
+            _wallDrawStart = null;
+            _selectedWall = null;
+
+            RenderCanvas.Cursor = enabled ? Cursors.Cross : Cursors.Arrow;
+            RedrawWalls();
+        }
+
+        public void AddWall(Wall wall) =>
+            _wallService.AddWall(wall);
+
+        public void RemoveWall(Wall wall) =>
+            _wallService.RemoveWall(wall);
+
+        public void RedrawWalls()
+        {
+            using (var dc = _wallVisual.RenderOpen())
+            {
+                var solidPen = new Pen(new SolidColorBrush(Color.FromArgb(255, 139, 90, 43)), 6);
+                var doorPen = new Pen(new SolidColorBrush(Color.FromArgb(255, 101, 67, 33)), 6);
+                var doorOpenPen = new Pen(new SolidColorBrush(Color.FromArgb(150, 101, 67, 33)), 4);
+                var windowPen = new Pen(new SolidColorBrush(Color.FromArgb(200, 135, 206, 235)), 4);
+                var halfWallPen = new Pen(new SolidColorBrush(Color.FromArgb(180, 169, 169, 169)), 4);
+                var selectedPen = new Pen(Brushes.Yellow, 3);
+
+                solidPen.DashStyle = DashStyles.Solid;
+                doorPen.DashStyle = DashStyles.Solid;
+                doorOpenPen.DashStyle = DashStyles.Dash;
+                windowPen.DashStyle = DashStyles.DashDot;
+                halfWallPen.DashStyle = DashStyles.Dot;
+
+                solidPen.Freeze();
+                doorPen.Freeze();
+                doorOpenPen.Freeze();
+                windowPen.Freeze();
+                halfWallPen.Freeze();
+                selectedPen.Freeze();                
+
+                foreach (var wall in _wallService.Walls)
+                {
+                    var startPx = new Point(
+                        wall.StartPoint.X * GridCellSize + GridCellSize / 2,
+                        wall.StartPoint.Y * GridCellSize + GridCellSize / 2);
+                    var endPx = new Point(
+                        wall.EndPoint.X * GridCellSize + GridCellSize / 2,
+                        wall.EndPoint.Y * GridCellSize + GridCellSize / 2);
+
+                    Pen wallPen = wall.WallType switch
+                    {
+                        WallType.Solid => solidPen,
+                        WallType.Door => wall.IsOpen ? doorOpenPen : doorPen,
+                        WallType.Window => windowPen,
+                        WallType.Halfwall => halfWallPen,
+                        _ => solidPen
+                    };
+
+                    var shadowPen = new Pen(new SolidColorBrush(Color.FromArgb(100, 0, 0, 0)), wallPen.Thickness);
+                    shadowPen.Freeze();
+                    dc.DrawLine(shadowPen,
+                        new Point(startPx.X + 2, startPx.Y + 2),
+                        new Point(endPx.X + 2, endPx.Y + 2));
+
+                    dc.DrawLine(wallPen, startPx, endPx);
+
+                    if (wall == _selectedWall)
+                    {
+                        dc.DrawLine(selectedPen, startPx, endPx);
+
+                        var handleBrush = Brushes.Yellow;
+                        dc.DrawEllipse(handleBrush, new Pen(Brushes.Black, 2), startPx, 8, 8);
+                        dc.DrawEllipse(handleBrush, new Pen(Brushes.Black, 2), endPx, 8, 8);
+                    }
+
+                    if (wall.WallType == WallType.Door)
+                    {
+                        var midPoint = new Point((startPx.X + endPx.X) / 2, (startPx.Y + endPx.Y) / 2);
+                        var doorBrush = wall.IsOpen
+                            ? new SolidColorBrush(Color.FromArgb(200, 76, 175, 80)) // Green for open
+                            : new SolidColorBrush(Color.FromArgb(200, 244, 67, 54)); // Red for closed
+                        doorBrush.Freeze();
+
+                        dc.DrawEllipse(doorBrush, new Pen(Brushes.White, 2), midPoint, 10, 10);
+
+                        var iconText = wall.IsOpen ? "🚪" : "🔒";
+                        var formattedText = new FormattedText(
+                            iconText,
+                            CultureInfo.CurrentCulture,
+                            FlowDirection.LeftToRight,
+                            new Typeface("Segoe UI Emoji"),
+                            14,
+                            Brushes.White,
+                            1.0);
+                        dc.DrawText(formattedText, new Point(midPoint.X - 7, midPoint.Y - 10));
+                    }
+                }
+
+                if (_wallDrawMode && _wallDrawStart.HasValue)
+                {
+                    var previewPen = new Pen(Brushes.LimeGreen, 4);
+                    previewPen.DashStyle = DashStyles.Dash;
+                    previewPen.Freeze();
+
+                    var startPx = new Point(
+                        _wallDrawStart.Value.X * GridCellSize + GridCellSize / 2,
+                        _wallDrawStart.Value.Y * GridCellSize + GridCellSize / 2);
+                    var endPx = new Point(
+                        _wallDrawPreview.X * GridCellSize + GridCellSize / 2,
+                        _wallDrawPreview.Y * GridCellSize + GridCellSize / 2);
+
+                    dc.DrawLine(previewPen, startPx, endPx);
+
+                    dc.DrawEllipse(Brushes.LimeGreen, null, startPx, 6, 6);
+                    dc.DrawEllipse(Brushes.LimeGreen, null, endPx, 6, 6);
+
+                    var length = Math.Sqrt(
+                        Math.Pow(_wallDrawPreview.X - _wallDrawStart.Value.X, 2) +
+                        Math.Pow(_wallDrawPreview.Y - _wallDrawStart.Value.Y, 2));
+
+                    var midPoint = new Point((startPx.X + endPx.X) / 2, (startPx.Y + endPx.Y) / 2 - 20);
+                    var lengthText = new FormattedText(
+                        $"{length:F1} squares",
+                        CultureInfo.CurrentCulture,
+                        FlowDirection.LeftToRight,
+                        new Typeface("Segoe UI"),
+                        12,
+                        Brushes.White,
+                        1.0);
+
+                    var textBounds = new Rect(midPoint.X - 5, midPoint.Y - 2, lengthText.Width + 10, lengthText.Height + 4);
+                    dc.DrawRectangle(new SolidColorBrush(Color.FromArgb(200, 0, 0, 0)), null, textBounds);
+                    dc.DrawText(lengthText, midPoint);
+                }
+
+                if (_wallDrawMode)
+                {
+                    var indicatorText = new FormattedText(
+                        $"Wall Mode: {_currentWallType}\nClick to start, click again to place\nRight-click to cancel",
+                        CultureInfo.CurrentCulture,
+                        FlowDirection.LeftToRight,
+                        new Typeface("Segoe UI"),
+                        12,
+                        Brushes.White,
+                        1.0);
+
+                    var bgRect = new Rect(10, 10, indicatorText.Width + 20, indicatorText.Height + 10);
+                    dc.DrawRectangle(new SolidColorBrush(Color.FromArgb(200, 0, 0, 0)), null, bgRect);
+                    dc.DrawText(indicatorText, new Point(20, 15));
+                }
+            }
+        }
+
+        private void HandleWallDrawClick(Point gridPoint, MouseButtonEventArgs e)
+        {
+            if (!_wallDrawMode) return;
+
+            if (e.ChangedButton == MouseButton.Right)
+            {
+                _wallDrawStart = null;
+                RedrawWalls();
+                return;
+            }
+
+            if (_wallDrawStart == null)
+            {
+                _wallDrawStart = gridPoint;
+                _wallDrawPreview = gridPoint;
+            }
+            else
+            {
+                if (_wallDrawStart.Value != gridPoint)
+                {
+                    var wall = new Wall()
+                    {
+                        StartPoint = _wallDrawStart.Value,
+                        EndPoint = gridPoint,
+                        WallType = _currentWallType,
+                        Label = $"{_currentWallType} Wall"
+                    };
+
+                    _wallService.AddWall(wall);
+                    AddToActionLog("Wall", $"Added {_currentWallType} wall from ({wall.StartPoint.X:F0},{wall.StartPoint.Y:F0}) to ({wall.EndPoint.X:F0},{wall.EndPoint.Y:F0})");
+                }
+
+                _wallDrawStart = null;
+            }
+
+            RedrawWalls();
+            RedrawLighting();
+        }
+
+        private void HandleWallSelection(Point gridPoint)
+        {
+            var endPointWall = _wallService.HitTestEndPoint(gridPoint, out bool isStart, 0.5);
+            if (endPointWall != null)
+            {
+                _selectedWall = endPointWall;
+                _isDraggingWallEndpoint = true;
+                _draggingWallIsStart = isStart;
+                RedrawWalls();
+                return;
+            }
+
+            var hitWall = _wallService.HitTest(gridPoint, 0.5);
+            if (hitWall != null)
+            {
+                _selectedWall = hitWall;
+
+                if (hitWall.WallType == WallType.Door)
+                {
+                    hitWall.IsOpen = !hitWall.IsOpen;
+                }
+
+                RedrawWalls();
+                return;
+            }
+
+            _selectedWall = null;
+            RedrawWalls();
+        }
+
         #endregion
 
         #region Movement overlay
@@ -1214,58 +1761,91 @@ namespace DnDBattle.Controls
             {
                 if (_lights == null || _lights.Count == 0)
                 {
-                    // nothing to draw
                     return;
-                }
-
-                // Convert obstacles to pixel-space polygons for raycasting
-                var obstaclePixelPolys = new List<Obstacle>();
-                foreach (var o in _obstacles)
-                {
-                    var copy = new Obstacle { Id = o.Id, Label = o.Label };
-                    copy.PolygonGridPoints = o.PolygonGridPoints.Select(p => new Point(p.X * GridCellSize + GridCellSize / 2.0, p.Y * GridCellSize + GridCellSize / 2.0)).ToList();
-                    obstaclePixelPolys.Add(copy);
                 }
 
                 foreach (var light in _lights)
                 {
-                    var centerPixel = new Point(light.CenterGrid.X * GridCellSize + GridCellSize / 2.0, light.CenterGrid.Y * GridCellSize + GridCellSize / 2.0);
-                    double radiusPx = Math.Max(1.0, light.RadiusSquares * GridCellSize);
+                    var centerGrid = light.CenterGrid;
+                    var centerPixel = new Point(
+                        centerGrid.X * GridCellSize + GridCellSize / 2.0,
+                        centerGrid.Y * GridCellSize + GridCellSize / 2.0);
+                    double radiusPx = Math.Max(GridCellSize, light.RadiusSquares * GridCellSize);
 
-                    // compute lit geometry using multi-sample raycasts
-                    var litGeom = LightingService.ComputeLitGeometry(centerPixel, radiusPx, obstaclePixelPolys, Options.MaxRaycaseAngles);
+                    // Compute lit polygon using wall service
+                    var litPolygonGrid = _wallService.ComputeLitPolygon(centerGrid, light.RadiusSquares, 180);
 
-                    // Build radial gradient brush for the light (transparent center -> faint dark near edge)
-                    // We draw the gradient inside the lit region so the center is the most revealed.
-                    var rg = new RadialGradientBrush();
-                    rg.GradientStops.Add(new GradientStop(Color.FromArgb(0, 255, 255, 255), 0.0)); // fully transparent center (revealed)
-                    byte edgeAlpha = (byte)(200 * (1.0 - light.Intensity)); // edge darkness (lower intensity => brighter)
-                    rg.GradientStops.Add(new GradientStop(Color.FromArgb(edgeAlpha, 0, 0, 0), 1.0));
-                    rg.RadiusX = 1; rg.RadiusY = 1;
-                    rg.Center = new Point(0.5, 0.5);
-                    rg.GradientOrigin = new Point(0.5, 0.5);
-                    rg.Freeze();
+                    if (litPolygonGrid.Count < 3)
+                    {
+                        // No walls blocking - draw full circle
+                        var rg = CreateLightGradient(light.Intensity);
+                        dc.DrawEllipse(rg, null, centerPixel, radiusPx, radiusPx);
+                    }
+                    else
+                    {
+                        // Create polygon geometry from lit area
+                        var litGeometry = new PathGeometry();
+                        var figure = new PathFigure
+                        {
+                            StartPoint = new Point(
+                                litPolygonGrid[0].X * GridCellSize + GridCellSize / 2,
+                                litPolygonGrid[0].Y * GridCellSize + GridCellSize / 2),
+                            IsClosed = true,
+                            IsFilled = true
+                        };
 
-                    // Clip to lit geometry and draw gradient rectangle covering the circle
-                    dc.PushClip(litGeom);
-                    dc.PushTransform(new TranslateTransform(centerPixel.X - radiusPx, centerPixel.Y - radiusPx));
-                    dc.DrawRectangle(rg, null, new Rect(0, 0, radiusPx * 2, radiusPx * 2));
-                    dc.Pop();
-                    dc.Pop();
+                        for (int i = 1; i < litPolygonGrid.Count; i++)
+                        {
+                            figure.Segments.Add(new LineSegment(
+                                new Point(
+                                    litPolygonGrid[i].X * GridCellSize + GridCellSize / 2,
+                                    litPolygonGrid[i].Y * GridCellSize + GridCellSize / 2),
+                                true));
+                        }
+
+                        litGeometry.Figures.Add(figure);
+
+                        // Draw with radial gradient clipped to lit area
+                        var rg = CreateLightGradient(light.Intensity);
+
+                        dc.PushClip(litGeometry);
+                        dc.PushTransform(new TranslateTransform(centerPixel.X - radiusPx, centerPixel.Y - radiusPx));
+                        dc.DrawRectangle(rg, null, new Rect(0, 0, radiusPx * 2, radiusPx * 2));
+                        dc.Pop();
+                        dc.Pop();
+                    }
+
+                    // Draw light source indicator
+                    var centerBrush = new SolidColorBrush(Color.FromArgb(255, 255, 255, 150));
+                    centerBrush.Freeze();
+                    dc.DrawEllipse(centerBrush, new Pen(Brushes.Orange, 2), centerPixel, 8, 8);
                 }
             }
-
-            // update blur radius in wrapper (soften edges the user can tune)
-            var lightingWrapper = RenderCanvas.Children.OfType<FrameworkElement>().FirstOrDefault(e => e.Tag as string == "Overlay" && Panel.GetZIndex(e) == 50);
-            if (lightingWrapper != null)
-            {
-                lightingWrapper.Effect = new BlurEffect { Radius = Options.ShadowSoftnessPx, RenderingBias = RenderingBias.Quality };
-            }
         }
+
+        private RadialGradientBrush CreateLightGradient(double intensity)
+        {
+            var rg = new RadialGradientBrush();
+
+            byte centerAlpha = (byte)(200 * intensity);
+            rg.GradientStops.Add(new GradientStop(Color.FromArgb(centerAlpha, 255, 255, 200), 0.0));
+            rg.GradientStops.Add(new GradientStop(Color.FromArgb((byte)(centerAlpha * 0.5), 255, 220, 150), 0.5));
+            rg.GradientStops.Add(new GradientStop(Color.FromArgb(0, 255, 150, 50), 1.0));
+
+            rg.RadiusX = 1;
+            rg.RadiusY = 1;
+            rg.Center = new Point(0.5, 0.5);
+            rg.GradientOrigin = new Point(0.5, 0.5);
+            rg.Freeze();
+
+            return rg;
+
+        }
+
         #endregion
 
         #region Undo / Redo API for obstacles
-        
+
         public void RemoveObstaclePublic(Obstacle obs)
         {
             if (obs == null) return;

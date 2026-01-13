@@ -472,6 +472,45 @@ namespace DnDBattle
             BattleGrid?.SetObstacleDrawMode(false);
         }
 
+        private void DrawSolidWall_Click(object sender, RoutedEventArgs e)
+        {
+            BattleGrid.SetWallDrawMode(true, WallType.Solid);
+        }
+
+        private void DrawDoor_Click(object sender, RoutedEventArgs e)
+        {
+            BattleGrid.SetWallDrawMode(true, WallType.Door);
+        }
+
+        private void DrawWindow_Click(object sender, RoutedEventArgs e)
+        {
+            BattleGrid.SetWallDrawMode(true, WallType.Window);
+        }
+
+        private void DrawHalfWall_Click(object sender, RoutedEventArgs e)
+        {
+            BattleGrid.SetWallDrawMode(true, WallType.Halfwall);
+        }
+
+        private void StopWallDraw_Click(object sender, RoutedEventArgs e)
+        {
+            BattleGrid.SetWallDrawMode(false);
+        }
+
+        private void ClearAllWalls_Click(object sender, RoutedEventArgs e)
+        {
+            var result = MessageBox.Show(
+                "Delete all wall from the map?",
+                "Clear Walls",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                BattleGrid.WallService.Clear();
+            }
+        }
+
         private void AddLight_Click(object sender, RoutedEventArgs e)
         {
             if (BattleGrid == null) return;

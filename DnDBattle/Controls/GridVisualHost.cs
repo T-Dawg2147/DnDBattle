@@ -49,37 +49,68 @@ namespace DnDBattle.Controls
         {
             using (var dc = _visual.RenderOpen())
             {
-                // Guard: avoid nonsensical values
                 if (cellSize <= 0) return;
 
                 viewWorldPixels.Inflate(extraPaddingPixels, extraPaddingPixels);
 
-                // compute grid line indices
                 int startCol = (int)Math.Floor(viewWorldPixels.Left / cellSize);
                 int endCol = (int)Math.Ceiling(viewWorldPixels.Right / cellSize);
                 int startRow = (int)Math.Floor(viewWorldPixels.Top / cellSize);
                 int endRow = (int)Math.Ceiling(viewWorldPixels.Bottom / cellSize);
 
-                // draw vertical lines
+                var minorLineColour = Color.FromArgb(120, 200, 200, 200);
+                var majorLineColour = Color.FromArgb(200, 255, 255, 255);
+                var shadowColour = Color.FromArgb(100, 0, 0, 0);
+
+                var minorLineBrush = new SolidColorBrush(minorLineColour);
+                var majorLineBrush = new SolidColorBrush(majorLineColour);
+                var shadowBrush = new SolidColorBrush(shadowColour);
+                minorLineBrush.Freeze();
+                majorLineBrush.Freeze();
+                shadowBrush.Freeze();
+
+                var shadowPen = new Pen(shadowBrush, 2.0);
+                shadowPen.Freeze();
+
+                var minorPen = new Pen(minorLineBrush, 1.0);
+                minorPen.Freeze();
+
+                var majorPen = new Pen(majorLineBrush, 2.0);
+                majorPen.Freeze();
+
+                // Shadown lines (offset by 1 pixel)
                 for (int c = startCol; c <= endCol; c++)
                 {
                     double x = c * cellSize;
-                    var pen = (c % 5 == 0) ? new Pen(Brushes.DarkGray, 1.25) : new Pen(Brushes.Gray, 0.6);
-                    pen.Freeze();
-                    dc.DrawLine(pen, new Point(x, viewWorldPixels.Top), new Point(x, viewWorldPixels.Bottom));
+                    if (c % 5 == 0)
+                    {
+                        dc.DrawLine(shadowPen, new Point(x + 1, viewWorldPixels.Top), new Point(x + 1, viewWorldPixels.Bottom));
+                    }
                 }
-
-                // draw horizontal lines
                 for (int r = startRow; r <= endRow; r++)
                 {
                     double y = r * cellSize;
-                    var pen = (r % 5 == 0) ? new Pen(Brushes.DarkGray, 1.25) : new Pen(Brushes.Gray, 0.6);
-                    pen.Freeze();
+                    if (r % 5 == 0)
+                    {
+                        dc.DrawLine(shadowPen, new Point(viewWorldPixels.Left, y + 1), new Point(viewWorldPixels.Right, y + 1));
+                    }
+                }
+
+                // Main grid lines
+                for (int c = startCol; c <= endCol; c++)
+                {
+                    double x = c * cellSize;
+                    var pen = (c % 5 == 0) ? majorPen : minorPen;
+                    dc.DrawLine(pen, new Point(x, viewWorldPixels.Top), new Point(x, viewWorldPixels.Bottom));
+                }
+
+                for (int r = startRow; r <= endRow; r++)
+                {
+                    double y = r * cellSize;
+                    var pen = (r % 5 == 0) ? majorPen : minorPen;
                     dc.DrawLine(pen, new Point(viewWorldPixels.Left, y), new Point(viewWorldPixels.Right, y));
                 }
             }
-
-            // Request repaint if needed
             InvalidateVisual();
         }
     }
