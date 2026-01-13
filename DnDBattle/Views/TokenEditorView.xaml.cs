@@ -58,5 +58,15 @@ namespace DnDBattle.Views
                 token.GridY = 0;
             }
         }
+
+        private void TextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                var textBox = sender as TextBox;
+                textBox?.MoveFocus(new TraversalRequest(FocusNavigationDirection.Next));
+                e.Handled = true;
+            }
+        }
     }
 }

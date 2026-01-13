@@ -38,6 +38,8 @@ namespace DnDBattle
             if (Options.EnabledPeriodicAutosave)
                 _autosaveTimer.Start();
 
+            BattleGrid.TokenDoubleClicked += OnTokenDoubleClicked;
+
             Loaded += MainWindow_Loaded;
 
             this.PreviewKeyDown += MainWindow_PreviewKeyDown;
@@ -52,6 +54,16 @@ namespace DnDBattle
             {
                 await vm.LoadCreaturesFromDatabaseAsync();
             }
+        }
+
+        private void OnTokenDoubleClicked(Token token)
+        {
+            var detailsWindow = new TokenDetailsWindow(token)
+            {
+                Owner = this,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            };
+            detailsWindow.Show();
         }
 
         private void UndoManager_StateChanged(object sender, EventArgs e)
@@ -144,6 +156,30 @@ namespace DnDBattle
                     e.Handled = true;
                     break;
             }   
+        }
+
+        private void ToggleLeftSidebar_Click(object seder, RoutedEventArgs e)
+        {
+            if (LeftSidebarColumn.Width.Value > 0)
+            {
+                LeftSidebarColumn.Width = new GridLength(0);
+            }
+            else
+            {
+                LeftSidebarColumn.Width = new GridLength(280);
+            }
+        }
+
+        private void ToggleRightSidebar_Click(object sender, RoutedEventArgs e)
+        {
+            if (RightSidebarColumn.Width.Value > 0)
+            {
+                RightSidebarColumn.Width = new GridLength(0);
+            }
+            else
+            {
+                RightSidebarColumn.Width = new GridLength(300);
+            }
         }
 
         private void SpawnEditedToken_Click(object sender, RoutedEventArgs e)

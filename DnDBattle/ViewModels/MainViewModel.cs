@@ -25,6 +25,7 @@ namespace DnDBattle.ViewModels
         public ObservableCollection<Obstacle> Obstacles { get; } = new ObservableCollection<Obstacle>();
         public ObservableCollection<LightSource> Lights { get; } = new ObservableCollection<LightSource>();
         public ObservableCollection<ActionLogEntry> ActionLog { get; } = new ObservableCollection<ActionLogEntry>();
+        
 
         public ObservableCollection<string> DiceHistory { get; } = new ObservableCollection<string>();
 
@@ -166,6 +167,8 @@ namespace DnDBattle.ViewModels
                 SetProperty(ref _initativeOrder, value);
             }
         }
+
+        public ObservableCollection<Token> InitiativeOrder => InitiativeOrderList;
 
         #endregion
 
@@ -514,20 +517,6 @@ namespace DnDBattle.ViewModels
 
             OnPropertyChanged(nameof(InitiativeOrderList));
             RequestTokenVisualsRefresh?.Invoke();
-        }
-
-        private void UpdateCurrentTurnToken()
-        {
-            if (!IsInCombat || InitiativeOrderList.Count == 0) return;
-
-            if (CurrentTurnIndex >= 0 && CurrentTurnIndex < InitiativeOrderList.Count)
-            {
-                var token = InitiativeOrderList[CurrentTurnIndex];
-                token.IsCurrentTurn = true;
-                CurrentTurnToken = token;
-                SelectedToken = token;
-                Log("Turn", $"🎯 {token.Name}'s turn");
-            }
         }
 
         #endregion

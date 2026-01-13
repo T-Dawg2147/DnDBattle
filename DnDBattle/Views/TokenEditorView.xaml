@@ -25,18 +25,18 @@
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Row="0" Grid.Column="0" Text="HP:" Foreground="LightGray" VerticalAlignment="Center" />
-                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding HP, UpdateSourceTrigger=PropertyChanged}" Width="80" Margin="6,0,0,0"/>
+                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding HP, UpdateSourceTrigger=PropertyChanged}" Width="80" Margin="6,0,0,0" KeyDown="TextBox_KeyDown"/>
 
                 <TextBlock Grid.Row="1" Grid.Column="0" Text="AC:" Foreground="LightGray" VerticalAlignment="Center" Margin="0,6,0,0"/>
-                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding ArmorClass, UpdateSourceTrigger=PropertyChanged}" Width="80" Margin="6,6,0,0"/>
+                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding ArmorClass, UpdateSourceTrigger=PropertyChanged}" Width="80" Margin="6,6,0,0" KeyDown="TextBox_KeyDown"/>
 
                 <TextBlock Grid.Row="2" Grid.Column="0" Text="Initiative Mod:" Foreground="LightGray" VerticalAlignment="Center" Margin="0,6,0,0"/>
-                <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding InitiativeModifier, UpdateSourceTrigger=PropertyChanged}" Width="80" Margin="6,6,0,0"/>
+                <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding InitiativeModifier, UpdateSourceTrigger=PropertyChanged}" Width="80" Margin="6,6,0,0" KeyDown="TextBox_KeyDown"/>
             </Grid>
 
             <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
                 <TextBlock Text="Speed (ft):" Foreground="LightGray" VerticalAlignment="Center"/>
-                <TextBox Text="{Binding Speed, UpdateSourceTrigger=PropertyChanged}" Width="80" Margin="6,0,0,0"/>
+                <TextBox Text="{Binding Speed, UpdateSourceTrigger=PropertyChanged}" Width="80" Margin="6,0,0,0" KeyDown="TextBox_KeyDown"/>
                 <Button Content="Upload Image" Click="UploadImage_Click" Margin="8,0,0,0" />
             </StackPanel>
             

@@ -4,152 +4,517 @@
         xmlns:local="clr-namespace:DnDBattle"
         xmlns:controls="clr-namespace:DnDBattle.Controls"
         xmlns:views="clr-namespace:DnDBattle.Views"
-        Title="DnD Battle Builder" Height="800" Width="1200">
-    <DockPanel LastChildFill="True">
-        <Menu DockPanel.Dock="Top" Background="#1E1E" Foreground="White">
+        Title="DnD Battle Builder" 
+        Height="900" Width="1400"
+        MinHeight="600" MinWidth="900"
+        Background="#1A1A1D"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+
+        <!-- Modern Button Style -->
+        <Style x:Key="ModernButton" TargetType="Button">
+            <Setter Property="Background" Value="#2D2D30"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="4" 
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#3E3E42"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="#007ACC"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Primary Action Button -->
+        <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource ModernButton}">
+            <Setter Property="Background" Value="#0E639C"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#1177BB"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Danger Button -->
+        <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource ModernButton}">
+            <Setter Property="Background" Value="#C42B1C"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#E81123"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Sidebar Header Style -->
+        <Style x:Key="SidebarHeader" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#888"/>
+            <Setter Property="Margin" Value="0,15,0,8"/>
+            <!-- <Setter Property="TextTransform" Value="Uppercase"/> -->
+        </Style>
+
+        <!-- Panel Style -->
+        <Style x:Key="PanelStyle" TargetType="Border">
+            <Setter Property="Background" Value="#252526"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Menu -->
+            <RowDefinition Height="Auto"/>
+            <!-- Toolbar -->
+            <RowDefinition Height="*"/>
+            <!-- Main Content -->
+            <RowDefinition Height="Auto"/>
+            <!-- Initiative Bar -->
+            <RowDefinition Height="Auto"/>
+            <!-- Status Bar -->
+        </Grid.RowDefinitions>
+
+        <!-- ==================== MENU BAR ==================== -->
+        <Menu Grid.Row="0" Background="#1E1E1E" Foreground="White" Padding="5,3">
             <MenuItem Header="_File">
-                <MenuItem Header="Import Tokens..." Click="MenuImport_Click" Foreground="Black"/> <!-- Obsolete -->
-                <MenuItem Header="Export Bank..." Click="MenuExportBank_Click"/> <!-- Obsolete -->
-                <MenuItem Header="Save Encounter..." Click="MenuSaveEncounter_Click"/>
-                <MenuItem Header="Load Encounter..." Click="MenuLoadEncounter_Click"/>
+                <MenuItem Header="Save Encounter..." Click="MenuSaveEncounter_Click" InputGestureText="Ctrl+S"/>
+                <MenuItem Header="Load Encounter..." Click="MenuLoadEncounter_Click" InputGestureText="Ctrl+O"/>
+                <Separator/>
                 <MenuItem Header="Import SRD Pack..." Click="MenuImportSrdPack_Click"/>
                 <Separator/>
-                <MenuItem Header="_Options">
-                    <MenuItem Header="Settings..." Click="MenuOptions_Click" />
-                    <MenuItem Header="Grid Settings..." Click="MenuGridSettings_Click" />
-                    <MenuItem Header="Toggle Live Mode" IsCheckable="True" IsChecked="{x:Static local:Options.LiveMode}" Click="MenuToggleLiveMode_Click"/>
-                </MenuItem>
+                <MenuItem Header="Settings..." Click="MenuOptions_Click"/>
                 <Separator/>
-                <MenuItem Header="Exit" Click="MenuExit_Click"/>
+                <MenuItem Header="Exit" Click="MenuExit_Click" InputGestureText="Alt+F4"/>
             </MenuItem>
-
-            <MenuItem Header="Encounter Templates" Click="MenuEncounterTemplates_Click"/>
-
-            <MenuItem Header="Database">
+            <MenuItem Header="_Edit">
+                <MenuItem Header="Undo" Click="Undo_Click" InputGestureText="Ctrl+Z"/>
+                <MenuItem Header="Redo" Click="Redo_Click" InputGestureText="Ctrl+Y"/>
+            </MenuItem>
+            <MenuItem Header="_Encounter">
+                <MenuItem Header="Add Creature..." Command="{Binding OpenCreatureBrowserCommand}"/>
+                <MenuItem Header="Roll All Initiative" Command="{Binding RollAllInitiativeCommand}"/>
+                <Separator/>
+                <MenuItem Header="Encounter Templates..." Click="MenuEncounterTemplates_Click"/>
+            </MenuItem>
+            <MenuItem Header="_Database">
                 <MenuItem Header="Import JSON to Database..." Click="MenuImportDatabase_Click"/>
                 <MenuItem Header="Reload from Database" Click="MenuReloadDatabase_Click"/>
                 <Separator/>
                 <MenuItem Header="Database Statistics" Click="MenuDatabaseStats_Click"/>
             </MenuItem>
+            <MenuItem Header="_View">
+                <MenuItem Header="Toggle Left Sidebar" Click="ToggleLeftSidebar_Click" InputGestureText="F9"/>
+                <MenuItem Header="Toggle Right Sidebar" Click="ToggleRightSidebar_Click" InputGestureText="F10"/>
+                <Separator/>
+                <MenuItem Header="Grid Settings..." Click="MenuGridSettings_Click"/>
+            </MenuItem>
         </Menu>
 
-        <Grid>
+        <!-- ==================== TOOLBAR ==================== -->
+        <Border Grid.Row="1" Background="#252526" Padding="8,6">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Left Toolbar Items -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <Button Content="➕ Add Creature" 
+                            Command="{Binding OpenCreatureBrowserCommand}"
+                            Style="{StaticResource PrimaryButton}"
+                            Margin="0,0,8,0"/>
+                    <Button Content="🗺️ Load Map" 
+                            Command="{Binding LoadMapCommand}"
+                            Style="{StaticResource ModernButton}"
+                            Margin="0,0,8,0"/>
+
+                    <Rectangle Width="1" Fill="#444" Margin="8,2"/>
+
+                    <Button Content="↩️" ToolTip="Undo (Ctrl+Z)" Click="Undo_Click"
+                            Style="{StaticResource ModernButton}" Width="36" Margin="0,0,4,0"/>
+                    <Button Content="↪️" ToolTip="Redo (Ctrl+Y)" Click="Redo_Click"
+                            Style="{StaticResource ModernButton}" Width="36"/>
+                </StackPanel>
+
+                <!-- Center - Combat Status -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center"
+                            Visibility="{Binding IsInCombat, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Border Background="#1B5E20" CornerRadius="4" Padding="15,6">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="⚔️ COMBAT" Foreground="White" FontWeight="Bold" VerticalAlignment="Center"/>
+                            <TextBlock Text=" - Round " Foreground="#AAA" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding CurrentRound}" Foreground="#4CAF50" FontWeight="Bold" FontSize="16" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Right Toolbar Items -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <ToggleButton x:Name="ToggleDrawObstacle" Content="🖊️ Draw" 
+                                  ToolTip="Draw Obstacle"
+                                  Checked="ToggleDrawObstacle_Checked" 
+                                  Unchecked="ToggleDrawObstacle_Unchecked"
+                                  Margin="0,0,8,0" Padding="10,6"/>
+                    <Button Content="💡 Light" Click="AddLight_Click"
+                            Style="{StaticResource ModernButton}" Margin="0,0,8,0"/>
+                    <CheckBox Content="🔒 Snap to Grid" 
+                              IsChecked="{Binding ElementName=BattleGrid, Path=LockToGrid}" 
+                              Foreground="White" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ==================== MAIN CONTENT ==================== -->
+        <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="320"/>
+                <ColumnDefinition x:Name="LeftSidebarColumn" Width="280" MinWidth="200" MaxWidth="400"/>
+                <ColumnDefinition Width="5"/>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="5"/>
+                <ColumnDefinition x:Name="RightSidebarColumn" Width="300" MinWidth="250" MaxWidth="450"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Sidebar: scrollable so expanders reflow and collapse moves content up -->
-            <Border Grid.Column="0" Background="#FF1E1E1E" Padding="8">
+            <!-- ========== LEFT SIDEBAR ========== -->
+            <Border Grid.Column="0" Background="#1E1E1E" Padding="12">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
-                        <TextBlock Text="Encounter" FontSize="18" Margin="4" Foreground="White"/>
-                        <Button Content="Add Creature" Command="{Binding OpenCreatureBrowserCommand}" Margin="0,8"/>
-                        <Button Content="Load Map Image" Command="{Binding LoadMapCommand}" Margin="0,8"/>
 
-                        <Expander Header="Token Editor" IsExpanded="True" Margin="0,8" Foreground="White">
-                            <views:TokenEditorView DataContext="{Binding SelectedToken}" />
-                        </Expander>
-
-                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                            <Button Content="Spawn Edited Token" Click="SpawnEditedToken_Click" Width="140" Margin="0,0,6,0"/>
-                            <Button Content="Save Edited to Bank" Click="SaveEditedToBank_Click" Width="140"/>
-                        </StackPanel>
-
-                        <StackPanel Margin="0,8">
-                            <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                                <Button Content="Roll All" Command="{Binding RollAllInitiativeCommand}" Width="80" />
-                                <Button Content="Next Turn" Command="{Binding NextTurnCommand}" Width="80" Margin="6,0,0,0" />
+                        <!-- Encounter Section -->
+                        <TextBlock Text="ENCOUNTER" Style="{StaticResource SidebarHeader}"/>
+                        <Border Style="{StaticResource PanelStyle}">
+                            <StackPanel>
+                                <Button Content="➕ Add Creature" 
+                                        Command="{Binding OpenCreatureBrowserCommand}"
+                                        Style="{StaticResource PrimaryButton}"
+                                        HorizontalAlignment="Stretch"/>
+                                <Button Content="🗺️ Load Map Image" 
+                                        Command="{Binding LoadMapCommand}"
+                                        Style="{StaticResource ModernButton}"
+                                        HorizontalAlignment="Stretch"
+                                        Margin="0,8,0,0"/>
                             </StackPanel>
+                        </Border>
 
-                            <StackPanel Orientation="Horizontal" Margin="0,8">
-                                <Button Content="Commit Move" Click="CommitMove_Click" Width="120" Foreground="Black"/>
-                                <CheckBox Content="Lock to Grid" IsChecked="{Binding ElementName=BattleGrid, Path=LockToGrid}" Margin="6,0,0,0" Foreground="White" />
+                        <!-- Combat Controls -->
+                        <TextBlock Text="COMBAT" Style="{StaticResource SidebarHeader}"/>
+                        <Border Style="{StaticResource PanelStyle}">
+                            <StackPanel>
+                                <Button Command="{Binding ToggleCombatCommand}"
+                                        HorizontalAlignment="Stretch"
+                                        Padding="12,10">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource ModernButton}">
+                                            <Setter Property="Background" Value="#4CAF50"/>
+                                            <Setter Property="Content" Value="⚔️ Start Combat"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsInCombat}" Value="True">
+                                                    <Setter Property="Background" Value="#C42B1C"/>
+                                                    <Setter Property="Content" Value="🏁 End Combat"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+
+                                <Grid Margin="0,10,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Button Grid.Column="0" Content="🎲 Roll All" 
+                                            Command="{Binding RollAllInitiativeCommand}"
+                                            Style="{StaticResource ModernButton}"
+                                            Margin="0,0,4,0"/>
+                                        <Button Grid.Column="1" Content="Next ▶" 
+                                            Command="{Binding NextTurnCommand}"
+                                            Style="{StaticResource ModernButton}"
+                                            Margin="4,0,0,0"/>
+                                </Grid>
                             </StackPanel>
+                        </Border>
 
-                            <Button Content="Add Sample Obstacle" Click="AddSampleObstacle_Click" Width="150" Margin="6,0,0,0" Foreground="Black"/>
-
-                            <StackPanel Orientation="Horizontal" Margin="0,8">
-                                <Button Content="Undo" Click="Undo_Click" Width="60"/>
-                                <Button Content="Redo" Click="Redo_Click" Width="60" Margin="6,0,0,0"/>
-                                <Button Content="Add Light" Click="AddLight_Click" Width="80" Margin="8,0,0,0"/>
-                                <ToggleButton x:Name="ToggleDrawObstacle" Content="Draw Obstacle" Margin="8,0,0,0" Width="110"
-                                              Checked="ToggleDrawObstacle_Checked" Unchecked="ToggleDrawObstacle_Unchecked"/>
+                        <!-- Tools Section -->
+                        <TextBlock Text="TOOLS" Style="{StaticResource SidebarHeader}"/>
+                        <Border Style="{StaticResource PanelStyle}">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Button Grid.Column="0" Content="↩️ Undo" Click="Undo_Click"
+                                            Style="{StaticResource ModernButton}" Margin="0,0,4,0"/>
+                                        <Button Grid.Column="1" Content="↪️ Redo" Click="Redo_Click"
+                                            Style="{StaticResource ModernButton}" Margin="4,0,0,0"/>
+                                </Grid>
+                                <Button Content="💡 Add Light Source" Click="AddLight_Click"
+                                        Style="{StaticResource ModernButton}"
+                                        HorizontalAlignment="Stretch" Margin="0,8,0,0"/>
+                                <Button Content="🧱 Add Obstacle" Click="AddSampleObstacle_Click"
+                                        Style="{StaticResource ModernButton}"
+                                        HorizontalAlignment="Stretch" Margin="0,8,0,0"/>
                             </StackPanel>
+                        </Border>
 
-                            <Border Background="White" BorderBrush="Black" BorderThickness="1" Margin="0,8,0,0">
-                                <ListBox ItemsSource="{Binding ActionLog}" Height="120" Foreground="Black">
-                                    <ListBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding}" FontFamily="Consolas" FontSize="12"/>
-                                        </DataTemplate>
-                                    </ListBox.ItemTemplate>
-                                </ListBox>
-                            </Border>
-                        </StackPanel>
-
-                        <Expander Header="Combat Tracker" IsExpanded="True" Margin="0,8" Foreground="White">
-                            <ListBox ItemsSource="{Binding Tokens}" SelectedItem="{Binding SelectedToken}" Foreground="Black">
+                        <!-- Action Log -->
+                        <TextBlock Text="ACTION LOG" Style="{StaticResource SidebarHeader}"/>
+                        <Border Background="#252526" CornerRadius="8" Padding="0" Height="150">
+                            <ListBox ItemsSource="{Binding ActionLog}" 
+                                     Background="Transparent" 
+                                     BorderThickness="0"
+                                     Foreground="#CCC"
+                                     FontFamily="Consolas"
+                                     FontSize="11">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
-                                        <StackPanel Orientation="Horizontal" Margin="4">
-                                            <TextBlock Text="{Binding Name}" Width="120"/>
-                                            <TextBlock Text="HP:" Foreground="Gray" Width="28"/>
-                                            <TextBlock Text="{Binding HP}" Foreground="DarkGreen" />
-                                        </StackPanel>
+                                        <TextBlock Text="{Binding}" TextWrapping="Wrap"/>
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
                             </ListBox>
-                        </Expander>
-
-                        <StatusBar DockPanel.Dock="Bottom" Grid.ColumnSpan="2" Height="24" VerticalAlignment="Bottom">
-                            <StatusBarItem>
-                                <TextBlock x:Name="Status_Cursor" Text="Cell: -,-" />
-                            </StatusBarItem>
-                            <StatusBarItem>
-                                <TextBlock x:Name="Status_Mode" Text="Mode: Normal" />
-                            </StatusBarItem>
-                            <StatusBarItem>
-                                <TextBlock x:Name="Status_Undo" Text="Undo: 0" />
-                            </StatusBarItem>
-                        </StatusBar>
+                        </Border>
 
                     </StackPanel>
                 </ScrollViewer>
             </Border>
 
-            <!-- Main Area -->
-            <Grid Grid.Column="1" Background="#FF2D2D30">
+            <!-- Left Splitter -->
+            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" 
+                          Background="#1A1A1D" Cursor="SizeWE"/>
+
+            <!-- ========== BATTLE MAP (CENTER) ========== -->
+            <Border Grid.Column="2" Background="#2D2D30" CornerRadius="8" Margin="5">
                 <controls:BattleGridControl x:Name="BattleGrid"
                                             HorizontalAlignment="Stretch"
                                             VerticalAlignment="Stretch"
                                             GridCellSize="{Binding GridCellSize}"
                                             Tokens="{Binding Tokens}"
                                             MapImageSource="{Binding MapImageSource}"
-                                            SelectedToken="{Binding SelectedToken}" />
-            </Grid>
-            <Border x:Name="LoadingOverlay" 
-                Background="#DD1E1E1E"
-                Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}, FallbackValue=Collapsed}"
-                Panel.ZIndex="9999">
-                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <ProgressBar IsIndeterminate="True" Width="300" Height="20" Margin="0,0,0,15"/>
-                    <TextBlock Text="{Binding LoadingMessage}" 
-                        Foreground="White" 
-                        FontSize="16" 
-                        HorizontalAlignment="Center"/>
-                    <TextBlock Text="Please wait while the creature database loads..."
-                        Foreground="#888"
-                        FontSize="12"
-                        HorizontalAlignment="Center"
-                        Margin="0,10,0,0"/>
-                </StackPanel>
+                                            SelectedToken="{Binding SelectedToken}"/>
             </Border>
 
-            <views:CombatTrackerPanel Grid.Column="2" 
-                          DataContext="{Binding}"
-                          Width="280"/>
+            <!-- Right Splitter -->
+            <GridSplitter Grid.Column="3" Width="5" HorizontalAlignment="Stretch" 
+                          Background="#1A1A1D" Cursor="SizeWE"/>
+
+            <!-- ========== RIGHT SIDEBAR ========== -->
+            <Border Grid.Column="4" Background="#1E1E1E" Padding="12">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+
+                        <!-- Selected Token Details -->
+                        <TextBlock Text="SELECTED TOKEN" Style="{StaticResource SidebarHeader}"/>
+                        <Border Style="{StaticResource PanelStyle}">
+                            <StackPanel>
+                                <TextBlock Text="Select a token on the map" 
+                                           Foreground="#666" 
+                                           HorizontalAlignment="Center"
+                                           Margin="0,20">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedToken}" Value="{x:Null}">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                                </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+
+                                <views:TokenEditorView DataContext="{Binding SelectedToken}"
+                                                       Visibility="{Binding SelectedToken, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Creatures on Map -->
+                        <TextBlock Text="CREATURES ON MAP" Style="{StaticResource SidebarHeader}"/>
+                        <Border Style="{StaticResource PanelStyle}" Padding="0">
+                            <ListBox ItemsSource="{Binding Tokens}" 
+                                     SelectedItem="{Binding SelectedToken}"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     MaxHeight="300">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Padding="10,8" Margin="2" CornerRadius="4" Cursor="Hand">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="Transparent"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsCurrentTurn}" Value="True">
+                                                            <Setter Property="Background" Value="#1B5E20"/>
+                                                        </DataTrigger>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="#3E3E42"/>
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{Binding Name}" 
+                                                           Foreground="White" 
+                                                           VerticalAlignment="Center"
+                                                           TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Grid.Column="1" Foreground="#4CAF50" 
+                                                           VerticalAlignment="Center" Margin="8,0">
+                                                    <Run Text="{Binding HP}"/><Run Text="/" Foreground="#666"/><Run Text="{Binding MaxHP}" Foreground="#666"/>
+                                                    </TextBlock>
+                                                    <TextBlock Grid.Column="2" Text="▶" 
+                                                           Foreground="#4CAF50" 
+                                                           Visibility="{Binding IsCurrentTurn, Converter={StaticResource BoolToVisibilityConverter}}"
+                                                           VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
         </Grid>
-    </DockPanel>
+
+        <!-- ==================== INITIATIVE BAR (BOTTOM) ==================== -->
+        <Border Grid.Row="3" Background="#252526" Padding="10,8"
+                Visibility="{Binding IsInCombat, Converter={StaticResource BoolToVisibilityConverter}}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Round Counter -->
+                <Border Grid.Column="0" Background="#1B5E20" CornerRadius="4" Padding="12,6" Margin="0,0,15,0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Round " Foreground="#AAA" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding CurrentRound}" Foreground="White" FontWeight="Bold" FontSize="16" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Initiative Order (Horizontal Scroll) -->
+                <ScrollViewer Grid.Column="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                    <ItemsControl ItemsSource="{Binding InitiativeOrderList}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Margin="0,0,8,0" CornerRadius="6" Padding="12,8" MinWidth="120" Cursor="Hand">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="#2D2D30"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsCurrentTurn}" Value="True">
+                                                    <Setter Property="Background" Value="#0E639C"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Name}" Foreground="White" FontWeight="SemiBold" 
+                                                   TextTrimming="CharacterEllipsis" MaxWidth="100"/>
+                                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                            <Border Background="#4FC3F7" CornerRadius="8" Padding="6,2" Margin="0,0,6,0">
+                                                <TextBlock Text="{Binding Initiative}" Foreground="Black" FontWeight="Bold" FontSize="11"/>
+                                            </Border>
+                                            <TextBlock Foreground="#888" FontSize="11" VerticalAlignment="Center">
+                                                <Run Text="HP:  "/><Run Text="{Binding HP}" Foreground="#4CAF50"/>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <!-- Turn Controls -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="15,0,0,0">
+                    <Button Content="◀ Prev" Command="{Binding PreviousTurnCommand}"
+                            Style="{StaticResource ModernButton}" Margin="0,0,8,0"/>
+                    <Button Content="Next ▶" Command="{Binding NextTurnCommand}"
+                            Padding="15,8" FontWeight="Bold">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource ModernButton}">
+                                <Setter Property="Background" Value="#4CAF50"/>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ==================== STATUS BAR ==================== -->
+        <Border Grid.Row="4" Background="#007ACC" Padding="10,4">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" x:Name="Status_Cursor" Text="Cell:  -,-" 
+                           Foreground="White" Margin="0,0,20,0"/>
+                <TextBlock Grid.Column="1" x:Name="Status_Mode" Text="Mode: Normal" 
+                           Foreground="White" Margin="0,0,20,0"/>
+                <TextBlock Grid.Column="3" x:Name="Status_Undo" Text="Undo:  0 | Redo: 0" 
+                           Foreground="White"/>
+            </Grid>
+        </Border>
+
+        <!-- ==================== LOADING OVERLAY ==================== -->
+        <Border Grid.RowSpan="5" 
+                Background="#DD1A1A1D"
+                Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}, FallbackValue=Collapsed}"
+                Panel.ZIndex="9999">
+            <Border Background="#252526" CornerRadius="12" Padding="40,30"
+                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                <StackPanel>
+                    <ProgressBar IsIndeterminate="True" Width="300" Height="6" 
+                                 Background="#1E1E1E" Foreground="#007ACC"/>
+                    <TextBlock Text="{Binding LoadingMessage}" 
+                               Foreground="White" 
+                               FontSize="16" 
+                               HorizontalAlignment="Center"
+                               Margin="0,20,0,0"/>
+                    <TextBlock Text="Please wait..."
+                               Foreground="#666"
+                               FontSize="12"
+                               HorizontalAlignment="Center"
+                               Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
+        </Border>
+    </Grid>
 </Window>

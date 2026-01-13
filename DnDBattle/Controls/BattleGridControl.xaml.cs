@@ -20,6 +20,13 @@ namespace DnDBattle.Controls
 {
     public partial class BattleGridControl : UserControl
     {
+        public event Action<Token> TokenDoubleClicked;
+
+        public event Action<Token> RequestDeleteToken;
+        public event Action<Token> RequestDuplicateToken;
+        public event Action<Token> RequestEditToken;
+        public event Action<Point> RequestAddTokenAtPosition;
+
         // Dependency properties (including LockToGrid)
         public static readonly DependencyProperty GridCellSizeProperty =
             DependencyProperty.Register(nameof(GridCellSize), typeof(double), typeof(BattleGridControl), new PropertyMetadata(48.0, OnGridPropertyChanged));
@@ -138,6 +145,91 @@ namespace DnDBattle.Controls
                 wrapper.Effect = new BlurEffect { Radius = Options.ShadowSoftnessPx, RenderingBias = RenderingBias.Quality };
             RenderCanvas.Children.Add(wrapper);
             Canvas.SetZIndex(RenderCanvas.Children[^1], zIndex);
+        }
+
+        private ContextMenu CreateTokenContextMenu(Token token)
+        {
+            var menu = new ContextMenu();
+
+            var editItem = new MenuItem { Header = "📝 Edit Stats..." };
+            editItem.Click += (s, e) => RequestEditToken?.Invoke(token);
+            menu.Items.Add(editItem);
+
+            var duplicateItem = new MenuItem { Header = "📋 Duplicate" };
+            duplicateItem.Click += (s, e) => RequestDuplicateToken?.Invoke(token);
+            menu.Items.Add(duplicateItem);
+
+            menu.Items.Add(new Separator());
+
+            var rollInitItem = new MenuItem { Header = "🎲 Roll Initiative" };
+            rollInitItem.Click += (s, e) =>
+            {
+                var roll = Utils.DiceRoller.RollExpression("1d20");
+                token.Initiative = roll.Total + token.InitiativeModifier;
+            };
+            menu.Items.Add(rollInitItem);
+
+            var healItem = new MenuItem { Header = "💚 Heal..." };
+            healItem.Click += (s, e) => ShowHealDialog(token);
+            menu.Items.Add(healItem);
+
+            var damageItem = new MenuItem { Header = "💔 Damage..." };
+            damageItem.Click += (s, e) => ShowDamageDialog(token);
+            menu.Items.Add(damageItem);
+
+            menu.Items.Add(new Separator());
+
+            var deleteItem = new MenuItem { Header = "🗑️ Remove from Map" };
+            deleteItem.Click += (s, e) => RequestDeleteToken?.Invoke(token);
+            menu.Items.Add(deleteItem);
+
+            return menu;
+        }
+
+
+        private void ShowHealDialog(Token token)
+        {
+            string input = Microsoft.VisualBasic.Interaction.InputBox(
+                $"Heal {token.Name} by how much?", "Heal", "0");
+
+            if (int.TryParse(input, out int amount) && amount > 0)
+            {
+                token.HP = Math.Min(token.HP + amount, token.MaxHP);
+            }
+        }
+
+        private void ShowDamageDialog(Token token)
+        {
+            string input = Microsoft.VisualBasic.Interaction.InputBox(
+                $"Damage {token.Name} by how much?", "Damage", "0");
+
+            if (int.TryParse(input, out int amount) && amount > 0)
+            {
+                token.HP = Math.Max(token.HP - amount, 0);
+            }
+        }
+
+        private void InitializeMapContextMenu()
+        {
+            var mapMenu = new ContextMenu();
+
+            var addCreatureItem = new MenuItem { Header = "➕ Add Creature Here..." };
+            addCreatureItem.Click += (s, e) =>
+            {
+                var position = Mouse.GetPosition(RenderCanvas);
+                RequestAddTokenAtPosition?.Invoke(position);
+            };
+            mapMenu.Items.Add(addCreatureItem);
+
+            var addLightItem = new MenuItem { Header = "💡 Add Light Here..." };
+            addLightItem.Click += (s, e) =>
+            {
+                var position = Mouse.GetPosition(RenderCanvas);
+                // Add light at position method?
+            };
+            mapMenu.Items.Add(addLightItem);
+
+            RenderCanvas.ContextMenu = mapMenu;
         }
 
         private class FrameworkElementForVisual : FrameworkElement
@@ -265,6 +357,8 @@ namespace DnDBattle.Controls
         private void Tokens_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e) => RebuildTokenVisuals();
         #endregion
 
+
+
         private void RebuildTokenVisuals()
         {
             var existing = RenderCanvas.Children.OfType<FrameworkElement>().Where(c => c.Tag is Token).ToList();
@@ -313,6 +407,24 @@ namespace DnDBattle.Controls
                     VerticalAlignment = VerticalAlignment.Center,
                     ToolTip = CreateTokenTooltip(token)
                 };
+
+                img.MouseLeftButtonDown += (s, e) =>
+                {
+                    if (e.ClickCount == 2)
+                    {
+                        if (img.Tag is Token token)
+                        {
+                            TokenDoubleClicked?.Invoke(token);
+                        }
+                        e.Handled = true;
+                    }
+                    else
+                    {
+                        Token_MouseLeftButtonDown(s, e);
+                    }
+                };
+
+                img.ContextMenu = CreateTokenContextMenu(token);
 
                 ToolTipService.SetInitialShowDelay(img, 100);
                 ToolTipService.SetShowDuration(img, 30000);
