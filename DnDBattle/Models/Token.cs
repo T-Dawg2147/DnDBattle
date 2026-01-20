@@ -147,6 +147,9 @@ namespace DnDBattle.Models
         private string _vulnerabilities;
         public string Vulnerabilities { get => _vulnerabilities; set => SetProperty(ref _vulnerabilities, value); }
 
+        private bool _isFavorite;
+        public bool IsFavorite { get => _isFavorite; set { _isFavorite = value; OnPropertyChanged(nameof(IsFavorite)); } }
+
         // === Combat Tracking Properties ===
 
         // Current Turn

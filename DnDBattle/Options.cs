@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace DnDBattle
 {
@@ -12,6 +14,11 @@ namespace DnDBattle
     /// </summary>
     public static class Options
     {
+        /// <summary>
+        /// Default images path, used for both Images and Icons.
+        /// </summary>
+        public static string DefaultTokenImagePath { get; set; } = Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Entites", "Tokens");
+
         /// <summary>
         /// Lighing / shadow softness in pixels (applied via BlurEffect radius).
         /// </summary>

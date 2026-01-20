@@ -246,7 +246,7 @@ namespace DnDBattle.ViewModels
                 {
                     await Application.Current.Dispatcher.InvokeAsync(() =>
                     {
-                        LoadingMessage = "Loading creatures from datsbase";
+                        LoadingMessage = "Loading creatures from database";
                     });
 
                     var creatures = await _dbService.SearchCreaturesAsync(sortBy: "Name", limit: 10000);
@@ -403,20 +403,9 @@ namespace DnDBattle.ViewModels
             }
 
             RefreshInitiativeOrder();
+            
             OnPropertyChanged(nameof(InitiativeOrderList));
-        }
-
-        private void RerollSingleInitiative()
-        {
-            if (SelectedToken == null) return;
-
-            var roll = DiceRoller.RollExpression("1d20");
-            SelectedToken.Initiative = roll.Total + SelectedToken.InitiativeModifier;
-
-            Log("Initiative", $"🎲 {SelectedToken.Name} rerolled:  {roll.Total} + {SelectedToken.InitiativeModifier} = {SelectedToken.Initiative}");
-
-            RefreshInitiativeOrder();
-            OnPropertyChanged(nameof(InitiativeOrderList));
+            OnPropertyChanged(nameof(InitiativeOrder));
         }
 
         private void RefreshInitiativeOrder()
@@ -435,6 +424,8 @@ namespace DnDBattle.ViewModels
 
             OnPropertyChanged(nameof(InitiativeOrderList));
             OnPropertyChanged(nameof(InitiativeOrder));
+
+            RequestTokenVisualsRefresh?.Invoke();
         }
 
         private void NextTurn()

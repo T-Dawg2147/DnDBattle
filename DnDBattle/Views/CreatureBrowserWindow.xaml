@@ -3,314 +3,286 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:DnDBattle.Views"
              mc:Ignorable="d" 
-             MinWidth="800" MinHeight="550" Background="#2D2D30">
+             MinWidth="900" MinHeight="600" Background="#1E1E1E">
 
     <UserControl.Resources>
-        <!-- TreeView Item Style -->
-        <Style x:Key="GroupHeaderStyle" TargetType="TextBlock">
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Foreground" Value="#4FC3F7"/>
-            <Setter Property="Margin" Value="0,2"/>
-        </Style>
-
-        <!-- Creature count badge -->
-        <Style x:Key="CountBadgeStyle" TargetType="Border">
-            <Setter Property="Background" Value="#3E3E42"/>
-            <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="Padding" Value="6,2"/>
-            <Setter Property="Margin" Value="8,0,0,0"/>
-        </Style>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
     </UserControl.Resources>
 
-    <Grid Margin="10">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="220" MinWidth="180"/>
+            <ColumnDefinition Width="5"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="300" MinWidth="250"/>
+        </Grid.ColumnDefinitions>
 
-        <!-- Header with Search and Filters -->
-        <Grid Grid.Row="0" Margin="0,0,0,10">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
+        <!-- ========== LEFT PANEL:  Categories ========== -->
+        <Border Grid.Column="0" Background="#252526" Padding="10">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
-            <!-- Search Box -->
-            <Grid Grid.Column="0">
-                <TextBox x:Name="TxtSearch" 
-                         Padding="30,8,10,8" 
-                         FontSize="14"
-                         Background="#1E1E1E"
-                         Foreground="White"
-                         BorderBrush="#444"
-                         TextChanged="TxtSearch_TextChanged">
-                </TextBox>
-                <TextBlock Text="🔍" 
-                           IsHitTestVisible="False"
-                           VerticalAlignment="Center"
-                           Margin="10,0,0,0"
-                           Foreground="#888"/>
-                <TextBlock Text="Search creatures..." 
-                           IsHitTestVisible="False"
-                           VerticalAlignment="Center"
-                           Margin="35,0,0,0"
-                           Foreground="#666"
-                           Visibility="{Binding Text. Length, ElementName=TxtSearch, Converter={StaticResource InverseBoolToVisibilityConverter}, FallbackValue=Visible}">
-                    <TextBlock.Style>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="Visibility" Value="Collapsed"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding Text, ElementName=TxtSearch}" Value="">
-                                    <Setter Property="Visibility" Value="Visible"/>
-                                </DataTrigger>
-                                </Style.Triggers>
+                <!-- Header -->
+                <TextBlock Grid.Row="0" Text="📚 LIBRARY" 
+                           Foreground="#4FC3F7" FontWeight="Bold" 
+                           FontSize="12" Margin="0,0,0,10"/>
+
+                <!-- Category Tree -->
+                <TreeView x:Name="CategoryTree" Grid.Row="1" 
+                          Background="Transparent" BorderThickness="0"
+                          SelectedItemChanged="CategoryTree_SelectedItemChanged">
+                    <TreeView.ItemContainerStyle>
+                        <Style TargetType="TreeViewItem">
+                            <Setter Property="Foreground" Value="White"/>
+                            <Setter Property="IsExpanded" Value="True"/>
                         </Style>
-                        </TextBlock.Style>
-                </TextBlock>
+                    </TreeView.ItemContainerStyle>
+                </TreeView>
+
+                <!-- Category Actions -->
+                <StackPanel Grid.Row="2" Margin="0,10,0,0">
+                    <Button Content="➕ New Category" Click="NewCategory_Click"
+                            Padding="8,5" Margin="0,0,0,5"/>
+                    <Button Content="📝 Rename" Click="RenameCategory_Click"
+                            Padding="8,5" Margin="0,0,0,5"
+                            x:Name="BtnRenameCategory"/>
+                    <Button Content="🗑️ Delete" Click="DeleteCategory_Click"
+                            Padding="8,5"
+                            x:Name="BtnDeleteCategory"/>
+                </StackPanel>
             </Grid>
-
-            <!-- Group By Selector -->
-            <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="15,0,0,0">
-                <TextBlock Text="Group by:" Foreground="#AAA" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                <ComboBox x:Name="CmbGroupBy" Width="140" SelectionChanged="CmbGroupBy_SelectionChanged">
-                    <ComboBoxItem Tag="Type" IsSelected="True">Type</ComboBoxItem>
-                    <ComboBoxItem Tag="ChallengeRating">Challenge Rating</ComboBoxItem>
-                    <ComboBoxItem Tag="Size">Size</ComboBoxItem>
-                    <ComboBoxItem Tag="Category">Source Category</ComboBoxItem>
-                    <ComboBoxItem Tag="None">No Grouping</ComboBoxItem>
-                </ComboBox>
-            </StackPanel>
-        </Grid>
-
-        <!-- Filter Bar -->
-        <Border Grid.Row="1" Background="#252526" CornerRadius="4" Padding="10,8" Margin="0,0,0,10">
-            <StackPanel Orientation="Horizontal">
-                <!-- CR Filter -->
-                <TextBlock Text="CR:" Foreground="#AAA" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                <TextBox x:Name="TxtCRMin" Width="40" Margin="0,0,3,0" 
-                         TextChanged="FilterChanged" Background="#1E1E1E" Foreground="White"/>
-                <TextBlock Text="—" Foreground="#666" VerticalAlignment="Center" Margin="0,0,3,0"/>
-                <TextBox x:Name="TxtCRMax" Width="40" Margin="0,0,15,0"
-                         TextChanged="FilterChanged" Background="#1E1E1E" Foreground="White"/>
-
-                <!-- HP Filter -->
-                <TextBlock Text="HP:" Foreground="#AAA" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                <TextBox x:Name="TxtHPMin" Width="45" Margin="0,0,3,0"
-                         TextChanged="FilterChanged" Background="#1E1E1E" Foreground="White"/>
-                <TextBlock Text="—" Foreground="#666" VerticalAlignment="Center" Margin="0,0,3,0"/>
-                <TextBox x:Name="TxtHPMax" Width="45" Margin="0,0,15,0"
-                         TextChanged="FilterChanged" Background="#1E1E1E" Foreground="White"/>
-
-                <!-- Size Filter -->
-                <TextBlock Text="Size:" Foreground="#AAA" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                <ComboBox x:Name="CmbSizeFilter" Width="100" Margin="0,0,15,0" 
-                          SelectionChanged="FilterChanged">
-                    <ComboBoxItem Content="All" IsSelected="True"/>
-                    <ComboBoxItem Content="Tiny"/>
-                    <ComboBoxItem Content="Small"/>
-                    <ComboBoxItem Content="Medium"/>
-                    <ComboBoxItem Content="Large"/>
-                    <ComboBoxItem Content="Huge"/>
-                    <ComboBoxItem Content="Gargantuan"/>
-                </ComboBox>
-
-                <!-- Clear Filters -->
-                <Button Content="Clear Filters" Padding="10,3" Click="BtnClearFilters_Click"/>
-
-                <!-- Creature Count -->
-                <TextBlock x:Name="TxtCreatureCount" Foreground="#888" 
-                           VerticalAlignment="Center" Margin="20,0,0,0"/>
-            </StackPanel>
         </Border>
 
-        <!-- Main Content:  TreeView + Details Panel -->
-        <Grid Grid.Row="2">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="350" MinWidth="250"/>
-                <ColumnDefinition Width="5"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
+        <!-- Splitter -->
+        <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" 
+                      Background="#1E1E1E" Cursor="SizeWE"/>
 
-            <!-- TreeView -->
-            <Border Grid.Row="0" Background="#1E1E1E" CornerRadius="4,4,0,0">
-                <TreeView x:Name="CreatureTree" 
-                  Background="Transparent"
-                  BorderThickness="0"
-                  Padding="5"
-                  VirtualizingPanel.IsVirtualizing="True"
-                  VirtualizingPanel.VirtualizationMode="Recycling"
-                  SelectedItemChanged="CreatureTree_SelectedItemChanged"
-                  MouseDoubleClick="CreatureTree_MouseDoubleClick">
-                </TreeView>
-            </Border>
+        <!-- ========== CENTER:  Creature List ========== -->
+        <Border Grid.Column="2" Background="#1E1E1E" Padding="10">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
-            <!-- Loading Status Bar -->
-            <Border x:Name="LoadingStatusBar" Grid.Row="1" 
-            Background="#252526" 
-            CornerRadius="0,0,4,4"
-            Padding="10,8"
-            Visibility="Collapsed">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-
-                    <!-- Spinning indicator -->
-                    <Border Grid.Column="0" Width="16" Height="16" Margin="0,0,10,0">
-                        <Border.RenderTransform>
-                            <RotateTransform x:Name="SpinnerRotation" CenterX="8" CenterY="8"/>
-                        </Border.RenderTransform>
-                        <Ellipse Width="16" Height="16" 
-                         StrokeThickness="2" 
-                         Stroke="#4FC3F7"
-                         StrokeDashArray="3,2"/>
-                    </Border>
-
-                    <!-- Status text -->
-                    <TextBlock x:Name="TxtLoadingStatus" 
-                       Grid.Column="1"
-                       Text="Loading creatures..."
-                       Foreground="#AAA"
-                       FontSize="12"
-                       VerticalAlignment="Center"/>
-
-                    <!-- Progress count -->
-                    <TextBlock x:Name="TxtLoadingProgress" 
-                       Grid.Column="2"
-                       Text="0 / 0"
-                       Foreground="#4FC3F7"
-                       FontSize="12"
-                       FontWeight="Bold"
-                       VerticalAlignment="Center"/>
+                <!-- Search Bar -->
+                <Grid Grid.Row="0" Margin="0,0,0,10">
+                    <TextBox x:Name="TxtSearch" 
+                             Padding="30,8,10,8" 
+                             FontSize="14"
+                             Background="#2D2D30"
+                             Foreground="White"
+                             BorderBrush="#444"
+                             TextChanged="TxtSearch_TextChanged"/>
+                    <TextBlock Text="🔍" 
+                               IsHitTestVisible="False"
+                               VerticalAlignment="Center"
+                               Margin="10,0,0,0"
+                               Foreground="#888"/>
                 </Grid>
-            </Border>
 
-            <!-- Splitter -->
-            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" 
-                          Background="#2D2D30" Cursor="SizeWE"/>
+                <!-- Filter Bar -->
+                <Border Grid.Row="1" Background="#252526" CornerRadius="4" Padding="10,8" Margin="0,0,0,10">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="CR:" Foreground="#AAA" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                        <TextBox x:Name="TxtCRMin" Width="40" Margin="0,0,3,0" 
+                                 TextChanged="FilterChanged" Background="#1E1E1E" Foreground="White"/>
+                        <TextBlock Text="—" Foreground="#666" VerticalAlignment="Center" Margin="0,0,3,0"/>
+                        <TextBox x:Name="TxtCRMax" Width="40" Margin="0,0,15,0"
+                                 TextChanged="FilterChanged" Background="#1E1E1E" Foreground="White"/>
 
-            <!-- Details Panel -->
-            <Border Grid.Column="2" Background="#1E1E1E" CornerRadius="4" Margin="5,0,0,0">
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="15">
-                    <StackPanel x:Name="DetailsPanel">
-                        <!-- Placeholder when nothing selected -->
-                        <TextBlock x:Name="TxtNoSelection" 
-                                   Text="Select a creature to view details"
-                                   Foreground="#666" FontSize="14"
-                                   HorizontalAlignment="Center"
-                                   Margin="0,50,0,0"/>
+                        <TextBlock Text="Type:" Foreground="#AAA" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                        <ComboBox x:Name="CmbTypeFilter" Width="120" Margin="0,0,15,0" 
+                                  SelectionChanged="FilterChanged"/>
 
-                        <!-- Creature Details (hidden until selection) -->
-                        <StackPanel x:Name="CreatureDetails" Visibility="Collapsed">
-                            <!-- Name and Type -->
-                            <TextBlock x:Name="TxtCreatureName" FontSize="22" FontWeight="Bold" 
-                                       Foreground="White" Margin="0,0,0,5"/>
-                            <TextBlock x:Name="TxtCreatureSubtitle" FontSize="12" 
-                                       Foreground="#AAA" FontStyle="Italic" Margin="0,0,0,15"/>
+                        <Button Content="Clear" Padding="10,3" Click="BtnClearFilters_Click"/>
 
-                            <!-- Stats Bar -->
-                            <Border Background="#252526" CornerRadius="4" Padding="15,10" Margin="0,0,0,15">
-                                <UniformGrid Columns="4">
-                                    <StackPanel HorizontalAlignment="Center">
-                                        <TextBlock Text="AC" Foreground="#888" FontSize="10" HorizontalAlignment="Center"/>
-                                        <TextBlock x:Name="TxtAC" Foreground="White" FontSize="18" 
-                                                   FontWeight="Bold" HorizontalAlignment="Center"/>
-                                    </StackPanel>
-                                    <StackPanel HorizontalAlignment="Center">
-                                        <TextBlock Text="HP" Foreground="#888" FontSize="10" HorizontalAlignment="Center"/>
-                                        <TextBlock x:Name="TxtHP" Foreground="#4CAF50" FontSize="18" 
-                                                   FontWeight="Bold" HorizontalAlignment="Center"/>
-                                    </StackPanel>
-                                    <StackPanel HorizontalAlignment="Center">
-                                        <TextBlock Text="CR" Foreground="#888" FontSize="10" HorizontalAlignment="Center"/>
-                                        <TextBlock x:Name="TxtCR" Foreground="#FFC107" FontSize="18" 
-                                                   FontWeight="Bold" HorizontalAlignment="Center"/>
-                                    </StackPanel>
-                                    <StackPanel HorizontalAlignment="Center">
-                                        <TextBlock Text="Speed" Foreground="#888" FontSize="10" HorizontalAlignment="Center"/>
-                                        <TextBlock x:Name="TxtSpeed" Foreground="White" FontSize="14" 
-                                                   HorizontalAlignment="Center"/>
-                                    </StackPanel>
-                                </UniformGrid>
+                        <TextBlock x:Name="TxtCreatureCount" Foreground="#888" 
+                                   VerticalAlignment="Center" Margin="15,0,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Creature List -->
+                <ListBox x:Name="CreatureList" Grid.Row="2" 
+                         Background="Transparent" BorderThickness="0"
+                         SelectionChanged="CreatureList_SelectionChanged"
+                         MouseDoubleClick="CreatureList_MouseDoubleClick">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Border Padding="10,8" Margin="2" CornerRadius="4" Cursor="Hand">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="#2D2D30"/>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="#3E3E42"/>
+                                            </Trigger>
+                                            </Style.Triggers>
+                                    </Style>
+                                    </Border.Style>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- Favorite Star -->
+                                        <Button Grid.Column="0" Content="⭐" 
+                                            Tag="{Binding}" Click="ToggleFavorite_Click"
+                                            Background="Transparent" BorderThickness="0"
+                                            Foreground="{Binding IsFavorite, Converter={StaticResource FavoriteColorConverter}, FallbackValue=Gray}"
+                                            Margin="0,0,8,0" Cursor="Hand"
+                                            ToolTip="Toggle Favorite"/>
+
+                                        <!-- Name and Type -->
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Text="{Binding Name}" Foreground="White" FontWeight="SemiBold"/>
+                                            <TextBlock Foreground="#888" FontSize="11">
+                                            <Run Text="{Binding Size}"/>
+                                            <Run Text=" "/>
+                                            <Run Text="{Binding Type}"/>
+                                            </TextBlock>
+                                        </StackPanel>
+
+                                        <!-- CR Badge -->
+                                        <Border Grid.Column="2" Background="#4A4A4A" CornerRadius="4" 
+                                            Padding="8,2" Margin="10,0" VerticalAlignment="Center">
+                                            <TextBlock Foreground="#FFB74D" FontSize="11" FontWeight="Bold">
+                                            <Run Text="CR "/>
+                                            <Run Text="{Binding ChallengeRating}"/>
+                                            </TextBlock>
+                                        </Border>
+
+                                        <!-- HP -->
+                                        <TextBlock Grid.Column="3" Foreground="#4CAF50" 
+                                               VerticalAlignment="Center" FontSize="12">
+                                        <Run Text="HP "/>
+                                        <Run Text="{Binding MaxHP}"/>
+                                        </TextBlock>
+                                    </Grid>
                             </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
 
-                            <!-- Ability Scores -->
-                            <TextBlock Text="Ability Scores" Foreground="#4FC3F7" FontWeight="Bold" 
-                                       FontSize="12" Margin="0,0,0,8"/>
-                            <Border Background="#252526" CornerRadius="4" Padding="10" Margin="0,0,0,15">
-                                <UniformGrid Columns="6">
-                                    <StackPanel HorizontalAlignment="Center">
-                                        <TextBlock Text="STR" Foreground="#888" FontSize="10" HorizontalAlignment="Center"/>
-                                        <TextBlock x:Name="TxtStr" Foreground="White" FontSize="16" 
-                                                   FontWeight="Bold" HorizontalAlignment="Center"/>
-                                    </StackPanel>
-                                    <StackPanel HorizontalAlignment="Center">
-                                        <TextBlock Text="DEX" Foreground="#888" FontSize="10" HorizontalAlignment="Center"/>
-                                        <TextBlock x:Name="TxtDex" Foreground="White" FontSize="16" 
-                                                   FontWeight="Bold" HorizontalAlignment="Center"/>
-                                    </StackPanel>
-                                    <StackPanel HorizontalAlignment="Center">
-                                        <TextBlock Text="CON" Foreground="#888" FontSize="10" HorizontalAlignment="Center"/>
-                                        <TextBlock x:Name="TxtCon" Foreground="White" FontSize="16" 
-                                                   FontWeight="Bold" HorizontalAlignment="Center"/>
-                                    </StackPanel>
-                                    <StackPanel HorizontalAlignment="Center">
-                                        <TextBlock Text="INT" Foreground="#888" FontSize="10" HorizontalAlignment="Center"/>
-                                        <TextBlock x:Name="TxtInt" Foreground="White" FontSize="16" 
-                                                   FontWeight="Bold" HorizontalAlignment="Center"/>
-                                    </StackPanel>
-                                    <StackPanel HorizontalAlignment="Center">
-                                        <TextBlock Text="WIS" Foreground="#888" FontSize="10" HorizontalAlignment="Center"/>
-                                        <TextBlock x:Name="TxtWis" Foreground="White" FontSize="16" 
-                                                   FontWeight="Bold" HorizontalAlignment="Center"/>
-                                    </StackPanel>
-                                    <StackPanel HorizontalAlignment="Center">
-                                        <TextBlock Text="CHA" Foreground="#888" FontSize="10" HorizontalAlignment="Center"/>
-                                        <TextBlock x:Name="TxtCha" Foreground="White" FontSize="16" 
-                                                   FontWeight="Bold" HorizontalAlignment="Center"/>
-                                    </StackPanel>
-                                </UniformGrid>
-                            </Border>
+                <!-- Bottom Actions -->
+                <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,10,0,0">
+                    <Button Content="➕ Create Creature" Click="CreateCreature_Click"
+                            Padding="12,8" Margin="0,0,10,0"/>
+                    <Button Content="📥 Import JSON" Click="ImportSingleJson_Click"
+                            Padding="12,8" Margin="0,0,10,0"/>
+                    <Button Content="🔄 Reload" Click="BtnReload_Click"
+                            Padding="12,8"/>
+                </StackPanel>
+            </Grid>
+        </Border>
 
-                            <!-- Traits -->
-                            <StackPanel x:Name="TraitsSection" Margin="0,0,0,15">
-                                <TextBlock Text="Traits" Foreground="#4FC3F7" FontWeight="Bold" 
-                                           FontSize="12" Margin="0,0,0,8"/>
-                                <TextBlock x:Name="TxtTraits" Foreground="#CCC" TextWrapping="Wrap"/>
+        <!-- ========== RIGHT PANEL: Creature Details ========== -->
+        <Border Grid.Column="3" Background="#252526" Padding="15">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel x:Name="DetailsPanel">
+                    <!-- Placeholder -->
+                    <TextBlock x:Name="TxtNoSelection" 
+                               Text="Select a creature to view details"
+                               Foreground="#666" FontSize="14"
+                               HorizontalAlignment="Center" Margin="0,50,0,0"/>
+
+                    <!-- Creature Details -->
+                    <StackPanel x:Name="CreatureDetails" Visibility="Collapsed">
+                        <!-- Header -->
+                        <Grid Margin="0,0,0,15">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock x:Name="TxtCreatureName" FontSize="20" FontWeight="Bold" 
+                                           Foreground="White"/>
+                                    <TextBlock x:Name="TxtCreatureSubtitle" FontSize="11" 
+                                           Foreground="#888" FontStyle="Italic"/>
+                                </StackPanel>
+
+                                <Button Grid.Column="1" Content="⭐" FontSize="20"
+                                    x:Name="BtnFavorite" Click="BtnFavorite_Click"
+                                    Background="Transparent" BorderThickness="0"
+                                    Cursor="Hand" ToolTip="Toggle Favorite"/>
+                        </Grid>
+
+                        <!-- Stats -->
+                        <Border Background="#1E1E1E" CornerRadius="4" Padding="15" Margin="0,0,0,15">
+                            <UniformGrid Columns="3">
+                                <StackPanel HorizontalAlignment="Center">
+                                    <TextBlock Text="AC" Foreground="#888" FontSize="10" HorizontalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtAC" Foreground="#4FC3F7" FontSize="18" 
+                                               FontWeight="Bold" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                                <StackPanel HorizontalAlignment="Center">
+                                    <TextBlock Text="HP" Foreground="#888" FontSize="10" HorizontalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtHP" Foreground="#4CAF50" FontSize="18" 
+                                               FontWeight="Bold" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                                <StackPanel HorizontalAlignment="Center">
+                                    <TextBlock Text="CR" Foreground="#888" FontSize="10" HorizontalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtCR" Foreground="#FFB74D" FontSize="18" 
+                                               FontWeight="Bold" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </UniformGrid>
+                        </Border>
+
+                        <!-- Ability Scores -->
+                        <TextBlock Text="Ability Scores" Foreground="#4FC3F7" FontWeight="Bold" 
+                                   FontSize="11" Margin="0,0,0,8"/>
+                        <Border Background="#1E1E1E" CornerRadius="4" Padding="10" Margin="0,0,0,15">
+                            <UniformGrid Columns="6" x:Name="AbilityScoresGrid"/>
+                        </Border>
+
+                        <!-- Speed -->
+                        <TextBlock Text="Speed" Foreground="#4FC3F7" FontWeight="Bold" 
+                                   FontSize="11" Margin="0,0,0,5"/>
+                        <TextBlock x:Name="TxtSpeed" Foreground="#CCC" Margin="0,0,0,15"/>
+
+                        <!-- Traits -->
+                        <StackPanel x:Name="TraitsSection" Margin="0,0,0,15">
+                            <TextBlock Text="Traits" Foreground="#4FC3F7" FontWeight="Bold" 
+                                       FontSize="11" Margin="0,0,0,5"/>
+                            <TextBlock x:Name="TxtTraits" Foreground="#CCC" TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <!-- Actions -->
+                        <StackPanel x:Name="ActionsSection">
+                            <TextBlock Text="Actions" Foreground="#F44336" FontWeight="Bold" 
+                                       FontSize="11" Margin="0,0,0,8"/>
+                            <ItemsControl x:Name="ActionsList"/>
+                        </StackPanel>
+
+                        <!-- Action Buttons -->
+                        <StackPanel Margin="0,20,0,0">
+                            <Button Content="➕ Add to Battle Map" Click="BtnAddToMap_Click"
+                                    Padding="15,10" FontWeight="Bold"
+                                    Background="#4CAF50" Foreground="White"/>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                <Button Content="📝 Edit" Click="EditCreature_Click"
+                                        Padding="10,5" Margin="0,0,5,0"/>
+                                <Button Content="📋 Duplicate" Click="DuplicateCreature_Click"
+                                        Padding="10,5" Margin="0,0,5,0"/>
+                                <Button Content="🗑️ Delete" Click="DeleteCreature_Click"
+                                        Padding="10,5" Foreground="#F44336"/>
                             </StackPanel>
-
-                            <!-- Actions -->
-                            <StackPanel x:Name="ActionsSection" Margin="0,0,0,15">
-                                <TextBlock Text="Actions" Foreground="#F44336" FontWeight="Bold" 
-                                           FontSize="12" Margin="0,0,0,8"/>
-                                <ItemsControl x:Name="ActionsList"/>
-                            </StackPanel>
-
-                            <!-- Add to Map Button -->
-                            <Button x:Name="BtnAddToMap" Content="➕ Add to Battle Map" 
-                                    Padding="15,10" FontSize="14" Margin="0,20,0,0"
-                                    Click="BtnAddToMap_Click"
-                                    HorizontalAlignment="Stretch"/>
                         </StackPanel>
                     </StackPanel>
-                </ScrollViewer>
-            </Border>
-        </Grid>
-
-        <!-- Footer -->
-        <Border Grid.Row="3" Margin="0,10,0,0">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Content="Reload from Database" Padding="15,8" Margin="0,0,10,0"
-                        Click="BtnReload_Click"/>
-                <Button Content="Close" Padding="15,8" Click="BtnClose_Click"/>
-            </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
         </Border>
     </Grid>
 </UserControl>

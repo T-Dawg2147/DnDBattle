@@ -10,6 +10,7 @@
         <converter:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
         <converter:HPBarWidthConverter x:Key="HPBarWidthConverter"/>
         <converter:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
+        <converter:FavoriteColorConverter x:Key="FavoriteColorConverter"/>
         <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         
         <SolidColorBrush x:Key="AppDarkBg" Color="#FF2D2D30" />

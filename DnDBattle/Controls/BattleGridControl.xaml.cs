@@ -1,6 +1,7 @@
 ﻿using DnDBattle.Models;
 using DnDBattle.Services;
 using DnDBattle.ViewModels;
+using DnDBattle.Views;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -184,6 +185,7 @@ namespace DnDBattle.Controls
             {
                 var roll = Utils.DiceRoller.RollExpression("1d20");
                 token.Initiative = roll.Total + token.InitiativeModifier;
+                
             };
             menu.Items.Add(rollInitItem);
 
@@ -476,7 +478,7 @@ namespace DnDBattle.Controls
                     Width = GridCellSize * token.SizeInSquares,
                     Height = GridCellSize * token.SizeInSquares,
                     Stretch = Stretch.UniformToFill,
-                    Source = token.Image ?? LoadDefaultTokenImage(),
+                    Source = LoadTokenImage(token.IconPath),
                     HorizontalAlignment = HorizontalAlignment.Center,
                     VerticalAlignment = VerticalAlignment.Center,
                     ToolTip = CreateTokenTooltip(token)
@@ -828,11 +830,11 @@ namespace DnDBattle.Controls
             return tooltip;
         }
 
-        private ImageSource LoadDefaultTokenImage()
+        private ImageSource LoadTokenImage(string imagePath = "pack://application:,,,/Resources/Entities/Tokens/default-token.png")
         {
             try 
             { 
-                return new BitmapImage(new Uri("pack://application:,,,/Resources/default-token.png", UriKind.Absolute)); 
+                return new BitmapImage(new Uri(imagePath, UriKind.Absolute)); 
             } 
             catch { return null; }
         }

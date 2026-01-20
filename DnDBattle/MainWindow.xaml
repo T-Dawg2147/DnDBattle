@@ -95,7 +95,7 @@
 
         <!-- ==================== MENU BAR ==================== -->
         <Menu Grid.Row="0" Background="#1E1E1E" Foreground="White" Padding="5,3">
-            <MenuItem Header="_File">
+            <MenuItem Header="_File" Foreground="White">
                 <MenuItem Header="Save Encounter..." Click="MenuSaveEncounter_Click" InputGestureText="Ctrl+S"/>
                 <MenuItem Header="Load Encounter..." Click="MenuLoadEncounter_Click" InputGestureText="Ctrl+O"/>
                 <Separator/>
@@ -105,30 +105,28 @@
                 <Separator/>
                 <MenuItem Header="Exit" Click="MenuExit_Click" InputGestureText="Alt+F4"/>
             </MenuItem>
-            <MenuItem Header="_Edit">
+            <MenuItem Header="_Edit" Foreground="White">
                 <MenuItem Header="Undo" Click="Undo_Click" InputGestureText="Ctrl+Z"/>
                 <MenuItem Header="Redo" Click="Redo_Click" InputGestureText="Ctrl+Y"/>
             </MenuItem>
-            <MenuItem Header="_Encounter">
+            <MenuItem Header="_Encounter" Foreground="White">
                 <MenuItem Header="Add Creature..." Command="{Binding OpenCreatureBrowserCommand}"/>
                 <MenuItem Header="Roll All Initiative" Command="{Binding RollAllInitiativeCommand}"/>
                 <Separator/>
                 <MenuItem Header="Encounter Templates..." Click="MenuEncounterTemplates_Click"/>
             </MenuItem>
-            <MenuItem Header="_Database">
+            <MenuItem Header="_Database" Foreground="White">
                 <MenuItem Header="Import JSON to Database..." Click="MenuImportDatabase_Click"/>
                 <MenuItem Header="Reload from Database" Click="MenuReloadDatabase_Click"/>
                 <Separator/>
                 <MenuItem Header="Database Statistics" Click="MenuDatabaseStats_Click"/>
             </MenuItem>
-            <MenuItem Header="_View">
+            <MenuItem Header="_View" Foreground="White">
                 <MenuItem Header="Toggle Left Sidebar" Click="ToggleLeftSidebar_Click" InputGestureText="F9"/>
                 <MenuItem Header="Toggle Right Sidebar" Click="ToggleRightSidebar_Click" InputGestureText="F10"/>
                 <Separator/>
                 <MenuItem Header="Grid Settings..." Click="MenuGridSettings_Click"/>
             </MenuItem>
-
-            <Rectangle Width="1" Fill="#444" Margin="8,2"/>
 
             <MenuItem Header="🧱 Walls" Foreground="White">
                 <MenuItem Header="Draw Solid Wall" Click="DrawSolidWall_Click"/>

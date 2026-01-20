@@ -1,7 +1,9 @@
 ﻿using DnDBattle.Models;
+using DnDBattle.Services;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -33,15 +35,27 @@ namespace DnDBattle.Views
             set => DataContext = value;
         }
 
-        private void UploadImage_Click(object sender, RoutedEventArgs e)
+        private async void UploadImage_Click(object sender, RoutedEventArgs e)
         {
             if (!(DataContext is Token token)) return;
             var dlg = new OpenFileDialog { Filter = "Image Files|*.png;*.jpg;*.jpeg;*.bmp" };
             if (dlg.ShowDialog() == true)
             {
+                string oldFilePath = dlg.FileName;
+                string newFilePath = 
+                    System.IO.Path.Combine(Options.DefaultTokenImagePath, 
+                    Token.Name + "_" + Token.Id.ToString().Substring(0, 8) + System.IO.Path.GetExtension(oldFilePath));
                 try
                 {
-                    token.Image = new BitmapImage(new Uri(dlg.FileName));
+                    File.Move(oldFilePath, newFilePath, true);
+
+                    token.Image = new BitmapImage(new Uri(newFilePath));
+                    token.IconPath = newFilePath;
+
+                    using (var db = new CreatureDatabaseService())
+                    {
+                        await db.UpdateCreatureAsync(Token);
+                    }
                 }
                 catch (Exception ex)
                 {

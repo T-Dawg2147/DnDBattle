@@ -3,6 +3,7 @@ using DnDBattle.Views;
 using Microsoft.Data.Sqlite;
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.DirectoryServices;
 using System.IO;
 using System.Linq;
@@ -259,14 +260,6 @@ namespace DnDBattle.Services
             return actions;
         }
 
-        public async Task DeleteCreatureAsync(string id)
-        {
-            var cmd = _conn.CreateCommand();
-            cmd.CommandText = "DELETE FROM Creatures WHERE Id = @Id";
-            cmd.Parameters.AddWithValue("@Id", id);
-            await cmd.ExecuteNonQueryAsync();
-        }
-
         public async Task ClearAllCreaturesAsync()
         {
             using var transaction = _conn.BeginTransaction();
@@ -297,6 +290,376 @@ namespace DnDBattle.Services
                 transaction.Rollback();
                 throw;
             }
+        }
+
+        #endregion
+
+        #region Category Management
+
+        /// <summary>
+        /// Creates the categories table if it doesn't exist
+        /// </summary>
+        public async Task EnsureCategoryTableExistsAsync()
+        {
+            var cmd = _conn.CreateCommand();
+            cmd.CommandText = @"
+        CREATE TABLE IF NOT EXISTS Categories (
+            Id TEXT PRIMARY KEY,
+            Name TEXT NOT NULL,
+            ParentId TEXT,
+            SortOrder INTEGER DEFAULT 0,
+            Icon TEXT,
+            IsSystem INTEGER DEFAULT 0,
+            CreatedAt TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+        
+        CREATE TABLE IF NOT EXISTS CreatureCategories (
+            CreatureId TEXT NOT NULL,
+            CategoryId TEXT NOT NULL,
+            PRIMARY KEY (CreatureId, CategoryId),
+            FOREIGN KEY (CreatureId) REFERENCES Creatures(Id),
+            FOREIGN KEY (CategoryId) REFERENCES Categories(Id)
+        );
+        
+        CREATE TABLE IF NOT EXISTS Favorites (
+            CreatureId TEXT PRIMARY KEY,
+            AddedAt TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (CreatureId) REFERENCES Creatures(Id)
+        );
+    ";
+            await cmd.ExecuteNonQueryAsync();
+
+            // Ensure default categories exist
+            await EnsureDefaultCategoriesAsync();
+        }
+
+        private async Task EnsureDefaultCategoriesAsync()
+        {
+            var defaultCategories = new (string id, string name, string parentId, int sortOrder, string icon, bool isSystem)[]
+            {
+                ("dnd5e-srd", "D&D 5e SRD", null, 0, "📚", true),
+                ("custom", "Custom Creatures", null, 1, "✨", true),
+                ("npcs", "NPCs", null, 2, "👤", true),
+                ("player-characters", "Player Characters", null, 3, "⚔️", true),
+                ("favorites", "Favorites", null, -1, "⭐", true)
+            };
+
+            foreach (var category in defaultCategories)
+            {
+                var checkCmd = _conn.CreateCommand();
+                checkCmd.CommandText = "SELECT COUNT(*) FROM Categories WHERE Id = @Id";
+                checkCmd.Parameters.AddWithValue("@Id", category.id);
+                var count = Convert.ToInt32(await checkCmd.ExecuteScalarAsync());
+
+                if (count == 0)
+                {
+                    var insertCmd = _conn.CreateCommand();
+                    insertCmd.CommandText = @"
+                        INSERT INTO Categories (Id, Name, ParentId, SortOrder, Icon, IsSystem)
+                        VALUES (@Id, @Name, @ParentId, @SortOrder, @Icon, @IsSystem)";
+                    insertCmd.Parameters.AddWithValue("@Id", category.id);
+                    insertCmd.Parameters.AddWithValue("@Name", category.name);
+                    insertCmd.Parameters.AddWithValue("@ParentId", category.parentId ?? (object)DBNull.Value);
+                    insertCmd.Parameters.AddWithValue("@SortOrder", category.sortOrder);
+                    insertCmd.Parameters.AddWithValue("@Icon", category.icon);
+                    insertCmd.Parameters.AddWithValue("@IsSystem", category.isSystem ? 1 : 0);
+                    await insertCmd.ExecuteNonQueryAsync();
+                }
+            }
+        }
+
+        public async Task<List<CreatureCategory>> GetAllCategoriesAsync()
+        {
+            await EnsureCategoryTableExistsAsync();
+
+            var categories = new List<CreatureCategory>();
+            var cmd = _conn.CreateCommand();
+            cmd.CommandText = "SELECT Id, Name, ParentId, SortOrder, Icon, IsSystem FROM Categories ORDER BY SortOrder, Name";
+
+            using (var reader = await cmd.ExecuteReaderAsync())
+            {
+                while (await reader.ReadAsync())
+                {
+                    categories.Add(new CreatureCategory
+                    {
+                        Id = reader.GetString(0),
+                        Name = reader.GetString(1),
+                        ParentId = reader.IsDBNull(2) ? null : reader.GetString(2),
+                        SortOrder = reader.GetInt32(3),
+                        Icon = reader.IsDBNull(4) ? "📁" : reader.GetString(4),
+                        IsSystem = reader.GetInt32(5) == 1
+                    });
+                }
+            }
+
+            // Get creature counts for each category
+            foreach (var cat in categories)
+            {
+                var countCmd = _conn.CreateCommand();
+                if (cat.Id == "favorites")
+                {
+                    countCmd.CommandText = "SELECT COUNT(*) FROM Favorites";
+                }
+                else
+                {
+                    countCmd.CommandText = "SELECT COUNT(*) FROM CreatureCategories WHERE CategoryId = @CategoryId";
+                    countCmd.Parameters.AddWithValue("@CategoryId", cat.Id);
+                }
+                cat.CreatureCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
+            }
+
+            return categories;
+        }
+
+        public async Task<CreatureCategory> AddCategoryAsync(string name, string parentId = null, string icon = "📁")
+        {
+            await EnsureCategoryTableExistsAsync();
+
+            var category = new CreatureCategory
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = name,
+                ParentId = parentId,
+                Icon = icon,
+                IsSystem = false,
+                SortOrder = 100
+            };
+
+            var cmd = _conn.CreateCommand();
+            cmd.CommandText = @"
+        INSERT INTO Categories (Id, Name, ParentId, SortOrder, Icon, IsSystem)
+        VALUES (@Id, @Name, @ParentId, @SortOrder, @Icon, 0)";
+            cmd.Parameters.AddWithValue("@Id", category.Id);
+            cmd.Parameters.AddWithValue("@Name", name);
+            cmd.Parameters.AddWithValue("@ParentId", parentId ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("@SortOrder", category.SortOrder);
+            cmd.Parameters.AddWithValue("@Icon", icon);
+            await cmd.ExecuteNonQueryAsync();
+
+            return category;
+        }
+
+        public async Task DeleteCategoryAsync(string categoryId)
+        {
+            // Don't allow deleting system categories
+            var checkCmd = _conn.CreateCommand();
+            checkCmd.CommandText = "SELECT IsSystem FROM Categories WHERE Id = @Id";
+            checkCmd.Parameters.AddWithValue("@Id", categoryId);
+            var isSystem = Convert.ToInt32(await checkCmd.ExecuteScalarAsync() ?? 0);
+
+            if (isSystem == 1)
+                throw new InvalidOperationException("Cannot delete system categories");
+
+            // Remove creature associations first
+            var removeAssocCmd = _conn.CreateCommand();
+            removeAssocCmd.CommandText = "DELETE FROM CreatureCategories WHERE CategoryId = @CategoryId";
+            removeAssocCmd.Parameters.AddWithValue("@CategoryId", categoryId);
+            await removeAssocCmd.ExecuteNonQueryAsync();
+
+            // Delete the category
+            var deleteCmd = _conn.CreateCommand();
+            deleteCmd.CommandText = "DELETE FROM Categories WHERE Id = @Id";
+            deleteCmd.Parameters.AddWithValue("@Id", categoryId);
+            await deleteCmd.ExecuteNonQueryAsync();
+        }
+
+        public async Task RenameCategoryAsync(string categoryId, string newName)
+        {
+            var cmd = _conn.CreateCommand();
+            cmd.CommandText = "UPDATE Categories SET Name = @Name WHERE Id = @Id";
+            cmd.Parameters.AddWithValue("@Name", newName);
+            cmd.Parameters.AddWithValue("@Id", categoryId);
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        public async Task AssignCreatureToCategoryAsync(string creatureId, string categoryId)
+        {
+            var cmd = _conn.CreateCommand();
+            cmd.CommandText = @"
+        INSERT OR IGNORE INTO CreatureCategories (CreatureId, CategoryId)
+        VALUES (@CreatureId, @CategoryId)";
+            cmd.Parameters.AddWithValue("@CreatureId", creatureId);
+            cmd.Parameters.AddWithValue("@CategoryId", categoryId);
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        public async Task RemoveCreatureFromCategoryAsync(string creatureId, string categoryId)
+        {
+            var cmd = _conn.CreateCommand();
+            cmd.CommandText = "DELETE FROM CreatureCategories WHERE CreatureId = @CreatureId AND CategoryId = @CategoryId";
+            cmd.Parameters.AddWithValue("@CreatureId", creatureId);
+            cmd.Parameters.AddWithValue("@CategoryId", categoryId);
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        public async Task<List<Token>> GetCreaturesByCategoryAsync(string categoryId)
+        {
+            var creatures = new List<Token>();
+            var cmd = _conn.CreateCommand();
+
+            if (categoryId == "favorites")
+            {
+                cmd.CommandText = @"
+                    SELECT c.* FROM Creatures c
+                    INNER JOIN Favorites f ON c. Id = f.CreatureId
+                    ORDER BY c.Name";
+            }
+            else
+            {
+                cmd.CommandText = @"
+                    SELECT c.* FROM Creatures c
+                    INNER JOIN CreatureCategories cc ON c.Id = cc.CreatureId
+                    WHERE cc.CategoryId = @CategoryId
+                    ORDER BY c.Name";
+                cmd.Parameters.AddWithValue("@CategoryId", categoryId);
+            }
+
+            using (var reader = await cmd.ExecuteReaderAsync())
+            {
+                while (await reader.ReadAsync())
+                {
+                    creatures.Add(ParseCreatureFromReader(reader));
+                }
+            }
+
+            return creatures;
+        }
+
+        #endregion
+
+        #region Favorites
+
+        public async Task<bool> IsCreatureFavoriteAsync(string creatureId)
+        {
+            await EnsureCategoryTableExistsAsync();
+
+            var cmd = _conn.CreateCommand();
+            cmd.CommandText = "SELECT COUNT(*) FROM Favorites WHERE CreatureId = @CreatureId";
+            cmd.Parameters.AddWithValue("@CreatureId", creatureId);
+            return Convert.ToInt32(await cmd.ExecuteScalarAsync()) > 0;
+        }
+
+        public async Task ToggleFavoriteAsync(string creatureId)
+        {
+            await EnsureCategoryTableExistsAsync();
+
+            if (await IsCreatureFavoriteAsync(creatureId))
+            {
+                var deleteCmd = _conn.CreateCommand();
+                deleteCmd.CommandText = "DELETE FROM Favorites WHERE CreatureId = @CreatureId";
+                deleteCmd.Parameters.AddWithValue("@CreatureId", creatureId);
+                await deleteCmd.ExecuteNonQueryAsync();
+            }
+            else
+            {
+                var insertCmd = _conn.CreateCommand();
+                insertCmd.CommandText = "INSERT INTO Favorites (CreatureId) VALUES (@CreatureId)";
+                insertCmd.Parameters.AddWithValue("@CreatureId", creatureId);
+                await insertCmd.ExecuteNonQueryAsync();
+            }
+        }
+
+        public async Task<List<Token>> GetFavoriteCreaturesAsync()
+        {
+            return await GetCreaturesByCategoryAsync("favorites");
+        }
+
+        #endregion
+
+        #region Single Creature Operations
+
+        public async Task<Token> AddCustomCreatureAsync(Token creature, string categoryId = "custom")
+        {
+            creature.Id = Guid.NewGuid();
+            await AddCreatureAsync(creature, categoryId, "custom");
+            await AssignCreatureToCategoryAsync(creature.Id.ToString(), categoryId);
+            return creature;
+        }
+
+        public async Task UpdateCreatureAsync(Token creature)
+        {
+            var cmd = _conn.CreateCommand();
+            cmd.CommandText = @"
+            UPDATE Creatures SET
+                Name = @Name,
+                Size = @Size,
+                Type = @Type,
+                Alignment = @Alignment,
+                ChallengeRating = @ChallengeRating,
+                ArmorClass = @ArmorClass,
+                MaxHP = @MaxHP,
+                HitDice = @HitDice,
+                InitiativeModifier = @InitiativeModifier,
+                Speed = @Speed,
+                Str = @Str,
+                Dex = @Dex,
+                Con = @Con,
+                Int = @Int,
+                Wis = @Wis,
+                Cha = @Cha,
+                Skills = @Skills,
+                Senses = @Senses,
+                Languages = @Languages,
+                Immunities = @Immunities,
+                Resistances = @Resistances,
+                Vulnerabilities = @Vulnerabilities,
+                Traits = @Traits,
+                Notes = @Notes,
+                IconPath = @IconPath,
+                SizeInSquares = @SizeInSquares
+            WHERE Id = @Id;
+            ";
+
+            cmd.Parameters.AddWithValue("@Id", creature.Id.ToString());
+            cmd.Parameters.AddWithValue("@Name", creature.Name ?? "");
+            cmd.Parameters.AddWithValue("@Size", creature.Size ?? "");
+            cmd.Parameters.AddWithValue("@Type", creature.Type ?? "");
+            cmd.Parameters.AddWithValue("@Alignment", creature.Alignment ?? "");
+            cmd.Parameters.AddWithValue("@ChallengeRating", creature.ChallengeRating ?? "");
+            cmd.Parameters.AddWithValue("@ArmorClass", creature.ArmorClass);
+            cmd.Parameters.AddWithValue("@MaxHP", creature.MaxHP);
+            cmd.Parameters.AddWithValue("@HitDice", creature.HitDice ?? "");
+            cmd.Parameters.AddWithValue("@InitiativeModifier", creature.InitiativeModifier);
+            cmd.Parameters.AddWithValue("@Speed", creature.Speed ?? "");
+            cmd.Parameters.AddWithValue("@Str", creature.Str);
+            cmd.Parameters.AddWithValue("@Dex", creature.Dex);
+            cmd.Parameters.AddWithValue("@Con", creature.Con);
+            cmd.Parameters.AddWithValue("@Int", creature.Int);
+            cmd.Parameters.AddWithValue("@Wis", creature.Wis);
+            cmd.Parameters.AddWithValue("@Cha", creature.Cha);
+            cmd.Parameters.AddWithValue("@Skills", creature.Skills != null ? string.Join(", ", creature.Skills) : "");
+            cmd.Parameters.AddWithValue("@Senses", creature.Senses ?? "");
+            cmd.Parameters.AddWithValue("@Languages", creature.Languages ?? "");
+            cmd.Parameters.AddWithValue("@Immunities", creature.Immunities ?? "");
+            cmd.Parameters.AddWithValue("@Resistances", creature.Resistances ?? "");
+            cmd.Parameters.AddWithValue("@Vulnerabilities", creature.Vulnerabilities ?? "");
+            cmd.Parameters.AddWithValue("@Traits", creature.Traits ?? "");
+            cmd.Parameters.AddWithValue("@Notes", creature.Notes ?? "");
+            cmd.Parameters.AddWithValue("@IconPath", creature.IconPath ?? "");
+            cmd.Parameters.AddWithValue("@SizeInSquares", creature.SizeInSquares);
+
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        public async Task DeleteCreatureAsync(string creatureId)
+        {
+            // Remove from categories first
+            var removeCatCmd = _conn.CreateCommand();
+            removeCatCmd.CommandText = "DELETE FROM CreatureCategories WHERE CreatureId = @CreatureId";
+            removeCatCmd.Parameters.AddWithValue("@CreatureId", creatureId);
+            await removeCatCmd.ExecuteNonQueryAsync();
+
+            // Remove from favorites
+            var removeFavCmd = _conn.CreateCommand();
+            removeFavCmd.CommandText = "DELETE FROM Favorites WHERE CreatureId = @CreatureId";
+            removeFavCmd.Parameters.AddWithValue("@CreatureId", creatureId);
+            await removeFavCmd.ExecuteNonQueryAsync();
+
+            // Delete creature
+            var deleteCmd = _conn.CreateCommand();
+            deleteCmd.CommandText = "DELETE FROM Creatures WHERE Id = @Id";
+            deleteCmd.Parameters.AddWithValue("@Id", creatureId);
+            await deleteCmd.ExecuteNonQueryAsync();
         }
 
         #endregion
@@ -489,21 +852,6 @@ namespace DnDBattle.Services
             }
 
             return creatures;
-        }
-
-        public async Task<List<string>> GetAllCategoriesAsync()
-        {
-            var categories = new List<string> { "All" };
-
-            var cmd = _conn.CreateCommand();
-            cmd.CommandText = "SELECT DISTINCT Category From Creatures WHERE Category != '' ORDER BY Category";
-
-            using var reader = await cmd.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-            {
-                categories.Add(reader.GetString(0));
-            }
-            return categories;
         }
 
         public async Task<List<string>> GetAllTypesAsync()
@@ -861,6 +1209,77 @@ namespace DnDBattle.Services
             }
 
             return actions;
+        }
+
+        private Token ParseCreatureFromReader(DbDataReader reader)
+        {
+            var creature = new Token();
+
+            string GetString(string column)
+            {
+                try
+                {
+                    var ordinal = reader.GetOrdinal(column);
+                    return reader.IsDBNull(ordinal) ? null : reader.GetString(ordinal); 
+                }
+                catch { return null; }
+            }
+
+            int GetInt(string column, int defaultValue = 0)
+            {
+                try
+                {
+                    var ordinal = reader.GetOrdinal(column);
+                    return reader.IsDBNull(ordinal) ? defaultValue : reader.GetInt32(ordinal);
+                }
+                catch { return defaultValue; }
+            }
+
+            var idStr = GetString("Id");
+            creature.Id = !string.IsNullOrEmpty(idStr) && Guid.TryParse(idStr, out var guid)
+                ? guid
+                : Guid.NewGuid();
+
+            creature.Name = GetString("Name") ?? "Unknown";
+            creature.Type = GetString("Type");
+            creature.Size = GetString("Size");
+            creature.Alignment = GetString("Alignment");
+            creature.ArmorClass = GetInt("ArmorClass", 10);
+            creature.MaxHP = GetInt("MaxHP", 10);
+            creature.HP = creature.MaxHP;
+            creature.HitDice = GetString("HitDice");
+            creature.Speed = GetString("Speed") ?? "30 ft. ";
+            creature.ChallengeRating = GetString("ChallengeRating");
+
+            // Ability scores
+            creature.Str = GetInt("Str", 10);
+            creature.Dex = GetInt("Dex", 10);
+            creature.Con = GetInt("Con", 10);
+            creature.Int = GetInt("Int", 10);
+            creature.Wis = GetInt("Wis", 10);
+            creature.Cha = GetInt("Cha", 10);
+
+            // Other properties
+            creature.Senses = GetString("Senses");
+            creature.Languages = GetString("Languages");
+            creature.Traits = GetString("Traits");
+            creature.Immunities = GetString("Immunities");
+            creature.Resistances = GetString("Resistances");
+            creature.Vulnerabilities = GetString("Vulnerabilities");
+
+            // Skills 
+            var skillsStr = GetString("Skills");
+            if (!string.IsNullOrEmpty(skillsStr))
+            {
+                creature.Skills = skillsStr.Split(',')
+                    .Select(s => s.Trim())
+                    .Where(s => !string.IsNullOrEmpty(s))
+                    .ToList();
+            }
+
+            creature.InitiativeModifier = (creature.Dex - 10) / 2;
+
+            return creature;
         }
 
         public void Dispose()

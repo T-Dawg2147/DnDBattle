@@ -18,7 +18,6 @@ namespace DnDBattle
     public partial class MainWindow : Window
     {
         private readonly DispatcherTimer _autosaveTimer;
-        private const string CreatureBankPath = "CreatureBank.json";
 
         public MainWindow()
         {
@@ -574,23 +573,5 @@ namespace DnDBattle
             BattleGrid?.AddObstacle(obs);
         }
 
-        protected override void OnClosed(EventArgs e)
-        {
-            base.OnClosed(e);
-
-            if (DataContext is MainViewModel vm)
-            {
-                try
-                {
-                    var json = JsonSerializer.Serialize(vm.CreatureBank, new JsonSerializerOptions { WriteIndented = true });
-                    File.WriteAllText(CreatureBankPath, json);
-                    Debug.WriteLine($"Saved CreatureBank to {CreatureBankPath}");
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"Failed to save CreatureBank: {ex.Message}");
-                }
-            }
-        }
     }
 }
