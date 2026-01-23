@@ -1,380 +1,254 @@
 ﻿using DnDBattle.Models;
-using DnDBattle.ViewModels;
 using DnDBattle.Services;
+using DnDBattle.ViewModels;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace DnDBattle.Views
 {
     public partial class CreatureBrowserWindow : UserControl
     {
-        private MainViewModel _vm;
+        #region Fields
+
+        private readonly CreatureDatabaseService _dbService;
+        private readonly MainViewModel _vm;
+
         private List<Token> _allCreatures = new List<Token>();
         private List<Token> _filteredCreatures = new List<Token>();
+        private List<CreatureSummary> _favorites = new List<CreatureSummary>();
         private List<CreatureCategory> _categories = new List<CreatureCategory>();
+
         private Token _selectedCreature;
-        private CreatureCategory _selectedCategory;
+        private string _currentGrouping = "Type";
+        private string _currentTypeFilter = "All";
+        private string _currentCategory = "All";
+
         private bool _isInitialized = false;
+        private bool _isLoading = false;
+
+        #endregion
+
+        #region Constructor
 
         public CreatureBrowserWindow()
         {
             InitializeComponent();
-            Loaded += CreatureBrowserWindow_Loaded;
-        }
 
-        private async void CreatureBrowserWindow_Loaded(object sender, RoutedEventArgs e)
-        {
-            _vm = DataContext as MainViewModel;
-            _isInitialized = true;
+            _dbService = new CreatureDatabaseService();
 
-            await LoadCategoriesAsync();
-            await LoadCreaturesAsync();
-        }
-
-        #region Data Loading
-
-        private async System.Threading.Tasks.Task LoadCategoriesAsync()
-        {
-            try
+            // Try to get the MainViewModel from the application
+            if (Application.Current?.MainWindow?.DataContext is MainViewModel vm)
             {
-                using (var db = new CreatureDatabaseService())
-                {
-                    _categories = await db.GetAllCategoriesAsync();
-                }
-
-                BuildCategoryTree();
+                _vm = vm;
             }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error loading categories: {ex.Message}");
-            }
-        }
-
-        private void BuildCategoryTree()
-        {
-            CategoryTree.Items.Clear();
-
-            // Add "All Creatures" node
-            var allNode = new TreeViewItem
-            {
-                Header = CreateCategoryHeader("📋", "All Creatures", _allCreatures.Count),
-                Tag = "all",
-                IsExpanded = true
-            };
-            CategoryTree.Items.Add(allNode);
-
-            // Add Favorites
-            var favCategory = _categories.FirstOrDefault(c => c.Id == "favorites");
-            if (favCategory != null)
-            {
-                var favNode = new TreeViewItem
-                {
-                    Header = CreateCategoryHeader(favCategory.Icon, favCategory.Name, favCategory.CreatureCount),
-                    Tag = favCategory,
-                    IsExpanded = true
-                };
-                CategoryTree.Items.Add(favNode);
-            }
-
-            // Add system categories
-            foreach (var cat in _categories.Where(c => c.IsSystem && c.Id != "favorites").OrderBy(c => c.SortOrder))
-            {
-                var node = new TreeViewItem
-                {
-                    Header = CreateCategoryHeader(cat.Icon, cat.Name, cat.CreatureCount),
-                    Tag = cat,
-                    IsExpanded = false
-                };
-
-                // Add subcategories
-                var subCats = _categories.Where(c => c.ParentId == cat.Id);
-                foreach (var subCat in subCats)
-                {
-                    node.Items.Add(new TreeViewItem
-                    {
-                        Header = CreateCategoryHeader(subCat.Icon, subCat.Name, subCat.CreatureCount),
-                        Tag = subCat
-                    });
-                }
-
-                CategoryTree.Items.Add(node);
-            }
-
-            // Add user categories
-            var userCats = _categories.Where(c => !c.IsSystem).ToList();
-            if (userCats.Any())
-            {
-                var userNode = new TreeViewItem
-                {
-                    Header = CreateCategoryHeader("📁", "My Categories", userCats.Sum(c => c.CreatureCount)),
-                    IsExpanded = true,
-                    Tag = "user-parent"
-                };
-
-                foreach (var cat in userCats)
-                {
-                    userNode.Items.Add(new TreeViewItem
-                    {
-                        Header = CreateCategoryHeader(cat.Icon, cat.Name, cat.CreatureCount),
-                        Tag = cat
-                    });
-                }
-
-                CategoryTree.Items.Add(userNode);
-            }
-        }
-
-        private StackPanel CreateCategoryHeader(string icon, string name, int count)
-        {
-            var panel = new StackPanel { Orientation = Orientation.Horizontal };
-
-            panel.Children.Add(new TextBlock
-            {
-                Text = icon,
-                Margin = new Thickness(0, 0, 8, 0),
-                VerticalAlignment = VerticalAlignment.Center
-            });
-
-            panel.Children.Add(new TextBlock
-            {
-                Text = name,
-                Foreground = Brushes.White,
-                VerticalAlignment = VerticalAlignment.Center
-            });
-
-            panel.Children.Add(new Border
-            {
-                Background = new SolidColorBrush(Color.FromRgb(60, 60, 60)),
-                CornerRadius = new CornerRadius(8),
-                Padding = new Thickness(6, 2, 6, 2),
-                Margin = new Thickness(8, 0, 0, 0),
-                Child = new TextBlock
-                {
-                    Text = count.ToString(),
-                    Foreground = Brushes.Gray,
-                    FontSize = 11
-                }
-            });
-
-            return panel;
-        }
-
-        private async System.Threading.Tasks.Task LoadCreaturesAsync()
-        {
-            try
-            {
-                // First check if ViewModel already has creatures loaded
-                if (_vm?.CreatureBank != null && _vm.CreatureBank.Count > 0)
-                {
-                    _allCreatures = _vm.CreatureBank.ToList();
-                }
-                else
-                {
-                    using (var db = new CreatureDatabaseService())
-                    {
-                        _allCreatures = await db.SearchCreaturesAsync(sortBy: "Name", limit: 10000);
-                    }
-                }
-
-                // Mark favorites
-                using (var db = new CreatureDatabaseService())
-                {
-                    foreach (var creature in _allCreatures)
-                    {
-                        creature.IsFavorite = await db.IsCreatureFavoriteAsync(creature.Id.ToString());
-                    }
-                }
-
-                _filteredCreatures = new List<Token>(_allCreatures);
-                PopulateTypeFilter();
-                RefreshCreatureList();
-                UpdateCreatureCount();
-                BuildCategoryTree(); // Rebuild to update counts
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error loading creatures: {ex.Message}", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private void PopulateTypeFilter()
-        {
-            var types = _allCreatures
-                .Where(c => !string.IsNullOrEmpty(c.Type))
-                .Select(c => c.Type)
-                .Distinct()
-                .OrderBy(t => t)
-                .ToList();
-
-            CmbTypeFilter.Items.Clear();
-            CmbTypeFilter.Items.Add(new ComboBoxItem { Content = "All Types", IsSelected = true });
-            foreach (var type in types)
-            {
-                CmbTypeFilter.Items.Add(new ComboBoxItem { Content = type });
-            }
-        }
-
-        private void RefreshCreatureList()
-        {
-            CreatureList.ItemsSource = null;
-            CreatureList.ItemsSource = _filteredCreatures;
-        }
-
-        private void UpdateCreatureCount()
-        {
-            TxtCreatureCount.Text = $"Showing {_filteredCreatures.Count} of {_allCreatures.Count} creatures";
-        }
-
-        private async void BtnReload_Click(object sender, RoutedEventArgs e)
-        {
-            await LoadCategoriesAsync();
-            await LoadCreaturesAsync();
-            MessageBox.Show($"Reloaded {_allCreatures.Count} creatures.", "Reload Complete",
-                MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         #endregion
 
-        #region Category Events
+        #region Initialization
 
-        private async void CategoryTree_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        private async void CreatureBrowserWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            if (e.NewValue is TreeViewItem item)
+            if (_isInitialized) return;
+            _isInitialized = true;
+
+            await InitializeAsync();
+        }
+
+        private async Task InitializeAsync()
+        {
+            try
             {
-                if (item.Tag is string tagStr)
+                // Initialize database first
+                await _dbService.EnsureInitializedAsync();
+
+                // Load types for filter dropdown
+                await LoadTypesAsync();
+
+                // Load categories (this will also trigger loading creatures via selection)
+                await LoadCategoriesAsync();
+
+                // Load favorites for the favorites panel
+                await LoadFavoritesAsync();
+
+                // If no category was auto-selected, load all creatures
+                if (_allCreatures == null || _allCreatures.Count == 0)
                 {
-                    if (tagStr == "all")
-                    {
-                        _selectedCategory = null;
-                        _filteredCreatures = new List<Token>(_allCreatures);
-                    }
-                    else if (tagStr == "user-parent")
-                    {
-                        return; // Parent node, ignore
-                    }
+                    _currentCategory = "dnd5e-srd"; // or "all"
+                    await LoadCreaturesAsync();
                 }
-                else if (item.Tag is CreatureCategory category)
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error initializing creature browser: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async Task LoadTypesAsync()
+        {
+            try
+            {
+                var types = await _dbService.GetAllTypesAsync();
+                CmbTypeFilter.Items.Clear();
+                foreach (var type in types)
                 {
-                    _selectedCategory = category;
+                    CmbTypeFilter.Items.Add(type);
+                }
+                CmbTypeFilter.SelectedIndex = 0;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error loading types: {ex.Message}");
+            }
+        }
 
-                    try
+        private async Task LoadCategoriesAsync()
+        {
+            try
+            {
+                CategoryTree.Items.Clear();
+
+                // Load categories from the database
+                _categories = await _dbService.GetCategoriesAsync();
+
+                foreach (var category in _categories.OrderBy(c => c.SortOrder))
+                {
+                    // Get creature count for this category
+                    int count = await _dbService.GetCreatureCountByCategoryAsync(category.Id);
+
+                    // Create the header with icon, name, and count
+                    var headerPanel = new StackPanel { Orientation = Orientation.Horizontal };
+
+                    // Icon and Name
+                    headerPanel.Children.Add(new TextBlock
                     {
-                        using (var db = new CreatureDatabaseService())
+                        Text = $"{category.Icon} {category.Name}",
+                        Foreground = Brushes.White,
+                        VerticalAlignment = VerticalAlignment.Center
+                    });
+
+                    // Count badge (grayed out)
+                    if (count > 0)
+                    {
+                        headerPanel.Children.Add(new TextBlock
                         {
-                            _filteredCreatures = await db.GetCreaturesByCategoryAsync(category.Id);
-
-                            // Mark favorites
-                            foreach (var creature in _filteredCreatures)
-                            {
-                                creature.IsFavorite = await db.IsCreatureFavoriteAsync(creature.Id.ToString());
-                            }
-                        }
+                            Text = $"  {count}",
+                            Foreground = new SolidColorBrush(Color.FromRgb(128, 128, 128)), // Gray
+                            FontSize = 11,
+                            VerticalAlignment = VerticalAlignment.Center
+                        });
                     }
-                    catch (Exception ex)
+
+                    var item = new TreeViewItem
                     {
-                        System.Diagnostics.Debug.WriteLine($"Error loading category creatures: {ex.Message}");
-                        _filteredCreatures = new List<Token>();
+                        Header = headerPanel,
+                        Tag = category.Id,
+                        IsExpanded = false
+                    };
+
+                    // Style system categories differently
+                    if (category.IsSystem)
+                    {
+                        item.FontWeight = FontWeights.SemiBold;
+                    }
+
+                    CategoryTree.Items.Add(item);
+                }
+
+                // Select the first item by default
+                if (CategoryTree.Items.Count > 0 && CategoryTree.Items[0] is TreeViewItem firstItem)
+                {
+                    firstItem.IsSelected = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in LoadCategoriesAsync: {ex.Message}");
+                MessageBox.Show($"Error loading categories: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        #endregion
+
+        #region Data Loading
+
+        private async Task LoadCreaturesAsync()
+        {
+            if (_isLoading) return;
+            _isLoading = true;
+
+            try
+            {
+                if (TxtCreatureCount != null)
+                    TxtCreatureCount.Text = "Loading...";
+
+                System.Diagnostics.Debug.WriteLine($"Loading creatures for category: {_currentCategory}");
+
+                // Load creatures based on current category
+                if (string.IsNullOrEmpty(_currentCategory) ||
+                    _currentCategory.ToLower() == "all" ||
+                    _currentCategory.ToLower() == "dnd5e-srd")
+                {
+                    // Load all creatures
+                    _allCreatures = await _dbService.GetAllCreaturesAsync(limit: 2000);
+                }
+                else if (_currentCategory.ToLower() == "favorites")
+                {
+                    // Load favorites
+                    var favSummaries = await _dbService.GetFavoritesAsync();
+                    _allCreatures = new List<Token>();
+                    foreach (var fav in favSummaries)
+                    {
+                        var creature = await _dbService.GetCreatureByIdAsync(fav.Id);
+                        if (creature != null)
+                            _allCreatures.Add(creature);
                     }
                 }
                 else
                 {
-                    return; // Unknown tag, ignore
+                    // Load by specific category
+                    _allCreatures = await _dbService.GetCreaturesByCategoryAsync(_currentCategory, limit: 2000);
                 }
 
+                System.Diagnostics.Debug.WriteLine($"Loaded {_allCreatures?.Count ?? 0} creatures");
+
+                _filteredCreatures = _allCreatures?.ToList() ?? new List<Token>();
+
+                // Apply filters
                 ApplyFilters();
-                UpdateCategoryButtons();
-            }
-        }
-
-        private void UpdateCategoryButtons()
-        {
-            bool canModify = _selectedCategory != null && !_selectedCategory.IsSystem;
-            BtnRenameCategory.IsEnabled = canModify;
-            BtnDeleteCategory.IsEnabled = canModify;
-        }
-
-        private async void NewCategory_Click(object sender, RoutedEventArgs e)
-        {
-            string name = Microsoft.VisualBasic.Interaction.InputBox(
-                "Enter category name:", "New Category", "My Category");
-
-            if (string.IsNullOrWhiteSpace(name)) return;
-
-            try
-            {
-                using (var db = new CreatureDatabaseService())
-                {
-                    await db.AddCategoryAsync(name);
-                }
-
-                await LoadCategoriesAsync();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error creating category: {ex.Message}", "Error",
+                System.Diagnostics.Debug.WriteLine($"Error loading creatures: {ex.Message}");
+                MessageBox.Show($"Error loading creatures: {ex.Message}", "Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                _isLoading = false;
             }
         }
 
-        private async void RenameCategory_Click(object sender, RoutedEventArgs e)
+        private async Task LoadFavoritesAsync()
         {
-            if (_selectedCategory == null || _selectedCategory.IsSystem) return;
-
-            string newName = Microsoft.VisualBasic.Interaction.InputBox(
-                "Enter new name:", "Rename Category", _selectedCategory.Name);
-
-            if (string.IsNullOrWhiteSpace(newName)) return;
-
             try
             {
-                using (var db = new CreatureDatabaseService())
-                {
-                    await db.RenameCategoryAsync(_selectedCategory.Id, newName);
-                }
-
-                await LoadCategoriesAsync();
+                _favorites = await _dbService.GetFavoritesAsync();
+                FavoritesList.ItemsSource = _favorites;
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error renaming category: {ex.Message}", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private async void DeleteCategory_Click(object sender, RoutedEventArgs e)
-        {
-            if (_selectedCategory == null || _selectedCategory.IsSystem) return;
-
-            var result = MessageBox.Show(
-                $"Delete category '{_selectedCategory.Name}'?\n\nCreatures in this category will NOT be deleted.",
-                "Delete Category",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
-
-            if (result != MessageBoxResult.Yes) return;
-
-            try
-            {
-                using (var db = new CreatureDatabaseService())
-                {
-                    await db.DeleteCategoryAsync(_selectedCategory.Id);
-                }
-
-                _selectedCategory = null;
-                await LoadCategoriesAsync();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error deleting category:  {ex.Message}", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Diagnostics.Debug.WriteLine($"Error loading favorites: {ex.Message}");
             }
         }
 
@@ -382,71 +256,35 @@ namespace DnDBattle.Views
 
         #region Filtering
 
-        private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            ApplyFilters();
-        }
-
-        private void FilterChanged(object sender, EventArgs e)
-        {
-            ApplyFilters();
-        }
-
-        private void FilterChanged(object sender, SelectionChangedEventArgs e)
-        {
-            ApplyFilters();
-        }
-
-        private void BtnClearFilters_Click(object sender, RoutedEventArgs e)
-        {
-            TxtSearch.Text = "";
-            TxtCRMin.Text = "";
-            TxtCRMax.Text = "";
-            if (CmbTypeFilter.Items.Count > 0)
-                CmbTypeFilter.SelectedIndex = 0;
-
-            ApplyFilters();
-        }
-
         private void ApplyFilters()
         {
-            if (!_isInitialized) return;
+            if (!_isInitialized || _allCreatures == null) return;
 
-            var filtered = (_selectedCategory != null ? _filteredCreatures : _allCreatures).AsEnumerable();
+            var filtered = _allCreatures.AsEnumerable();
 
-            // Name search
+            // Search filter
             var search = TxtSearch?.Text?.Trim();
             if (!string.IsNullOrEmpty(search))
             {
                 filtered = filtered.Where(c =>
-                    c.Name?.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                    c.Type?.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0);
+                    c.Name?.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0);
             }
 
-            // CR filter
+            // CR Min filter
             if (double.TryParse(TxtCRMin?.Text, out double crMin))
             {
                 filtered = filtered.Where(c => ParseCR(c.ChallengeRating) >= crMin);
             }
+
+            // CR Max filter
             if (double.TryParse(TxtCRMax?.Text, out double crMax))
             {
                 filtered = filtered.Where(c => ParseCR(c.ChallengeRating) <= crMax);
             }
 
-            // Type filter
-            var selectedType = (CmbTypeFilter?.SelectedItem as ComboBoxItem)?.Content?.ToString();
-            if (!string.IsNullOrEmpty(selectedType) && selectedType != "All Types")
-            {
-                filtered = filtered.Where(c =>
-                    string.Equals(c.Type, selectedType, StringComparison.OrdinalIgnoreCase));
-            }
-
-            var resultList = filtered.OrderBy(c => c.Name).ToList();
-
-            CreatureList.ItemsSource = null;
-            CreatureList.ItemsSource = resultList;
-
-            TxtCreatureCount.Text = $"Showing {resultList.Count} of {_allCreatures.Count} creatures";
+            _filteredCreatures = filtered.ToList();
+            UpdateTreeView();
+            UpdateCreatureCount();
         }
 
         private double ParseCR(string cr)
@@ -472,95 +310,309 @@ namespace DnDBattle.Views
             return 0;
         }
 
+        private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ApplyFilters();
+        }
+
+        private void FilterChanged(object sender, TextChangedEventArgs e)
+        {
+            ApplyFilters();
+        }
+
+        private void CmbTypeFilter_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (!_isInitialized) return;
+            _currentTypeFilter = CmbTypeFilter.SelectedItem?.ToString() ?? "All";
+            _ = LoadCreaturesAsync();
+        }
+
+        private void CmbGroupBy_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (!_isInitialized) return;
+            var selected = CmbGroupBy.SelectedItem as ComboBoxItem;
+            _currentGrouping = selected?.Tag?.ToString() ?? "Type";
+            UpdateTreeView();
+        }
+
+        private void BtnClearFilters_Click(object sender, RoutedEventArgs e)
+        {
+            TxtSearch.Text = "";
+            TxtCRMin.Text = "";
+            TxtCRMax.Text = "";
+            CmbTypeFilter.SelectedIndex = 0;
+            CmbGroupBy.SelectedIndex = 1; // "Type"
+
+            ApplyFilters();
+        }
+
         #endregion
 
-        #region Creature Selection & Details
+        #region TreeView Management
 
-        private void CreatureList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void UpdateTreeView()
         {
-            _selectedCreature = CreatureList.SelectedItem as Token;
+            if (CreatureTree == null) return;
 
-            if (_selectedCreature != null)
+            CreatureTree.Items.Clear();
+
+            if (_filteredCreatures == null || _filteredCreatures.Count == 0)
+                return;
+
+            if (string.IsNullOrEmpty(_currentGrouping) || _currentGrouping == "None")
             {
-                ShowCreatureDetails(_selectedCreature);
+                // Flat list - no grouping
+                foreach (var creature in _filteredCreatures.OrderBy(c => c.Name))
+                {
+                    CreatureTree.Items.Add(CreateCreatureTreeItem(creature));
+                }
             }
             else
             {
+                // Grouped view
+                var groups = GroupCreatures(_filteredCreatures, _currentGrouping);
+
+                var sortedGroups = groups
+                    .OrderBy(g => g.Key == "Unknown" ? 1 : 0)
+                    .ThenBy(g => g.Key)
+                    .ToList();
+
+                foreach (var group in sortedGroups)
+                {
+                    var groupItem = new TreeViewItem
+                    {
+                        Header = CreateGroupHeader(group.Key, group.Value.Count),
+                        IsExpanded = false, // START COLLAPSED
+                        Tag = "Group"
+                    };
+
+                    foreach (var creature in group.Value.OrderBy(c => c.Name))
+                    {
+                        groupItem.Items.Add(CreateCreatureTreeItem(creature));
+                    }
+
+                    CreatureTree.Items.Add(groupItem);
+                }
+            }
+        }
+
+        private Dictionary<string, List<Token>> GroupCreatures(List<Token> creatures, string groupBy)
+        {
+            var groups = new Dictionary<string, List<Token>>();
+
+            if (creatures == null) return groups;
+
+            foreach (var creature in creatures)
+            {
+                string key = GetGroupKey(creature, groupBy);
+
+                if (string.IsNullOrWhiteSpace(key))
+                    key = "Unknown";
+
+                if (key.Length > 0)
+                    key = char.ToUpper(key[0]) + key.Substring(1);
+
+                if (!groups.ContainsKey(key))
+                    groups[key] = new List<Token>();
+
+                groups[key].Add(creature);
+            }
+
+            return groups;
+        }
+
+        private string GetGroupKey(Token creature, string groupBy)
+        {
+            if (creature == null) return "Unknown";
+
+            return groupBy switch
+            {
+                "Type" => string.IsNullOrWhiteSpace(creature.Type) ? "Unknown" : creature.Type.Trim(),
+                "ChallengeRating" => string.IsNullOrWhiteSpace(creature.ChallengeRating) ? "Unknown" : $"CR {creature.ChallengeRating.Trim()}",
+                "Size" => string.IsNullOrWhiteSpace(creature.Size) ? "Unknown" : creature.Size.Trim(),
+                _ => "All"
+            };
+        }
+
+        private StackPanel CreateGroupHeader(string groupName, int count)
+        {
+            var panel = new StackPanel { Orientation = Orientation.Horizontal };
+
+            panel.Children.Add(new TextBlock
+            {
+                Text = groupName,
+                FontWeight = FontWeights.Bold,
+                FontSize = 13,
+                Foreground = new SolidColorBrush(Color.FromRgb(79, 195, 247)),
+                VerticalAlignment = VerticalAlignment.Center
+            });
+
+            var badge = new Border
+            {
+                Background = new SolidColorBrush(Color.FromRgb(62, 62, 66)),
+                CornerRadius = new CornerRadius(8),
+                Padding = new Thickness(6, 2, 6, 2),
+                Margin = new Thickness(8, 0, 0, 0),
+                Child = new TextBlock
+                {
+                    Text = count.ToString(),
+                    Foreground = Brushes.LightGray,
+                    FontSize = 11
+                }
+            };
+
+            panel.Children.Add(badge);
+            return panel;
+        }
+
+        private TreeViewItem CreateCreatureTreeItem(Token creature)
+        {
+            if (creature == null)
+                return new TreeViewItem { Header = "Unknown" };
+
+            var grid = new Grid { Margin = new Thickness(0, 2, 0, 2) };
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            // Icon placeholder
+            var iconBorder = new Border
+            {
+                Width = 24,
+                Height = 24,
+                Background = new SolidColorBrush(Color.FromRgb(51, 51, 51)),
+                CornerRadius = new CornerRadius(4),
+                Margin = new Thickness(0, 0, 8, 0),
+                Child = new TextBlock
+                {
+                    Text = creature.Name?.Substring(0, 1).ToUpper() ?? "?",
+                    Foreground = Brushes.White,
+                    FontWeight = FontWeights.Bold,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    FontSize = 11
+                }
+            };
+
+            Grid.SetColumn(iconBorder, 0);
+            grid.Children.Add(iconBorder);
+
+            // Name
+            var nameText = new TextBlock
+            {
+                Text = creature.Name,
+                Foreground = Brushes.White,
+                VerticalAlignment = VerticalAlignment.Center,
+                TextTrimming = TextTrimming.CharacterEllipsis
+            };
+            Grid.SetColumn(nameText, 1);
+            grid.Children.Add(nameText);
+
+            // CR badge
+            var crBorder = new Border
+            {
+                Background = new SolidColorBrush(Color.FromRgb(62, 62, 66)),
+                CornerRadius = new CornerRadius(8),
+                Padding = new Thickness(6, 2, 6, 2),
+                Margin = new Thickness(8, 0, 0, 0),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            crBorder.Child = new TextBlock
+            {
+                Text = $"CR {creature.ChallengeRating ?? "?"}",
+                Foreground = new SolidColorBrush(Color.FromRgb(255, 183, 77)),
+                FontSize = 10
+            };
+            Grid.SetColumn(crBorder, 2);
+            grid.Children.Add(crBorder);
+
+            return new TreeViewItem
+            {
+                Header = grid,
+                Tag = creature
+            };
+        }
+
+        private void UpdateCreatureCount()
+        {
+            if (TxtCreatureCount != null)
+            {
+                int filtered = _filteredCreatures?.Count ?? 0;
+                int total = _allCreatures?.Count ?? 0;
+                TxtCreatureCount.Text = $"Showing {filtered} of {total} creatures";
+            }
+        }
+
+        #endregion
+
+        #region Selection & Details
+
+        private void CreatureTree_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            if (e.NewValue is TreeViewItem item && item.Tag is Token creature)
+            {
+                _selectedCreature = creature;
+                ShowCreatureDetails(creature);
+            }
+            else
+            {
+                _selectedCreature = null;
                 HideCreatureDetails();
             }
         }
 
-        private void ShowCreatureDetails(Token creature)
+        private async void CategoryTree_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
+            if (e.NewValue is TreeViewItem item && item.Tag is string categoryId)
+            {
+                System.Diagnostics.Debug.WriteLine($"Category selected: {categoryId}");
+                _currentCategory = categoryId;
+                await LoadCreaturesAsync();
+            }
+        }
+
+        private async void ShowCreatureDetails(Token creature)
+        {
+            if (creature == null) return;
+
             TxtNoSelection.Visibility = Visibility.Collapsed;
             CreatureDetails.Visibility = Visibility.Visible;
 
-            TxtCreatureName.Text = creature.Name ?? "Unknown";
-            TxtCreatureSubtitle.Text = $"{creature.Size ?? ""} {creature.Type ?? ""}".Trim();
-            if (!string.IsNullOrEmpty(creature.Alignment))
-                TxtCreatureSubtitle.Text += $", {creature.Alignment}";
-
-            TxtAC.Text = creature.ArmorClass.ToString();
-            TxtHP.Text = creature.MaxHP.ToString();
-            TxtCR.Text = creature.ChallengeRating ?? "—";
-            TxtSpeed.Text = creature.Speed ?? "30 ft. ";
-
-            // Update favorite button
-            BtnFavorite.Foreground = creature.IsFavorite
-                ? Brushes.Gold
-                : Brushes.Gray;
-
-            // Ability scores
-            AbilityScoresGrid.Children.Clear();
-            var abilities = new[]
+            // Load full creature data if needed
+            Token fullCreature = creature;
+            if (creature.Actions == null || creature.Actions.Count == 0)
             {
-                ("STR", creature.Str),
-                ("DEX", creature.Dex),
-                ("CON", creature.Con),
-                ("INT", creature.Int),
-                ("WIS", creature. Wis),
-                ("CHA", creature.Cha)
-            };
-
-            foreach (var (name, score) in abilities)
-            {
-                var panel = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(2) };
-
-                panel.Children.Add(new TextBlock
+                try
                 {
-                    Text = name,
-                    Foreground = Brushes.Gray,
-                    FontSize = 10,
-                    HorizontalAlignment = HorizontalAlignment.Center
-                });
-
-                panel.Children.Add(new TextBlock
-                {
-                    Text = score.ToString(),
-                    Foreground = Brushes.White,
-                    FontSize = 16,
-                    FontWeight = FontWeights.Bold,
-                    HorizontalAlignment = HorizontalAlignment.Center
-                });
-
-                int mod = (score - 10) / 2;
-                string modStr = mod >= 0 ? $"+{mod}" : mod.ToString();
-                panel.Children.Add(new TextBlock
-                {
-                    Text = modStr,
-                    Foreground = Brushes.Gray,
-                    FontSize = 10,
-                    HorizontalAlignment = HorizontalAlignment.Center
-                });
-
-                AbilityScoresGrid.Children.Add(panel);
+                    var loaded = await _dbService.GetCreatureByIdAsync(creature.Id.ToString());
+                    if (loaded != null)
+                        fullCreature = loaded;
+                }
+                catch { /* Use partial data */ }
             }
 
+            TxtCreatureName.Text = fullCreature.Name;
+            TxtCreatureSubtitle.Text = $"{fullCreature.Size} {fullCreature.Type}" +
+                (string.IsNullOrEmpty(fullCreature.Alignment) ? "" : $", {fullCreature.Alignment}");
+
+            TxtAC.Text = fullCreature.ArmorClass.ToString();
+            TxtHP.Text = fullCreature.MaxHP.ToString();
+            TxtCR.Text = fullCreature.ChallengeRating ?? "—";
+            TxtSpeed.Text = fullCreature.Speed ?? "30 ft.";
+
+            // Ability scores
+            TxtStr.Text = FormatAbilityScore(fullCreature.Str);
+            TxtDex.Text = FormatAbilityScore(fullCreature.Dex);
+            TxtCon.Text = FormatAbilityScore(fullCreature.Con);
+            TxtInt.Text = FormatAbilityScore(fullCreature.Int);
+            TxtWis.Text = FormatAbilityScore(fullCreature.Wis);
+            TxtCha.Text = FormatAbilityScore(fullCreature.Cha);
+
             // Traits
-            if (!string.IsNullOrWhiteSpace(creature.Traits))
+            if (!string.IsNullOrWhiteSpace(fullCreature.Traits))
             {
                 TraitsSection.Visibility = Visibility.Visible;
-                TxtTraits.Text = creature.Traits;
+                TxtTraits.Text = fullCreature.Traits;
             }
             else
             {
@@ -568,18 +620,18 @@ namespace DnDBattle.Views
             }
 
             // Actions
-            if (creature.Actions != null && creature.Actions.Count > 0)
+            if (fullCreature.Actions != null && fullCreature.Actions.Count > 0)
             {
                 ActionsSection.Visibility = Visibility.Visible;
                 ActionsList.Items.Clear();
 
-                foreach (var action in creature.Actions)
+                foreach (var action in fullCreature.Actions)
                 {
                     var actionPanel = new StackPanel { Margin = new Thickness(0, 0, 0, 10) };
 
                     actionPanel.Children.Add(new TextBlock
                     {
-                        Text = action.Name ?? "Action",
+                        Text = action.Name,
                         FontWeight = FontWeights.Bold,
                         Foreground = Brushes.White
                     });
@@ -602,6 +654,18 @@ namespace DnDBattle.Views
             {
                 ActionsSection.Visibility = Visibility.Collapsed;
             }
+
+            // Update favorite button
+            bool isFavorite = await _dbService.IsFavoriteAsync(fullCreature.Id.ToString());
+            BtnFavorite.Content = isFavorite ? "★" : "☆";
+            BtnFavorite.Foreground = isFavorite ? Brushes.Gold : Brushes.Gray;
+        }
+
+        private string FormatAbilityScore(int score)
+        {
+            int mod = (score - 10) / 2;
+            string modStr = mod >= 0 ? $"+{mod}" : mod.ToString();
+            return $"{score}\n({modStr})";
         }
 
         private void HideCreatureDetails()
@@ -610,260 +674,119 @@ namespace DnDBattle.Views
             CreatureDetails.Visibility = Visibility.Collapsed;
         }
 
-        private void CreatureList_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            if (_selectedCreature != null)
-            {
-                AddCreatureToMap(_selectedCreature);
-            }
-        }
-
         #endregion
 
         #region Favorites
 
-        private async void ToggleFavorite_Click(object sender, RoutedEventArgs e)
+        private void Favorite_Click(object sender, MouseButtonEventArgs e)
         {
-            if (sender is Button btn && btn.Tag is Token creature)
+            if (sender is FrameworkElement fe && fe.DataContext is CreatureSummary summary)
             {
-                await ToggleFavoriteAsync(creature);
+                var creature = _allCreatures.FirstOrDefault(c => c.Id.ToString() == summary.Id);
+                if (creature != null)
+                {
+                    _selectedCreature = creature;
+                    ShowCreatureDetails(creature);
+
+                    // Find and select in tree
+                    SelectCreatureInTree(creature);
+                }
+            }
+        }
+
+        private void SelectCreatureInTree(Token creature)
+        {
+            foreach (var item in CreatureTree.Items)
+            {
+                if (item is TreeViewItem tvi)
+                {
+                    if (tvi.Tag is Token t && t.Id == creature.Id)
+                    {
+                        tvi.IsSelected = true;
+                        return;
+                    }
+
+                    // Check children (for grouped view)
+                    foreach (var child in tvi.Items)
+                    {
+                        if (child is TreeViewItem childTvi && childTvi.Tag is Token ct && ct.Id == creature.Id)
+                        {
+                            childTvi.IsSelected = true;
+                            tvi.IsExpanded = true;
+                            return;
+                        }
+                    }
+                }
             }
         }
 
         private async void BtnFavorite_Click(object sender, RoutedEventArgs e)
         {
-            if (_selectedCreature != null)
-            {
-                await ToggleFavoriteAsync(_selectedCreature);
+            if (_selectedCreature == null) return;
 
-                // Update button color
-                BtnFavorite.Foreground = _selectedCreature.IsFavorite
-                    ? Brushes.Gold
-                    : Brushes.Gray;
-            }
-        }
+            await _dbService.ToggleFavoriteAsync(_selectedCreature.Id.ToString());
+            await LoadFavoritesAsync();
 
-        private async System.Threading.Tasks.Task ToggleFavoriteAsync(Token creature)
-        {
-            try
-            {
-                using (var db = new CreatureDatabaseService())
-                {
-                    await db.ToggleFavoriteAsync(creature.Id.ToString());
-                    creature.IsFavorite = !creature.IsFavorite;
-                }
-
-                // Refresh the list to update star colors
-                RefreshCreatureList();
-
-                // Refresh categories to update counts
-                await LoadCategoriesAsync();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error toggling favorite: {ex.Message}", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            // Update button
+            bool isFavorite = await _dbService.IsFavoriteAsync(_selectedCreature.Id.ToString());
+            BtnFavorite.Content = isFavorite ? "★" : "☆";
+            BtnFavorite.Foreground = isFavorite ? Brushes.Gold : Brushes.Gray;
         }
 
         #endregion
 
-        #region Creature Actions
+        #region Actions
 
         private void BtnAddToMap_Click(object sender, RoutedEventArgs e)
         {
-            if (_selectedCreature != null)
-            {
-                AddCreatureToMap(_selectedCreature);
-            }
+            if (_selectedCreature == null || _vm == null) return;
+
+            var newToken = CloneCreatureForMap(_selectedCreature);
+            _vm.Tokens.Add(newToken);
+
+            // Add some way to indicate a creature has been added
         }
 
-        private void AddCreatureToMap(Token prototype)
+        private Token CloneCreatureForMap(Token source)
         {
-            if (_vm == null || prototype == null) return;
-
-            string uniqueName = GenerateUniqueName(prototype.Name);
-
-            var placed = CloneToken(prototype);
-            placed.Name = uniqueName;
-
-            // Position at center of battle grid
-            var mw = Application.Current?.MainWindow as Window;
-            if (mw != null)
-            {
-                var battleGrid = mw.FindName("BattleGrid") as Controls.BattleGridControl;
-                if (battleGrid != null)
-                {
-                    var centerScreen = new Point(battleGrid.ActualWidth / 2.0, battleGrid.ActualHeight / 2.0);
-                    var world = battleGrid.ScreenToWorldPublic(centerScreen);
-                    int gx = (int)Math.Floor(world.X / battleGrid.GridCellSize);
-                    int gy = (int)Math.Floor(world.Y / battleGrid.GridCellSize);
-                    placed.GridX = gx;
-                    placed.GridY = gy;
-                }
-            }
-
-            _vm.Tokens.Add(placed);
-            UndoManager.Record(new TokenAddAction(_vm, placed));
-
-            // Close the browser window
-            var w = Window.GetWindow(this);
-            w?.Close();
-        }
-
-        private string GenerateUniqueName(string baseName)
-        {
-            if (_vm == null || string.IsNullOrEmpty(baseName)) return baseName ?? "Creature";
-
-            var existingNames = _vm.Tokens
-                .Where(t => t.Name != null && t.Name.StartsWith(baseName, StringComparison.OrdinalIgnoreCase))
-                .Select(t => t.Name)
-                .ToList();
-
-            if (existingNames.Count == 0)
-                return baseName;
-
-            int maxNumber = 0;
-
-            foreach (var name in existingNames)
-            {
-                if (name.Equals(baseName, StringComparison.OrdinalIgnoreCase))
-                {
-                    maxNumber = Math.Max(maxNumber, 1);
-                    continue;
-                }
-
-                if (name.Length > baseName.Length && name[baseName.Length] == ' ')
-                {
-                    var suffix = name.Substring(baseName.Length + 1);
-                    if (int.TryParse(suffix, out int num))
-                        maxNumber = Math.Max(maxNumber, num);
-                }
-            }
-
-            return $"{baseName} {maxNumber + 1}";
-        }
-
-        private Token CloneToken(Token prototype)
-        {
-            if (prototype == null) return new Token { Name = "Unknown" };
-
             return new Token
             {
                 Id = Guid.NewGuid(),
-                Name = prototype.Name,
-                Size = prototype.Size,
-                Type = prototype.Type,
-                Alignment = prototype.Alignment,
-                ChallengeRating = prototype.ChallengeRating,
-                ArmorClass = prototype.ArmorClass,
-                MaxHP = prototype.MaxHP,
-                HP = prototype.MaxHP,
-                HitDice = prototype.HitDice,
-                InitiativeModifier = prototype.InitiativeModifier,
-                Speed = prototype.Speed,
-                Str = prototype.Str,
-                Dex = prototype.Dex,
-                Con = prototype.Con,
-                Int = prototype.Int,
-                Wis = prototype.Wis,
-                Cha = prototype.Cha,
-                Skills = prototype.Skills != null ? new List<string>(prototype.Skills) : new List<string>(),
-                Senses = prototype.Senses,
-                Languages = prototype.Languages,
-                Immunities = prototype.Immunities,
-                Resistances = prototype.Resistances,
-                Vulnerabilities = prototype.Vulnerabilities,
-                Traits = prototype.Traits,
-                Actions = prototype.Actions != null ? new List<Models.Action>(prototype.Actions) : new List<Models.Action>(),
-                BonusActions = prototype.BonusActions != null ? new List<Models.Action>(prototype.BonusActions) : new List<Models.Action>(),
-                Reactions = prototype.Reactions != null ? new List<Models.Action>(prototype.Reactions) : new List<Models.Action>(),
-                LegendaryActions = prototype.LegendaryActions != null ? new List<Models.Action>(prototype.LegendaryActions) : new List<Models.Action>(),
-                Notes = prototype.Notes,
-                IconPath = prototype.IconPath,
-                SizeInSquares = prototype.SizeInSquares,
-                Tags = prototype.Tags != null ? new List<string>(prototype.Tags) : new List<string>()
+                Name = source.Name,
+                Size = source.Size,
+                Type = source.Type,
+                Alignment = source.Alignment,
+                ChallengeRating = source.ChallengeRating,
+                ArmorClass = source.ArmorClass,
+                MaxHP = source.MaxHP,
+                HP = source.MaxHP,
+                HitDice = source.HitDice,
+                InitiativeModifier = source.InitiativeModifier,
+                Speed = source.Speed,
+                Str = source.Str,
+                Dex = source.Dex,
+                Con = source.Con,
+                Int = source.Int,
+                Wis = source.Wis,
+                Cha = source.Cha,
+                SizeInSquares = source.SizeInSquares,
+                GridX = 0,
+                GridY = 0
             };
         }
 
-        #endregion
-
-        #region Create / Edit / Delete Creature
-
-        private async void CreateCreature_Click(object sender, RoutedEventArgs e)
-        {
-            var editor = new CreatureEditorWindow
-            {
-                Owner = Window.GetWindow(this)
-            };
-
-            if (editor.ShowDialog() == true && editor.ResultCreature != null)
-            {
-                await LoadCreaturesAsync();
-
-                // Select the new creature
-                var newCreature = _allCreatures.FirstOrDefault(c => c.Id == editor.ResultCreature.Id);
-                if (newCreature != null)
-                {
-                    CreatureList.SelectedItem = newCreature;
-                }
-            }
-        }
-
-        private async void EditCreature_Click(object sender, RoutedEventArgs e)
+        private void EditCreature_Click(object sender, RoutedEventArgs e)
         {
             if (_selectedCreature == null) return;
-
-            var editor = new CreatureEditorWindow(_selectedCreature)
-            {
-                Owner = Window.GetWindow(this)
-            };
-
-            if (editor.ShowDialog() == true)
-            {
-                await LoadCreaturesAsync();
-
-                // Re-select the edited creature
-                var editedCreature = _allCreatures.FirstOrDefault(c => c.Id == _selectedCreature.Id);
-                if (editedCreature != null)
-                {
-                    CreatureList.SelectedItem = editedCreature;
-                    ShowCreatureDetails(editedCreature);
-                }
-            }
+            MessageBox.Show("Edit creature functionality coming soon!", "Info",
+                MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
-        private async void DuplicateCreature_Click(object sender, RoutedEventArgs e)
+        private void DuplicateCreature_Click(object sender, RoutedEventArgs e)
         {
             if (_selectedCreature == null) return;
-
-            var duplicate = CloneToken(_selectedCreature);
-            duplicate.Name = $"{_selectedCreature.Name} (Copy)";
-
-            try
-            {
-                using (var db = new CreatureDatabaseService())
-                {
-                    await db.AddCustomCreatureAsync(duplicate, "custom");
-                }
-
-                await LoadCreaturesAsync();
-
-                // Select the duplicate
-                var newCreature = _allCreatures.FirstOrDefault(c => c.Name == duplicate.Name);
-                if (newCreature != null)
-                {
-                    CreatureList.SelectedItem = newCreature;
-                }
-
-                MessageBox.Show($"Created duplicate: {duplicate.Name}", "Duplicate Created",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error duplicating creature: {ex.Message}", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            MessageBox.Show("Duplicate creature functionality coming soon!", "Info",
+                MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private async void DeleteCreature_Click(object sender, RoutedEventArgs e)
@@ -871,162 +794,299 @@ namespace DnDBattle.Views
             if (_selectedCreature == null) return;
 
             var result = MessageBox.Show(
-                $"Are you sure you want to delete '{_selectedCreature.Name}'?\n\nThis cannot be undone.",
-                "Delete Creature",
+                $"Are you sure you want to delete '{_selectedCreature.Name}' from the database?",
+                "Confirm Delete",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                await _dbService.DeleteCreatureAsync(_selectedCreature.Id.ToString());
+                await LoadCreaturesAsync();
+                await LoadFavoritesAsync();
+                HideCreatureDetails();
+            }
+        }
+
+        private void CreateCreature_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Create creature functionality coming soon!", "Info",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        #endregion
+
+        #region Import
+
+        private async void ImportJson_Click(object sender, RoutedEventArgs e)
+        {
+            var dlg = new OpenFileDialog
+            {
+                Filter = "JSON Files|*.json",
+                Title = "Import Creatures from JSON"
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                try
+                {
+                    ImportProgressOverlay.Visibility = Visibility.Visible;
+                    ImportProgressText.Text = "Importing...";
+
+                    var count = await _dbService.ImportFromJsonFileAsync(dlg.FileName);
+
+                    ImportProgressText.Text = $"Imported {count} creatures!";
+                    await Task.Delay(1500);
+
+                    await LoadCreaturesAsync();
+                    await LoadCategoriesAsync();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error importing: {ex.Message}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                finally
+                {
+                    ImportProgressOverlay.Visibility = Visibility.Collapsed;
+                }
+            }
+        }
+
+        private async void ImportFolder_Click(object sender, RoutedEventArgs e)
+        {
+            var dlg = new OpenFileDialog
+            {
+                Title = "Select a folder containing JSON files",
+                Filter = "Folder|*.folder",
+                CheckFileExists = false,
+                CheckPathExists = true,
+                FileName = "Select Folder"
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                string folderPath = System.IO.Path.GetDirectoryName(dlg.FileName);
+                if (!string.IsNullOrEmpty(folderPath))
+                {
+                    await ImportCreaturesWithProgressAsync(folderPath);
+                }
+            }
+        }
+
+        private async Task ImportCreaturesWithProgressAsync(string folderPath)
+        {
+            ImportProgressOverlay.Visibility = Visibility.Visible;
+            ImportProgressBar.Value = 0;
+            ImportProgressText.Text = "Scanning folder...";
+            ImportProgressDetail.Text = "";
+
+            try
+            {
+                var jsonFiles = System.IO.Directory.GetFiles(folderPath, "*.json");
+                int totalFiles = jsonFiles.Length;
+                int processedFiles = 0;
+                int totalCreatures = 0;
+
+                foreach (var file in jsonFiles)
+                {
+                    var fileName = System.IO.Path.GetFileName(file);
+                    ImportProgressText.Text = $"Importing {fileName}...";
+                    ImportProgressDetail.Text = $"File {processedFiles + 1} of {totalFiles}";
+
+                    try
+                    {
+                        var count = await _dbService.ImportFromJsonFileAsync(file);
+                        totalCreatures += count;
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Error importing {fileName}: {ex.Message}");
+                    }
+
+                    processedFiles++;
+                    ImportProgressBar.Value = (double)processedFiles / totalFiles * 100;
+
+                    await Task.Delay(10); // Allow UI to update
+                }
+
+                ImportProgressText.Text = "Import complete!";
+                ImportProgressDetail.Text = $"Imported {totalCreatures} creatures from {processedFiles} files";
+
+                await Task.Delay(2000);
+
+                await LoadCreaturesAsync();
+                await LoadCategoriesAsync();
+                await LoadFavoritesAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Import error: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                ImportProgressOverlay.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private async void BtnReload_Click(object sender, RoutedEventArgs e)
+        {
+            await LoadCreaturesAsync();
+            await LoadFavoritesAsync();
+        }
+
+        #endregion
+
+        #region Category Management
+
+        private async Task LoadCreaturesByCategoryAsync(string categoryId)
+        {
+            if (_isLoading) return;
+            _isLoading = true;
+
+            try
+            {
+                if (TxtCreatureCount != null)
+                    TxtCreatureCount.Text = "Loading...";
+
+                // Load creatures for this category
+                _allCreatures = await _dbService.GetCreaturesByCategoryAsync(categoryId);
+                _filteredCreatures = _allCreatures.ToList();
+
+                // Apply any active filters
+                ApplyFilters();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading creatures: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                _isLoading = false;
+            }
+        }
+
+        private async void NewCategory_Click(object sender, RoutedEventArgs e)
+        {
+            string name = Microsoft.VisualBasic.Interaction.InputBox(
+                "Enter the name for the new category:",
+                "New Category",
+                "My Category");
+
+            if (string.IsNullOrWhiteSpace(name)) return;
+
+            // Generate a URL-friendly ID
+            string id = name.ToLower()
+                .Replace(" ", "-")
+                .Replace("'", "")
+                .Replace("\"", "");
+
+            // Ask for an icon (optional)
+            string icon = Microsoft.VisualBasic.Interaction.InputBox(
+                "Enter an emoji icon for the category (or leave default):",
+                "Category Icon",
+                "📁");
+
+            if (string.IsNullOrWhiteSpace(icon)) icon = "📁";
+
+            // Get the next sort order
+            int sortOrder = _categories.Count > 0 ? _categories.Max(c => c.SortOrder) + 1 : 10;
+
+            bool success = await _dbService.AddCategoryAsync(id, name, icon, null, sortOrder);
+
+            if (success)
+            {
+                await LoadCategoriesAsync();
+                MessageBox.Show($"Category '{name}' created!", "Success",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            else
+            {
+                MessageBox.Show("Failed to create category. It may already exist.", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private async void RenameCategory_Click(object sender, RoutedEventArgs e)
+        {
+            if (CategoryTree.SelectedItem is not TreeViewItem selectedItem || selectedItem.Tag is not string categoryId)
+            {
+                MessageBox.Show("Please select a category to rename.", "Info",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            // Check if it's a system category
+            var category = _categories.FirstOrDefault(c => c.Id == categoryId);
+            if (category?.IsSystem == true)
+            {
+                MessageBox.Show("System categories cannot be renamed.", "Info",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            string currentName = category?.Name ?? "";
+            string newName = Microsoft.VisualBasic.Interaction.InputBox(
+                "Enter the new name for this category:",
+                "Rename Category",
+                currentName);
+
+            if (string.IsNullOrWhiteSpace(newName) || newName == currentName) return;
+
+            bool success = await _dbService.RenameCategoryAsync(categoryId, newName);
+
+            if (success)
+            {
+                await LoadCategoriesAsync();
+            }
+            else
+            {
+                MessageBox.Show("Failed to rename category.", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private async void DeleteCategory_Click(object sender, RoutedEventArgs e)
+        {
+            if (CategoryTree.SelectedItem is not TreeViewItem selectedItem || selectedItem.Tag is not string categoryId)
+            {
+                MessageBox.Show("Please select a category to delete.", "Info",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            // Check if it's a system category
+            var category = _categories.FirstOrDefault(c => c.Id == categoryId);
+            if (category?.IsSystem == true)
+            {
+                MessageBox.Show("System categories cannot be deleted.", "Info",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            var result = MessageBox.Show(
+                $"Are you sure you want to delete the category '{category?.Name}'?\n\n" +
+                "Creatures in this category will be moved to 'Custom'.",
+                "Confirm Delete",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Warning);
 
             if (result != MessageBoxResult.Yes) return;
 
-            try
+            bool success = await _dbService.DeleteCategoryAsync(categoryId);
+
+            if (success)
             {
-                using (var db = new CreatureDatabaseService())
-                {
-                    await db.DeleteCreatureAsync(_selectedCreature.Id.ToString());
-                }
-
-                _selectedCreature = null;
-                HideCreatureDetails();
-                await LoadCreaturesAsync();
-
-                MessageBox.Show("Creature deleted.", "Deleted",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                await LoadCategoriesAsync();
+                await LoadCreaturesByCategoryAsync("custom");
             }
-            catch (Exception ex)
+            else
             {
-                MessageBox.Show($"Error deleting creature: {ex.Message}", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Failed to delete category.", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
             }
-        }
-
-        #endregion
-
-        #region Import Single JSON
-
-        private async void ImportSingleJson_Click(object sender, RoutedEventArgs e)
-        {
-            var openDialog = new OpenFileDialog
-            {
-                Title = "Import Creature from JSON",
-                Filter = "JSON Files (*.json)|*.json|All Files (*.*)|*.*",
-                Multiselect = false
-            };
-
-            if (openDialog.ShowDialog() != true) return;
-
-            try
-            {
-                var json = await File.ReadAllTextAsync(openDialog.FileName);
-
-                // Try to parse as single creature or array
-                Token creature = null;
-
-                using (var doc = JsonDocument.Parse(json))
-                {
-                    var root = doc.RootElement;
-
-                    if (root.ValueKind == JsonValueKind.Array && root.GetArrayLength() > 0)
-                    {
-                        // Take first creature from array
-                        creature = ParseCreatureFromJson(root[0]);
-                    }
-                    else if (root.ValueKind == JsonValueKind.Object)
-                    {
-                        creature = ParseCreatureFromJson(root);
-                    }
-                }
-
-                if (creature == null)
-                {
-                    MessageBox.Show("Could not parse creature from JSON file.", "Import Failed",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                // Add to database
-                using (var db = new CreatureDatabaseService())
-                {
-                    await db.AddCustomCreatureAsync(creature, "custom");
-                }
-
-                await LoadCreaturesAsync();
-
-                // Select the imported creature
-                var imported = _allCreatures.FirstOrDefault(c => c.Id == creature.Id);
-                if (imported != null)
-                {
-                    CreatureList.SelectedItem = imported;
-                }
-
-                MessageBox.Show($"Successfully imported:  {creature.Name}", "Import Complete",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error importing creature: {ex.Message}", "Import Failed",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private Token ParseCreatureFromJson(JsonElement element)
-        {
-            var creature = new Token
-            {
-                Id = Guid.NewGuid()
-            };
-
-            if (element.TryGetProperty("Name", out var nameProp) || element.TryGetProperty("name", out nameProp))
-                creature.Name = nameProp.GetString();
-
-            if (element.TryGetProperty("Type", out var typeProp) || element.TryGetProperty("type", out typeProp))
-                creature.Type = typeProp.GetString();
-
-            if (element.TryGetProperty("Size", out var sizeProp) || element.TryGetProperty("size", out sizeProp))
-                creature.Size = sizeProp.GetString();
-
-            if (element.TryGetProperty("Alignment", out var alignProp) || element.TryGetProperty("alignment", out alignProp))
-                creature.Alignment = alignProp.GetString();
-
-            if (element.TryGetProperty("ArmorClass", out var acProp) || element.TryGetProperty("ac", out acProp))
-            {
-                if (acProp.ValueKind == JsonValueKind.Number)
-                    creature.ArmorClass = acProp.GetInt32();
-                else if (int.TryParse(acProp.GetString(), out int ac))
-                    creature.ArmorClass = ac;
-            }
-
-            if (element.TryGetProperty("MaxHP", out var hpProp) || element.TryGetProperty("hp", out hpProp))
-            {
-                if (hpProp.ValueKind == JsonValueKind.Number)
-                {
-                    creature.MaxHP = hpProp.GetInt32();
-                    creature.HP = creature.MaxHP;
-                }
-                else if (int.TryParse(hpProp.GetString(), out int hp))
-                {
-                    creature.MaxHP = hp;
-                    creature.HP = hp;
-                }
-            }
-
-            if (element.TryGetProperty("ChallengeRating", out var crProp) || element.TryGetProperty("cr", out crProp))
-                creature.ChallengeRating = crProp.GetString();
-
-            if (element.TryGetProperty("Speed", out var speedProp) || element.TryGetProperty("speed", out speedProp))
-                creature.Speed = speedProp.GetString();
-
-            // Ability scores
-            if (element.TryGetProperty("Str", out var strProp)) creature.Str = strProp.GetInt32();
-            if (element.TryGetProperty("Dex", out var dexProp)) creature.Dex = dexProp.GetInt32();
-            if (element.TryGetProperty("Con", out var conProp)) creature.Con = conProp.GetInt32();
-            if (element.TryGetProperty("Int", out var intProp)) creature.Int = intProp.GetInt32();
-            if (element.TryGetProperty("Wis", out var wisProp)) creature.Wis = wisProp.GetInt32();
-            if (element.TryGetProperty("Cha", out var chaProp)) creature.Cha = chaProp.GetInt32();
-
-            if (element.TryGetProperty("Traits", out var traitsProp))
-                creature.Traits = traitsProp.GetString();
-
-            return creature;
         }
 
         #endregion

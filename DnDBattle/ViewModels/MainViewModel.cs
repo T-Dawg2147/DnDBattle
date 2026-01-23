@@ -22,7 +22,6 @@ namespace DnDBattle.ViewModels
 
         public ObservableCollection<Token> Tokens { get; } = new ObservableCollection<Token>();
         public ObservableCollection<Token> CreatureBank { get; } = new ObservableCollection<Token>();
-        public ObservableCollection<Obstacle> Obstacles { get; } = new ObservableCollection<Obstacle>();
         public ObservableCollection<LightSource> Lights { get; } = new ObservableCollection<LightSource>();
         public ObservableCollection<ActionLogEntry> ActionLog { get; } = new ObservableCollection<ActionLogEntry>();
         
@@ -184,7 +183,6 @@ namespace DnDBattle.ViewModels
         public IRelayCommand RollAllInitiativeCommand { get; }
 
         public IRelayCommand ToggleRulerCommand { get; }
-        public IRelayCommand AddObstacleCommand { get; }
         public IRelayCommand AddLightCommand { get; }
 
         public IRelayCommand OpenCreatureBrowserCommand { get; }
@@ -211,7 +209,6 @@ namespace DnDBattle.ViewModels
             LoadMapCommand = new RelayCommand(LoadMap);
             RollDiceCommand = new RelayCommand(RollDice);
             ToggleRulerCommand = new RelayCommand(ToggleRuler);
-            AddObstacleCommand = new RelayCommand(AddSampleObstacle);
             AddLightCommand = new RelayCommand(AddSampleLight);
             OpenCreatureBrowserCommand = new RelayCommand(OpenCreatureBrowser);
 
@@ -527,18 +524,6 @@ namespace DnDBattle.ViewModels
             Log("System", $"Ruler {(RulerEnabled ? "enabled" : "disabled")}");
         }
 
-        private void AddSampleObstacle()
-        {
-            var obs = new Obstacle();
-            obs.Label = "Wall";
-            obs.PolygonGridPoints.Add(new System.Windows.Point(6, 4));
-            obs.PolygonGridPoints.Add(new System.Windows.Point(9, 4));
-            obs.PolygonGridPoints.Add(new System.Windows.Point(9, 5));
-            obs.PolygonGridPoints.Add(new System.Windows.Point(6, 5));
-            Obstacles.Add(obs);
-            Log("System", "Added sample obstacle (wall)");
-        }
-
         private void AddSampleLight()
         {
             var l = new LightSource { CenterGrid = new System.Windows.Point(5, 5), RadiusSquares = 6, Intensity = 1.0 };
@@ -554,8 +539,10 @@ namespace DnDBattle.ViewModels
                 Content = new CreatureBrowserWindow { DataContext = this },
                 Owner = Application.Current?.MainWindow,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                Width = 900,
-                Height = 640
+                Width = 1100,
+                MinWidth = 1100,
+                Height = 740,
+                MinHeight = 740
             };
             host.ShowDialog();
         }

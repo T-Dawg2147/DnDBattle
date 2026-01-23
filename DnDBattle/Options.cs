@@ -47,7 +47,7 @@ namespace DnDBattle
 
         public static double DefaultGridCellSize { get; set; } = 48.0;
         public static int GridMaxWidth { get; set; } = 100;
-        public static int GridMaxHeight { get; set; } = 60;
+        public static int GridMaxHeight { get; set; } = 100;
 
         public static bool AutoResolveAOOs { get; set; } = true;
 

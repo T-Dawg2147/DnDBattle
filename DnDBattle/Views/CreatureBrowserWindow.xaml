@@ -4,7 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
-             MinWidth="900" MinHeight="600" Background="#1E1E1E">
+             MinWidth="900" MinHeight="600" Background="#1E1E1E"
+             Loaded="CreatureBrowserWindow_Loaded">
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
@@ -18,7 +19,7 @@
             <ColumnDefinition Width="300" MinWidth="250"/>
         </Grid.ColumnDefinitions>
 
-        <!-- ========== LEFT PANEL:  Categories ========== -->
+        <!-- ========== LEFT PANEL: Categories ========== -->
         <Border Grid.Column="0" Background="#252526" Padding="10">
             <Grid>
                 <Grid.RowDefinitions>
@@ -62,10 +63,11 @@
         <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" 
                       Background="#1E1E1E" Cursor="SizeWE"/>
 
-        <!-- ========== CENTER:  Creature List ========== -->
+        <!-- ========== CENTER: Creature List ========== -->
         <Border Grid.Column="2" Background="#1E1E1E" Padding="10">
             <Grid>
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
@@ -88,97 +90,102 @@
                                Foreground="#888"/>
                 </Grid>
 
+                <!-- Favorites Section -->
+                <Expander Grid.Row="1" Header="⭐ Favorites" IsExpanded="True" Margin="0,0,0,10"
+                          Foreground="White" Background="Transparent">
+                    <Expander.Style>
+                        <Style TargetType="Expander">
+                            <Setter Property="Foreground" Value="White"/>
+                        </Style>
+                    </Expander.Style>
+                    <Border Background="#252526" CornerRadius="4" Padding="8" MaxHeight="120">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                            <ItemsControl x:Name="FavoritesList">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#3E3E42" CornerRadius="4" Padding="8,5" 
+                                                Margin="0,0,6,6" Cursor="Hand"
+                                                MouseLeftButtonDown="Favorite_Click"
+                                                ToolTip="{Binding Name}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="⭐" Margin="0,0,5,0" Foreground="Gold"/>
+                                                <TextBlock Text="{Binding Name}" Foreground="White" 
+                                                           MaxWidth="100" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Text=" CR " Foreground="#666" FontSize="10" 
+                                                           VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding ChallengeRating}" Foreground="#888" 
+                                                           FontSize="10" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+                </Expander>
+
                 <!-- Filter Bar -->
-                <Border Grid.Row="1" Background="#252526" CornerRadius="4" Padding="10,8" Margin="0,0,0,10">
-                    <StackPanel Orientation="Horizontal">
+                <Border Grid.Row="2" Background="#252526" CornerRadius="4" Padding="10,8" Margin="0,0,0,10">
+                    <WrapPanel Orientation="Horizontal">
                         <TextBlock Text="CR:" Foreground="#AAA" VerticalAlignment="Center" Margin="0,0,5,0"/>
                         <TextBox x:Name="TxtCRMin" Width="40" Margin="0,0,3,0" 
-                                 TextChanged="FilterChanged" Background="#1E1E1E" Foreground="White"/>
+                                 TextChanged="FilterChanged" Background="#1E1E1E" Foreground="White"
+                                 BorderBrush="#444"/>
                         <TextBlock Text="—" Foreground="#666" VerticalAlignment="Center" Margin="0,0,3,0"/>
                         <TextBox x:Name="TxtCRMax" Width="40" Margin="0,0,15,0"
-                                 TextChanged="FilterChanged" Background="#1E1E1E" Foreground="White"/>
+                                 TextChanged="FilterChanged" Background="#1E1E1E" Foreground="White"
+                                 BorderBrush="#444"/>
 
                         <TextBlock Text="Type:" Foreground="#AAA" VerticalAlignment="Center" Margin="0,0,5,0"/>
                         <ComboBox x:Name="CmbTypeFilter" Width="120" Margin="0,0,15,0" 
-                                  SelectionChanged="FilterChanged"/>
+                                  SelectionChanged="CmbTypeFilter_SelectionChanged"
+                                  Background="#1E1E1E"/>
+
+                        <TextBlock Text="Group:" Foreground="#AAA" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                        <ComboBox x:Name="CmbGroupBy" Width="100" Margin="0,0,15,0"
+                                  SelectionChanged="CmbGroupBy_SelectionChanged"
+                                  Background="#1E1E1E">
+                            <ComboBoxItem Content="None" Tag="None"/>
+                            <ComboBoxItem Content="Type" Tag="Type" IsSelected="True"/>
+                            <ComboBoxItem Content="CR" Tag="ChallengeRating"/>
+                            <ComboBoxItem Content="Size" Tag="Size"/>
+                        </ComboBox>
 
                         <Button Content="Clear" Padding="10,3" Click="BtnClearFilters_Click"/>
 
                         <TextBlock x:Name="TxtCreatureCount" Foreground="#888" 
                                    VerticalAlignment="Center" Margin="15,0,0,0"/>
-                    </StackPanel>
+                    </WrapPanel>
                 </Border>
 
-                <!-- Creature List -->
-                <ListBox x:Name="CreatureList" Grid.Row="2" 
-                         Background="Transparent" BorderThickness="0"
-                         SelectionChanged="CreatureList_SelectionChanged"
-                         MouseDoubleClick="CreatureList_MouseDoubleClick">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <Border Padding="10,8" Margin="2" CornerRadius="4" Cursor="Hand">
-                                <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Setter Property="Background" Value="#2D2D30"/>
-                                        <Style.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter Property="Background" Value="#3E3E42"/>
-                                            </Trigger>
-                                            </Style.Triggers>
-                                    </Style>
-                                    </Border.Style>
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-
-                                        <!-- Favorite Star -->
-                                        <Button Grid.Column="0" Content="⭐" 
-                                            Tag="{Binding}" Click="ToggleFavorite_Click"
-                                            Background="Transparent" BorderThickness="0"
-                                            Foreground="{Binding IsFavorite, Converter={StaticResource FavoriteColorConverter}, FallbackValue=Gray}"
-                                            Margin="0,0,8,0" Cursor="Hand"
-                                            ToolTip="Toggle Favorite"/>
-
-                                        <!-- Name and Type -->
-                                        <StackPanel Grid.Column="1">
-                                            <TextBlock Text="{Binding Name}" Foreground="White" FontWeight="SemiBold"/>
-                                            <TextBlock Foreground="#888" FontSize="11">
-                                            <Run Text="{Binding Size}"/>
-                                            <Run Text=" "/>
-                                            <Run Text="{Binding Type}"/>
-                                            </TextBlock>
-                                        </StackPanel>
-
-                                        <!-- CR Badge -->
-                                        <Border Grid.Column="2" Background="#4A4A4A" CornerRadius="4" 
-                                            Padding="8,2" Margin="10,0" VerticalAlignment="Center">
-                                            <TextBlock Foreground="#FFB74D" FontSize="11" FontWeight="Bold">
-                                            <Run Text="CR "/>
-                                            <Run Text="{Binding ChallengeRating}"/>
-                                            </TextBlock>
-                                        </Border>
-
-                                        <!-- HP -->
-                                        <TextBlock Grid.Column="3" Foreground="#4CAF50" 
-                                               VerticalAlignment="Center" FontSize="12">
-                                        <Run Text="HP "/>
-                                        <Run Text="{Binding MaxHP}"/>
-                                        </TextBlock>
-                                    </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
+                <!-- Creature Tree View -->
+                <TreeView x:Name="CreatureTree" Grid.Row="3" 
+                    Background="Transparent" BorderThickness="0"
+                    VirtualizingStackPanel.IsVirtualizing="True"
+                    VirtualizingStackPanel.VirtualizationMode="Recycling"
+                    SelectedItemChanged="CreatureTree_SelectedItemChanged">
+                    <TreeView.ItemContainerStyle>
+                        <Style TargetType="TreeViewItem">
+                            <Setter Property="Foreground" Value="White"/>
+                            <Setter Property="IsExpanded" Value="False"/>
+                            <!-- Start collapsed! -->
+                            <Setter Property="Padding" Value="2"/>
+                        </Style>
+                    </TreeView.ItemContainerStyle>
+                </TreeView>
 
                 <!-- Bottom Actions -->
-                <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,10,0,0">
+                <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="0,10,0,0">
                     <Button Content="➕ Create Creature" Click="CreateCreature_Click"
                             Padding="12,8" Margin="0,0,10,0"/>
-                    <Button Content="📥 Import JSON" Click="ImportSingleJson_Click"
+                    <Button Content="📥 Import JSON" Click="ImportJson_Click"
+                            Padding="12,8" Margin="0,0,10,0"/>
+                    <Button Content="📁 Import Folder" Click="ImportFolder_Click"
                             Padding="12,8" Margin="0,0,10,0"/>
                     <Button Content="🔄 Reload" Click="BtnReload_Click"
                             Padding="12,8"/>
@@ -203,19 +210,20 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
+                            </Grid.ColumnDefinitions>
 
-                                <StackPanel Grid.Column="0">
-                                    <TextBlock x:Name="TxtCreatureName" FontSize="20" FontWeight="Bold" 
-                                           Foreground="White"/>
-                                    <TextBlock x:Name="TxtCreatureSubtitle" FontSize="11" 
-                                           Foreground="#888" FontStyle="Italic"/>
-                                </StackPanel>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock x:Name="TxtCreatureName" FontSize="20" FontWeight="Bold" 
+                                           Foreground="White" TextWrapping="Wrap"/>
+                                <TextBlock x:Name="TxtCreatureSubtitle" FontSize="11" 
+                                           Foreground="#888" FontStyle="Italic" TextWrapping="Wrap"/>
+                            </StackPanel>
 
-                                <Button Grid.Column="1" Content="⭐" FontSize="20"
-                                    x:Name="BtnFavorite" Click="BtnFavorite_Click"
+                            <Button Grid.Column="1" x:Name="BtnFavorite" Content="☆" FontSize="24"
+                                    Click="BtnFavorite_Click"
                                     Background="Transparent" BorderThickness="0"
-                                    Cursor="Hand" ToolTip="Toggle Favorite"/>
+                                    Foreground="Gray" Cursor="Hand" ToolTip="Toggle Favorite"
+                                    VerticalAlignment="Top"/>
                         </Grid>
 
                         <!-- Stats -->
@@ -243,13 +251,38 @@
                         <TextBlock Text="Ability Scores" Foreground="#4FC3F7" FontWeight="Bold" 
                                    FontSize="11" Margin="0,0,0,8"/>
                         <Border Background="#1E1E1E" CornerRadius="4" Padding="10" Margin="0,0,0,15">
-                            <UniformGrid Columns="6" x:Name="AbilityScoresGrid"/>
+                            <UniformGrid Columns="6">
+                                <StackPanel HorizontalAlignment="Center">
+                                    <TextBlock Text="STR" Foreground="#888" FontSize="9" HorizontalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtStr" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                                <StackPanel HorizontalAlignment="Center">
+                                    <TextBlock Text="DEX" Foreground="#888" FontSize="9" HorizontalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtDex" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                                <StackPanel HorizontalAlignment="Center">
+                                    <TextBlock Text="CON" Foreground="#888" FontSize="9" HorizontalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtCon" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                                <StackPanel HorizontalAlignment="Center">
+                                    <TextBlock Text="INT" Foreground="#888" FontSize="9" HorizontalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtInt" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                                <StackPanel HorizontalAlignment="Center">
+                                    <TextBlock Text="WIS" Foreground="#888" FontSize="9" HorizontalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtWis" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                                <StackPanel HorizontalAlignment="Center">
+                                    <TextBlock Text="CHA" Foreground="#888" FontSize="9" HorizontalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtCha" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </UniformGrid>
                         </Border>
 
                         <!-- Speed -->
                         <TextBlock Text="Speed" Foreground="#4FC3F7" FontWeight="Bold" 
                                    FontSize="11" Margin="0,0,0,5"/>
-                        <TextBlock x:Name="TxtSpeed" Foreground="#CCC" Margin="0,0,0,15"/>
+                        <TextBlock x:Name="TxtSpeed" Foreground="#CCC" Margin="0,0,0,15" TextWrapping="Wrap"/>
 
                         <!-- Traits -->
                         <StackPanel x:Name="TraitsSection" Margin="0,0,0,15">
@@ -271,7 +304,7 @@
                                     Padding="15,10" FontWeight="Bold"
                                     Background="#4CAF50" Foreground="White"/>
 
-                            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <StackPanel Orientation="Horizontal" Margin="0,10,0,0" HorizontalAlignment="Center">
                                 <Button Content="📝 Edit" Click="EditCreature_Click"
                                         Padding="10,5" Margin="0,0,5,0"/>
                                 <Button Content="📋 Duplicate" Click="DuplicateCreature_Click"
@@ -283,6 +316,49 @@
                     </StackPanel>
                 </StackPanel>
             </ScrollViewer>
+        </Border>
+
+        <!-- Import Progress Overlay -->
+        <Border x:Name="ImportProgressOverlay" 
+                Grid.ColumnSpan="4"
+                Background="#DD1A1A1D" 
+                Visibility="Collapsed"
+                Panel.ZIndex="999">
+            <Border Background="#252526" CornerRadius="12" Padding="30,20"
+                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                    MinWidth="350">
+                <StackPanel>
+                    <TextBlock x:Name="ImportProgressTitle" 
+                               Text="Importing Creatures..." 
+                               Foreground="White" 
+                               FontSize="16" 
+                               FontWeight="Bold"
+                               HorizontalAlignment="Center"
+                               Margin="0,0,0,15"/>
+
+                    <ProgressBar x:Name="ImportProgressBar" 
+                                 Height="8" 
+                                 Minimum="0" Maximum="100" Value="0"
+                                 Background="#1E1E1E" 
+                                 Foreground="#007ACC"/>
+
+                    <TextBlock x:Name="ImportProgressText" 
+                               Text="Preparing..." 
+                               Foreground="#AAA" 
+                               FontSize="12"
+                               HorizontalAlignment="Center"
+                               Margin="0,10,0,0"/>
+
+                    <TextBlock x:Name="ImportProgressDetail" 
+                               Text="" 
+                               Foreground="#666" 
+                               FontSize="11"
+                               HorizontalAlignment="Center"
+                               Margin="0,5,0,0"
+                               TextWrapping="Wrap"
+                               MaxWidth="300"/>
+                </StackPanel>
+            </Border>
         </Border>
     </Grid>
 </UserControl>

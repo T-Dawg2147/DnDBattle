@@ -17,92 +17,191 @@ namespace DnDBattle.Services
     {
         private readonly string _dbPath;
         private SqliteConnection _conn;
+        private bool _isInitialized = false;
+        private readonly SemaphoreSlim _initLock = new SemaphoreSlim(1, 1);
 
         public CreatureDatabaseService(string dbPath = "CreatureBank.db")
         {
             _dbPath = dbPath;
-            InitializeDatabase();
         }
 
         #region Database Initialization
 
-        private void InitializeDatabase()
+        public async Task EnsureInitializedAsync()
         {
-            _conn = new SqliteConnection($"Data Source={_dbPath}");
-            _conn.Open();
+            if (_isInitialized) return;
+
+            await _initLock.WaitAsync();
+            try
+            {
+                if (_isInitialized) return;
+
+                await InitializeDatabaseAsync();
+                _isInitialized = true;
+            }
+            finally
+            {
+                _initLock.Release();
+            }
+        }
+
+        private async Task InitializeDatabaseAsync()
+        {
+            _conn = new SqliteConnection($"Data Source={_dbPath};Cache=Shared;Mode=ReadWriteCreate");
+            await _conn.OpenAsync();
+
+            // Enable WAL mode for better concurrent read performance
+            using (var walCmd = _conn.CreateCommand())
+            {
+                walCmd.CommandText = "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA cache_size=10000;";
+                await walCmd.ExecuteNonQueryAsync();
+            }
 
             var createTablesCmd = _conn.CreateCommand();
             createTablesCmd.CommandText = @"
                 -- Main Creatures table
                 CREATE TABLE IF NOT EXISTS Creatures (
-	                Id TEXT PRIMARY KEY,
-	                Name TEXT NOT NULL,
-	                Size TEXT,
-	                Type TEXT,
-	                Alignment TEXT,
-	                ChallengeRating TEXT,
-	                ArmorClass INTEGER,
-	                MaxHP INTEGER,
-	                HitDice TEXT,
-	                InitiativeModifier INTEGER,
-	                Speed TEXT,
-	                Str INTEGER,
-	                Dex INTEGER,
-	                Con INTEGER,
-	                Int INTEGER,
-	                Wis INTEGER,
-	                Cha INTEGER,
-	                Skills TEXT,
-	                Senses TEXT,
-	                Languages TEXT,
-	                Immunities TEXT,
-	                Resistances TEXT,
-	                Vulnerabilities TEXT,
-	                Traits TEXT,
-	                Notes TEXT,
-	                IconPath TEXT,
-	                SizeInSquares INTEGER DEFAULT 1,
-	                Category TEXT,
-	                SourceFile TEXT,
-	                DateAdded TEXT
-	                );
+                    Id TEXT PRIMARY KEY,
+                    Name TEXT NOT NULL,
+                    Size TEXT,
+                    Type TEXT,
+                    Alignment TEXT,
+                    ChallengeRating TEXT,
+                    ArmorClass INTEGER,
+                    MaxHP INTEGER,
+                    HitDice TEXT,
+                    InitiativeModifier INTEGER,
+                    Speed TEXT,
+                    Str INTEGER,
+                    Dex INTEGER,
+                    Con INTEGER,
+                    Int INTEGER,
+                    Wis INTEGER,
+                    Cha INTEGER,
+                    Skills TEXT,
+                    Senses TEXT,
+                    Languages TEXT,
+                    Immunities TEXT,
+                    Resistances TEXT,
+                    Vulnerabilities TEXT,
+                    Traits TEXT,
+                    Notes TEXT,
+                    IconPath TEXT,
+                    SizeInSquares INTEGER DEFAULT 1,
+                    Category TEXT,
+                    SourceFile TEXT,
+                    DateAdded TEXT,
+                    IsFavorite INTEGER DEFAULT 0
+                );
 
-	                -- Actions table (one-to-many with Creatures)
-	                CREATE TABLE IF NOT EXISTS CreatureActions (
-	                Id INTEGER PRIMARY KEY AUTOINCREMENT,
-	                CreatureId TEXT NOT NULL,
-	                ActionType TEXT NOT NULL,
-	                Name TEXT,
-	                AttackBonus INTEGER,
-	                DamageExpression TEXT,
-	                Range TEXT,
-	                Description TEXT,
-	                FOREIGN KEY (CreatureId) REFERENCES Creatures(Id) ON DELETE CASCADE
-	                );
+                -- Actions table
+                CREATE TABLE IF NOT EXISTS CreatureActions (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    CreatureId TEXT NOT NULL,
+                    ActionType TEXT NOT NULL,
+                    Name TEXT,
+                    AttackBonus INTEGER,
+                    DamageExpression TEXT,
+                    Range TEXT,
+                    Description TEXT,
+                    FOREIGN KEY (CreatureId) REFERENCES Creatures(Id) ON DELETE CASCADE
+                );
 
-	                -- Tags table (many-to-many with Creatures)
-	                CREATE TABLE IF NOT EXISTS Tags (
-	                Id INTEGER PRIMARY KEY AUTOINCREMENT,
-	                Name TEXT UNIQUE NOT NULL
-	                );
+                -- Tags table
+                CREATE TABLE IF NOT EXISTS Tags (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Name TEXT UNIQUE NOT NULL
+                );
 
-	                -- Junction table for Creature-Tag relationship
-	                CREATE TABLE IF NOT EXISTS CreatureTags (
-	                CreatureId TEXT NOT NULL,
-	                TagId INTEGER NOT NULL,
-	                PRIMARY KEY (CreatureId, TagId),
-	                FOREIGN KEY (CreatureId) REFERENCES Creatures(Id) ON DELETE CASCADE,
-	                FOREIGN KEY (TagId) REFERENCES Tags(Id) ON DELETE CASCADE
-	                );
-	
-	                -- Create indexes for faster searching
-	                CREATE INDEX IF NOT EXISTS idx_creatures_name ON Creatures(Name);
-	                CREATE INDEX IF NOT EXISTS idx_creatures_type ON Creatures(Type);
-	                CREATE INDEX IF NOT EXISTS idx_creatures_category ON Creatures(Category);
-	                CREATE INDEX IF NOT EXISTS idx_creatures_cr ON Creatures(ChallengeRating);
-	                CREATE INDEX IF NOT EXISTS idx_tags_name ON Tags(Name);
-                ";
-            createTablesCmd.ExecuteNonQuery();
+                -- Junction table for Creature-Tag relationship
+                CREATE TABLE IF NOT EXISTS CreatureTags (
+                    CreatureId TEXT NOT NULL,
+                    TagId INTEGER NOT NULL,
+                    PRIMARY KEY (CreatureId, TagId),
+                    FOREIGN KEY (CreatureId) REFERENCES Creatures(Id) ON DELETE CASCADE,
+                    FOREIGN KEY (TagId) REFERENCES Tags(Id) ON DELETE CASCADE
+                );
+
+                -- Create indexes for faster searching
+                CREATE INDEX IF NOT EXISTS idx_creatures_name ON Creatures(Name);
+                CREATE INDEX IF NOT EXISTS idx_creatures_type ON Creatures(Type);
+                CREATE INDEX IF NOT EXISTS idx_creatures_category ON Creatures(Category);
+                CREATE INDEX IF NOT EXISTS idx_creatures_cr ON Creatures(ChallengeRating);
+                CREATE INDEX IF NOT EXISTS idx_creatures_favorite ON Creatures(IsFavorite);
+                CREATE INDEX IF NOT EXISTS idx_tags_name ON Tags(Name);
+            ";
+            await createTablesCmd.ExecuteNonQueryAsync();
+
+            // Add IsFavorite column if it doesn't exist (for existing databases)
+            try
+            {
+                using var alterCmd = _conn.CreateCommand();
+                alterCmd.CommandText = "ALTER TABLE Creatures ADD COLUMN IsFavorite INTEGER DEFAULT 0";
+                await alterCmd.ExecuteNonQueryAsync();
+            }
+            catch { /* Column already exists */ }
+        }
+
+        private async Task EnsureConnectionAsync()
+        {
+            await EnsureInitializedAsync();
+            if (_conn.State != System.Data.ConnectionState.Open)
+                await _conn.OpenAsync();
+        }
+
+        public async Task<List<CreatureSummary>> GetCreatureSummariesAsync(string nameSearch = null, string type = null, string category = null, int limit = 500, int offset = 0)
+        {
+            var summaries = new List<CreatureSummary>();
+
+            var sql = new StringBuilder();
+            sql.Append(@"SELECT Id, Name, Size, Type, ChallengeRating, ArmorClass, MaxHP, IconPath
+                        FROM Creatures WHERE 1=1 ");
+
+            var parameters = new List<SqliteParameter>();
+
+            if (!string.IsNullOrWhiteSpace(nameSearch))
+            {
+                sql.Append("AND Name LIKE @NameSearch ");
+                parameters.Add(new SqliteParameter("@NameSearch", $"%{nameSearch}%"));
+            }
+
+            if (!string.IsNullOrWhiteSpace(type) && type != "All")
+            {
+                sql.Append("AND Type = @Type ");
+                parameters.Add(new SqliteParameter("Type", type));
+            }
+
+            if (!string.IsNullOrWhiteSpace(category) && category != "All")
+            {
+                sql.Append("AND Category = @Category ");
+                parameters.Add(new SqliteParameter("@Category", category));
+            }
+
+            sql.Append("ORDER BY Name LIMIT @Limit OFFSET @Offset");
+            parameters.Add(new SqliteParameter("@Limit", limit));
+            parameters.Add(new SqliteParameter("@Offset", offset));
+
+            var cmd = _conn.CreateCommand();
+            cmd.CommandText = sql.ToString();
+            foreach (var p in parameters)
+                cmd.Parameters.Add(p);
+
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                summaries.Add(new CreatureSummary()
+                {
+                    Id = reader.GetString(0),
+                    Name = reader.IsDBNull(1) ? "" : reader.GetString(1),
+                    Size = reader.IsDBNull(2) ? "" : reader.GetString(2),
+                    Type = reader.IsDBNull(3) ? "" : reader.GetString(3),
+                    ChallengeRating = reader.IsDBNull(4) ? "" : reader.GetString(4),
+                    ArmorClass = reader.IsDBNull(5) ? 0 : reader.GetInt32(5),
+                    MaxHP = reader.IsDBNull(6) ? 0 : reader.GetInt32(6),
+                    IconPath = reader.IsDBNull(7) ? "" : reader.GetString(7)
+                });
+            }
+            return summaries;
         }
 
         #endregion
@@ -111,6 +210,8 @@ namespace DnDBattle.Services
 
         public async Task<int> AddCreatureAsync(Token creature, string category = null, string sourceFile = null)
         {
+            await EnsureConnectionAsync();
+
             using var transaction = _conn.BeginTransaction();
 
             try
@@ -212,6 +313,8 @@ namespace DnDBattle.Services
 
         public async Task<Token> GetCreatureByIdAsync(string id)
         {
+            await EnsureConnectionAsync();
+
             var cmd = _conn.CreateCommand();
 
             cmd.CommandText = "SELECT * FROM Creatures WHERE Id = @Id";
@@ -234,6 +337,8 @@ namespace DnDBattle.Services
 
         private async Task<List<Models.Action>> GetActionsAsync(string creatureId, string actionType)
         {
+            await EnsureConnectionAsync();
+
             var actions = new List<Models.Action>();
 
             var cmd = _conn.CreateCommand();
@@ -262,6 +367,8 @@ namespace DnDBattle.Services
 
         public async Task ClearAllCreaturesAsync()
         {
+            await EnsureConnectionAsync();
+
             using var transaction = _conn.BeginTransaction();
 
             try
@@ -301,6 +408,8 @@ namespace DnDBattle.Services
         /// </summary>
         public async Task EnsureCategoryTableExistsAsync()
         {
+            await EnsureConnectionAsync();
+
             var cmd = _conn.CreateCommand();
             cmd.CommandText = @"
         CREATE TABLE IF NOT EXISTS Categories (
@@ -344,6 +453,8 @@ namespace DnDBattle.Services
                 ("favorites", "Favorites", null, -1, "⭐", true)
             };
 
+            await EnsureConnectionAsync();
+
             foreach (var category in defaultCategories)
             {
                 var checkCmd = _conn.CreateCommand();
@@ -368,112 +479,136 @@ namespace DnDBattle.Services
             }
         }
 
-        public async Task<List<CreatureCategory>> GetAllCategoriesAsync()
+        public async Task<List<CreatureCategory>> GetCategoriesAsync()
         {
-            await EnsureCategoryTableExistsAsync();
+            await EnsureConnectionAsync();
 
             var categories = new List<CreatureCategory>();
-            var cmd = _conn.CreateCommand();
-            cmd.CommandText = "SELECT Id, Name, ParentId, SortOrder, Icon, IsSystem FROM Categories ORDER BY SortOrder, Name";
 
-            using (var reader = await cmd.ExecuteReaderAsync())
+            try
             {
+                var cmd = _conn.CreateCommand();
+                cmd.CommandText = @"
+            SELECT Id, Name, ParentId, SortOrder, Icon, IsSystem 
+            FROM Categories 
+            ORDER BY SortOrder, Name";
+
+                using var reader = await cmd.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {
                     categories.Add(new CreatureCategory
                     {
-                        Id = reader.GetString(0),
-                        Name = reader.GetString(1),
+                        Id = reader.IsDBNull(0) ? "" : reader.GetString(0),
+                        Name = reader.IsDBNull(1) ? "" : reader.GetString(1),
                         ParentId = reader.IsDBNull(2) ? null : reader.GetString(2),
-                        SortOrder = reader.GetInt32(3),
+                        SortOrder = reader.IsDBNull(3) ? 0 : reader.GetInt32(3),
                         Icon = reader.IsDBNull(4) ? "📁" : reader.GetString(4),
-                        IsSystem = reader.GetInt32(5) == 1
+                        IsSystem = reader.IsDBNull(5) ? false : reader.GetInt32(5) == 1,
                     });
                 }
             }
-
-            // Get creature counts for each category
-            foreach (var cat in categories)
+            catch (Exception ex)
             {
-                var countCmd = _conn.CreateCommand();
-                if (cat.Id == "favorites")
-                {
-                    countCmd.CommandText = "SELECT COUNT(*) FROM Favorites";
-                }
-                else
-                {
-                    countCmd.CommandText = "SELECT COUNT(*) FROM CreatureCategories WHERE CategoryId = @CategoryId";
-                    countCmd.Parameters.AddWithValue("@CategoryId", cat.Id);
-                }
-                cat.CreatureCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
+                System.Diagnostics.Debug.WriteLine($"Error getting categories: {ex.Message}");
             }
 
             return categories;
         }
 
-        public async Task<CreatureCategory> AddCategoryAsync(string name, string parentId = null, string icon = "📁")
+        public async Task<bool> AddCategoryAsync(string id, string name, string icon = "📁", string parentId = null, int sortOrder = 0)
         {
-            await EnsureCategoryTableExistsAsync();
+            await EnsureConnectionAsync();
 
-            var category = new CreatureCategory
+            try
             {
-                Id = Guid.NewGuid().ToString(),
-                Name = name,
-                ParentId = parentId,
-                Icon = icon,
-                IsSystem = false,
-                SortOrder = 100
-            };
+                var cmd = _conn.CreateCommand();
+                cmd.CommandText = @"
+            INSERT INTO Categories (Id, Name, ParentId, SortOrder, Icon, IsSystem, CreatedAt)
+            VALUES (@Id, @Name, @ParentId, @SortOrder, @Icon, 0, @CreatedAt)";
 
-            var cmd = _conn.CreateCommand();
-            cmd.CommandText = @"
-        INSERT INTO Categories (Id, Name, ParentId, SortOrder, Icon, IsSystem)
-        VALUES (@Id, @Name, @ParentId, @SortOrder, @Icon, 0)";
-            cmd.Parameters.AddWithValue("@Id", category.Id);
-            cmd.Parameters.AddWithValue("@Name", name);
-            cmd.Parameters.AddWithValue("@ParentId", parentId ?? (object)DBNull.Value);
-            cmd.Parameters.AddWithValue("@SortOrder", category.SortOrder);
-            cmd.Parameters.AddWithValue("@Icon", icon);
-            await cmd.ExecuteNonQueryAsync();
+                cmd.Parameters.AddWithValue("@Id", id);
+                cmd.Parameters.AddWithValue("@Name", name);
+                cmd.Parameters.AddWithValue("@ParentId", (object)parentId ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@SortOrder", sortOrder);
+                cmd.Parameters.AddWithValue("@Icon", icon);
+                cmd.Parameters.AddWithValue("@CreatedAt", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
-            return category;
+                await cmd.ExecuteNonQueryAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error adding category: {ex.Message}");
+                return false;
+            }
         }
 
-        public async Task DeleteCategoryAsync(string categoryId)
+        /// <summary>
+        /// Deletes a category (only if not a system category)
+        /// </summary>
+        public async Task<bool> DeleteCategoryAsync(string categoryId)
         {
-            // Don't allow deleting system categories
-            var checkCmd = _conn.CreateCommand();
-            checkCmd.CommandText = "SELECT IsSystem FROM Categories WHERE Id = @Id";
-            checkCmd.Parameters.AddWithValue("@Id", categoryId);
-            var isSystem = Convert.ToInt32(await checkCmd.ExecuteScalarAsync() ?? 0);
+            await EnsureConnectionAsync();
 
-            if (isSystem == 1)
-                throw new InvalidOperationException("Cannot delete system categories");
+            try
+            {
+                // Check if it's a system category
+                var checkCmd = _conn.CreateCommand();
+                checkCmd.CommandText = "SELECT IsSystem FROM Categories WHERE Id = @Id";
+                checkCmd.Parameters.AddWithValue("@Id", categoryId);
 
-            // Remove creature associations first
-            var removeAssocCmd = _conn.CreateCommand();
-            removeAssocCmd.CommandText = "DELETE FROM CreatureCategories WHERE CategoryId = @CategoryId";
-            removeAssocCmd.Parameters.AddWithValue("@CategoryId", categoryId);
-            await removeAssocCmd.ExecuteNonQueryAsync();
+                var result = await checkCmd.ExecuteScalarAsync();
+                if (result != null && Convert.ToInt32(result) == 1)
+                {
+                    return false; // Can't delete system categories
+                }
 
-            // Delete the category
-            var deleteCmd = _conn.CreateCommand();
-            deleteCmd.CommandText = "DELETE FROM Categories WHERE Id = @Id";
-            deleteCmd.Parameters.AddWithValue("@Id", categoryId);
-            await deleteCmd.ExecuteNonQueryAsync();
+                // Move creatures in this category to "custom"
+                var moveCmd = _conn.CreateCommand();
+                moveCmd.CommandText = "UPDATE Creatures SET Category = 'custom' WHERE Category = @Id";
+                moveCmd.Parameters.AddWithValue("@Id", categoryId);
+                await moveCmd.ExecuteNonQueryAsync();
+
+                // Delete the category
+                var deleteCmd = _conn.CreateCommand();
+                deleteCmd.CommandText = "DELETE FROM Categories WHERE Id = @Id AND IsSystem = 0";
+                deleteCmd.Parameters.AddWithValue("@Id", categoryId);
+                await deleteCmd.ExecuteNonQueryAsync();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error deleting category: {ex.Message}");
+                return false;
+            }
         }
 
-        public async Task RenameCategoryAsync(string categoryId, string newName)
+        public async Task<bool> RenameCategoryAsync(string categoryId, string newName)
         {
-            var cmd = _conn.CreateCommand();
-            cmd.CommandText = "UPDATE Categories SET Name = @Name WHERE Id = @Id";
-            cmd.Parameters.AddWithValue("@Name", newName);
-            cmd.Parameters.AddWithValue("@Id", categoryId);
-            await cmd.ExecuteNonQueryAsync();
+            await EnsureConnectionAsync();
+
+            try
+            {
+                var cmd = _conn.CreateCommand();
+                cmd.CommandText = "UPDATE Categories SET Name = @Name WHERE Id = @Id";
+                cmd.Parameters.AddWithValue("@Name", newName);
+                cmd.Parameters.AddWithValue("@Id", categoryId);
+
+                await cmd.ExecuteNonQueryAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error renaming category: {ex.Message}");
+                return false;
+            }
         }
 
         public async Task AssignCreatureToCategoryAsync(string creatureId, string categoryId)
         {
+            await EnsureConnectionAsync();
+
             var cmd = _conn.CreateCommand();
             cmd.CommandText = @"
         INSERT OR IGNORE INTO CreatureCategories (CreatureId, CategoryId)
@@ -485,6 +620,8 @@ namespace DnDBattle.Services
 
         public async Task RemoveCreatureFromCategoryAsync(string creatureId, string categoryId)
         {
+            await EnsureConnectionAsync();
+
             var cmd = _conn.CreateCommand();
             cmd.CommandText = "DELETE FROM CreatureCategories WHERE CreatureId = @CreatureId AND CategoryId = @CategoryId";
             cmd.Parameters.AddWithValue("@CreatureId", creatureId);
@@ -492,37 +629,101 @@ namespace DnDBattle.Services
             await cmd.ExecuteNonQueryAsync();
         }
 
-        public async Task<List<Token>> GetCreaturesByCategoryAsync(string categoryId)
+        /// <summary>
+        /// Gets creatures by category ID - checks the Category column in Creatures table
+        /// </summary>
+        public async Task<List<Token>> GetCreaturesByCategoryAsync(string categoryId, int limit = 1000)
         {
+            await EnsureConnectionAsync();
+
+            System.Diagnostics.Debug.WriteLine($"GetCreaturesByCategoryAsync called with categoryId: {categoryId}");
+
+            // Special handling for "favorites"
+            if (categoryId?.ToLower() == "favorites")
+            {
+                var favs = await GetFavoritesAsync();
+                var favoriteCreatures = new List<Token>();
+                foreach (var f in favs)
+                {
+                    var creature = await GetCreatureByIdAsync(f.Id);
+                    if (creature != null)
+                        favoriteCreatures.Add(creature);
+                }
+                return favoriteCreatures;
+            }
+
+            // Special handling for "all" or main SRD category
+            if (string.IsNullOrEmpty(categoryId) ||
+                categoryId.ToLower() == "all" ||
+                categoryId.ToLower() == "dnd5e-srd")
+            {
+                return await GetAllCreaturesAsync(limit);
+            }
+
             var creatures = new List<Token>();
-            var cmd = _conn.CreateCommand();
 
-            if (categoryId == "favorites")
+            try
             {
+                var cmd = _conn.CreateCommand();
                 cmd.CommandText = @"
-                    SELECT c.* FROM Creatures c
-                    INNER JOIN Favorites f ON c. Id = f.CreatureId
-                    ORDER BY c.Name";
-            }
-            else
-            {
-                cmd.CommandText = @"
-                    SELECT c.* FROM Creatures c
-                    INNER JOIN CreatureCategories cc ON c.Id = cc.CreatureId
-                    WHERE cc.CategoryId = @CategoryId
-                    ORDER BY c.Name";
-                cmd.Parameters.AddWithValue("@CategoryId", categoryId);
-            }
+            SELECT * FROM Creatures 
+            WHERE Category = @Category OR Category IS NULL OR Category = ''
+            ORDER BY Name 
+            LIMIT @Limit";
+                cmd.Parameters.AddWithValue("@Category", categoryId);
+                cmd.Parameters.AddWithValue("@Limit", limit);
 
-            using (var reader = await cmd.ExecuteReaderAsync())
-            {
+                using var reader = await cmd.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {
-                    creatures.Add(ParseCreatureFromReader(reader));
+                    creatures.Add(ReadCreatureFromReader(reader));
                 }
+
+                System.Diagnostics.Debug.WriteLine($"GetCreaturesByCategoryAsync: Found {creatures.Count} creatures for category {categoryId}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error getting creatures by category: {ex.Message}");
             }
 
             return creatures;
+        }
+
+        /// <summary>
+        /// Gets the count of creatures in a specific category
+        /// </summary>
+        public async Task<int> GetCreatureCountByCategoryAsync(string categoryId)
+        {
+            await EnsureConnectionAsync();
+
+            try
+            {
+                var cmd = _conn.CreateCommand();
+
+                if (categoryId?.ToLower() == "favorites")
+                {
+                    cmd.CommandText = "SELECT COUNT(*) FROM Creatures WHERE IsFavorite = 1";
+                }
+                else if (string.IsNullOrEmpty(categoryId) ||
+                         categoryId.ToLower() == "all" ||
+                         categoryId.ToLower() == "dnd5e-srd")
+                {
+                    cmd.CommandText = "SELECT COUNT(*) FROM Creatures";
+                }
+                else
+                {
+                    cmd.CommandText = "SELECT COUNT(*) FROM Creatures WHERE Category = @Category";
+                    cmd.Parameters.AddWithValue("@Category", categoryId);
+                }
+
+                var result = await cmd.ExecuteScalarAsync();
+                return Convert.ToInt32(result);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error getting creature count: {ex.Message}");
+                return 0;
+            }
         }
 
         #endregion
@@ -541,27 +742,67 @@ namespace DnDBattle.Services
 
         public async Task ToggleFavoriteAsync(string creatureId)
         {
-            await EnsureCategoryTableExistsAsync();
+            await EnsureConnectionAsync();
 
-            if (await IsCreatureFavoriteAsync(creatureId))
-            {
-                var deleteCmd = _conn.CreateCommand();
-                deleteCmd.CommandText = "DELETE FROM Favorites WHERE CreatureId = @CreatureId";
-                deleteCmd.Parameters.AddWithValue("@CreatureId", creatureId);
-                await deleteCmd.ExecuteNonQueryAsync();
-            }
-            else
-            {
-                var insertCmd = _conn.CreateCommand();
-                insertCmd.CommandText = "INSERT INTO Favorites (CreatureId) VALUES (@CreatureId)";
-                insertCmd.Parameters.AddWithValue("@CreatureId", creatureId);
-                await insertCmd.ExecuteNonQueryAsync();
-            }
+            var cmd = _conn.CreateCommand();
+            cmd.CommandText = "UPDATE Creatures SET IsFavorite = NOT IsFavorite WHERE Id = @Id";
+            cmd.Parameters.AddWithValue("@Id", creatureId);
+            await cmd.ExecuteNonQueryAsync();
         }
 
-        public async Task<List<Token>> GetFavoriteCreaturesAsync()
+        public async Task SetFavoriteAsync(string creatureId, bool isFavorite)
         {
-            return await GetCreaturesByCategoryAsync("favorites");
+            await EnsureInitializedAsync();
+
+            var cmd = _conn.CreateCommand();
+            cmd.CommandText = "UPDATE Creatures SET IsFavorite = @IsFavorite WHERE Id = @Id";
+            cmd.Parameters.AddWithValue("@Id", creatureId);
+            cmd.Parameters.AddWithValue("@IsVaorite", isFavorite);
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        /// <summary>
+        /// Get all favorite creatures (lightweight)
+        /// </summary>
+        public async Task<List<CreatureSummary>> GetFavoritesAsync()
+        {
+            await EnsureConnectionAsync();
+
+            var summaries = new List<CreatureSummary>();
+
+            var cmd = _conn.CreateCommand();
+            cmd.CommandText = @"SELECT Id, Name, Size, Type, ChallengeRating, ArmorClass, MaxHP, IconPath 
+                        FROM Creatures WHERE IsFavorite = 1 ORDER BY Name";
+
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                summaries.Add(new CreatureSummary
+                {
+                    Id = reader.GetString(0),
+                    Name = reader.IsDBNull(1) ? "" : reader.GetString(1),
+                    Size = reader.IsDBNull(2) ? "" : reader.GetString(2),
+                    Type = reader.IsDBNull(3) ? "" : reader.GetString(3),
+                    ChallengeRating = reader.IsDBNull(4) ? "" : reader.GetString(4),
+                    ArmorClass = reader.IsDBNull(5) ? 0 : reader.GetInt32(5),
+                    MaxHP = reader.IsDBNull(6) ? 0 : reader.GetInt32(6),
+                    IconPath = reader.IsDBNull(7) ? "" : reader.GetString(7)
+                });
+            }
+
+            return summaries;
+        }
+
+        public async Task<bool> IsFavoriteAsync(string creatureId)
+        {
+            await EnsureConnectionAsync();
+
+            var cmd = _conn.CreateCommand();
+            cmd.CommandText = "SELECT IsFavorite FROM Creatures WHERE Id = @Id";
+            cmd.Parameters.AddWithValue("@Id", creatureId);
+
+            var result = await cmd.ExecuteScalarAsync();
+            return result != null && Convert.ToInt32(result) == 1;
         }
 
         #endregion
@@ -570,6 +811,8 @@ namespace DnDBattle.Services
 
         public async Task<Token> AddCustomCreatureAsync(Token creature, string categoryId = "custom")
         {
+            await EnsureConnectionAsync();
+
             creature.Id = Guid.NewGuid();
             await AddCreatureAsync(creature, categoryId, "custom");
             await AssignCreatureToCategoryAsync(creature.Id.ToString(), categoryId);
@@ -578,6 +821,8 @@ namespace DnDBattle.Services
 
         public async Task UpdateCreatureAsync(Token creature)
         {
+            await EnsureConnectionAsync();
+
             var cmd = _conn.CreateCommand();
             cmd.CommandText = @"
             UPDATE Creatures SET
@@ -643,6 +888,8 @@ namespace DnDBattle.Services
 
         public async Task DeleteCreatureAsync(string creatureId)
         {
+            await EnsureConnectionAsync();
+
             // Remove from categories first
             var removeCatCmd = _conn.CreateCommand();
             removeCatCmd.CommandText = "DELETE FROM CreatureCategories WHERE CreatureId = @CreatureId";
@@ -668,6 +915,8 @@ namespace DnDBattle.Services
 
         public async Task<int> GetOrCreateTagIdAsync(string tagName)
         {
+            await EnsureConnectionAsync();
+
             var getCmd = _conn.CreateCommand();
             getCmd.CommandText = "SELECT Id FROM Tags WHERE Name = @Name COLLATE NOCASE";
             getCmd.Parameters.AddWithValue("@Name", tagName.Trim());
@@ -687,6 +936,8 @@ namespace DnDBattle.Services
 
         public async Task SetCreatureTagsAsync(string creatureId, List<string> tags)
         {
+            await EnsureConnectionAsync();
+
             var deleteCmd = _conn.CreateCommand();
             deleteCmd.CommandText = "DELETE FROM CreatureTags WHERE CreatureId = @CreatureId";
             deleteCmd.Parameters.AddWithValue("@CreatureId", creatureId);
@@ -708,6 +959,8 @@ namespace DnDBattle.Services
 
         public async Task<List<string>> GetCreatureTagsAsync(string creatureId)
         {
+            await EnsureConnectionAsync();
+
             var tags = new List<string>();
 
             var cmd = _conn.CreateCommand();
@@ -729,6 +982,8 @@ namespace DnDBattle.Services
 
         public async Task<List<string>> GetAllTagsAsync()
         {
+            await EnsureConnectionAsync();
+
             var tags = new List<string>();
 
             var cmd = _conn.CreateCommand();
@@ -827,6 +1082,8 @@ namespace DnDBattle.Services
             parameters.Add(new SqliteParameter("@Limit", limit));
             parameters.Add(new SqliteParameter("@Offset", offset));
 
+            await EnsureConnectionAsync();
+
             var cmd = _conn.CreateCommand();
             cmd.CommandText = sql.ToString();
             foreach (var param in parameters)
@@ -856,6 +1113,8 @@ namespace DnDBattle.Services
 
         public async Task<List<string>> GetAllTypesAsync()
         {
+            await EnsureConnectionAsync();
+
             var types = new List<string> { "All" };
 
             var cmd = _conn.CreateCommand();
@@ -871,53 +1130,60 @@ namespace DnDBattle.Services
 
         public async Task<int> GetCreatureCountAsync()
         {
+            await EnsureInitializedAsync();
+
             var cmd = _conn.CreateCommand();
             cmd.CommandText = "SELECT COUNT(*) FROM Creatures";
             return Convert.ToInt32(await cmd.ExecuteScalarAsync());
+        }
+
+        /// <summary>
+        /// Gets all creatures from the database
+        /// </summary>
+        public async Task<List<Token>> GetAllCreaturesAsync(int limit = 1000)
+        {
+            await EnsureConnectionAsync();
+
+            var creatures = new List<Token>();
+
+            try
+            {
+                var cmd = _conn.CreateCommand();
+                cmd.CommandText = "SELECT * FROM Creatures ORDER BY Name LIMIT @Limit";
+                cmd.Parameters.AddWithValue("@Limit", limit);
+
+                using var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    creatures.Add(ReadCreatureFromReader(reader));
+                }
+
+                System.Diagnostics.Debug.WriteLine($"GetAllCreaturesAsync: Found {creatures.Count} creatures");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in GetAllCreaturesAsync: {ex.Message}");
+            }
+
+            return creatures;
         }
 
         #endregion
 
         #region JSON Import
 
-        // Original Method
-        /*public async Task<int> ImportFromJsonFileAsync(string filePath)
-        {
-            if (!File.Exists(filePath))
-                throw new FileNotFoundException($"JSON file not found: {filePath}");
-
-            var json = await File.ReadAllTextAsync(filePath);
-            var category = Path.GetFileNameWithoutExtension(filePath);
-
-            var options = new JsonSerializerOptions()
-            {
-                PropertyNameCaseInsensitive = true
-            };
-
-            var jsonCreatures = JsonSerializer.Deserialize<List<JsonCreatureDto>>(json, options);
-
-            int importedCount = 0;
-
-            foreach (var jc in jsonCreatures)
-            {
-                var token = ConvertJsonToToken(jc);
-                await AddCreatureAsync(token, category, filePath);
-                importedCount++;
-            }
-            return importedCount;
-        }*/
-
         public async Task<int> ImportFromJsonFileAsync(string filePath)
         {
             if (!File.Exists(filePath))
                 throw new FileNotFoundException($"JSON file not found: {filePath}");
 
-            var category = Path.GetFileNameWithoutExtension(filePath);
+            var category = "dnd5e-srd"; // Default category for imported creatures
             int importedCount = 0;
+            int skippedCount = 0;
+            int errorCount = 0;
 
             try
             {
-                // Read the file content
                 string json;
                 using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
                 using (var reader = new StreamReader(stream, System.Text.Encoding.UTF8, detectEncodingFromByteOrderMarks: true))
@@ -939,32 +1205,49 @@ namespace DnDBattle.Services
                     return 0;
                 }
 
-                // Use JsonDocument for more reliable parsing
                 using (JsonDocument document = JsonDocument.Parse(json))
                 {
                     JsonElement root = document.RootElement;
 
-                    // Handle array of creatures
                     if (root.ValueKind == JsonValueKind.Array)
                     {
+                        int totalInFile = 0;
                         foreach (JsonElement creatureElement in root.EnumerateArray())
                         {
+                            totalInFile++;
                             try
                             {
                                 var token = ParseCreatureFromJsonElement(creatureElement);
-                                if (token != null && !string.IsNullOrWhiteSpace(token.Name))
+
+                                if (token == null)
                                 {
-                                    await AddCreatureAsync(token, category, filePath);
-                                    importedCount++;
+                                    System.Diagnostics.Debug.WriteLine($"  Creature #{totalInFile}: Parse returned null");
+                                    skippedCount++;
+                                    continue;
                                 }
+
+                                if (string.IsNullOrWhiteSpace(token.Name))
+                                {
+                                    System.Diagnostics.Debug.WriteLine($"  Creature #{totalInFile}: No name found");
+                                    skippedCount++;
+                                    continue;
+                                }
+
+                                // Log what we're about to import
+                                System.Diagnostics.Debug.WriteLine($"  Importing: {token.Name} | Type: '{token.Type}' | CR: {token.ChallengeRating}");
+
+                                await AddCreatureAsync(token, category, filePath);
+                                importedCount++;
                             }
                             catch (Exception ex)
                             {
-                                System.Diagnostics.Debug.WriteLine($"Error parsing creature: {ex.Message}");
+                                System.Diagnostics.Debug.WriteLine($"  Error on creature #{totalInFile}: {ex.Message}");
+                                errorCount++;
                             }
                         }
+
+                        System.Diagnostics.Debug.WriteLine($"File {Path.GetFileName(filePath)}: Total={totalInFile}, Imported={importedCount}, Skipped={skippedCount}, Errors={errorCount}");
                     }
-                    // Handle single creature object
                     else if (root.ValueKind == JsonValueKind.Object)
                     {
                         var token = ParseCreatureFromJsonElement(root);
@@ -1095,58 +1378,218 @@ namespace DnDBattle.Services
         {
             var token = new Token();
 
-            // Parse each property safely
-            token.Id = GetGuidProperty(element, "Id") ?? Guid.NewGuid();
-            token.Name = GetStringProperty(element, "Name") ?? "Unknown";
-            token.Size = GetStringProperty(element, "Size") ?? "";
-            token.Type = GetStringProperty(element, "Type") ?? "";
-            token.Alignment = GetStringProperty(element, "Alignment") ?? "";
-            token.ChallengeRating = GetStringProperty(element, "ChallengeRating") ?? "";
-            token.ArmorClass = GetIntProperty(element, "ArmorClass");
-            token.MaxHP = GetIntProperty(element, "MaxHP");
-            token.HP = token.MaxHP;
-            token.HitDice = GetStringProperty(element, "HitDice") ?? "";
-            token.InitiativeModifier = GetIntProperty(element, "InitiativeMod");
-            token.Speed = GetStringProperty(element, "Speed") ?? "";
-            token.Str = GetIntProperty(element, "Str", 10);
-            token.Dex = GetIntProperty(element, "Dex", 10);
-            token.Con = GetIntProperty(element, "Con", 10);
-            token.Int = GetIntProperty(element, "Int", 10);
-            token.Wis = GetIntProperty(element, "Wis", 10);
-            token.Cha = GetIntProperty(element, "Cha", 10);
-            token.Senses = GetStringProperty(element, "Senses") ?? "";
-            token.Languages = GetStringProperty(element, "Languages") ?? "";
-            token.Immunities = GetStringProperty(element, "Immunities") ?? "";
-            token.Resistances = GetStringProperty(element, "Resistances") ?? "";
-            token.Vulnerabilities = GetStringProperty(element, "Vulnerabilities") ?? "";
-            token.Traits = GetStringProperty(element, "Traits") ?? "";
-            token.Notes = GetStringProperty(element, "Notes") ?? "";
-            token.IconPath = GetStringProperty(element, "IconPath") ?? "";
-            token.SizeInSquares = GetIntProperty(element, "SizeInSquares", 1);
-
-            // Parse Skills array
-            token.Skills = new List<string>();
-            if (element.TryGetProperty("Skills", out JsonElement skillsElement) && skillsElement.ValueKind == JsonValueKind.Array)
+            try
             {
-                foreach (var skill in skillsElement.EnumerateArray())
+                // Parse each property safely
+                token.Id = GetGuidProperty(element, "Id") ?? Guid.NewGuid();
+
+                token.Name = GetStringProperty(element, "Name")
+                          ?? GetStringProperty(element, "name")
+                          ?? "Unknown";
+
+                // Handle Type - might be a string or an object with nested properties
+                token.Type = ParseTypeProperty(element);
+
+                token.Size = GetStringProperty(element, "Size")
+                          ?? GetStringProperty(element, "size")
+                          ?? "";
+
+                token.Alignment = GetStringProperty(element, "Alignment")
+                               ?? GetStringProperty(element, "alignment")
+                               ?? "";
+
+                // Handle ChallengeRating - might be "CR" or "ChallengeRating", string or number
+                token.ChallengeRating = ParseChallengeRating(element);
+
+                // For int properties, try each variant separately (can't chain ?? with int)
+                token.ArmorClass = GetIntProperty(element, "ArmorClass", 0);
+                if (token.ArmorClass == 0) token.ArmorClass = GetIntProperty(element, "AC", 0);
+                if (token.ArmorClass == 0) token.ArmorClass = GetIntProperty(element, "ac", 10);
+
+                token.MaxHP = GetIntProperty(element, "MaxHP", 0);
+                if (token.MaxHP == 0) token.MaxHP = GetIntProperty(element, "HP", 0);
+                if (token.MaxHP == 0) token.MaxHP = GetIntProperty(element, "hp", 0);
+                if (token.MaxHP == 0) token.MaxHP = GetIntProperty(element, "HitPoints", 1);
+                token.HP = token.MaxHP;
+
+                token.HitDice = GetStringProperty(element, "HitDice")
+                             ?? GetStringProperty(element, "hitDice")
+                             ?? "";
+
+                token.InitiativeModifier = GetIntProperty(element, "InitiativeMod", 0);
+                if (token.InitiativeModifier == 0)
+                    token.InitiativeModifier = GetIntProperty(element, "InitiativeModifier", 0);
+
+                token.Speed = GetStringProperty(element, "Speed")
+                           ?? GetStringProperty(element, "speed")
+                           ?? "30 ft.";
+
+                // Ability scores - try uppercase first, then lowercase
+                token.Str = GetIntProperty(element, "Str", 0);
+                if (token.Str == 0) token.Str = GetIntProperty(element, "str", 10);
+
+                token.Dex = GetIntProperty(element, "Dex", 0);
+                if (token.Dex == 0) token.Dex = GetIntProperty(element, "dex", 10);
+
+                token.Con = GetIntProperty(element, "Con", 0);
+                if (token.Con == 0) token.Con = GetIntProperty(element, "con", 10);
+
+                token.Int = GetIntProperty(element, "Int", 0);
+                if (token.Int == 0) token.Int = GetIntProperty(element, "int", 10);
+
+                token.Wis = GetIntProperty(element, "Wis", 0);
+                if (token.Wis == 0) token.Wis = GetIntProperty(element, "wis", 10);
+
+                token.Cha = GetIntProperty(element, "Cha", 0);
+                if (token.Cha == 0) token.Cha = GetIntProperty(element, "cha", 10);
+
+                token.Senses = GetStringProperty(element, "Senses") ?? "";
+                token.Languages = GetStringProperty(element, "Languages") ?? "";
+                token.Immunities = GetStringProperty(element, "Immunities") ?? "";
+                token.Resistances = GetStringProperty(element, "Resistances") ?? "";
+                token.Vulnerabilities = GetStringProperty(element, "Vulnerabilities") ?? "";
+                token.Traits = GetStringProperty(element, "Traits") ?? "";
+                token.Notes = GetStringProperty(element, "Notes") ?? "";
+                token.IconPath = GetStringProperty(element, "IconPath") ?? "";
+                token.SizeInSquares = GetIntProperty(element, "SizeInSquares", 1);
+
+                // Parse Skills array or string
+                token.Skills = ParseSkillsProperty(element);
+
+                // Parse Actions
+                token.Actions = ParseActionsArray(element, "Actions") ?? new List<Models.Action>();
+                token.BonusActions = ParseActionsArray(element, "BonusActions") ?? new List<Models.Action>();
+                token.Reactions = ParseActionsArray(element, "Reactions") ?? new List<Models.Action>();
+                token.LegendaryActions = ParseActionsArray(element, "LegendaryActions") ?? new List<Models.Action>();
+
+                token.Tags = new List<string>();
+
+                System.Diagnostics.Debug.WriteLine($"Parsed creature: {token.Name}, Type: {token.Type}, CR: {token.ChallengeRating}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error parsing creature: {ex.Message}");
+            }
+
+            return token;
+        }
+
+        /// <summary>
+        /// Parses the Type property which might be a simple string or contain parentheses like "Humanoid (Goblinoid)"
+        /// </summary>
+        private string ParseTypeProperty(JsonElement element)
+        {
+            // Try direct "Type" property first
+            var typeValue = GetStringProperty(element, "Type") ?? GetStringProperty(element, "type");
+
+            if (!string.IsNullOrEmpty(typeValue))
+            {
+                // The type is already a string - return it as-is (preserving parentheses)
+                return typeValue.Trim();
+            }
+
+            // Some JSON formats have separate "type" and "subtype" fields
+            var mainType = GetStringProperty(element, "type") ?? GetStringProperty(element, "creature_type");
+            var subType = GetStringProperty(element, "subtype") ?? GetStringProperty(element, "creature_subtype");
+
+            if (!string.IsNullOrEmpty(mainType))
+            {
+                if (!string.IsNullOrEmpty(subType))
                 {
-                    if (skill.ValueKind == JsonValueKind.String)
+                    return $"{mainType} ({subType})";
+                }
+                return mainType;
+            }
+
+            // Try parsing a nested "meta" or "type" object
+            if (element.TryGetProperty("meta", out JsonElement metaElement))
+            {
+                var metaType = GetStringProperty(metaElement, "type");
+                if (!string.IsNullOrEmpty(metaType))
+                    return metaType;
+            }
+
+            return "";
+        }
+
+        /// <summary>
+        /// Parses Challenge Rating which might be in various formats
+        /// </summary>
+        private string ParseChallengeRating(JsonElement element)
+        {
+            // Try string property first
+            var crString = GetStringProperty(element, "ChallengeRating")
+                        ?? GetStringProperty(element, "CR")
+                        ?? GetStringProperty(element, "cr")
+                        ?? GetStringProperty(element, "challenge_rating");
+
+            if (!string.IsNullOrEmpty(crString))
+                return crString.Trim();
+
+            // Try numeric property
+            if (element.TryGetProperty("ChallengeRating", out JsonElement crElement) ||
+                element.TryGetProperty("CR", out crElement) ||
+                element.TryGetProperty("cr", out crElement))
+            {
+                if (crElement.ValueKind == JsonValueKind.Number)
+                {
+                    if (crElement.TryGetDouble(out double crValue))
                     {
-                        token.Skills.Add(skill.GetString());
+                        // Handle fractions
+                        if (crValue == 0.125) return "1/8";
+                        if (crValue == 0.25) return "1/4";
+                        if (crValue == 0.5) return "1/2";
+                        return crValue.ToString();
                     }
                 }
             }
 
-            // Parse Actions
-            token.Actions = ParseActionsArray(element, "Actions");
-            token.BonusActions = ParseActionsArray(element, "BonusActions");
-            token.Reactions = ParseActionsArray(element, "Reactions");
-            token.LegendaryActions = ParseActionsArray(element, "LegendaryActions");
+            // Try nested "challenge" object (some formats use this)
+            if (element.TryGetProperty("challenge", out JsonElement challengeElement))
+            {
+                var nestedCr = GetStringProperty(challengeElement, "rating");
+                if (!string.IsNullOrEmpty(nestedCr))
+                    return nestedCr;
+            }
 
-            // Initialize empty tags list (your JSON doesn't have tags, users add them later)
-            token.Tags = new List<string>();
+            return "";
+        }
 
-            return token;
+        /// <summary>
+        /// Parses Skills which might be an array or a string
+        /// </summary>
+        private List<string> ParseSkillsProperty(JsonElement element)
+        {
+            var skills = new List<string>();
+
+            // Try as array first
+            if (element.TryGetProperty("Skills", out JsonElement skillsElement))
+            {
+                if (skillsElement.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var skill in skillsElement.EnumerateArray())
+                    {
+                        if (skill.ValueKind == JsonValueKind.String)
+                        {
+                            var skillStr = skill.GetString();
+                            if (!string.IsNullOrWhiteSpace(skillStr))
+                                skills.Add(skillStr);
+                        }
+                    }
+                }
+                else if (skillsElement.ValueKind == JsonValueKind.String)
+                {
+                    // It's a comma-separated string
+                    var skillsStr = skillsElement.GetString();
+                    if (!string.IsNullOrWhiteSpace(skillsStr))
+                    {
+                        skills.AddRange(skillsStr.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                            .Select(s => s.Trim()));
+                    }
+                }
+            }
+
+            return skills;
         }
 
         private string GetStringProperty(JsonElement element, string propertyName)
@@ -1211,75 +1654,51 @@ namespace DnDBattle.Services
             return actions;
         }
 
-        private Token ParseCreatureFromReader(DbDataReader reader)
+        private Token ReadCreatureFromReader(Microsoft.Data.Sqlite.SqliteDataReader reader)
         {
-            var creature = new Token();
-
-            string GetString(string column)
+            return new Token
             {
-                try
-                {
-                    var ordinal = reader.GetOrdinal(column);
-                    return reader.IsDBNull(ordinal) ? null : reader.GetString(ordinal); 
-                }
-                catch { return null; }
-            }
+                Id = Guid.TryParse(GetStringOrDefault(reader, "Id"), out var id) ? id : Guid.NewGuid(),
+                Name = GetStringOrDefault(reader, "Name"),
+                Size = GetStringOrDefault(reader, "Size"),
+                Type = GetStringOrDefault(reader, "Type"),
+                Alignment = GetStringOrDefault(reader, "Alignment"),
+                ChallengeRating = GetStringOrDefault(reader, "ChallengeRating"),
+                ArmorClass = GetIntOrDefault(reader, "ArmorClass"),
+                MaxHP = GetIntOrDefault(reader, "MaxHP"),
+                HP = GetIntOrDefault(reader, "MaxHP"),
+                HitDice = GetStringOrDefault(reader, "HitDice"),
+                InitiativeModifier = GetIntOrDefault(reader, "InitiativeModifier"),
+                Speed = GetStringOrDefault(reader, "Speed"),
+                Str = GetIntOrDefault(reader, "Str", 10),
+                Dex = GetIntOrDefault(reader, "Dex", 10),
+                Con = GetIntOrDefault(reader, "Con", 10),
+                Int = GetIntOrDefault(reader, "Int", 10),
+                Wis = GetIntOrDefault(reader, "Wis", 10),
+                Cha = GetIntOrDefault(reader, "Cha", 10),
+                Traits = GetStringOrDefault(reader, "Traits"),
+                SizeInSquares = GetIntOrDefault(reader, "SizeInSquares", 1)
+            };
+        }
 
-            int GetInt(string column, int defaultValue = 0)
+        private string GetStringOrDefault(Microsoft.Data.Sqlite.SqliteDataReader reader, string column, string defaultValue = "")
+        {
+            try
             {
-                try
-                {
-                    var ordinal = reader.GetOrdinal(column);
-                    return reader.IsDBNull(ordinal) ? defaultValue : reader.GetInt32(ordinal);
-                }
-                catch { return defaultValue; }
+                var ordinal = reader.GetOrdinal(column);
+                return reader.IsDBNull(ordinal) ? defaultValue : reader.GetString(ordinal);
             }
+            catch { return defaultValue; }
+        }
 
-            var idStr = GetString("Id");
-            creature.Id = !string.IsNullOrEmpty(idStr) && Guid.TryParse(idStr, out var guid)
-                ? guid
-                : Guid.NewGuid();
-
-            creature.Name = GetString("Name") ?? "Unknown";
-            creature.Type = GetString("Type");
-            creature.Size = GetString("Size");
-            creature.Alignment = GetString("Alignment");
-            creature.ArmorClass = GetInt("ArmorClass", 10);
-            creature.MaxHP = GetInt("MaxHP", 10);
-            creature.HP = creature.MaxHP;
-            creature.HitDice = GetString("HitDice");
-            creature.Speed = GetString("Speed") ?? "30 ft. ";
-            creature.ChallengeRating = GetString("ChallengeRating");
-
-            // Ability scores
-            creature.Str = GetInt("Str", 10);
-            creature.Dex = GetInt("Dex", 10);
-            creature.Con = GetInt("Con", 10);
-            creature.Int = GetInt("Int", 10);
-            creature.Wis = GetInt("Wis", 10);
-            creature.Cha = GetInt("Cha", 10);
-
-            // Other properties
-            creature.Senses = GetString("Senses");
-            creature.Languages = GetString("Languages");
-            creature.Traits = GetString("Traits");
-            creature.Immunities = GetString("Immunities");
-            creature.Resistances = GetString("Resistances");
-            creature.Vulnerabilities = GetString("Vulnerabilities");
-
-            // Skills 
-            var skillsStr = GetString("Skills");
-            if (!string.IsNullOrEmpty(skillsStr))
+        private int GetIntOrDefault(Microsoft.Data.Sqlite.SqliteDataReader reader, string column, int defaultValue = 0)
+        {
+            try
             {
-                creature.Skills = skillsStr.Split(',')
-                    .Select(s => s.Trim())
-                    .Where(s => !string.IsNullOrEmpty(s))
-                    .ToList();
+                var ordinal = reader.GetOrdinal(column);
+                return reader.IsDBNull(ordinal) ? defaultValue : reader.GetInt32(ordinal);
             }
-
-            creature.InitiativeModifier = (creature.Dex - 10) / 2;
-
-            return creature;
+            catch { return defaultValue; }
         }
 
         public void Dispose()
@@ -1289,6 +1708,18 @@ namespace DnDBattle.Services
         }
 
         #endregion
+    }
+
+    public class CreatureSummary
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public string Size { get; set; }
+        public string Type { get; set; }
+        public string ChallengeRating { get; set; }
+        public int ArmorClass { get; set; }
+        public int MaxHP { get; set; }
+        public string IconPath { get;set; }
     }
 
     public enum AddCreatureResult

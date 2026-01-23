@@ -7,7 +7,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
 
 namespace DnDBattle
@@ -37,13 +39,34 @@ namespace DnDBattle
             if (Options.EnabledPeriodicAutosave)
                 _autosaveTimer.Start();
 
+            // Wire up SelectedToken changes to update the panel
+            vm.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(MainViewModel.SelectedToken))
+                {
+                    SelectedTokenPanel.SetToken(vm.SelectedToken);
+                }
+
+                // Refresh panel when combat state changes
+                if (e.PropertyName == nameof(MainViewModel.IsInCombat) ||
+                    e.PropertyName == nameof(MainViewModel.CurrentTurnToken))
+                {
+                    if (vm.SelectedToken != null)
+                    {
+                        SelectedTokenPanel.UpdateDisplay();
+                    }
+                }
+            };
+
+            // Setup the token panel events
+            SetupSelectedTokenPanel();
+
             BattleGrid.TokenDoubleClicked += OnTokenDoubleClicked;
 
             Loaded += MainWindow_Loaded;
 
             this.PreviewKeyDown += MainWindow_PreviewKeyDown;
             this.Closing += (s, e) => Services.OptionsService.SaveOptions();
-
             Closing += (s, e) => AutosaveNow();
         }
 
@@ -53,6 +76,27 @@ namespace DnDBattle
             {
                 await vm.LoadCreaturesFromDatabaseAsync();
             }
+        }
+
+        private void SetupSelectedTokenPanel()
+        {
+            SelectedTokenPanel.LogAction += (message) =>
+            {
+                if (DataContext is MainViewModel vm)
+                {
+                    vm.ActionLog.Insert(0, new ActionLogEntry()
+                    {
+                        Timestamp = DateTime.Now,
+                        Source = "Action",
+                        Message = message
+                    });
+                }
+            };
+
+            SelectedTokenPanel.ActionSelected += (token, action) =>
+            {
+                Debug.WriteLine($"{token.Name} selected action: {action.Name}");
+            };
         }
 
         private void OnTokenDoubleClicked(Token token)
@@ -317,7 +361,7 @@ namespace DnDBattle
         {
             using var db = new Services.CreatureDatabaseService();
             var count = await db.GetCreatureCountAsync();
-            var categories = await db.GetAllCategoriesAsync();
+            var categories = await db.GetCategoriesAsync();
             var types = await db.GetAllTypesAsync();
             var tags = await db.GetAllTagsAsync();
 
@@ -461,14 +505,19 @@ namespace DnDBattle
             }
         }
 
-        private void ToggleDrawObstacle_Checked(object sender, RoutedEventArgs e)
+        private void ToggleMeasure_Click(object sender, RoutedEventArgs e)
         {
-            BattleGrid?.SetObstacleDrawMode(true);
-        }
+            bool newState = !BattleGrid.IsMeasureMode;
+            BattleGrid.SetMeasureMode(newState);
 
-        private void ToggleDrawObstacle_Unchecked(object sender, RoutedEventArgs e)
-        {
-            BattleGrid?.SetObstacleDrawMode(false);
+            if (sender is Button btn)
+            {
+                btn.Background = newState
+                    ? new SolidColorBrush(Color.FromRgb(14, 99, 156))
+                    : new SolidColorBrush(Color.FromRgb(45, 45, 48));
+            }
+
+            Status_Mode.Text = newState ? "Mode: Measure" : "Mode: Normal";
         }
 
         private void DrawSolidWall_Click(object sender, RoutedEventArgs e)
@@ -476,9 +525,22 @@ namespace DnDBattle
             BattleGrid.SetWallDrawMode(true, WallType.Solid);
         }
 
+        private void DrawRoom_Click(object sender, RoutedEventArgs e)
+        {
+            BattleGrid.SetRoomDrawMode(true, WallType.Solid);
+            Status_Mode.Text = "Mode: Draw Room";
+        }
+
         private void DrawDoor_Click(object sender, RoutedEventArgs e)
         {
             BattleGrid.SetWallDrawMode(true, WallType.Door);
+        }
+
+        private void DrawRoomWithDoors_Click(object sender, RoutedEventArgs e)
+        {
+            // First wall will be a door, rest solid
+            BattleGrid.SetRoomDrawMode(true, WallType.Solid);
+            Status_Mode.Text = "Mode: Draw Room";
         }
 
         private void DrawWindow_Click(object sender, RoutedEventArgs e)
@@ -494,6 +556,8 @@ namespace DnDBattle
         private void StopWallDraw_Click(object sender, RoutedEventArgs e)
         {
             BattleGrid.SetWallDrawMode(false);
+            BattleGrid.SetRoomDrawMode(false);
+            Status_Mode.Text = "Mode: Normal";
         }
 
         private void ClearAllWalls_Click(object sender, RoutedEventArgs e)
@@ -555,22 +619,6 @@ namespace DnDBattle
                     AutosaveService.SaveEncounter(vm, BattleGrid);
             }
             catch { }
-        }
-
-        private void AddSampleObstacle_Click(object sender, RoutedEventArgs e)
-        {
-            var obs = new Obstacle
-            {
-                Label = "SampleWall",
-                PolygonGridPoints = new System.Collections.Generic.List<System.Windows.Point>
-                {
-                    new System.Windows.Point(6,6),
-                    new System.Windows.Point(9,6),
-                    new System.Windows.Point(9,9),
-                    new System.Windows.Point(6,9)
-                }
-            };
-            BattleGrid?.AddObstacle(obs);
         }
 
     }

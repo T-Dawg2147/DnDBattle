@@ -264,6 +264,11 @@ namespace DnDBattle.Models
             }
         }
 
+        public void ResetMovementForTurn()
+        {
+            
+        }
+
         public void ResetDeathSaves()
         {
             DeathSaveSuccesses = 0;

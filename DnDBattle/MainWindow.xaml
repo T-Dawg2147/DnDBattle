@@ -134,6 +134,9 @@
                 <MenuItem Header="Draw Window" Click="DrawWindow_Click"/>
                 <MenuItem Header="Draw Half Wall" Click="DrawHalfWall_Click"/>
                 <Separator/>
+                <MenuItem Header="🏠 Draw Room (Solid)" Click="DrawRoom_Click"/>
+                <MenuItem Header="🚪 Draw Room (with Doors)" Click="DrawRoomWithDoors_Click"/>
+                <Separator/>
                 <MenuItem Header="Stop Drawing" Click="StopWallDraw_Click"/>
                 <Separator/>
                 <MenuItem Header="Clear All Walls" Click="ClearAllWalls_Click"/>
@@ -183,16 +186,29 @@
 
                 <!-- Right Toolbar Items -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal">
-                    <ToggleButton x:Name="ToggleDrawObstacle" Content="🖊️ Draw" 
-                                  ToolTip="Draw Obstacle"
-                                  Checked="ToggleDrawObstacle_Checked" 
-                                  Unchecked="ToggleDrawObstacle_Unchecked"
-                                  Margin="0,0,8,0" Padding="10,6"/>
                     <Button Content="💡 Light" Click="AddLight_Click"
                             Style="{StaticResource ModernButton}" Margin="0,0,8,0"/>
                     <CheckBox Content="🔒 Snap to Grid" 
                               IsChecked="{Binding ElementName=BattleGrid, Path=LockToGrid}" 
                               Foreground="White" VerticalAlignment="Center"/>
+
+                    <Rectangle Width="1" Fill="#444" Margin="8,2"/>
+
+                    <Button x:Name="BtnMeasure" Content="📏" ToolTip="Measure Distance"
+                        Click="ToggleMeasure_Click"
+                        Style="{StaticResource ModernButton}" Width="36" Margin="0,0,4,0"/>
+
+                    <CheckBox Content="Grid" 
+                        IsChecked="{Binding ElementName=BattleGrid, Path=ShowGrid}" 
+                        Foreground="White" VerticalAlignment="Center" Margin="0,0,8,0"
+                        ToolTip="Show/Hide Grid Lines"/>
+
+                    <CheckBox Content="Coords" 
+                      IsChecked="{Binding ElementName=BattleGrid, Path=ShowCoordinates}" 
+                      Foreground="White" VerticalAlignment="Center" Margin="0,0,8,0"
+                      ToolTip="Show/Hide Coordinate Labels"/>
+
+                    <Rectangle Width="1" Fill="#444" Margin="8,2"/>
                 </StackPanel>
             </Grid>
         </Border>
@@ -283,7 +299,6 @@
                                 <Button Content="💡 Add Light Source" Click="AddLight_Click"
                                         Style="{StaticResource ModernButton}"
                                         HorizontalAlignment="Stretch" Margin="0,8,0,0"/>
-                                <Button Content="🧱 Add Obstacle OBSOLETE"/>
                             </StackPanel>
                         </Border>
 
@@ -320,7 +335,7 @@
                                             GridCellSize="{Binding GridCellSize}"
                                             Tokens="{Binding Tokens}"
                                             MapImageSource="{Binding MapImageSource}"
-                                            SelectedToken="{Binding SelectedToken}"/>
+                                            SelectedToken="{Binding SelectedToken, Mode=TwoWay}"/>
             </Border>
 
             <!-- Right Splitter -->
@@ -328,86 +343,8 @@
                           Background="#1A1A1D" Cursor="SizeWE"/>
 
             <!-- ========== RIGHT SIDEBAR ========== -->
-            <Border Grid.Column="4" Background="#1E1E1E" Padding="12">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel>
-
-                        <!-- Selected Token Details -->
-                        <TextBlock Text="SELECTED TOKEN" Style="{StaticResource SidebarHeader}"/>
-                        <Border Style="{StaticResource PanelStyle}">
-                            <StackPanel>
-                                <TextBlock Text="Select a token on the map" 
-                                           Foreground="#666" 
-                                           HorizontalAlignment="Center"
-                                           Margin="0,20">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Visibility" Value="Visible"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding SelectedToken}" Value="{x:Null}">
-                                                    <Setter Property="Visibility" Value="Visible"/>
-                                                </DataTrigger>
-                                                </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-
-                                <views:TokenEditorView DataContext="{Binding SelectedToken}"
-                                                       Visibility="{Binding SelectedToken, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- Creatures on Map -->
-                        <TextBlock Text="CREATURES ON MAP" Style="{StaticResource SidebarHeader}"/>
-                        <Border Style="{StaticResource PanelStyle}" Padding="0">
-                            <ListBox ItemsSource="{Binding Tokens}" 
-                                     SelectedItem="{Binding SelectedToken}"
-                                     Background="Transparent"
-                                     BorderThickness="0"
-                                     MaxHeight="300">
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Padding="10,8" Margin="2" CornerRadius="4" Cursor="Hand">
-                                            <Border.Style>
-                                                <Style TargetType="Border">
-                                                    <Setter Property="Background" Value="Transparent"/>
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsCurrentTurn}" Value="True">
-                                                            <Setter Property="Background" Value="#1B5E20"/>
-                                                        </DataTrigger>
-                                                        <Trigger Property="IsMouseOver" Value="True">
-                                                            <Setter Property="Background" Value="#3E3E42"/>
-                                                        </Trigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Border.Style>
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <TextBlock Grid.Column="0" Text="{Binding Name}" 
-                                                           Foreground="White" 
-                                                           VerticalAlignment="Center"
-                                                           TextTrimming="CharacterEllipsis"/>
-                                                    <TextBlock Grid.Column="1" Foreground="#4CAF50" 
-                                                           VerticalAlignment="Center" Margin="8,0">
-                                                    <Run Text="{Binding HP}"/><Run Text="/" Foreground="#666"/><Run Text="{Binding MaxHP}" Foreground="#666"/>
-                                                    </TextBlock>
-                                                    <TextBlock Grid.Column="2" Text="▶" 
-                                                           Foreground="#4CAF50" 
-                                                           Visibility="{Binding IsCurrentTurn, Converter={StaticResource BoolToVisibilityConverter}}"
-                                                           VerticalAlignment="Center"/>
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
-                        </Border>
-
-                    </StackPanel>
-                </ScrollViewer>
+            <Border Grid.Column="4" Background="#252526" Width="320">
+                <views:SelectedTokenPanel x:Name="SelectedTokenPanel"/>
             </Border>
         </Grid>
 

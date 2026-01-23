@@ -9,7 +9,7 @@ namespace DnDBattle.Services
 {
     class LightingService
     {
-        public static StreamGeometry ComputeLitGeometry(Point center, double radiusPx, IEnumerable<Obstacle> obstaclesPixelPolys, int maxAngles = 512)
+        /*public static StreamGeometry ComputeLitGeometry(Point center, double radiusPx, IEnumerable<Obstacle> obstaclesPixelPolys, int maxAngles = 512)
         {
             var obstacleSegments = new List<(Point a, Point b)>();
 
@@ -115,7 +115,7 @@ namespace DnDBattle.Services
             }
             geom.Freeze();
             return geom;
-        }
+        }*/
 
         private static double NormalizeAngle(double a)
         {

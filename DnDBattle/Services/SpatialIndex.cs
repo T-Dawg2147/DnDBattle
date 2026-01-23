@@ -19,27 +19,6 @@ namespace DnDBattle.Services
             _cellResolution = Math.Max(1, cellResolution);
         }
 
-        public void Clear() => _cells.Clear();
-
-        public void IndexObstacle(Obstacle obs)
-        {
-            if (obs?.PolygonGridPoints == null || obs.PolygonGridPoints.Count == 0) return;
-            var bbox = GetBoundingBox(obs.PolygonGridPoints);
-            for (int gx = (int)Math.Floor(bbox.minX); gx <= (int)Math.Ceiling(bbox.maxX); gx++)
-            {
-                for (int gy = (int)Math.Floor(bbox.minY); gy <= (int)Math.Ceiling(bbox.maxY); gy++)
-                {
-                    var key = (gx / _cellResolution, gy / _cellResolution);
-                    if (!_cells.TryGetValue(key, out var list))
-                    {
-                        list = new List<object>();
-                        _cells[key] = list;
-                    }
-                    if (!list.Contains(obs)) list.Add(obs);
-                }
-            }
-        }
-
         public void IndexLight(LightSource light)
         {
             var bboxMinX = light.CenterGrid.X - light.RadiusSquares;
@@ -56,24 +35,6 @@ namespace DnDBattle.Services
                     if (!list.Contains(light)) list.Add(light);
                 }
             }
-        }
-
-        public IEnumerable<Obstacle> QueryObstaclesInCell(int gx, int gy)
-        {
-            var key = (gx / _cellResolution, gy / _cellResolution);
-            if (_cells.TryGetValue(key, out var list)) return list.OfType<Obstacle>();
-            return Enumerable.Empty<Obstacle>();
-        }
-
-        public IEnumerable<Obstacle> QueryObstaclesInBounds(double minX, double minY, double maxX, double maxY)
-        {
-            var results = new HashSet<Obstacle>();
-            for (int gx = (int)Math.Floor(minX); gx <= (int)Math.Ceiling(maxX); gx++)
-                for (int gy = (int)Math.Floor(minY); gy <= (int)Math.Ceiling(maxY); gy++)
-                {
-                    foreach (var o in QueryObstaclesInCell(gx, gy)) results.Add(o);
-                }
-            return results;
         }
 
         public IEnumerable<LightSource> QueryLightsInBounds(double minX, double minY, double maxX, double maxY)

@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Resources\Entites\Tokens\default-token.png">
+    <Content Include="Resources\Entities\Tokens\default-token.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

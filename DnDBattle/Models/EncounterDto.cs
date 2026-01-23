@@ -1,16 +1,49 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace DnDBattle.Models
 {
+    /// <summary>
+    /// Data Transfer Object for saving/loading encounters
+    /// </summary>
     public class EncounterDto
     {
         public string MapImagePath { get; set; }
         public List<TokenDto> Tokens { get; set; } = new List<TokenDto>();
-        public List<ObstacleDto> Obstacles { get; set; } = new List<ObstacleDto>();
+        public List<WallDto> Walls { get; set; } = new List<WallDto>();
         public List<LightDto> Lights { get; set; } = new List<LightDto>();
+    }
+
+    /// <summary>
+    /// DTO for serializing wall data
+    /// </summary>
+    public class WallDto
+    {
+        public double StartX { get; set; }
+        public double StartY { get; set; }
+        public double EndX { get; set; }
+        public double EndY { get; set; }
+        public string WallType { get; set; }
+        public bool IsOpen { get; set; }
+        public string Label { get; set; }
+    }
+
+    /// <summary>
+    /// DTO for serializing light source data
+    /// </summary>
+    public class LightDto
+    {
+        public double X { get; set; }
+        public double Y { get; set; }
+        public double RadiusSquares { get; set; }
+        public double Intensity { get; set; }
+    }
+
+    /// <summary>
+    /// DTO for serializing point data (if still needed elsewhere)
+    /// </summary>
+    public class PointDto
+    {
+        public double X { get; set; }
+        public double Y { get; set; }
     }
 }

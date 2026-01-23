@@ -106,54 +106,6 @@ namespace DnDBattle.Models
             if (p != null && p.CanWrite) p.SetValue(_token, v);
         }
     }
-
-    public class ObstacleAddAction : IUndoabaleAction
-    {
-        private readonly Obstacle _obs;
-        private readonly BattleGridControl _grid;
-        public string Description => $"Add Obstacle {_obs?.Label}";
-
-        public ObstacleAddAction(Obstacle obs, BattleGridControl grid)
-        {
-            _obs = obs; _grid = grid;
-        }
-
-        public void Do() => _grid.AddObstacle(_obs);
-        public void Undo() => _grid.RemoveObstaclePublic(_obs);
-    }
-
-    public class ObstacleRemoveAction : IUndoabaleAction
-    {
-        private readonly Obstacle _obs;
-        private readonly BattleGridControl _grid;
-        public string Description => $"Remove Obstacle {_obs?.Label}";
-
-        public ObstacleRemoveAction(Obstacle obs, BattleGridControl grid)
-        {
-            _obs = obs; _grid = grid;
-        }
-
-        public void Do() => _grid.RemoveObstaclePublic(_obs);
-        public void Undo() => _grid.AddObstacle(_obs);
-    }
-
-    public class ObstacleMoveVertexAction : IUndoabaleAction
-    {
-        private readonly Obstacle _obs;
-        private readonly int _index;
-        private readonly Point _oldPos, _newPos;
-        private readonly BattleGridControl _grid;
-        public string Description => $"Move Vertex {_index}";
-
-        public ObstacleMoveVertexAction(Obstacle obs, int index, Point oldPos, Point newPos, BattleGridControl grid)
-        {
-            _obs = obs; _index = index; _oldPos = oldPos; _newPos = newPos; _grid = grid;
-        }
-
-        public void Do() => _grid.MoveVertexPublic(_obs, _index, _newPos);
-        public void Undo() => _grid.MoveVertexPublic(_obs, _index, _oldPos);
-    }
-
     public class LigthAddAction : IUndoabaleAction
     {
         private readonly LightSource _light;

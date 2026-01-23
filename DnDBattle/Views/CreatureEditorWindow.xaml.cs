@@ -41,7 +41,7 @@ namespace DnDBattle.Views
         {
             using (var db = new CreatureDatabaseService())
             {
-                _categories = await db.GetAllCategoriesAsync();
+                _categories = await db.GetCategoriesAsync();
             }
 
             CmbCategory.Items.Clear();

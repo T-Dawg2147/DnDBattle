@@ -108,7 +108,7 @@ namespace DnDBattle.Models
         }
 
         public bool IsPointNear(Point point, double threshold = 0.3) =>
-            DistanceToPoint(point) <= threshold;            
+            DistanceToPoint(point) <= threshold;
 
         public double DistanceToPoint(Point point)
         {
@@ -117,13 +117,13 @@ namespace DnDBattle.Models
             var lengthSquared = dx * dx + dy * dy;
 
             if (lengthSquared == 0)
-                return Math.Sqrt(Math.Pow(point.X - StartPoint.X, 2));
+                return Math.Sqrt(Math.Pow(point.X - StartPoint.X, 2) + Math.Pow(point.Y - StartPoint.Y, 2));
 
             var t = Math.Max(0, Math.Min(1, ((point.X - StartPoint.X) * dx + (point.Y - StartPoint.Y) * dy) / lengthSquared));
             var projectionX = StartPoint.X + t * dx;
             var projectionY = StartPoint.Y + t * dy;
 
-            return Math.Sqrt(Math.Pow(point.X - StartPoint.X, 2) + Math.Pow(point.Y - point.X, 2));
+            return Math.Sqrt(Math.Pow(point.X - projectionX, 2) + Math.Pow(point.Y - projectionY, 2));
         }
 
         public bool IntersectsLine(Point lineStart, Point lineEnd, out Point intersection)
@@ -135,17 +135,17 @@ namespace DnDBattle.Models
             var p3 = lineStart;
             var p4 = lineEnd;
 
-            var d = (p1.X - p2.X) * (p3.Y - p4.Y) - (p1.Y - p3.Y) * (p3.X - p4.X);
+            var d = (p1.X - p2.X) * (p3.Y - p4.Y) - (p1.Y - p2.Y) * (p3.X - p4.X);
             if (Math.Abs(d) < 0.0001) return false;
 
-            var t = ((p1.X - p2.X) * (p3.Y - p4.Y) - (p1.Y - p3.Y) * (p3.X - p4.X)) / d;
-            var u = -((p1.X - p2.X) * (p3.Y - p4.Y) - (p1.Y - p3.Y) * (p3.X - p4.X)) / d;
+            var t = ((p1.X - p3.X) * (p3.Y - p4.Y) - (p1.Y - p3.Y) * (p3.X - p4.X)) / d;
+            var u = -((p1.X - p2.X) * (p1.Y - p3.Y) - (p1.Y - p2.Y) * (p1.X - p3.X)) / d;
 
             if (t >= 0 && t <= 1 && u >= 0 && u <= 1)
             {
                 intersection = new Point(
                     p1.X + t * (p2.X - p1.X),
-                    p2.Y + t * (p2.Y - p1.Y));
+                    p1.Y + t * (p2.Y - p1.Y));  // FIXED: Was p2.Y
                 return true;
             }
             return false;
