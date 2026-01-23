@@ -228,83 +228,12 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
 
-                        <!-- Encounter Section -->
-                        <TextBlock Text="ENCOUNTER" Style="{StaticResource SidebarHeader}"/>
-                        <Border Style="{StaticResource PanelStyle}">
-                            <StackPanel>
-                                <Button Content="➕ Add Creature" 
-                                        Command="{Binding OpenCreatureBrowserCommand}"
-                                        Style="{StaticResource PrimaryButton}"
-                                        HorizontalAlignment="Stretch"/>
-                                <Button Content="🗺️ Load Map Image" 
-                                        Command="{Binding LoadMapCommand}"
-                                        Style="{StaticResource ModernButton}"
-                                        HorizontalAlignment="Stretch"
-                                        Margin="0,8,0,0"/>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- Combat Controls -->
-                        <TextBlock Text="COMBAT" Style="{StaticResource SidebarHeader}"/>
-                        <Border Style="{StaticResource PanelStyle}">
-                            <StackPanel>
-                                <Button Command="{Binding ToggleCombatCommand}"
-                                        HorizontalAlignment="Stretch"
-                                        Padding="12,10">
-                                    <Button.Style>
-                                        <Style TargetType="Button" BasedOn="{StaticResource ModernButton}">
-                                            <Setter Property="Background" Value="#4CAF50"/>
-                                            <Setter Property="Content" Value="⚔️ Start Combat"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsInCombat}" Value="True">
-                                                    <Setter Property="Background" Value="#C42B1C"/>
-                                                    <Setter Property="Content" Value="🏁 End Combat"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Button.Style>
-                                </Button>
-
-                                <Grid Margin="0,10,0,0">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Button Grid.Column="0" Content="🎲 Roll All" 
-                                            Command="{Binding RollAllInitiativeCommand}"
-                                            Style="{StaticResource ModernButton}"
-                                            Margin="0,0,4,0"/>
-                                        <Button Grid.Column="1" Content="Next ▶" 
-                                            Command="{Binding NextTurnCommand}"
-                                            Style="{StaticResource ModernButton}"
-                                            Margin="4,0,0,0"/>
-                                </Grid>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- Tools Section -->
-                        <TextBlock Text="TOOLS" Style="{StaticResource SidebarHeader}"/>
-                        <Border Style="{StaticResource PanelStyle}">
-                            <StackPanel>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Button Grid.Column="0" Content="↩️ Undo" Click="Undo_Click"
-                                            Style="{StaticResource ModernButton}" Margin="0,0,4,0"/>
-                                        <Button Grid.Column="1" Content="↪️ Redo" Click="Redo_Click"
-                                            Style="{StaticResource ModernButton}" Margin="4,0,0,0"/>
-                                </Grid>
-                                <Button Content="💡 Add Light Source" Click="AddLight_Click"
-                                        Style="{StaticResource ModernButton}"
-                                        HorizontalAlignment="Stretch" Margin="0,8,0,0"/>
-                            </StackPanel>
-                        </Border>
+                        <views:InitiativeTrackerPanel x:Name="InitiativeTracker" 
+                               Margin="0,10,0,0"/>
 
                         <!-- Action Log -->
                         <TextBlock Text="ACTION LOG" Style="{StaticResource SidebarHeader}"/>
-                        <Border Background="#252526" CornerRadius="8" Padding="0" Height="150">
+                        <Border Background="#252526" CornerRadius="8" Padding="0" Height="350">
                             <ListBox ItemsSource="{Binding ActionLog}" 
                                      Background="Transparent" 
                                      BorderThickness="0"
@@ -328,14 +257,28 @@
                           Background="#1A1A1D" Cursor="SizeWE"/>
 
             <!-- ========== BATTLE MAP (CENTER) ========== -->
-            <Border Grid.Column="2" Background="#2D2D30" CornerRadius="8" Margin="5">
-                <controls:BattleGridControl x:Name="BattleGrid"
-                                            HorizontalAlignment="Stretch"
-                                            VerticalAlignment="Stretch"
-                                            GridCellSize="{Binding GridCellSize}"
-                                            Tokens="{Binding Tokens}"
-                                            MapImageSource="{Binding MapImageSource}"
-                                            SelectedToken="{Binding SelectedToken, Mode=TwoWay}"/>
+            <Border Grid.Column="2" Background="#202030" CornerRadius="8" Margin="5">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Area Effect Toolbar -->
+                    <views:AreaEffectToolbar x:Name="AoeToolbar" 
+                                  Grid.Row="0"
+                                  Visibility="Visible"/>
+
+                    <!-- Battle Grid - NOTE: Grid.Row="1" is required! -->
+                    <controls:BattleGridControl x:Name="BattleGrid"
+                                    Grid.Row="1"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Stretch"
+                                    GridCellSize="{Binding GridCellSize}"
+                                    Tokens="{Binding Tokens}"
+                                    MapImageSource="{Binding MapImageSource}"
+                                    SelectedToken="{Binding SelectedToken, Mode=TwoWay}"/>
+                </Grid>
             </Border>
 
             <!-- Right Splitter -->
@@ -343,7 +286,17 @@
                           Background="#1A1A1D" Cursor="SizeWE"/>
 
             <!-- ========== RIGHT SIDEBAR ========== -->
-            <Border Grid.Column="4" Background="#252526" Width="320">
+            <GridSplitter Grid.Column="3" 
+                          Width="3" 
+                          Background="#333"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Stretch"
+                          ResizeBehavior="PreviousAndNext"/>
+
+            <Border Grid.Column="4" 
+                    Background="#252526" 
+                    MinWidth="280"
+                    MaxWidth="500">
                 <views:SelectedTokenPanel x:Name="SelectedTokenPanel"/>
             </Border>
         </Grid>

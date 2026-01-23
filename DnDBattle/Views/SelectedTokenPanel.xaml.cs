@@ -1,4 +1,5 @@
 ﻿using DnDBattle.Models;
+using DnDBattle.Services;
 using DnDBattle.ViewModels;
 using System;
 using System.Linq;
@@ -12,14 +13,18 @@ namespace DnDBattle.Views
     {
         private Token _token;
         private MainViewModel _vm;
+        private List<QuickAction> _quickActions;
 
         public event Action<Token, Models.Action> ActionSelected;
         public event Action<string> LogAction;
+        public event System.Action QuickActionsConfigChanged;
 
         public SelectedTokenPanel()
         {
             InitializeComponent();
             Loaded += SelectedTokenPanel_Loaded;
+
+            _quickActions = QuickActionsService.GetEnabledQuickActions();
         }
 
         private void SelectedTokenPanel_Loaded(object sender, RoutedEventArgs e)
@@ -28,6 +33,8 @@ namespace DnDBattle.Views
             {
                 _vm = vm;
             }
+
+            BuildQuickActionsUI();
         }
 
         /// <summary>
@@ -224,10 +231,17 @@ namespace DnDBattle.Views
             ReactionsPanel.Children.Clear();
             LegendaryActionsPanel.Children.Clear();
 
-            bool hasActions = _token.Actions?.Count > 0;
-            bool hasBonusActions = _token.BonusActions?.Count > 0;
-            bool hasReactions = _token.Reactions?.Count > 0;
-            bool hasLegendaryActions = _token.LegendaryActions?.Count > 0;
+            // Debug output
+            System.Diagnostics.Debug.WriteLine($"PopulateActions for {_token?.Name}");
+            System.Diagnostics.Debug.WriteLine($"  Actions: {_token?.Actions?.Count ?? 0}");
+            System.Diagnostics.Debug.WriteLine($"  BonusActions: {_token?.BonusActions?.Count ?? 0}");
+            System.Diagnostics.Debug.WriteLine($"  Reactions: {_token?.Reactions?.Count ?? 0}");
+            System.Diagnostics.Debug.WriteLine($"  LegendaryActions: {_token?.LegendaryActions?.Count ?? 0}");
+
+            bool hasActions = _token?.Actions?.Count > 0;
+            bool hasBonusActions = _token?.BonusActions?.Count > 0;
+            bool hasReactions = _token?.Reactions?.Count > 0;
+            bool hasLegendaryActions = _token?.LegendaryActions?.Count > 0;
 
             // Actions
             if (hasActions)
@@ -235,6 +249,7 @@ namespace DnDBattle.Views
                 NoActionsText.Visibility = Visibility.Collapsed;
                 foreach (var action in _token.Actions)
                 {
+                    System.Diagnostics.Debug.WriteLine($"    Adding action: {action.Name}");
                     ActionsPanel.Children.Add(CreateActionButton(action, "Action"));
                 }
             }
@@ -476,6 +491,252 @@ namespace DnDBattle.Views
             }
         }
 
+        /// <summary>
+        /// Rebuilds the quick actions buttons based on user configuration
+        /// </summary>
+        public void BuildQuickActionsUI()
+        {
+            _quickActions = QuickActionsService.GetEnabledQuickActions();
+
+            // Find the Quick Actions section in XAML and rebuild it
+            // We need to find the WrapPanel that contains the quick action buttons
+
+            // Clear existing quick action buttons (find the WrapPanel after "Quick Actions" header)
+            var quickActionsPanel = FindQuickActionsPanel();
+            if (quickActionsPanel == null) return;
+
+            quickActionsPanel.Children.Clear();
+
+            foreach (var action in _quickActions)
+            {
+                var button = new Button
+                {
+                    Content = $"{action.Icon} {action.Name}",
+                    Tag = action,
+                    ToolTip = action.Description,
+                    Style = (Style)FindResource("QuickActionButtonStyle"),
+                    Margin = new Thickness(0, 0, 4, 4)
+                };
+
+                button.Click += QuickActionButton_Click;
+                quickActionsPanel.Children.Add(button);
+            }
+
+            // Add configure button
+            var configButton = new Button
+            {
+                Content = "⚙️",
+                ToolTip = "Configure Quick Actions",
+                Style = (Style)FindResource("QuickActionButtonStyle"),
+                Margin = new Thickness(0, 0, 4, 4),
+                Width = 28
+            };
+            configButton.Click += BtnConfigureQuickActions_Click;
+            quickActionsPanel.Children.Add(configButton);
+        }
+
+        private WrapPanel FindQuickActionsPanel()
+        {
+            return QuickActionsPanel;
+        }
+
+        private void QuickActionButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_token == null) return;
+            if (sender is not Button btn || btn.Tag is not QuickAction action) return;
+
+            ExecuteQuickAction(action);
+        }
+
+        private void ExecuteQuickAction(QuickAction action)
+        {
+            switch (action.ActionType)
+            {
+                case QuickActionType.ToggleCondition:
+                    // Safely get the condition value
+                    Models.Condition? conditionNullable = action.ConditionToToggle;
+                    if (conditionNullable.HasValue && conditionNullable.Value != Models.Condition.None)
+                    {
+                        Models.Condition condition = conditionNullable.Value;
+
+                        // Special handling for Concentration
+                        if (condition == Models.Condition.Concentrating)
+                        {
+                            HandleConcentration();
+                        }
+                        else
+                        {
+                            _token.ToggleCondition(condition);
+                            bool isActive = _token.HasCondition(condition);
+                            LogAction?.Invoke($"{_token.Name}: {(isActive ? "+" : "-")}{action.Name}");
+                        }
+                        UpdateDisplay();
+                    }
+                    break;
+
+                case QuickActionType.RollInitiative:
+                    RollInitiative();
+                    break;
+
+                case QuickActionType.RollSave:
+                    RollSavingThrow(action.CustomCommand);
+                    break;
+
+                case QuickActionType.RollAbilityCheck:
+                    RollAbilityCheck(action.CustomCommand);
+                    break;
+
+                case QuickActionType.RollDice:
+                    RollDice(action.Name, action.DiceExpression);
+                    break;
+
+                case QuickActionType.Custom:
+                    // Future: Handle custom actions
+                    break;
+            }
+        }
+
+        private void HandleConcentration()
+        {
+            if (_token.HasCondition(Models.Condition.Concentrating))
+            {
+                _token.RemoveCondition(Models.Condition.Concentrating);
+                _token.ConcentrationSpell = null;
+                LogAction?.Invoke($"{_token.Name} drops concentration");
+            }
+            else
+            {
+                string spell = Microsoft.VisualBasic.Interaction.InputBox(
+                    "What spell is being concentrated on?", "Concentration", "");
+
+                if (!string.IsNullOrWhiteSpace(spell))
+                {
+                    _token.AddCondition(Models.Condition.Concentrating);
+                    _token.ConcentrationSpell = spell;
+                    LogAction?.Invoke($"{_token.Name} concentrating on {spell}");
+                }
+            }
+            UpdateDisplay();
+        }
+
+        private void RollInitiative()
+        {
+            var roll = Utils.DiceRoller.RollExpression("1d20");
+            _token.Initiative = roll.Total + _token.InitiativeModifier;
+            UpdateDisplay();
+            LogAction?.Invoke($"{_token.Name} rolled initiative: {roll.Total} + {_token.InitiativeModifier} = {_token.Initiative}");
+        }
+
+        private void RollSavingThrow(string ability)
+        {
+            int modifier = GetAbilityModifier(ability);
+            var roll = Utils.DiceRoller.RollExpression("1d20");
+            int total = roll.Total + modifier;
+
+            string modStr = modifier >= 0 ? $"+{modifier}" : modifier.ToString();
+            LogAction?.Invoke($"{_token.Name} {ability} Save: {roll.Total} {modStr} = {total}");
+
+            MessageBox.Show(
+                $"{ability} Saving Throw\n\nRoll: {roll.Total}\nModifier: {modStr}\nTotal: {total}",
+                $"{_token.Name} - {ability} Save",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+
+        private void RollAbilityCheck(string command)
+        {
+            // Format: "ABILITY:Skill" or just "ABILITY"
+            var parts = command.Split(':');
+            var ability = parts[0];
+            var skill = parts.Length > 1 ? parts[1] : null;
+
+            int modifier = GetAbilityModifier(ability);
+
+            // TODO: Add proficiency if the token has the skill
+
+            var roll = Utils.DiceRoller.RollExpression("1d20");
+            int total = roll.Total + modifier;
+
+            string checkName = skill ?? ability;
+            string modStr = modifier >= 0 ? $"+{modifier}" : modifier.ToString();
+            LogAction?.Invoke($"{_token.Name} {checkName}: {roll.Total} {modStr} = {total}");
+
+            MessageBox.Show(
+                $"{checkName} Check\n\nRoll: {roll.Total}\nModifier: {modStr}\nTotal: {total}",
+                $"{_token.Name} - {checkName}",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+
+        private void RollDice(string name, string expression)
+        {
+            var roll = Utils.DiceRoller.RollExpression(expression);
+            LogAction?.Invoke($"{_token.Name} {name}: {roll.Total}");
+
+            // Special handling for death saves
+            if (name == "Death Save")
+            {
+                if (roll.Total >= 10)
+                {
+                    _token.DeathSaveSuccesses++;
+                    if (roll.Total == 20)
+                    {
+                        _token.HP = 1;
+                        _token.DeathSaveSuccesses = 0;
+                        _token.DeathSaveFailures = 0;
+                        LogAction?.Invoke($"{_token.Name} rolled a 20! Regains 1 HP and is conscious!");
+                    }
+                    else if (_token.DeathSaveSuccesses >= 3)
+                    {
+                        LogAction?.Invoke($"{_token.Name} is stable!");
+                    }
+                }
+                else
+                {
+                    _token.DeathSaveFailures++;
+                    if (roll.Total == 1)
+                    {
+                        _token.DeathSaveFailures++; // Natural 1 = 2 failures
+                    }
+                    if (_token.DeathSaveFailures >= 3)
+                    {
+                        LogAction?.Invoke($"{_token.Name} has died!");
+                    }
+                }
+                UpdateDisplay();
+            }
+        }
+
+        private int GetAbilityModifier(string ability)
+        {
+            return ability?.ToUpper() switch
+            {
+                "STR" => (_token.Str - 10) / 2,
+                "DEX" => (_token.Dex - 10) / 2,
+                "CON" => (_token.Con - 10) / 2,
+                "INT" => (_token.Int - 10) / 2,
+                "WIS" => (_token.Wis - 10) / 2,
+                "CHA" => (_token.Cha - 10) / 2,
+                _ => 0
+            };
+        }
+
+        private void BtnConfigureQuickActions_Click(object sender, RoutedEventArgs e)
+        {
+            var allActions = QuickActionsService.GetQuickActions();
+            var window = new QuickActionsSettingsWindow(allActions)
+            {
+                Owner = Window.GetWindow(this)
+            };
+
+            if (window.ShowDialog() == true && window.ResultActions != null)
+            {
+                QuickActionsService.SaveQuickActions(window.ResultActions);
+                BuildQuickActionsUI();
+                QuickActionsConfigChanged?.Invoke();
+            }
+        }
+
         #region Button Handlers
 
         private void BtnHeal_Click(object sender, RoutedEventArgs e)
@@ -538,56 +799,6 @@ namespace DnDBattle.Views
             _token.ResetMovementForTurn();
             UpdateDisplay();
             LogAction?.Invoke($"{_token.Name} movement reset");
-        }
-
-        private void BtnRollInitiative_Click(object sender, RoutedEventArgs e)
-        {
-            if (_token == null) return;
-            var roll = Utils.DiceRoller.RollExpression("1d20");
-            _token.Initiative = roll.Total + _token.InitiativeModifier;
-            UpdateDisplay();
-            LogAction?.Invoke($"{_token.Name} rolled initiative: {roll.Total} + {_token.InitiativeModifier} = {_token.Initiative}");
-        }
-
-        private void BtnDodge_Click(object sender, RoutedEventArgs e)
-        {
-            if (_token == null) return;
-            _token.ToggleCondition(Models.Condition.Dodging);
-            UpdateDisplay();
-            LogAction?.Invoke($"{_token.Name} {(_token.HasCondition(Models.Condition.Dodging) ? "takes the Dodge action" : "stops dodging")}");
-        }
-
-        private void BtnConcentrate_Click(object sender, RoutedEventArgs e)
-        {
-            if (_token == null) return;
-
-            if (_token.HasCondition(Models.Condition.Concentrating))
-            {
-                _token.RemoveCondition(Models.Condition.Concentrating);
-                _token.ConcentrationSpell = null;
-                LogAction?.Invoke($"{_token.Name} drops concentration");
-            }
-            else
-            {
-                string spell = Microsoft.VisualBasic.Interaction.InputBox(
-                    "What spell is being concentrated on?", "Concentration", "");
-
-                if (!string.IsNullOrWhiteSpace(spell))
-                {
-                    _token.AddCondition(Models.Condition.Concentrating);
-                    _token.ConcentrationSpell = spell;
-                    LogAction?.Invoke($"{_token.Name} concentrating on {spell}");
-                }
-            }
-            UpdateDisplay();
-        }
-
-        private void BtnHide_Click(object sender, RoutedEventArgs e)
-        {
-            if (_token == null) return;
-            _token.ToggleCondition(Models.Condition.Hidden);
-            UpdateDisplay();
-            LogAction?.Invoke($"{_token.Name} {(_token.HasCondition(Models.Condition.Hidden) ? "hides" : "is revealed")}");
         }
 
         private void TxtNotes_TextChanged(object sender, TextChangedEventArgs e)

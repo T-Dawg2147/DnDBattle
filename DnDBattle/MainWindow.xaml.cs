@@ -58,8 +58,17 @@ namespace DnDBattle
                 }
             };
 
-            // Setup the token panel events
+            // Setup panels
+            SetupInitiativeTracker();
+
             SetupSelectedTokenPanel();
+
+            SetupAreaEffectToolbar();
+
+            BattleGrid.TokenAddedToMap += (token) =>
+            {
+                InitiativeTracker.AddToken(token);
+            };
 
             BattleGrid.TokenDoubleClicked += OnTokenDoubleClicked;
 
@@ -76,6 +85,40 @@ namespace DnDBattle
             {
                 await vm.LoadCreaturesFromDatabaseAsync();
             }
+        }
+
+        #region Startup events
+        private void SetupAreaEffectToolbar()
+        {
+            AoeToolbar.ShapeSelected += (shape) =>
+            {
+                BattleGrid.StartAreaEffectPlacement(shape, AoeToolbar.CurrentSize, AoeToolbar.CurrentColor);
+            };
+
+            AoeToolbar.SizeChanged += (size) =>
+            {
+                BattleGrid.UpdateAreaEffectSize(size);
+            };
+
+            AoeToolbar.ColorChanged += (color) =>
+            {
+                BattleGrid.UpdateAreaEffectColor(color);
+            };
+
+            AoeToolbar.PresetSelected += (preset) =>
+            {
+                BattleGrid.StartAreaEffectPlacement(preset);
+            };
+
+            AoeToolbar.CancelRequested += () =>
+            {
+                BattleGrid.CancelAreaEffectPlacement();
+            };
+
+            AoeToolbar.ClearAllRequested += () =>
+            {
+                BattleGrid.AreaEffectService.ClearAllEffects();
+            };
         }
 
         private void SetupSelectedTokenPanel()
@@ -98,6 +141,55 @@ namespace DnDBattle
                 Debug.WriteLine($"{token.Name} selected action: {action.Name}");
             };
         }
+
+        private void SetupInitiativeTracker()
+        {
+            if (DataContext is MainViewModel vm)
+            {
+                InitiativeTracker.SetViewModel(vm);
+            }
+
+            InitiativeTracker.LogAction += (message) =>
+            {
+                if (DataContext is MainViewModel vm)
+                {
+                    vm.ActionLog.Insert(0, new ActionLogEntry
+                    {
+                        Timestamp = DateTime.Now,
+                        Source = "Initiative",
+                        Message = message
+                    });
+                }
+            };
+
+            InitiativeTracker.TokenSelected += (token) =>
+            {
+                if (DataContext is MainViewModel vm)
+                {
+                    vm.SelectedToken = token;
+                }
+                SelectedTokenPanel?.SetToken(token);
+            };
+
+            InitiativeTracker.CombatStarted += () =>
+            {
+                // Refresh token visuals to show turn indicators
+                BattleGrid?.RebuildTokenVisuals();
+            };
+
+            InitiativeTracker.CombatEnded += () =>
+            {
+                BattleGrid?.RebuildTokenVisuals();
+            };
+
+            InitiativeTracker.TurnChanged += () =>
+            {
+                BattleGrid?.RebuildTokenVisuals();
+                SelectedTokenPanel?.UpdateDisplay();
+            };
+        }
+
+        #endregion
 
         private void OnTokenDoubleClicked(Token token)
         {

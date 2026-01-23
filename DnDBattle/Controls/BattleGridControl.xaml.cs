@@ -23,11 +23,11 @@ namespace DnDBattle.Controls
     public partial class BattleGridControl : UserControl
     {
         public event Action<Token> TokenDoubleClicked;
-
         public event Action<Token> RequestDeleteToken;
         public event Action<Token> RequestDuplicateToken;
         public event Action<Token> RequestEditToken;
         public event Action<Point> RequestAddTokenAtPosition;
+        public event Action<Token> TokenAddedToMap;
 
         // Dependency properties (including LockToGrid)
         public static readonly DependencyProperty GridCellSizeProperty =
@@ -61,6 +61,7 @@ namespace DnDBattle.Controls
         public bool ShowGrid { get => (bool)GetValue(ShowGridProperty); set => SetValue(ShowGridProperty, value); }
         public bool ShowCoordinates { get => (bool)GetValue(ShowCoordinatesProperty); set => SetValue(ShowCoordinatesProperty, value); }
         public bool ShowCoordinatesRulers { get => _showCoordinateRulers; set { _showCoordinateRulers = value; DrawCoordinateRulers(); } }
+        public AreaEffectService AreaEffectService => _areaEffectService;
 
         #region States
         // internal state
@@ -86,6 +87,15 @@ namespace DnDBattle.Controls
         private int _gridMinY = 0;
         private int _gridMaxX = 100;
         private int _gridMaxY = 100;
+
+        // AOE State
+        private readonly AreaEffectService _areaEffectService = new AreaEffectService();
+        private readonly DrawingVisual _areaEffectVisual = new DrawingVisual();
+        private AreaEffect _previewEffect;
+        private bool _isPlacingAreaEffect;
+        private AreaEffectShape? _currentAoeShape;
+        private int _currentAoeSize = 20;
+        private Color _currentAoeColor = Color.FromArgb(120, 255, 69, 0);
 
         // Wall Drawing State
         private bool _wallDrawMode = false;
@@ -145,6 +155,7 @@ namespace DnDBattle.Controls
             AddVisualOverlay(_pathVisual, 65);
             AddVisualOverlay(_wallVisual, 70);
             AddVisualOverlay(_measureVisual, 80);
+            AddVisualOverlay(_areaEffectVisual, 85);
 
             _wallService.WallsChanged += () => RedrawWalls();
 
@@ -360,29 +371,6 @@ namespace DnDBattle.Controls
             {
                 token.HP = Math.Max(token.HP - amount, 0);
             }
-        }
-
-        private void InitializeMapContextMenu()
-        {
-            var mapMenu = new ContextMenu();
-
-            var addCreatureItem = new MenuItem { Header = "➕ Add Creature Here..." };
-            addCreatureItem.Click += (s, e) =>
-            {
-                var position = Mouse.GetPosition(RenderCanvas);
-                RequestAddTokenAtPosition?.Invoke(position);
-            };
-            mapMenu.Items.Add(addCreatureItem);
-
-            var addLightItem = new MenuItem { Header = "💡 Add Light Here..." };
-            addLightItem.Click += (s, e) =>
-            {
-                var position = Mouse.GetPosition(RenderCanvas);
-                // Add light at position method?
-            };
-            mapMenu.Items.Add(addLightItem);
-
-            RenderCanvas.ContextMenu = mapMenu;
         }
 
         private class FrameworkElementForVisual : FrameworkElement
@@ -665,14 +653,43 @@ namespace DnDBattle.Controls
 
         private void GridBackground_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            // Focus the control for keyboard input
             Focus();
 
-            // Get position relative to RenderCanvas (which has the transform)
             var pos = e.GetPosition(RenderCanvas);
             var worldPt = ScreenToWorld(pos);
             var gridPoint = new Point(worldPt.X / GridCellSize, worldPt.Y / GridCellSize);
 
+            // Area Effect Placement
+            if (_isPlacingAreaEffect && _previewEffect != null)
+            {
+                if (_previewEffect.Shape == AreaEffectShape.Cone || _previewEffect.Shape == AreaEffectShape.Line)
+                {
+                    // First click sets origin, wait for second click for direction
+                    if (_previewEffect.Origin == default)
+                    {
+                        _previewEffect.Origin = gridPoint;
+                        RedrawAreaEffects();
+                        e.Handled = true;
+                        return;
+                    }
+                    else
+                    {
+                        // Second click places the effect
+                        _previewEffect.DirectionAngle = CalculateAngle(_previewEffect.Origin, gridPoint);
+                        PlaceAreaEffect();
+                        e.Handled = true;
+                        return;
+                    }
+                }
+                else
+                {
+                    // Single click placement for spheres, cubes
+                    _previewEffect.Origin = gridPoint;
+                    PlaceAreaEffect();
+                    e.Handled = true;
+                    return;
+                }
+            }
             // Measurement mode
             if (_measureMode)
             {
@@ -761,6 +778,31 @@ namespace DnDBattle.Controls
 
             // Update status bar with current cell
             UpdateCurrentCellDisplay(gridPoint);
+
+            // AOE preview
+            if (_isPlacingAreaEffect && _previewEffect != null)
+            {
+                if (_previewEffect.Shape == AreaEffectShape.Cone || _previewEffect.Shape == AreaEffectShape.Line)
+                {
+                    if (_previewEffect.Origin != default)
+                    {
+                        // Update direction
+                        _previewEffect.DirectionAngle = CalculateAngle(_previewEffect.Origin, gridPoint);
+                    }
+                    else
+                    {
+                        // Update origin position
+                        _previewEffect.Origin = gridPoint;
+                    }
+                }
+                else
+                {
+                    // Update position for spheres, cubes
+                    _previewEffect.Origin = gridPoint;
+                }
+
+                RedrawAreaEffects();
+            }
 
             // Measurement preview
             if (_measureMode && _measureStart.HasValue)
@@ -856,6 +898,14 @@ namespace DnDBattle.Controls
             var pos = e.GetPosition(RenderCanvas);
             var worldPt = ScreenToWorld(pos);
             var gridPoint = new Point(worldPt.X / GridCellSize, worldPt.Y / GridCellSize);
+
+            // Cancel AOE placement
+            if (_isPlacingAreaEffect)
+            {
+                CancelAreaEffectPlacement();
+                e.Handled = true;
+                return;
+            }
 
             // Cancel wall drawing
             if (_wallDrawMode)
@@ -984,7 +1034,7 @@ namespace DnDBattle.Controls
         public event Action<string> CurrentCellChanged;
         #endregion
 
-        private void RebuildTokenVisuals()
+        public void RebuildTokenVisuals()
         {
             System.Diagnostics.Debug.WriteLine($"=== RebuildTokenVisuals called ===");
 
@@ -998,6 +1048,10 @@ namespace DnDBattle.Controls
             {
                 try
                 {
+                    // Subscribe to HP changes to update the visual
+                    token.PropertyChanged -= Token_PropertyChanged;
+                    token.PropertyChanged += Token_PropertyChanged;
+
                     var container = new Grid()
                     {
                         Width = GridCellSize * token.SizeInSquares + 8,
@@ -1604,11 +1658,8 @@ namespace DnDBattle.Controls
 
         private void RenderCanvas_Drop(object sender, DragEventArgs e)
         {
-            System.Diagnostics.Debug.WriteLine("RenderCanvas_Drop triggered");
-
             try
             {
-                // Handle image file drops (for map)
                 if (e.Data.GetDataPresent(DataFormats.FileDrop))
                 {
                     var files = (string[])e.Data.GetData(DataFormats.FileDrop);
@@ -1617,7 +1668,6 @@ namespace DnDBattle.Controls
                         f.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) ||
                         f.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase) ||
                         f.EndsWith(".bmp", StringComparison.OrdinalIgnoreCase));
-
                     if (!string.IsNullOrEmpty(imageFile))
                     {
                         MapImage.Source = new BitmapImage(new Uri(imageFile));
@@ -1627,15 +1677,11 @@ namespace DnDBattle.Controls
                     }
                 }
 
-                // Handle token drops from Creature Bank
                 if (e.Data.GetDataPresent("DnDBattle.Token"))
                 {
                     var proto = e.Data.GetData("DnDBattle.Token") as Token;
                     if (proto != null)
                     {
-                        System.Diagnostics.Debug.WriteLine($"Dropping token: {proto.Name}");
-
-                        // Prevent duplicate drops
                         var protoId = proto.Id.ToString();
                         var now = DateTime.UtcNow;
                         if (_lastDropPrototypeId == protoId && (now - _lastDropTime) < _duplicateDropThreshold)
@@ -1646,46 +1692,94 @@ namespace DnDBattle.Controls
                         _lastDropPrototypeId = protoId;
                         _lastDropTime = now;
 
-                        // Calculate grid position
                         var dropPt = e.GetPosition(RenderCanvas);
                         var world = ScreenToWorld(dropPt);
                         int gx = (int)Math.Floor(world.X / GridCellSize);
                         int gy = (int)Math.Floor(world.Y / GridCellSize);
 
-                        gx = Math.Max(_gridMinX, Math.Min(_gridMaxX - 1, gx));
-                        gy = Math.Max(_gridMinY, Math.Min(_gridMaxY - 1, gy));
-
-                        // Create new token from prototype
+                        // Create a FULL copy of the token with ALL properties
                         var newToken = new Token
                         {
                             Id = Guid.NewGuid(),
                             Name = proto.Name,
+                            Size = proto.Size,
+                            Type = proto.Type,
+                            Alignment = proto.Alignment,
+                            ChallengeRating = proto.ChallengeRating,
                             Image = proto.Image,
+                            IconPath = proto.IconPath,
                             HP = proto.MaxHP,
                             MaxHP = proto.MaxHP,
+                            HitDice = proto.HitDice,
                             ArmorClass = proto.ArmorClass,
                             InitiativeModifier = proto.InitiativeModifier,
                             IsPlayer = proto.IsPlayer,
                             Speed = proto.Speed,
                             GridX = gx,
                             GridY = gy,
-                            SizeInSquares = proto.SizeInSquares > 0 ? proto.SizeInSquares : 1
+                            SizeInSquares = proto.SizeInSquares > 0 ? proto.SizeInSquares : 1,
+
+                            // Ability Scores
+                            Str = proto.Str,
+                            Dex = proto.Dex,
+                            Con = proto.Con,
+                            Int = proto.Int,
+                            Wis = proto.Wis,
+                            Cha = proto.Cha,
+
+                            // Extra info
+                            Skills = proto.Skills?.ToList() ?? new List<string>(),
+                            Senses = proto.Senses,
+                            Languages = proto.Languages,
+                            Immunities = proto.Immunities,
+                            Resistances = proto.Resistances,
+                            Vulnerabilities = proto.Vulnerabilities,
+                            Traits = proto.Traits,
+                            Notes = proto.Notes,
+
+                            // ACTIONS - This was missing!
+                            Actions = proto.Actions?.Select(a => new Models.Action
+                            {
+                                Name = a.Name,
+                                AttackBonus = a.AttackBonus,
+                                DamageExpression = a.DamageExpression,
+                                Range = a.Range,
+                                Description = a.Description
+                            }).ToList() ?? new List<Models.Action>(),
+
+                            BonusActions = proto.BonusActions?.Select(a => new Models.Action
+                            {
+                                Name = a.Name,
+                                AttackBonus = a.AttackBonus,
+                                DamageExpression = a.DamageExpression,
+                                Range = a.Range,
+                                Description = a.Description
+                            }).ToList() ?? new List<Models.Action>(),
+
+                            Reactions = proto.Reactions?.Select(a => new Models.Action
+                            {
+                                Name = a.Name,
+                                AttackBonus = a.AttackBonus,
+                                DamageExpression = a.DamageExpression,
+                                Range = a.Range,
+                                Description = a.Description
+                            }).ToList() ?? new List<Models.Action>(),
+
+                            LegendaryActions = proto.LegendaryActions?.Select(a => new Models.Action
+                            {
+                                Name = a.Name,
+                                AttackBonus = a.AttackBonus,
+                                DamageExpression = a.DamageExpression,
+                                Range = a.Range,
+                                Description = a.Description
+                            }).ToList() ?? new List<Models.Action>(),
+
+                            Tags = proto.Tags?.ToList() ?? new List<string>()
                         };
 
-                        System.Diagnostics.Debug.WriteLine($"New token created at ({gx}, {gy}), Tokens collection is {(Tokens == null ? "NULL" : "OK")}");
-
-                        // Add to tokens collection
-                        if (Tokens != null)
-                        {
-                            Tokens.Add(newToken);
-                            SelectedToken = newToken;
-                            System.Diagnostics.Debug.WriteLine($"Token added. Total tokens: {Tokens.Count}");
-                        }
-                        else
-                        {
-                            System.Diagnostics.Debug.WriteLine("ERROR: Tokens collection is null!");
-                        }
-
+                        Tokens?.Add(newToken);
+                        SelectedToken = newToken;
+                        TokenAddedToMap?.Invoke(newToken);
                         RedrawMovementOverlay();
                         RedrawPathVisual();
                         e.Handled = true;
@@ -1693,10 +1787,7 @@ namespace DnDBattle.Controls
                     }
                 }
             }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Drop handler error: {ex}");
-            }
+            catch (Exception ex) { Debug.WriteLine($"Drop handler error: {ex}"); }
         }
 
         public void PanBy(double dx, double dy)
@@ -1707,6 +1798,80 @@ namespace DnDBattle.Controls
             RedrawLighting();
             RedrawMovementOverlay();
             RedrawPathVisual();
+        }
+        #endregion
+
+        #region Tokens
+        private void Token_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (sender is Token token)
+            {
+                // Update visuals when HP or conditions change
+                if (e.PropertyName == nameof(Token.HP) ||
+                    e.PropertyName == nameof(Token.Conditions) ||
+                    e.PropertyName == nameof(Token.IsCurrentTurn))
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        // Find and update just this token's visual instead of rebuilding all
+                        UpdateSingleTokenVisual(token);
+                    });
+                }
+            }
+        }
+
+        private void UpdateSingleTokenVisual(Token token)
+        {
+            // Find the token's container
+            var container = RenderCanvas.Children.OfType<FrameworkElement>()
+                .FirstOrDefault(c => c.Tag is Token t && t.Id == token.Id);
+
+            if (container is Grid grid)
+            {
+                // Update HP bar
+                var hpBar = FindHPBar(grid);
+                if (hpBar != null)
+                {
+                    double hpPercent = token.MaxHP > 0 ? (double)Math.Max(0, token.HP) / token.MaxHP : 0;
+                    double barWidth = GridCellSize * token.SizeInSquares - 8;
+
+                    hpBar.Width = Math.Max(0, barWidth * hpPercent);
+
+                    // Update color
+                    if (hpPercent > 0.5)
+                        hpBar.Background = new SolidColorBrush(Color.FromRgb(76, 175, 80));
+                    else if (hpPercent > 0.25)
+                        hpBar.Background = new SolidColorBrush(Color.FromRgb(255, 193, 7));
+                    else
+                        hpBar.Background = new SolidColorBrush(Color.FromRgb(244, 67, 54));
+                }
+
+                // Update condition badges - just rebuild them
+                var oldBadges = grid.Children.OfType<WrapPanel>().FirstOrDefault();
+                if (oldBadges != null)
+                    grid.Children.Remove(oldBadges);
+
+                var newBadges = CreateConditionBadges(token);
+                if (newBadges != null)
+                    grid.Children.Add(newBadges);
+
+                // Update Z-index for current turn
+                Canvas.SetZIndex(container, token.IsCurrentTurn ? 150 : 100);
+            }
+        }
+
+        private Border FindHPBar(Grid container)
+        {
+            // Find the HP bar container (Grid at the bottom with the fill border)
+            foreach (var child in container.Children)
+            {
+                if (child is Grid hpGrid && hpGrid.VerticalAlignment == VerticalAlignment.Bottom)
+                {
+                    // Return the fill border (second child)
+                    return hpGrid.Children.OfType<Border>().Skip(1).FirstOrDefault();
+                }
+            }
+            return null;
         }
         #endregion
 
@@ -2756,6 +2921,177 @@ namespace DnDBattle.Controls
         }
         #endregion
 
+        #region Area Effect Methods
+
+        /// <summary>
+        /// Starts placing an area effect of the given shape
+        /// </summary>
+        public void StartAreaEffectPlacement(AreaEffectShape shape, int sizeInFeet, Color color)
+        {
+            _isPlacingAreaEffect = true;
+            _currentAoeShape = shape;
+            _currentAoeSize = sizeInFeet;
+            _currentAoeColor = color;
+
+            _previewEffect = new AreaEffect
+            {
+                Shape = shape,
+                SizeInFeet = sizeInFeet,
+                Color = color,
+                IsPreview = true
+            };
+
+            Cursor = Cursors.Cross;
+        }
+
+        /// <summary>
+        /// Starts placing a preset area effect
+        /// </summary>
+        public void StartAreaEffectPlacement(AreaEffect preset)
+        {
+            _isPlacingAreaEffect = true;
+            _currentAoeShape = preset.Shape;
+            _currentAoeSize = preset.SizeInFeet;
+            _currentAoeColor = preset.Color;
+
+            _previewEffect = new AreaEffect
+            {
+                Name = preset.Name,
+                Shape = preset.Shape,
+                SizeInFeet = preset.SizeInFeet,
+                WidthInFeet = preset.WidthInFeet,
+                Color = preset.Color,
+                IsPreview = true
+            };
+
+            Cursor = Cursors.Cross;
+        }
+
+        /// <summary>
+        /// Cancels the current area effect placement
+        /// </summary>
+        public void CancelAreaEffectPlacement()
+        {
+            _isPlacingAreaEffect = false;
+            _currentAoeShape = null;
+            _previewEffect = null;
+            Cursor = Cursors.Arrow;
+            RedrawAreaEffects();
+        }
+
+        /// <summary>
+        /// Updates the area effect size during placement
+        /// </summary>
+        public void UpdateAreaEffectSize(int sizeInFeet)
+        {
+            _currentAoeSize = sizeInFeet;
+            if (_previewEffect != null)
+            {
+                _previewEffect.SizeInFeet = sizeInFeet;
+                RedrawAreaEffects();
+            }
+        }
+
+        /// <summary>
+        /// Updates the area effect color during placement
+        /// </summary>
+        public void UpdateAreaEffectColor(Color color)
+        {
+            _currentAoeColor = color;
+            if (_previewEffect != null)
+            {
+                _previewEffect.Color = color;
+                RedrawAreaEffects();
+            }
+        }
+
+        /// <summary>
+        /// Redraws all area effects
+        /// </summary>
+        private void RedrawAreaEffects()
+        {
+            using var dc = _areaEffectVisual.RenderOpen();
+
+            // Draw active effects
+            foreach (var effect in _areaEffectService.ActiveEffects)
+            {
+                DrawAreaEffect(dc, effect);
+            }
+
+            // Draw preview effect
+            if (_previewEffect != null)
+            {
+                DrawAreaEffect(dc, _previewEffect);
+            }
+        }
+
+        private void DrawAreaEffect(DrawingContext dc, AreaEffect effect)
+        {
+            var geometry = AreaEffectService.GetEffectGeometry(effect, GridCellSize);
+
+            // Create fill brush with transparency
+            var fillBrush = new SolidColorBrush(effect.Color);
+            fillBrush.Freeze();
+
+            // Create outline pen
+            var outlineColor = Color.FromArgb(200, effect.Color.R, effect.Color.G, effect.Color.B);
+            var pen = new Pen(new SolidColorBrush(outlineColor), effect.IsPreview ? 2 : 3);
+            if (effect.IsPreview)
+            {
+                pen.DashStyle = DashStyles.Dash;
+            }
+            pen.Freeze();
+
+            dc.DrawGeometry(fillBrush, pen, geometry);
+
+            // Draw origin point for cones and lines
+            if (effect.Shape == AreaEffectShape.Cone || effect.Shape == AreaEffectShape.Line)
+            {
+                double originX = effect.Origin.X * GridCellSize;
+                double originY = effect.Origin.Y * GridCellSize;
+
+                dc.DrawEllipse(
+                    Brushes.White,
+                    new Pen(Brushes.Black, 1),
+                    new Point(originX, originY),
+                    5, 5);
+            }
+
+            // Draw label for placed effects
+            if (!effect.IsPreview && !string.IsNullOrEmpty(effect.Name))
+            {
+                var bounds = geometry.Bounds;
+                var text = new FormattedText(
+                    effect.Name,
+                    System.Globalization.CultureInfo.CurrentCulture,
+                    FlowDirection.LeftToRight,
+                    new Typeface("Segoe UI"),
+                    12,
+                    Brushes.White,
+                    1.0);
+
+                // Draw text background
+                var textPos = new Point(bounds.X + (bounds.Width - text.Width) / 2, bounds.Y + (bounds.Height - text.Height) / 2);
+                dc.DrawRectangle(
+                    new SolidColorBrush(Color.FromArgb(150, 0, 0, 0)),
+                    null,
+                    new Rect(textPos.X - 4, textPos.Y - 2, text.Width + 8, text.Height + 4));
+                dc.DrawText(text, textPos);
+            }
+        }
+
+        /// <summary>
+        /// Calculates the angle from origin to target point
+        /// </summary>
+        private double CalculateAngle(Point origin, Point target)
+        {
+            double dx = target.X - origin.X;
+            double dy = target.Y - origin.Y;
+            return Math.Atan2(dy, dx) * 180.0 / Math.PI;
+        }
+
+        #endregion
+
         #region Lighting (unchanged aside from obstacle positions)
         public void AddLight(LightSource light)
         {
@@ -3307,6 +3643,42 @@ namespace DnDBattle.Controls
                 index = index / 26 - 1;
             }
             return result;
+        }
+
+        private void PlaceAreaEffect()
+        {
+            if (_previewEffect == null) return;
+
+            // Create a copy of the preview as a placed effect
+            var placedEffect = new AreaEffect
+            {
+                Name = _previewEffect.Name,
+                Shape = _previewEffect.Shape,
+                SizeInFeet = _previewEffect.SizeInFeet,
+                WidthInFeet = _previewEffect.WidthInFeet,
+                Origin = _previewEffect.Origin,
+                DirectionAngle = _previewEffect.DirectionAngle,
+                Color = _previewEffect.Color,
+                IsPreview = false
+            };
+
+            _areaEffectService.AddEffect(placedEffect);
+
+            // Log the action
+            AddToActionLog("AoE", $"Placed {placedEffect.Name ?? placedEffect.Shape.ToString()} ({placedEffect.SizeInFeet} ft)");
+
+            // Reset for next placement (keep the same settings)
+            _previewEffect = new AreaEffect
+            {
+                Name = placedEffect.Name,
+                Shape = placedEffect.Shape,
+                SizeInFeet = placedEffect.SizeInFeet,
+                WidthInFeet = placedEffect.WidthInFeet,
+                Color = placedEffect.Color,
+                IsPreview = true
+            };
+
+            RedrawAreaEffects();
         }
 
         /// <summary>
