@@ -17,6 +17,21 @@
         <SolidColorBrush x:Key="AppDarkBg" Color="#FF2D2D30" />
         <SolidColorBrush x:Key="AppPanelBg" Color="#FF1E1E1E" />
 
+        <DataTemplate x:Key="ActionTooltipTemplate">
+            <StackPanel>
+                <TextBlock Text="{Binding Name}" FontWeight="Bold" Foreground="White" />
+                <TextBlock Text="Attack Bonus: " Foreground="Gray">
+                <Run Text="{Binding AttackBonus}" Foreground="White"/>
+                </TextBlock>
+                <TextBlock Text="Damage: " Foreground="Gray">
+                <Run Text="{Binding DamageExpression}" Foreground="White"/>
+                </TextBlock>
+                <TextBlock Text="Range: " Foreground="Gray">
+                <Run Text="{Binding Range}" Foreground="White"/>
+                </TextBlock>
+            </StackPanel>
+        </DataTemplate>
+
         <Style TargetType="TextBox">
             <Setter Property="Background" Value="{StaticResource AppDarkBg}"/>
             <Setter Property="Foreground" Value="White"/>

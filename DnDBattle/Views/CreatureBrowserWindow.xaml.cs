@@ -556,7 +556,43 @@ namespace DnDBattle.Views
             {
                 if (creature == null) return;
 
-                var actions = await _dbService.GetActionsAsync(creature.Id.ToString(), "Action");
+                // Retrieve all actions grouped by action type
+                Dictionary<string, List<Models.Action>> groupedActions = new Dictionary<string, List<Models.Action>>();
+                foreach (var actionType in new[] { "Action", "BonusAction", "Reaction", "LegendaryAction" })
+                {
+                    var actions = await _dbService.GetActionsAsync(creature.Id.ToString(), actionType);
+                    if (actions.Count > 0)
+                    {
+                        groupedActions[actionType] = actions;
+                    }
+                }
+
+                // Clear existing action UI
+                ActionsContainer.Children.Clear(); // ActionsContainer is a StackPanel defined in XAML
+
+                // Populate action types as separate areas
+                foreach (var actionType in groupedActions.Keys)
+                {
+                    var header = new TextBlock
+                    {
+                        Text = actionType,
+                        FontWeight = FontWeights.Bold,
+                        Margin = new Thickness(10, 5, 10, 2),
+                        Foreground = Brushes.White
+                    };
+
+                    var actionsList = new ItemsControl
+                    {
+                        ItemsSource = groupedActions[actionType],
+                        Margin = new Thickness(10),
+                        Background = Brushes.Transparent // Ensure theme matches
+                    };
+
+                    actionsList.ItemTemplate = (DataTemplate)Resources["ActionTooltipTemplate"]; // Apply tooltip template
+
+                    ActionsContainer.Children.Add(header);
+                    ActionsContainer.Children.Add(actionsList);
+                }
 
                 // Show details panel
                 TxtNoSelection.Visibility = Visibility.Collapsed;
@@ -599,8 +635,6 @@ namespace DnDBattle.Views
 
                 // Load image ASYNCHRONOUSLY (only for this one creature!)
                 await LoadCreatureImageAsync(creature);
-
-                ActionsList.ItemsSource = creature.Actions;
             }
             catch (Exception ex)
             {

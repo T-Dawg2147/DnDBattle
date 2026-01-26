@@ -9,7 +9,7 @@ namespace DnDBattle.Models
     public class Action
     {
         public string Name { get; set; }
-        public ActionType Type { get; set; }
+        public string Type { get; set; }
         public int? Cost { get; set; }
         public int? AttackBonus { get; set; }
         public string DamageExpression { get; set; }

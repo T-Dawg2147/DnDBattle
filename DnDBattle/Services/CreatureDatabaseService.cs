@@ -340,7 +340,6 @@ namespace DnDBattle.Services
             await EnsureConnectionAsync();
 
             var actions = new List<Models.Action>();
-
             var cmd = _conn.CreateCommand();
             cmd.CommandText = @"
                 SELECT Name, AttackBonus, DamageExpression, Range, Description
@@ -362,7 +361,8 @@ namespace DnDBattle.Services
                     AttackBonus = reader.GetInt32(1),
                     DamageExpression = reader.GetString(2),
                     Range = reader.GetString(3),
-                    Description = reader.GetString(4)
+                    Description = reader.GetString(4),
+                    Type = actionType
                 });
             }
 

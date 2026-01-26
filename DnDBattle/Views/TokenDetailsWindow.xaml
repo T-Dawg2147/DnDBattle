@@ -168,14 +168,19 @@
                 <Border Background="#252526" CornerRadius="8" Padding="15" Margin="0,0,0,15">
                     <StackPanel>
                         <TextBlock Text="Actions" Foreground="#F44336" FontWeight="Bold" Margin="0,0,0,10"/>
-                        <ItemsControl ItemsSource="{Binding Actions}">
+                        <ItemsControl x:Name="TokenActionsControl"
+                                Margin="10"
+                                Background="Transparent"
+                                ItemsSource="{Binding SelectedToken.Actions}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <StackPanel Margin="0,0,0,10">
-                                        <TextBlock Text="{Binding Name}" Foreground="White" FontWeight="SemiBold"/>
-                                        <TextBlock Text="{Binding Description}" Foreground="#AAA" 
-                                                   TextWrapping="Wrap" Margin="0,3,0,0"/>
-                                    </StackPanel>
+                                    <TextBlock Text="{Binding Name}" 
+                                        Foreground="White">
+                                        <TextBlock.ToolTip>
+                                            <ToolTip ContentTemplate="{StaticResource ActionTooltipTemplate}" 
+                                                DataContext="{Binding}" />
+                                        </TextBlock.ToolTip>
+                                    </TextBlock>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
