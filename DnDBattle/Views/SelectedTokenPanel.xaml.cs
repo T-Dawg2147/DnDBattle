@@ -70,7 +70,7 @@ namespace DnDBattle.Views
             if (!string.IsNullOrEmpty(_token.Alignment))
                 TxtTokenSubtitle.Text += $", {_token.Alignment}";
 
-            ImgToken.Source = _token.Image;
+            ImgToken.Source = _token.DisplayImage ?? _token.Image;
 
             // Conditions
             UpdateConditionsDisplay();

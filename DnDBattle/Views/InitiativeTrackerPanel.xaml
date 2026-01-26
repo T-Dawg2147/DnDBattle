@@ -173,18 +173,33 @@
                                            Cursor="SizeAll"/>
 
                                 <!-- Initiative Number -->
-                                <Border Grid.Column="1" 
-                                        Width="36" Height="36"
-                                        CornerRadius="18"
-                                        Background="#1E1E1E"
-                                        Margin="0,0,10,0">
-                                    <TextBlock Text="{Binding InitiativeTotal}" 
-                                               Foreground="#4FC3F7"
-                                               FontSize="14"
-                                               FontWeight="Bold"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center"/>
-                                </Border>
+                                <Grid Grid.Column="1" Width="40" Height="40" Margin="0,0,10,0">
+                                    <!-- Creature Image (circular) -->
+                                    <Border Width="36" Height="36" 
+                                        CornerRadius="18" 
+                                        Background="#1E1E1E">
+                                        <Image Source="{Binding Token.DisplayImage}" 
+                                           Stretch="UniformToFill"
+                                           RenderOptions.BitmapScalingMode="HighQuality">
+                                            <Image.Clip>
+                                                <EllipseGeometry Center="18,18" RadiusX="18" RadiusY="18"/>
+                                            </Image.Clip>
+                                        </Image>
+                                    </Border>
+
+                                    <!-- Initiative Badge (overlay) -->
+                                    <Border Background="#1E1E1E" 
+                                        CornerRadius="10"
+                                        Padding="4,1"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Bottom"
+                                        Margin="0,0,-2,-2">
+                                        <TextBlock Text="{Binding InitiativeTotal}" 
+                                           Foreground="#4FC3F7"
+                                           FontSize="10"
+                                           FontWeight="Bold"/>
+                                    </Border>
+                                </Grid>
 
                                 <!-- Name and Status -->
                                 <StackPanel Grid.Column="2" VerticalAlignment="Center">

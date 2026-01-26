@@ -1,6 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using DnDBattle.Services;
 using System;
 using System.ComponentModel;
+using System.Windows;
 using System.Windows.Media;
 
 namespace DnDBattle.Models
@@ -201,14 +203,55 @@ namespace DnDBattle.Models
         {
             get => _concentrationSpell;
             set => SetProperty(ref _concentrationSpell, value);
-        }        
+        }
 
-        // Icon path
-        private ImageSource _image;
-        public ImageSource Image { get => _image; set => SetProperty(ref _image, value); }
+        #region Image States
 
         private string _iconPath;
         public string IconPath { get => _iconPath; set => SetProperty(ref _iconPath, value); }
+
+        // Old ImageSource
+        private ImageSource _image;
+        public ImageSource Image { get => _image; set => SetProperty(ref _image, value); }
+        // New ImageSource  
+        private ImageSource _displayImage;
+        public ImageSource DisplayImage
+        {
+            get
+            {
+                if (_displayImage != null)
+                    return _displayImage;
+
+                if (Image != null)
+                    return null;
+
+                _displayImage = CreatureImageService.GetCreatureImageSync(
+                    Name, Type, Size, ChallengeRating, IconPath);
+                return _displayImage;
+            }
+            set => SetProperty(ref _displayImage, value);
+        }
+        
+        public async Task RefreshImageAsync()
+        {
+            var newImage = await CreatureImageService.GetCreatureImageAsync(
+                Name, Type, Size, ChallengeRating, IconPath);
+
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                _displayImage = newImage;
+                OnPropertyChanged(nameof(DisplayImage));
+            });
+        }
+
+        public void ClearImageCache()
+        {
+            CreatureImageService.ClearCache(Name);
+            _displayImage = null;
+            OnPropertyChanged(nameof(DisplayImage));
+        }
+
+        #endregion
 
         public int SpeedSquares
         {

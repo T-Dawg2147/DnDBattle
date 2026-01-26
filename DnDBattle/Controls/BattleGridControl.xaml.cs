@@ -1083,16 +1083,7 @@ namespace DnDBattle.Controls
                         container.Children.Add(glowBorder);
                     }
 
-                    // Token image
-                    ImageSource imageSource = null;
-                    try
-                    {
-                        imageSource = token.Image ?? LoadDefaultTokenImage();
-                    }
-                    catch
-                    {
-                        imageSource = CreateFallbackTokenImage();
-                    }
+                    ImageSource imageSource = token.DisplayImage ?? token.Image ?? LoadDefaultTokenImage();
 
                     var img = new Image
                     {

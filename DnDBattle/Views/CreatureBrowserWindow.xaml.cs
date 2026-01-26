@@ -471,41 +471,19 @@ namespace DnDBattle.Views
                 return new TreeViewItem { Header = "Unknown" };
 
             var grid = new Grid { Margin = new Thickness(0, 2, 0, 2) };
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-            // Icon placeholder
-            var iconBorder = new Border
-            {
-                Width = 24,
-                Height = 24,
-                Background = new SolidColorBrush(Color.FromRgb(51, 51, 51)),
-                CornerRadius = new CornerRadius(4),
-                Margin = new Thickness(0, 0, 8, 0),
-                Child = new TextBlock
-                {
-                    Text = creature.Name?.Substring(0, 1).ToUpper() ?? "?",
-                    Foreground = Brushes.White,
-                    FontWeight = FontWeights.Bold,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center,
-                    FontSize = 11
-                }
-            };
-
-            Grid.SetColumn(iconBorder, 0);
-            grid.Children.Add(iconBorder);
-
-            // Name
+            // Name only
             var nameText = new TextBlock
             {
                 Text = creature.Name,
                 Foreground = Brushes.White,
                 VerticalAlignment = VerticalAlignment.Center,
-                TextTrimming = TextTrimming.CharacterEllipsis
+                TextTrimming = TextTrimming.CharacterEllipsis,
+                FontSize = 12
             };
-            Grid.SetColumn(nameText, 1);
+            Grid.SetColumn(nameText, 0);
             grid.Children.Add(nameText);
 
             // CR badge
@@ -523,7 +501,7 @@ namespace DnDBattle.Views
                 Foreground = new SolidColorBrush(Color.FromRgb(255, 183, 77)),
                 FontSize = 10
             };
-            Grid.SetColumn(crBorder, 2);
+            Grid.SetColumn(crBorder, 1);
             grid.Children.Add(crBorder);
 
             return new TreeViewItem
@@ -575,90 +553,82 @@ namespace DnDBattle.Views
         {
             if (creature == null) return;
 
+            // Show details panel
             TxtNoSelection.Visibility = Visibility.Collapsed;
             CreatureDetails.Visibility = Visibility.Visible;
 
-            // Load full creature data if needed
-            Token fullCreature = creature;
-            if (creature.Actions == null || creature.Actions.Count == 0)
-            {
-                try
-                {
-                    var loaded = await _dbService.GetCreatureByIdAsync(creature.Id.ToString());
-                    if (loaded != null)
-                        fullCreature = loaded;
-                }
-                catch { /* Use partial data */ }
-            }
+            // Set basic info immediately
+            TxtCreatureName.Text = creature.Name ?? "Unknown";
+            TxtCreatureSubtitle.Text = $"{creature.Size} {creature.Type}, {creature.Alignment}".Trim(' ', ',');
 
-            TxtCreatureName.Text = fullCreature.Name;
-            TxtCreatureSubtitle.Text = $"{fullCreature.Size} {fullCreature.Type}" +
-                (string.IsNullOrEmpty(fullCreature.Alignment) ? "" : $", {fullCreature.Alignment}");
+            TxtAC.Text = creature.ArmorClass.ToString();
+            TxtHP.Text = creature.MaxHP.ToString();
+            TxtCR.Text = creature.ChallengeRating ?? "?";
 
-            TxtAC.Text = fullCreature.ArmorClass.ToString();
-            TxtHP.Text = fullCreature.MaxHP.ToString();
-            TxtCR.Text = fullCreature.ChallengeRating ?? "—";
-            TxtSpeed.Text = fullCreature.Speed ?? "30 ft.";
+            TxtStr.Text = creature.Str.ToString();
+            TxtDex.Text = creature.Dex.ToString();
+            TxtCon.Text = creature.Con.ToString();
+            TxtInt.Text = creature.Int.ToString();
+            TxtWis.Text = creature.Wis.ToString();
+            TxtCha.Text = creature.Cha.ToString();
 
-            // Ability scores
-            TxtStr.Text = FormatAbilityScore(fullCreature.Str);
-            TxtDex.Text = FormatAbilityScore(fullCreature.Dex);
-            TxtCon.Text = FormatAbilityScore(fullCreature.Con);
-            TxtInt.Text = FormatAbilityScore(fullCreature.Int);
-            TxtWis.Text = FormatAbilityScore(fullCreature.Wis);
-            TxtCha.Text = FormatAbilityScore(fullCreature.Cha);
+            TxtSpeed.Text = creature.Speed ?? "30 ft.";
 
             // Traits
-            if (!string.IsNullOrWhiteSpace(fullCreature.Traits))
+            if (!string.IsNullOrWhiteSpace(creature.Traits))
             {
                 TraitsSection.Visibility = Visibility.Visible;
-                TxtTraits.Text = fullCreature.Traits;
+                TxtTraits.Text = creature.Traits;
             }
             else
             {
                 TraitsSection.Visibility = Visibility.Collapsed;
             }
 
-            // Actions
-            if (fullCreature.Actions != null && fullCreature.Actions.Count > 0)
+            // Update favorite button - check if creature is in favorites
+            bool isFavorite = _favorites?.Any(f => f.Id == creature.Id.ToString()) ?? false;
+            BtnFavorite.Content = isFavorite ? "★" : "☆";
+            BtnFavorite.Foreground = isFavorite
+                ? new SolidColorBrush(Color.FromRgb(255, 215, 0))
+                : Brushes.Gray;
+
+            // Load image ASYNCHRONOUSLY (only for this one creature!)
+            await LoadCreatureImageAsync(creature);
+
+            // Load actions - use whatever method you already have
+            // If you have a method like ShowActions, LoadActions, or DisplayActions, call it here
+            // For example:
+            // ShowActions(creature);
+            // OR just populate ActionsList directly:
+            ActionsList.ItemsSource = creature.Actions;
+        }
+
+        private async Task LoadCreatureImageAsync(Token creature)
+        {
+            try
             {
-                ActionsSection.Visibility = Visibility.Visible;
-                ActionsList.Items.Clear();
+                // Show a placeholder immediately
+                ImgCreatureDetail.Source = CreatureImageService.GeneratePlaceholderToken(
+                    creature.Name, creature.Type, creature.Size, creature.ChallengeRating);
 
-                foreach (var action in fullCreature.Actions)
+                // Then try to fetch real image in background
+                var image = await CreatureImageService.GetCreatureImageAsync(
+                    creature.Name,
+                    creature.Type,
+                    creature.Size,
+                    creature.ChallengeRating,
+                    creature.IconPath);
+
+                // Only update if this creature is still selected
+                if (_selectedCreature?.Id == creature.Id)
                 {
-                    var actionPanel = new StackPanel { Margin = new Thickness(0, 0, 0, 10) };
-
-                    actionPanel.Children.Add(new TextBlock
-                    {
-                        Text = action.Name,
-                        FontWeight = FontWeights.Bold,
-                        Foreground = Brushes.White
-                    });
-
-                    if (!string.IsNullOrEmpty(action.Description))
-                    {
-                        actionPanel.Children.Add(new TextBlock
-                        {
-                            Text = action.Description,
-                            Foreground = Brushes.LightGray,
-                            TextWrapping = TextWrapping.Wrap,
-                            Margin = new Thickness(0, 3, 0, 0)
-                        });
-                    }
-
-                    ActionsList.Items.Add(actionPanel);
+                    ImgCreatureDetail.Source = image;
                 }
             }
-            else
+            catch (Exception ex)
             {
-                ActionsSection.Visibility = Visibility.Collapsed;
+                System.Diagnostics.Debug.WriteLine($"Error loading creature image: {ex.Message}");
             }
-
-            // Update favorite button
-            bool isFavorite = await _dbService.IsFavoriteAsync(fullCreature.Id.ToString());
-            BtnFavorite.Content = isFavorite ? "★" : "☆";
-            BtnFavorite.Foreground = isFavorite ? Brushes.Gold : Brushes.Gray;
         }
 
         private string FormatAbilityScore(int score)

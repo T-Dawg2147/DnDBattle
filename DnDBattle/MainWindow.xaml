@@ -6,7 +6,7 @@
         xmlns:views="clr-namespace:DnDBattle.Views"
         Title="DnD Battle Builder" 
         Height="900" Width="1400"
-        MinHeight="600" MinWidth="900"
+        MinHeight="600" MinWidth="1000"
         Background="#1A1A1D"
         WindowStartupLocation="CenterScreen">
 
@@ -220,7 +220,7 @@
                 <ColumnDefinition Width="5"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="5"/>
-                <ColumnDefinition x:Name="RightSidebarColumn" Width="300" MinWidth="250" MaxWidth="450"/>
+                <ColumnDefinition x:Name="RightSidebarColumn" Width="300" MinWidth="350" MaxWidth="450"/>
             </Grid.ColumnDefinitions>
 
             <!-- ========== LEFT SIDEBAR ========== -->
@@ -352,7 +352,7 @@
 
             <Border Grid.Column="4" 
                     Background="#252526" 
-                    MinWidth="280"
+                    MinWidth="380"
                     MaxWidth="500">
                 <views:SelectedTokenPanel x:Name="SelectedTokenPanel"/>
             </Border>

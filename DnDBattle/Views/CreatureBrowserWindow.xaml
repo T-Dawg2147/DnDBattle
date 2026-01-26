@@ -205,25 +205,37 @@
 
                     <!-- Creature Details -->
                     <StackPanel x:Name="CreatureDetails" Visibility="Collapsed">
-                        <!-- Header -->
+                        <!-- Header with Image -->
                         <Grid Margin="0,0,0,15">
                             <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
 
-                            <StackPanel Grid.Column="0">
+                            <!-- Creature Image -->
+                            <Border Grid.Column="0" 
+                                Width="64" Height="64" 
+                                CornerRadius="8" 
+                                Background="#1E1E1E"
+                                Margin="0,0,12,0">
+                                <Image x:Name="ImgCreatureDetail" 
+                                   Stretch="UniformToFill"
+                                   RenderOptions.BitmapScalingMode="HighQuality"/>
+                            </Border>
+
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                 <TextBlock x:Name="TxtCreatureName" FontSize="20" FontWeight="Bold" 
-                                           Foreground="White" TextWrapping="Wrap"/>
+                                    Foreground="White" TextWrapping="Wrap"/>
                                 <TextBlock x:Name="TxtCreatureSubtitle" FontSize="11" 
-                                           Foreground="#888" FontStyle="Italic" TextWrapping="Wrap"/>
+                                    Foreground="#888" FontStyle="Italic" TextWrapping="Wrap"/>
                             </StackPanel>
 
-                            <Button Grid.Column="1" x:Name="BtnFavorite" Content="☆" FontSize="24"
-                                    Click="BtnFavorite_Click"
-                                    Background="Transparent" BorderThickness="0"
-                                    Foreground="Gray" Cursor="Hand" ToolTip="Toggle Favorite"
-                                    VerticalAlignment="Top"/>
+                            <Button Grid.Column="2" x:Name="BtnFavorite" Content="☆" FontSize="24"
+                                Click="BtnFavorite_Click"
+                                Background="Transparent" BorderThickness="0"
+                                Foreground="Gray" Cursor="Hand" ToolTip="Toggle Favorite"
+                                VerticalAlignment="Top"/>
                         </Grid>
 
                         <!-- Stats -->
