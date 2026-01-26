@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace DnDBattle.Views
@@ -226,10 +227,13 @@ namespace DnDBattle.Views
 
         private void PopulateActions()
         {
+            // Clear all panels
             ActionsPanel.Children.Clear();
             BonusActionsPanel.Children.Clear();
             ReactionsPanel.Children.Clear();
             LegendaryActionsPanel.Children.Clear();
+
+            if (_token == null) return;
 
             // Debug output
             System.Diagnostics.Debug.WriteLine($"PopulateActions for {_token?.Name}");
@@ -249,8 +253,7 @@ namespace DnDBattle.Views
                 NoActionsText.Visibility = Visibility.Collapsed;
                 foreach (var action in _token.Actions)
                 {
-                    System.Diagnostics.Debug.WriteLine($"    Adding action: {action.Name}");
-                    ActionsPanel.Children.Add(CreateActionButton(action, "Action"));
+                    ActionsPanel.Children.Add(CreateActionElement(action, "Action"));
                 }
             }
             else
@@ -264,7 +267,7 @@ namespace DnDBattle.Views
             {
                 foreach (var action in _token.BonusActions)
                 {
-                    BonusActionsPanel.Children.Add(CreateActionButton(action, "Bonus"));
+                    BonusActionsPanel.Children.Add(CreateActionElement(action, "Bonus"));
                 }
             }
 
@@ -274,7 +277,7 @@ namespace DnDBattle.Views
             {
                 foreach (var action in _token.Reactions)
                 {
-                    ReactionsPanel.Children.Add(CreateActionButton(action, "Reaction"));
+                    ReactionsPanel.Children.Add(CreateActionElement(action, "Reaction"));
                 }
             }
 
@@ -284,50 +287,77 @@ namespace DnDBattle.Views
             {
                 foreach (var action in _token.LegendaryActions)
                 {
-                    LegendaryActionsPanel.Children.Add(CreateActionButton(action, "Legendary"));
+                    LegendaryActionsPanel.Children.Add(CreateActionElement(action, "Legendary"));
                 }
             }
         }
 
-        private UIElement CreateActionButton(Models.Action action, string actionType)
+        /// <summary>
+        /// Creates a styled action element with badges and tooltip
+        /// </summary>
+        private UIElement CreateActionElement(Models.Action action, string actionType)
         {
-            var button = new Button
+            // Main container - clickable button with hover effect
+            var border = new Border
             {
-                Tag = action,
-                Style = (Style)FindResource("ActionButtonStyle"),
-                Margin = new Thickness(0, 0, 0, 5)
+                Background = new SolidColorBrush(Color.FromRgb(45, 45, 48)),
+                CornerRadius = new CornerRadius(4),
+                Padding = new Thickness(10, 6, 10, 6),
+                Margin = new Thickness(0, 0, 0, 4),
+                Cursor = Cursors.Hand,
+                Tag = action
+            };
+
+            // Hover effects
+            border.MouseEnter += (s, e) => border.Background = new SolidColorBrush(Color.FromRgb(60, 60, 64));
+            border.MouseLeave += (s, e) => border.Background = new SolidColorBrush(Color.FromRgb(45, 45, 48));
+
+            // Click to use action
+            border.MouseLeftButtonDown += (s, e) =>
+            {
+                if (border.Tag is Models.Action clickedAction)
+                {
+                    UseAction(clickedAction, actionType);
+                    ActionSelected?.Invoke(_token, clickedAction);
+                }
             };
 
             var content = new StackPanel();
 
-            // Action name row
-            var nameRow = new StackPanel { Orientation = Orientation.Horizontal };
+            // First row: Name + badges
+            var nameRow = new WrapPanel { Orientation = Orientation.Horizontal };
+
+            // Action name
             nameRow.Children.Add(new TextBlock
             {
                 Text = action.Name ?? "Unknown Action",
+                Foreground = Brushes.White,
                 FontWeight = FontWeights.SemiBold,
-                Foreground = Brushes.White
+                FontSize = 11,
+                VerticalAlignment = VerticalAlignment.Center
             });
 
-            // Attack bonus badge
-            if (action.AttackBonus != 0)
+            // Attack bonus badge (green)
+            if (action.AttackBonus != null && action.AttackBonus != 0)
             {
                 nameRow.Children.Add(new Border
                 {
                     Background = new SolidColorBrush(Color.FromRgb(76, 175, 80)),
                     CornerRadius = new CornerRadius(3),
                     Padding = new Thickness(4, 1, 4, 1),
-                    Margin = new Thickness(8, 0, 0, 0),
+                    Margin = new Thickness(6, 0, 0, 0),
+                    VerticalAlignment = VerticalAlignment.Center,
                     Child = new TextBlock
                     {
-                        Text = $"+{action.AttackBonus}",
-                        FontSize = 10,
-                        Foreground = Brushes.White
+                        Text = action.AttackBonus > 0 ? $"+{action.AttackBonus}" : action.AttackBonus.ToString(),
+                        Foreground = Brushes.White,
+                        FontSize = 9,
+                        FontWeight = FontWeights.Bold
                     }
                 });
             }
 
-            // Damage badge
+            // Damage badge (red)
             if (!string.IsNullOrEmpty(action.DamageExpression))
             {
                 nameRow.Children.Add(new Border
@@ -335,12 +365,33 @@ namespace DnDBattle.Views
                     Background = new SolidColorBrush(Color.FromRgb(244, 67, 54)),
                     CornerRadius = new CornerRadius(3),
                     Padding = new Thickness(4, 1, 4, 1),
-                    Margin = new Thickness(5, 0, 0, 0),
+                    Margin = new Thickness(4, 0, 0, 0),
+                    VerticalAlignment = VerticalAlignment.Center,
                     Child = new TextBlock
                     {
                         Text = action.DamageExpression,
-                        FontSize = 10,
-                        Foreground = Brushes.White
+                        Foreground = Brushes.White,
+                        FontSize = 9,
+                        FontWeight = FontWeights.Bold
+                    }
+                });
+            }
+
+            // Range badge (blue)
+            if (!string.IsNullOrEmpty(action.Range))
+            {
+                nameRow.Children.Add(new Border
+                {
+                    Background = new SolidColorBrush(Color.FromRgb(100, 181, 246)),
+                    CornerRadius = new CornerRadius(3),
+                    Padding = new Thickness(4, 1, 4, 1),
+                    Margin = new Thickness(4, 0, 0, 0),
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Child = new TextBlock
+                    {
+                        Text = action.Range,
+                        Foreground = Brushes.Black,
+                        FontSize = 9
                     }
                 });
             }
@@ -350,110 +401,139 @@ namespace DnDBattle.Views
             // Description (truncated)
             if (!string.IsNullOrEmpty(action.Description))
             {
-                var desc = action.Description;
-                if (desc.Length > 80)
-                    desc = desc.Substring(0, 77) + "...";
+                string truncatedDesc = action.Description.Length > 80
+                    ? action.Description.Substring(0, 77) + "..."
+                    : action.Description;
 
                 content.Children.Add(new TextBlock
                 {
-                    Text = desc,
+                    Text = truncatedDesc,
                     Foreground = new SolidColorBrush(Color.FromRgb(150, 150, 150)),
-                    FontSize = 11,
+                    FontSize = 10,
                     TextWrapping = TextWrapping.Wrap,
                     Margin = new Thickness(0, 3, 0, 0)
                 });
             }
 
-            button.Content = content;
+            border.Child = content;
 
             // Create detailed tooltip
-            button.ToolTip = CreateActionTooltip(action);
+            border.ToolTip = CreateActionTooltip(action);
 
-            // Click handler
-            button.Click += (s, e) =>
-            {
-                ActionSelected?.Invoke(_token, action);
-                UseAction(action, actionType);
-            };
-
-            return button;
+            return border;
         }
 
+        /// <summary>
+        /// Creates a detailed tooltip for an action
+        /// </summary>
         private ToolTip CreateActionTooltip(Models.Action action)
         {
             var tooltip = new ToolTip
             {
                 Background = new SolidColorBrush(Color.FromRgb(30, 30, 30)),
                 BorderBrush = new SolidColorBrush(Color.FromRgb(80, 80, 80)),
+                BorderThickness = new Thickness(1),
                 Padding = new Thickness(12),
                 MaxWidth = 350
             };
 
             var stack = new StackPanel();
 
+            // Action name
             stack.Children.Add(new TextBlock
             {
-                Text = action.Name,
+                Text = action.Name ?? "Unknown Action",
                 FontWeight = FontWeights.Bold,
                 FontSize = 14,
                 Foreground = Brushes.White,
                 Margin = new Thickness(0, 0, 0, 8)
             });
 
-            if (action.AttackBonus != 0 || !string.IsNullOrEmpty(action.Range))
-            {
-                var statsText = "";
-                if (action.AttackBonus != 0)
-                    statsText += $"Attack: +{action.AttackBonus}  ";
-                if (!string.IsNullOrEmpty(action.Range))
-                    statsText += $"Range: {action.Range}";
+            // Stats row
+            var statsPanel = new WrapPanel { Margin = new Thickness(0, 0, 0, 8) };
 
-                stack.Children.Add(new TextBlock
+            if (action.AttackBonus != null && action.AttackBonus != 0)
+            {
+                statsPanel.Children.Add(new TextBlock
                 {
-                    Text = statsText,
-                    Foreground = new SolidColorBrush(Color.FromRgb(100, 181, 246)),
-                    Margin = new Thickness(0, 0, 0, 5)
+                    Text = $"Attack: +{action.AttackBonus}",
+                    Foreground = new SolidColorBrush(Color.FromRgb(76, 175, 80)),
+                    Margin = new Thickness(0, 0, 15, 0),
+                    FontWeight = FontWeights.SemiBold
                 });
             }
 
             if (!string.IsNullOrEmpty(action.DamageExpression))
             {
-                stack.Children.Add(new TextBlock
+                statsPanel.Children.Add(new TextBlock
                 {
                     Text = $"Damage: {action.DamageExpression}",
                     Foreground = new SolidColorBrush(Color.FromRgb(244, 67, 54)),
-                    Margin = new Thickness(0, 0, 0, 5)
+                    Margin = new Thickness(0, 0, 15, 0),
+                    FontWeight = FontWeights.SemiBold
                 });
             }
 
+            if (!string.IsNullOrEmpty(action.Range))
+            {
+                statsPanel.Children.Add(new TextBlock
+                {
+                    Text = $"Range: {action.Range}",
+                    Foreground = new SolidColorBrush(Color.FromRgb(100, 181, 246)),
+                    FontWeight = FontWeights.SemiBold
+                });
+            }
+
+            if (statsPanel.Children.Count > 0)
+            {
+                stack.Children.Add(statsPanel);
+            }
+
+            // Full description
             if (!string.IsNullOrEmpty(action.Description))
             {
                 stack.Children.Add(new TextBlock
                 {
                     Text = action.Description,
                     Foreground = new SolidColorBrush(Color.FromRgb(200, 200, 200)),
-                    TextWrapping = TextWrapping.Wrap
+                    TextWrapping = TextWrapping.Wrap,
+                    FontSize = 12
                 });
             }
+
+            // Click hint
+            stack.Children.Add(new TextBlock
+            {
+                Text = "Click to use this action",
+                Foreground = new SolidColorBrush(Color.FromRgb(100, 100, 100)),
+                FontStyle = FontStyles.Italic,
+                FontSize = 10,
+                Margin = new Thickness(0, 10, 0, 0)
+            });
 
             tooltip.Content = stack;
             return tooltip;
         }
 
+        /// <summary>
+        /// Executes an action - rolls attack and damage
+        /// </summary>
         private void UseAction(Models.Action action, string actionType)
         {
+            if (_token == null || action == null) return;
+
             // Roll attack if applicable
-            if (action.AttackBonus != 0)
+            if (action.AttackBonus != null && action.AttackBonus != 0)
             {
                 var attackRoll = Utils.DiceRoller.RollExpression("1d20");
-                int total = attackRoll.Total + action.AttackBonus ?? 0;
+                int total = attackRoll.Total + (action.AttackBonus ?? 0);
 
-                string message = $"{_token.Name} uses {action.Name}: Attack roll {attackRoll.Total} + {action.AttackBonus} = {total}";
+                string message = $"🎯 {_token.Name} uses {action.Name}: Attack roll {attackRoll.Total} + {action.AttackBonus} = {total}";
 
                 if (attackRoll.Total == 20)
-                    message += " (CRITICAL HIT!)";
+                    message += " ⚡ CRITICAL HIT!";
                 else if (attackRoll.Total == 1)
-                    message += " (CRITICAL MISS!)";
+                    message += " 💀 CRITICAL MISS!";
 
                 LogAction?.Invoke(message);
 
@@ -475,19 +555,35 @@ namespace DnDBattle.Views
                         {
                             var critRoll = Utils.DiceRoller.RollExpression(action.DamageExpression);
                             damage += critRoll.Total;
-                            LogAction?.Invoke($"{_token.Name} deals {damage} damage (CRIT: {damageRoll.Total} + {critRoll.Total})!");
+                            LogAction?.Invoke($"💥 {_token.Name} deals {damage} damage (CRIT: {damageRoll.Total} + {critRoll.Total})!");
                         }
                         else
                         {
-                            LogAction?.Invoke($"{_token.Name} deals {damage} damage!");
+                            LogAction?.Invoke($"💥 {_token.Name} deals {damage} damage ({damageRoll.Total})!");
                         }
                     }
                 }
             }
             else
             {
-                // Non-attack action
-                LogAction?.Invoke($"{_token.Name} uses {action.Name}");
+                // Non-attack action (like abilities or spells without attack rolls)
+                LogAction?.Invoke($"✨ {_token.Name} uses {action.Name}");
+
+                // Still roll damage if there is any (like saving throw spells)
+                if (!string.IsNullOrEmpty(action.DamageExpression))
+                {
+                    var result = MessageBox.Show(
+                        $"{action.Name}\n\nRoll damage ({action.DamageExpression})?",
+                        action.Name,
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Question);
+
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        var damageRoll = Utils.DiceRoller.RollExpression(action.DamageExpression);
+                        LogAction?.Invoke($"💥 {action.Name} deals {damageRoll.Total} damage!");
+                    }
+                }
             }
         }
 

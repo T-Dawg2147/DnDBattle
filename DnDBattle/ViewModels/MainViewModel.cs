@@ -533,10 +533,15 @@ namespace DnDBattle.ViewModels
 
         private void OpenCreatureBrowser()
         {
+            var browser = new CreatureBrowserWindow { DataContext = this };
+
+            // Wire up the event to add creatures to the map!
+            browser.CreatureAddedToMap += OnCreatureAddedToMap;
+
             var host = new Window()
             {
                 Title = "Add Creature",
-                Content = new CreatureBrowserWindow { DataContext = this },
+                Content = browser,
                 Owner = Application.Current?.MainWindow,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 Width = 1100,
@@ -545,6 +550,9 @@ namespace DnDBattle.ViewModels
                 MinHeight = 740
             };
             host.ShowDialog();
+
+            // Unsubscribe when closed to prevent memory leaks
+            browser.CreatureAddedToMap -= OnCreatureAddedToMap;
         }
 
         private bool FilterCreatureBank(object obj)
@@ -566,9 +574,115 @@ namespace DnDBattle.ViewModels
             await LoadCreaturesFromDatabaseAsync();
         }
 
+        #region Helpers
+
         private void Log(string source, string message)
         {
             ActionLog.Insert(0, new ActionLogEntry { Source = source, Message = message, Timestamp = DateTime.Now });
         }
+
+        private void OnCreatureAddedToMap(Token creature)
+        {
+            if (creature == null) return;
+
+            // Create a copy of the creature for the map
+            var newToken = new Token
+            {
+                Id = Guid.NewGuid(),
+                Name = creature.Name,
+                Size = creature.Size,
+                Type = creature.Type,
+                Alignment = creature.Alignment,
+                ChallengeRating = creature.ChallengeRating,
+                Image = creature.Image,
+                IconPath = creature.IconPath,
+                HP = creature.MaxHP,
+                MaxHP = creature.MaxHP,
+                HitDice = creature.HitDice,
+                ArmorClass = creature.ArmorClass,
+                InitiativeModifier = creature.InitiativeModifier,
+                IsPlayer = creature.IsPlayer,
+                Speed = creature.Speed,
+                SizeInSquares = creature.SizeInSquares > 0 ? creature.SizeInSquares : 1,
+
+                // Place at a default position (will be adjusted by user)
+                GridX = 5,
+                GridY = 5,
+
+                // Ability Scores
+                Str = creature.Str,
+                Dex = creature.Dex,
+                Con = creature.Con,
+                Int = creature.Int,
+                Wis = creature.Wis,
+                Cha = creature.Cha,
+
+                // Extra info
+                Skills = creature.Skills?.ToList() ?? new List<string>(),
+                Senses = creature.Senses,
+                Languages = creature.Languages,
+                Immunities = creature.Immunities,
+                Resistances = creature.Resistances,
+                Vulnerabilities = creature.Vulnerabilities,
+                Traits = creature.Traits,
+                Notes = creature.Notes,
+
+                // ACTIONS - Deep copy all action types
+                Actions = creature.Actions?.Select(a => new Models.Action
+                {
+                    Name = a.Name,
+                    AttackBonus = a.AttackBonus,
+                    DamageExpression = a.DamageExpression,
+                    Range = a.Range,
+                    Description = a.Description,
+                    Type = a.Type,
+                    Cost = a.Cost
+                }).ToList() ?? new List<Models.Action>(),
+
+                BonusActions = creature.BonusActions?.Select(a => new Models.Action
+                {
+                    Name = a.Name,
+                    AttackBonus = a.AttackBonus,
+                    DamageExpression = a.DamageExpression,
+                    Range = a.Range,
+                    Description = a.Description,
+                    Type = a.Type,
+                    Cost = a.Cost
+                }).ToList() ?? new List<Models.Action>(),
+
+                Reactions = creature.Reactions?.Select(a => new Models.Action
+                {
+                    Name = a.Name,
+                    AttackBonus = a.AttackBonus,
+                    DamageExpression = a.DamageExpression,
+                    Range = a.Range,
+                    Description = a.Description,
+                    Type = a.Type,
+                    Cost = a.Cost
+                }).ToList() ?? new List<Models.Action>(),
+
+                LegendaryActions = creature.LegendaryActions?.Select(a => new Models.Action
+                {
+                    Name = a.Name,
+                    AttackBonus = a.AttackBonus,
+                    DamageExpression = a.DamageExpression,
+                    Range = a.Range,
+                    Description = a.Description,
+                    Type = a.Type,
+                    Cost = a.Cost
+                }).ToList() ?? new List<Models.Action>(),
+
+                Tags = creature.Tags?.ToList() ?? new List<string>()
+            };
+
+            // Add to the tokens collection
+            Tokens.Add(newToken);
+            SelectedToken = newToken;
+
+            // Log the action
+            Log("Map", $"➕ Added {newToken.Name} to the battle map");
+        }
+
+        #endregion
     }
 }

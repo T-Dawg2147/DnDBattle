@@ -316,7 +316,6 @@ namespace DnDBattle.Services
             await EnsureConnectionAsync();
 
             var cmd = _conn.CreateCommand();
-
             cmd.CommandText = "SELECT * FROM Creatures WHERE Id = @Id";
             cmd.Parameters.AddWithValue("@Id", id);
 
@@ -326,8 +325,8 @@ namespace DnDBattle.Services
                 var creature = MapReaderToToken(reader);
                 creature.Actions = await GetActionsAsync(id, "Action");
                 creature.BonusActions = await GetActionsAsync(id, "BonusAction");
-                creature.Reactions = await GetActionsAsync(id, "Reactions");
-                creature.LegendaryActions = await GetActionsAsync(id, "LegendaryActions");
+                creature.Reactions = await GetActionsAsync(id, "Reaction");
+                creature.LegendaryActions = await GetActionsAsync(id, "LegendaryAction");  
                 creature.Tags = await GetCreatureTagsAsync(id);
                 return creature;
             }

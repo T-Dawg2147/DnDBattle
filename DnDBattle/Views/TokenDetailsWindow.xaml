@@ -167,23 +167,14 @@
                 <!-- Actions -->
                 <Border Background="#252526" CornerRadius="8" Padding="15" Margin="0,0,0,15">
                     <StackPanel>
-                        <TextBlock Text="Actions" Foreground="#F44336" FontWeight="Bold" Margin="0,0,0,10"/>
-                        <ItemsControl x:Name="TokenActionsControl"
-                                Margin="10"
-                                Background="Transparent"
-                                ItemsSource="{Binding SelectedToken.Actions}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding Name}" 
-                                        Foreground="White">
-                                        <TextBlock.ToolTip>
-                                            <ToolTip ContentTemplate="{StaticResource ActionTooltipTemplate}" 
-                                                DataContext="{Binding}" />
-                                        </TextBlock.ToolTip>
-                                    </TextBlock>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                        <TextBlock Text="Actions" 
+                               Foreground="#4FC3F7" 
+                               FontWeight="Bold" 
+                               FontSize="12" 
+                               Margin="0,0,0,10"/>
+
+                        <!-- Actions will be populated here -->
+                        <StackPanel x:Name="ActionsContainer"/>
                     </StackPanel>
                 </Border>
 

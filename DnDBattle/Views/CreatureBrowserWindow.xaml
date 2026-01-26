@@ -168,12 +168,12 @@
                     Background="Transparent" BorderThickness="0"
                     VirtualizingStackPanel.IsVirtualizing="True"
                     VirtualizingStackPanel.VirtualizationMode="Recycling"
-                    SelectedItemChanged="CreatureTree_SelectedItemChanged">
+                    SelectedItemChanged="CreatureTree_SelectedItemChanged"
+                    MouseDoubleClick="CreatureTree_MouseDoubleClick">
                     <TreeView.ItemContainerStyle>
                         <Style TargetType="TreeViewItem">
                             <Setter Property="Foreground" Value="White"/>
                             <Setter Property="IsExpanded" Value="False"/>
-                            <!-- Start collapsed! -->
                             <Setter Property="Padding" Value="2"/>
                         </Style>
                     </TreeView.ItemContainerStyle>

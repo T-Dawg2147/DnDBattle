@@ -15,6 +15,9 @@ namespace DnDBattle.Models
         public string DamageExpression { get; set; }
         public string Range { get; set; }
         public string? Description { get; set; }
+
+        public override string ToString() =>
+            Name ?? "Unknown Action";
     }
 
     public enum ActionType

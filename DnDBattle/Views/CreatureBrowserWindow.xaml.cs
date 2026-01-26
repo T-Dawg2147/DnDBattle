@@ -556,44 +556,6 @@ namespace DnDBattle.Views
             {
                 if (creature == null) return;
 
-                // Retrieve all actions grouped by action type
-                Dictionary<string, List<Models.Action>> groupedActions = new Dictionary<string, List<Models.Action>>();
-                foreach (var actionType in new[] { "Action", "BonusAction", "Reaction", "LegendaryAction" })
-                {
-                    var actions = await _dbService.GetActionsAsync(creature.Id.ToString(), actionType);
-                    if (actions.Count > 0)
-                    {
-                        groupedActions[actionType] = actions;
-                    }
-                }
-
-                // Clear existing action UI
-                ActionsContainer.Children.Clear(); // ActionsContainer is a StackPanel defined in XAML
-
-                // Populate action types as separate areas
-                foreach (var actionType in groupedActions.Keys)
-                {
-                    var header = new TextBlock
-                    {
-                        Text = actionType,
-                        FontWeight = FontWeights.Bold,
-                        Margin = new Thickness(10, 5, 10, 2),
-                        Foreground = Brushes.White
-                    };
-
-                    var actionsList = new ItemsControl
-                    {
-                        ItemsSource = groupedActions[actionType],
-                        Margin = new Thickness(10),
-                        Background = Brushes.Transparent // Ensure theme matches
-                    };
-
-                    actionsList.ItemTemplate = (DataTemplate)Resources["ActionTooltipTemplate"]; // Apply tooltip template
-
-                    ActionsContainer.Children.Add(header);
-                    ActionsContainer.Children.Add(actionsList);
-                }
-
                 // Show details panel
                 TxtNoSelection.Visibility = Visibility.Collapsed;
                 CreatureDetails.Visibility = Visibility.Visible;
@@ -635,11 +597,280 @@ namespace DnDBattle.Views
 
                 // Load image ASYNCHRONOUSLY (only for this one creature!)
                 await LoadCreatureImageAsync(creature);
+
+                // Retrieve all actions grouped by action type
+                Dictionary<string, List<Models.Action>> groupedActions = new Dictionary<string, List<Models.Action>>();
+                foreach (var actionType in new[] { "Action", "BonusAction", "Reaction", "LegendaryAction" })
+                {
+                    var actions = await _dbService.GetActionsAsync(creature.Id.ToString(), actionType);
+                    if (actions.Count > 0)
+                    {
+                        groupedActions[actionType] = actions;
+                    }
+                }
+
+                // Clear existing action UI
+                ActionsContainer.Children.Clear();
+
+                // Populate action types as separate sections
+                foreach (var kvp in groupedActions)
+                {
+                    string actionType = kvp.Key;
+                    List<Models.Action> actions = kvp.Value;
+
+                    // Get display name and color for the action type
+                    var (displayName, headerColor) = GetActionTypeStyle(actionType);
+
+                    // Create section header
+                    var header = new TextBlock
+                    {
+                        Text = displayName,
+                        FontWeight = FontWeights.Bold,
+                        FontSize = 12,
+                        Margin = new Thickness(0, 10, 0, 5),
+                        Foreground = new SolidColorBrush(headerColor)
+                    };
+                    ActionsContainer.Children.Add(header);
+
+                    // Create action items
+                    foreach (var action in actions)
+                    {
+                        var actionElement = CreateActionElement(action);
+                        ActionsContainer.Children.Add(actionElement);
+                    }
+                }
+
+                // Show message if no actions
+                if (groupedActions.Count == 0)
+                {
+                    ActionsContainer.Children.Add(new TextBlock
+                    {
+                        Text = "No actions available",
+                        Foreground = new SolidColorBrush(Color.FromRgb(102, 102, 102)),
+                        FontStyle = FontStyles.Italic,
+                        FontSize = 11,
+                        Margin = new Thickness(0, 5, 0, 0)
+                    });
+                }
             }
             catch (Exception ex)
             {
-
+                System.Diagnostics.Debug.WriteLine($"Error showing creature details: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// Gets the display name and color for an action type
+        /// </summary>
+        private (string displayName, Color color) GetActionTypeStyle(string actionType)
+        {
+            return actionType switch
+            {
+                "Action" => ("Actions", Color.FromRgb(244, 67, 54)),           // Red
+                "BonusAction" => ("Bonus Actions", Color.FromRgb(255, 152, 0)), // Orange
+                "Reaction" => ("Reactions", Color.FromRgb(156, 39, 176)),       // Purple
+                "LegendaryAction" => ("Legendary Actions", Color.FromRgb(255, 215, 0)), // Gold
+                _ => (actionType, Color.FromRgb(255, 255, 255))                 // White default
+            };
+        }
+
+        /// <summary>
+        /// Creates a UI element for displaying an action with tooltip
+        /// </summary>
+        private UIElement CreateActionElement(Models.Action action)
+        {
+            // Main container with hover effect
+            var border = new Border
+            {
+                Background = new SolidColorBrush(Color.FromRgb(45, 45, 48)),
+                CornerRadius = new CornerRadius(4),
+                Padding = new Thickness(10, 6, 10, 6),
+                Margin = new Thickness(0, 0, 0, 4),
+                Cursor = Cursors.Hand
+            };
+
+            // Hover effect
+            border.MouseEnter += (s, e) => border.Background = new SolidColorBrush(Color.FromRgb(60, 60, 64));
+            border.MouseLeave += (s, e) => border.Background = new SolidColorBrush(Color.FromRgb(45, 45, 48));
+
+            var content = new StackPanel();
+
+            // First row: Name + Attack Bonus + Damage
+            var nameRow = new WrapPanel { Orientation = Orientation.Horizontal };
+
+            // Action name
+            nameRow.Children.Add(new TextBlock
+            {
+                Text = action.Name ?? "Unknown Action",
+                Foreground = Brushes.White,
+                FontWeight = FontWeights.SemiBold,
+                FontSize = 12,
+                VerticalAlignment = VerticalAlignment.Center
+            });
+
+            // Attack bonus badge
+            if (action.AttackBonus != null && action.AttackBonus != 0)
+            {
+                nameRow.Children.Add(new Border
+                {
+                    Background = new SolidColorBrush(Color.FromRgb(76, 175, 80)),
+                    CornerRadius = new CornerRadius(3),
+                    Padding = new Thickness(5, 1, 5, 1),
+                    Margin = new Thickness(8, 0, 0, 0),
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Child = new TextBlock
+                    {
+                        Text = $"+{action.AttackBonus}",
+                        Foreground = Brushes.White,
+                        FontSize = 10,
+                        FontWeight = FontWeights.Bold
+                    }
+                });
+            }
+
+            // Damage badge
+            if (!string.IsNullOrEmpty(action.DamageExpression))
+            {
+                nameRow.Children.Add(new Border
+                {
+                    Background = new SolidColorBrush(Color.FromRgb(244, 67, 54)),
+                    CornerRadius = new CornerRadius(3),
+                    Padding = new Thickness(5, 1, 5, 1),
+                    Margin = new Thickness(5, 0, 0, 0),
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Child = new TextBlock
+                    {
+                        Text = action.DamageExpression,
+                        Foreground = Brushes.White,
+                        FontSize = 10,
+                        FontWeight = FontWeights.Bold
+                    }
+                });
+            }
+
+            // Range badge
+            if (!string.IsNullOrEmpty(action.Range))
+            {
+                nameRow.Children.Add(new Border
+                {
+                    Background = new SolidColorBrush(Color.FromRgb(100, 181, 246)),
+                    CornerRadius = new CornerRadius(3),
+                    Padding = new Thickness(5, 1, 5, 1),
+                    Margin = new Thickness(5, 0, 0, 0),
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Child = new TextBlock
+                    {
+                        Text = action.Range,
+                        Foreground = Brushes.Black,
+                        FontSize = 10
+                    }
+                });
+            }
+
+            content.Children.Add(nameRow);
+
+            // Description (truncated in the card, full in tooltip)
+            if (!string.IsNullOrEmpty(action.Description))
+            {
+                string truncatedDesc = action.Description.Length > 100
+                    ? action.Description.Substring(0, 97) + "..."
+                    : action.Description;
+
+                content.Children.Add(new TextBlock
+                {
+                    Text = truncatedDesc,
+                    Foreground = new SolidColorBrush(Color.FromRgb(170, 170, 170)),
+                    FontSize = 10,
+                    TextWrapping = TextWrapping.Wrap,
+                    Margin = new Thickness(0, 4, 0, 0)
+                });
+            }
+
+            border.Child = content;
+
+            // Create detailed tooltip
+            border.ToolTip = CreateActionTooltip(action);
+
+            return border;
+        }
+
+        /// <summary>
+        /// Creates a detailed tooltip for an action
+        /// </summary>
+        private ToolTip CreateActionTooltip(Models.Action action)
+        {
+            var tooltip = new ToolTip
+            {
+                Background = new SolidColorBrush(Color.FromRgb(30, 30, 30)),
+                BorderBrush = new SolidColorBrush(Color.FromRgb(80, 80, 80)),
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(12),
+                MaxWidth = 400
+            };
+
+            var stack = new StackPanel();
+
+            // Action name
+            stack.Children.Add(new TextBlock
+            {
+                Text = action.Name ?? "Unknown Action",
+                FontWeight = FontWeights.Bold,
+                FontSize = 14,
+                Foreground = Brushes.White,
+                Margin = new Thickness(0, 0, 0, 8)
+            });
+
+            // Stats row
+            var statsPanel = new WrapPanel { Margin = new Thickness(0, 0, 0, 8) };
+
+            if (action.AttackBonus != null && action.AttackBonus != 0)
+            {
+                statsPanel.Children.Add(new TextBlock
+                {
+                    Text = $"Attack: +{action.AttackBonus}",
+                    Foreground = new SolidColorBrush(Color.FromRgb(76, 175, 80)),
+                    Margin = new Thickness(0, 0, 15, 0)
+                });
+            }
+
+            if (!string.IsNullOrEmpty(action.DamageExpression))
+            {
+                statsPanel.Children.Add(new TextBlock
+                {
+                    Text = $"Damage: {action.DamageExpression}",
+                    Foreground = new SolidColorBrush(Color.FromRgb(244, 67, 54)),
+                    Margin = new Thickness(0, 0, 15, 0)
+                });
+            }
+
+            if (!string.IsNullOrEmpty(action.Range))
+            {
+                statsPanel.Children.Add(new TextBlock
+                {
+                    Text = $"Range: {action.Range}",
+                    Foreground = new SolidColorBrush(Color.FromRgb(100, 181, 246))
+                });
+            }
+
+            if (statsPanel.Children.Count > 0)
+            {
+                stack.Children.Add(statsPanel);
+            }
+
+            // Full description
+            if (!string.IsNullOrEmpty(action.Description))
+            {
+                stack.Children.Add(new TextBlock
+                {
+                    Text = action.Description,
+                    Foreground = new SolidColorBrush(Color.FromRgb(200, 200, 200)),
+                    TextWrapping = TextWrapping.Wrap,
+                    FontSize = 12
+                });
+            }
+
+            tooltip.Content = stack;
+            return tooltip;
         }
 
         private async Task LoadCreatureImageAsync(Token creature)
@@ -746,42 +977,56 @@ namespace DnDBattle.Views
 
         #region Actions
 
-        private void BtnAddToMap_Click(object sender, RoutedEventArgs e)
+        public event System.Action<Token> CreatureAddedToMap;
+
+        private async Task AddCreatureToMapAsync(Token creature)
         {
-            if (_selectedCreature == null || _vm == null) return;
+            if (creature == null) return;
 
-            var newToken = CloneCreatureForMap(_selectedCreature);
-            _vm.Tokens.Add(newToken);
+            Token creatureToAdd = creature;
 
-            // Add some way to indicate a creature has been added
+            // Ensure actions are loaded before adding
+            if ((creature.Actions == null || creature.Actions.Count == 0) && _dbService != null)
+            {
+                try
+                {
+                    var fullCreature = await _dbService.GetCreatureByIdAsync(creature.Id.ToString());
+                    if (fullCreature != null)
+                        creatureToAdd = fullCreature;
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error loading creature actions: {ex.Message}");
+                }
+            }
+
+            // Fire event to add to map
+            CreatureAddedToMap?.Invoke(creatureToAdd);
         }
 
-        private Token CloneCreatureForMap(Token source)
+        private async void BtnAddToMap_Click(object sender, RoutedEventArgs e)
         {
-            return new Token
+            if (_selectedCreature == null)
             {
-                Id = Guid.NewGuid(),
-                Name = source.Name,
-                Size = source.Size,
-                Type = source.Type,
-                Alignment = source.Alignment,
-                ChallengeRating = source.ChallengeRating,
-                ArmorClass = source.ArmorClass,
-                MaxHP = source.MaxHP,
-                HP = source.MaxHP,
-                HitDice = source.HitDice,
-                InitiativeModifier = source.InitiativeModifier,
-                Speed = source.Speed,
-                Str = source.Str,
-                Dex = source.Dex,
-                Con = source.Con,
-                Int = source.Int,
-                Wis = source.Wis,
-                Cha = source.Cha,
-                SizeInSquares = source.SizeInSquares,
-                GridX = 0,
-                GridY = 0
-            };
+                MessageBox.Show("Please select a creature first.", "No Selection",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            await AddCreatureToMapAsync(_selectedCreature);
+        }
+
+        /// <summary>
+        /// Handle double-click on creature tree item to add to map
+        /// </summary>
+        private async void CreatureTree_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            // Make sure we have a selected creature (not a group header)
+            if (_selectedCreature != null)
+            {
+                await AddCreatureToMapAsync(_selectedCreature);
+                e.Handled = true;
+            }
         }
 
         private void EditCreature_Click(object sender, RoutedEventArgs e)

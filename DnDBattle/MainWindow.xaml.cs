@@ -703,6 +703,8 @@ namespace DnDBattle
             }
         }
 
+        #region Helpers
+
         private void AutosaveNow()
         {
             try
@@ -713,5 +715,6 @@ namespace DnDBattle
             catch { }
         }
 
+        #endregion
     }
 }
