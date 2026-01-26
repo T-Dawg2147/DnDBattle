@@ -307,7 +307,7 @@
                         <StackPanel x:Name="ActionsSection">
                             <TextBlock Text="Actions" Foreground="#F44336" FontWeight="Bold" 
                                        FontSize="11" Margin="0,0,0,8"/>
-                            <ItemsControl x:Name="ActionsList"/>
+                            <ItemsControl x:Name="ActionsList" ItemsSource="{Binding Actions}"/>
                         </StackPanel>
 
                         <!-- Action Buttons -->

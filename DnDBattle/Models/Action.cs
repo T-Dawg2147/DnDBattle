@@ -9,10 +9,19 @@ namespace DnDBattle.Models
     public class Action
     {
         public string Name { get; set; }
+        public ActionType Type { get; set; }
         public int? Cost { get; set; }
         public int? AttackBonus { get; set; }
         public string DamageExpression { get; set; }
         public string Range { get; set; }
         public string? Description { get; set; }
+    }
+
+    public enum ActionType
+    {
+        Action,
+        BonusAction,
+        Reaction,
+        LegendaryAction
     }
 }

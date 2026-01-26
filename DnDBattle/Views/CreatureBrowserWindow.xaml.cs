@@ -200,7 +200,7 @@ namespace DnDBattle.Views
                     _currentCategory.ToLower() == "dnd5e-srd")
                 {
                     // Load all creatures
-                    _allCreatures = await _dbService.GetAllCreaturesAsync(limit: 2000);
+                    _allCreatures = await _dbService.GetAllCreaturesAsync(limit: 4000);
                 }
                 else if (_currentCategory.ToLower() == "favorites")
                 {
@@ -211,6 +211,7 @@ namespace DnDBattle.Views
                     {
                         var creature = await _dbService.GetCreatureByIdAsync(fav.Id);
                         if (creature != null)
+                            
                             _allCreatures.Add(creature);
                     }
                 }
@@ -551,56 +552,60 @@ namespace DnDBattle.Views
 
         private async void ShowCreatureDetails(Token creature)
         {
-            if (creature == null) return;
-
-            // Show details panel
-            TxtNoSelection.Visibility = Visibility.Collapsed;
-            CreatureDetails.Visibility = Visibility.Visible;
-
-            // Set basic info immediately
-            TxtCreatureName.Text = creature.Name ?? "Unknown";
-            TxtCreatureSubtitle.Text = $"{creature.Size} {creature.Type}, {creature.Alignment}".Trim(' ', ',');
-
-            TxtAC.Text = creature.ArmorClass.ToString();
-            TxtHP.Text = creature.MaxHP.ToString();
-            TxtCR.Text = creature.ChallengeRating ?? "?";
-
-            TxtStr.Text = creature.Str.ToString();
-            TxtDex.Text = creature.Dex.ToString();
-            TxtCon.Text = creature.Con.ToString();
-            TxtInt.Text = creature.Int.ToString();
-            TxtWis.Text = creature.Wis.ToString();
-            TxtCha.Text = creature.Cha.ToString();
-
-            TxtSpeed.Text = creature.Speed ?? "30 ft.";
-
-            // Traits
-            if (!string.IsNullOrWhiteSpace(creature.Traits))
+            try
             {
-                TraitsSection.Visibility = Visibility.Visible;
-                TxtTraits.Text = creature.Traits;
+                if (creature == null) return;
+
+                var actions = await _dbService.GetActionsAsync(creature.Id.ToString(), "Action");
+
+                // Show details panel
+                TxtNoSelection.Visibility = Visibility.Collapsed;
+                CreatureDetails.Visibility = Visibility.Visible;
+
+                // Set basic info immediately
+                TxtCreatureName.Text = creature.Name ?? "Unknown";
+                TxtCreatureSubtitle.Text = $"{creature.Size} {creature.Type}, {creature.Alignment}".Trim(' ', ',');
+
+                TxtAC.Text = creature.ArmorClass.ToString();
+                TxtHP.Text = creature.MaxHP.ToString();
+                TxtCR.Text = creature.ChallengeRating ?? "?";
+
+                TxtStr.Text = creature.Str.ToString();
+                TxtDex.Text = creature.Dex.ToString();
+                TxtCon.Text = creature.Con.ToString();
+                TxtInt.Text = creature.Int.ToString();
+                TxtWis.Text = creature.Wis.ToString();
+                TxtCha.Text = creature.Cha.ToString();
+
+                TxtSpeed.Text = creature.Speed ?? "30 ft.";
+
+                // Traits
+                if (!string.IsNullOrWhiteSpace(creature.Traits))
+                {
+                    TraitsSection.Visibility = Visibility.Visible;
+                    TxtTraits.Text = creature.Traits;
+                }
+                else
+                {
+                    TraitsSection.Visibility = Visibility.Collapsed;
+                }
+
+                // Update favorite button - check if creature is in favorites
+                bool isFavorite = _favorites?.Any(f => f.Id == creature.Id.ToString()) ?? false;
+                BtnFavorite.Content = isFavorite ? "★" : "☆";
+                BtnFavorite.Foreground = isFavorite
+                    ? new SolidColorBrush(Color.FromRgb(255, 215, 0))
+                    : Brushes.Gray;
+
+                // Load image ASYNCHRONOUSLY (only for this one creature!)
+                await LoadCreatureImageAsync(creature);
+
+                ActionsList.ItemsSource = creature.Actions;
             }
-            else
+            catch (Exception ex)
             {
-                TraitsSection.Visibility = Visibility.Collapsed;
+
             }
-
-            // Update favorite button - check if creature is in favorites
-            bool isFavorite = _favorites?.Any(f => f.Id == creature.Id.ToString()) ?? false;
-            BtnFavorite.Content = isFavorite ? "★" : "☆";
-            BtnFavorite.Foreground = isFavorite
-                ? new SolidColorBrush(Color.FromRgb(255, 215, 0))
-                : Brushes.Gray;
-
-            // Load image ASYNCHRONOUSLY (only for this one creature!)
-            await LoadCreatureImageAsync(creature);
-
-            // Load actions - use whatever method you already have
-            // If you have a method like ShowActions, LoadActions, or DisplayActions, call it here
-            // For example:
-            // ShowActions(creature);
-            // OR just populate ActionsList directly:
-            ActionsList.ItemsSource = creature.Actions;
         }
 
         private async Task LoadCreatureImageAsync(Token creature)

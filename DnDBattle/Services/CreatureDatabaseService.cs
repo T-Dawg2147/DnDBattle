@@ -335,7 +335,7 @@ namespace DnDBattle.Services
             return null;
         }
 
-        private async Task<List<Models.Action>> GetActionsAsync(string creatureId, string actionType)
+        public async Task<List<Models.Action>> GetActionsAsync(string creatureId, string actionType = null)
         {
             await EnsureConnectionAsync();
 
@@ -345,9 +345,13 @@ namespace DnDBattle.Services
             cmd.CommandText = @"
                 SELECT Name, AttackBonus, DamageExpression, Range, Description
                 FROM CreatureActions
-                WHERE CreatureId = @CreatureId AND ActionType = @ActionType";
+                WHERE CreatureId = @CreatureId ";
+            if (!string.IsNullOrWhiteSpace(actionType))
+            {
+                cmd.CommandText += "AND ActionType = @ActionType";
+                cmd.Parameters.AddWithValue("@ActionType", actionType);
+            }
             cmd.Parameters.AddWithValue("@CreatureId", creatureId);
-            cmd.Parameters.AddWithValue("@ActionType", actionType);
 
             using var reader = await cmd.ExecuteReaderAsync();
             while (await reader.ReadAsync())
