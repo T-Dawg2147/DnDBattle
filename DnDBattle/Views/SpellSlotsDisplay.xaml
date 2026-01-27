@@ -1,0 +1,33 @@
+﻿<UserControl x:Class="DnDBattle.Views.SpellSlotsDisplay"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="Transparent">
+
+    <Border x:Name="MainBorder" 
+            Background="#252526" 
+            CornerRadius="4" 
+            Padding="10"
+            Visibility="Collapsed">
+        <StackPanel>
+            <TextBlock Text="✨ Spell Slots" 
+                       Foreground="#BA68C8" 
+                       FontWeight="Bold" 
+                       FontSize="11"
+                       Margin="0,0,0,8"/>
+
+            <WrapPanel x:Name="SlotsContainer"/>
+
+            <Button x:Name="BtnLongRest"
+                    Content="🌙 Long Rest"
+                    Padding="8,4"
+                    Margin="0,8,0,0"
+                    Click="BtnLongRest_Click"
+                    Background="#3E3E42"
+                    Foreground="White"
+                    BorderThickness="0"
+                    HorizontalAlignment="Left"
+                    Cursor="Hand"
+                    ToolTip="Restore all spell slots"/>
+        </StackPanel>
+    </Border>
+</UserControl>

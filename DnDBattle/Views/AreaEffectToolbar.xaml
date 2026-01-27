@@ -117,10 +117,7 @@
         <!-- Size Input -->
         <TextBlock Text="Size:" Foreground="#888" VerticalAlignment="Center" Margin="0,0,5,0" FontSize="11"/>
         <ComboBox x:Name="CmbSize" 
-                  Width="70" 
-                  Background="#3E3E42"
-                  Foreground="White"
-                  BorderThickness="0"
+                  Width="70"
                   SelectedIndex="3"
                   SelectionChanged="CmbSize_SelectionChanged">
             <ComboBoxItem Content="5 ft"/>
@@ -140,8 +137,6 @@
         <TextBlock Text="Color:" Foreground="#888" VerticalAlignment="Center" Margin="0,0,5,0" FontSize="11"/>
         <ComboBox x:Name="CmbColor" 
                   Width="90" 
-                  Background="#3E3E42"
-                  BorderThickness="0"
                   SelectedIndex="0"
                   SelectionChanged="CmbColor_SelectionChanged">
             <ComboBoxItem>

@@ -21,6 +21,11 @@ namespace DnDBattle
     {
         private readonly DispatcherTimer _autosaveTimer;
 
+        private CombatStatisticsService _combatStatsService;
+        private TurnTimerService _turnTimerService;
+        private SoundEffectsService _soundService;
+        private DiceHistoryService _diceHistoryService;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -88,6 +93,20 @@ namespace DnDBattle
         }
 
         #region Startup events
+        private void InitializeServices()
+        {
+            _combatStatsService = new CombatStatisticsService();
+            _turnTimerService = new TurnTimerService();
+            _soundService = new SoundEffectsService();
+            _diceHistoryService = new DiceHistoryService();
+
+            // Load settings
+            _turnTimerService.IsEnabled = Options.TurnTimerEnabled;
+            _turnTimerService.SetTimeLimit(Options.TurnTimerSeconds);
+            _soundService.IsEnabled = Options.SoundEffectsEnabled;
+            _soundService.Volume = Options.SoundEffectsVolume;
+        }
+
         private void SetupAreaEffectToolbar()
         {
             AoeToolbar.ShapeSelected += (shape) =>
@@ -140,6 +159,81 @@ namespace DnDBattle
             {
                 Debug.WriteLine($"{token.Name} selected action: {action.Name}");
             };
+
+            SelectedTokenPanel.TargetingStarted += (state) =>
+            { 
+                BattleGrid.EnterTargetingMode(state); 
+            };
+
+            SelectedTokenPanel.TargetingCancelled += () =>
+            {
+                BattleGrid.ExitTargetingMode();
+            };
+
+            SelectedTokenPanel.ActionResolved += (result) =>
+            {
+                // Refresh visuals after damage is applied
+                BattleGrid.RebuildTokenVisuals();
+
+                // Check for concentration save needed
+                if (result.Success && result.TargetWasConcentrating && result.DamageForConcentration > 0)
+                {
+                    // Small delay to let the user see the damage result first
+                    Dispatcher.BeginInvoke(new System.Action(() =>
+                    {
+                        SelectedTokenPanel.PromptConcentrationCheck(result.DamageForConcentration);
+                    }), System.Windows.Threading.DispatcherPriority.Background);
+                }
+
+                // If target is dead, show message
+                if (result.Target != null && result.Target.HP <= 0)
+                {
+                    if (DataContext is MainViewModel vm)
+                    {
+                        if (result.Target.IsDead)
+                        {
+                            vm.ActionLog.Insert(0, new ActionLogEntry
+                            {
+                                Timestamp = DateTime.Now,
+                                Source = "Combat",
+                                Message = $"💀 {result.Target.Name} has died!"
+                            });
+                        }
+                        else
+                        {
+                            vm.ActionLog.Insert(0, new ActionLogEntry
+                            {
+                                Timestamp = DateTime.Now,
+                                Source = "Combat",
+                                Message = $"💀 {result.Target.Name} has fallen unconscious!"
+                            });
+                        }
+                    }
+                }
+            };
+
+            SelectedTokenPanel.ActionResolved += (result) =>
+            {
+                BattleGrid.RebuildTokenVisuals();
+
+                if (result.Target != null && result.Target.HP <= 0)
+                {
+                    if (DataContext is MainViewModel vm)
+                    {
+                        vm.ActionLog.Insert(0, new ActionLogEntry()
+                        {
+                            Timestamp = DateTime.Now,
+                            Source = "Combat",
+                            Message = $"💀 {result.Target.Name} has fallen!"
+                        });
+                    }
+                }
+            };
+
+            BattleGrid.TargetSelected += (target) =>
+            {
+                SelectedTokenPanel.OnTargetSelected(target);
+            };
         }
 
         private void SetupInitiativeTracker()
@@ -189,6 +283,71 @@ namespace DnDBattle
             };
         }
 
+        private void SetupFogOfWar()
+        {
+            // Initialize fog service in battle grid
+            BattleGrid.InitializeFogOfWar(); // You may need to make this public or call in Loaded event
+
+            FogToolbar.FogEnabledChanged += (enabled) =>
+            {
+                BattleGrid.SetFogEnabled(enabled);
+
+                if (DataContext is MainViewModel vm)
+                {
+                    vm.ActionLog.Insert(0, new ActionLogEntry
+                    {
+                        Timestamp = DateTime.Now,
+                        Source = "Fog",
+                        Message = enabled ? "🌫️ Fog of War enabled" : "🌅 Fog of War disabled"
+                    });
+                }
+            };
+
+            FogToolbar.BrushModeChanged += (mode) =>
+            {
+                BattleGrid.SetFogBrushMode(mode);
+            };
+
+            FogToolbar.BrushSizeChanged += (size) =>
+            {
+                BattleGrid.SetFogBrushSize(size);
+            };
+
+            FogToolbar.PlayerViewChanged += (isPlayerView) =>
+            {
+                BattleGrid.SetPlayerView(isPlayerView);
+            };
+
+            FogToolbar.RevealPlayersRequested += () =>
+            {
+                BattleGrid.RevealAroundPlayers();
+
+                if (DataContext is MainViewModel vm)
+                {
+                    vm.ActionLog.Insert(0, new ActionLogEntry
+                    {
+                        Timestamp = DateTime.Now,
+                        Source = "Fog",
+                        Message = "👥 Revealed area around player tokens"
+                    });
+                }
+            };
+
+            FogToolbar.RevealAllRequested += () =>
+            {
+                BattleGrid.FogService.RevealAll();
+            };
+
+            FogToolbar.HideAllRequested += () =>
+            {
+                BattleGrid.FogService.ClearAll();
+            };
+
+            FogToolbar.ShapeToolSelected += (tool) =>
+            {
+                BattleGrid.StartFogShapeTool(tool);
+            };
+        }
         #endregion
 
         private void OnTokenDoubleClicked(Token token)
@@ -214,7 +373,21 @@ namespace DnDBattle
 
         private void MainWindow_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
+            if (e.Key == Key.Escape)
+            {
+                if (SelectedTokenPanel.IsTargeting)
+                {
+                    SelectedTokenPanel.CancelTargeting();
+                    e.Handled = true;
+                    return;
+                }
+            }
+
             if (BattleGrid == null) return;
+
+            // Pass key to battle grid
+            BattleGrid.HandleKeyDown(e.Key);
+
             double step = BattleGrid.GridCellSize * 3;
             if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift)) step *= 2;
 
@@ -702,6 +875,180 @@ namespace DnDBattle
                 vm.CreatureBank.Add(creature);
             }
         }
+
+        private void BtnCombatStats_Click(object sender, RoutedEventArgs e)
+        {
+            var panel = new CombatStatisticsPanel();
+            panel.SetStatsService(_combatStatsService);
+
+            var host = new Window
+            {
+                Title = "Combat Statistics",
+                Content = panel,
+                Owner = this,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Width = 400,
+                Height = 500
+            };
+
+            host.Show();
+        }
+
+        // Add method to open dice history window
+        private void BtnDiceHistory_Click(object sender, RoutedEventArgs e)
+        {
+            var panel = new DiceHistoryPanel();
+            panel.SetHistoryService(_diceHistoryService);
+
+            var host = new Window
+            {
+                Title = "Dice Roll History",
+                Content = panel,
+                Owner = this,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Width = 450,
+                Height = 550
+            };
+
+            host.Show();
+        }
+
+        #region Encounter Builder
+
+        private void BtnEncounterBuilder_Click(object sender, RoutedEventArgs e)
+        {
+            var builder = new EncounterBuilderWindow();
+
+            // Wire up deploy event
+            builder.DeployRequested += OnEncounterDeploy;
+
+            var host = new Window()
+            {
+                Title = "Encounter Builder",
+                Content = builder,
+                Owner = this,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Width = 900,
+                Height = 650,
+                MinWidth = 800,
+                MinHeight = 500
+            };
+
+            host.ShowDialog();
+        }
+
+        private void OnEncounterDeploy(List<Token> creatures)
+        {
+            if (DataContext is ViewModels.MainViewModel vm)
+            {
+                int gridX = 2;
+                int gridY = 2;
+                int spacing = 2;
+                int creaturesPerRow = 5;
+                int index = 0;
+
+                foreach (var creature in creatures)
+                {
+                    // Create a copy of the creature
+                    var newToken = CreateTokenFromCreature(creature);
+
+                    // Position in a grid pattern
+                    newToken.GridX = gridX + (index % creaturesPerRow) * spacing;
+                    newToken.GridY = gridY + (index / creaturesPerRow) * spacing;
+
+                    vm.Tokens.Add(newToken);
+                    index++;
+                }
+
+                vm.ActionLog.Insert(0, new ActionLogEntry
+                {
+                    Timestamp = DateTime.Now,
+                    Source = "Encounter",
+                    Message = $"⚔️ Deployed {creatures.Count} creatures from encounter builder"
+                });
+            }
+        }
+
+        // If you don't already have this method, add it:
+        private Token CreateTokenFromCreature(Token source)
+        {
+            return new Token
+            {
+                Id = Guid.NewGuid(),
+                Name = source.Name,
+                Size = source.Size,
+                Type = source.Type,
+                Alignment = source.Alignment,
+                ChallengeRating = source.ChallengeRating,
+                Image = source.Image,
+                IconPath = source.IconPath,
+                HP = source.MaxHP,
+                MaxHP = source.MaxHP,
+                HitDice = source.HitDice,
+                ArmorClass = source.ArmorClass,
+                InitiativeModifier = source.InitiativeModifier,
+                IsPlayer = source.IsPlayer,
+                Speed = source.Speed,
+                SizeInSquares = source.SizeInSquares > 0 ? source.SizeInSquares : 1,
+                Str = source.Str,
+                Dex = source.Dex,
+                Con = source.Con,
+                Int = source.Int,
+                Wis = source.Wis,
+                Cha = source.Cha,
+                Skills = source.Skills?.ToList() ?? new List<string>(),
+                Senses = source.Senses,
+                Languages = source.Languages,
+                Immunities = source.Immunities,
+                Resistances = source.Resistances,
+                Vulnerabilities = source.Vulnerabilities,
+                Traits = source.Traits,
+                Notes = source.Notes,
+                Actions = source.Actions?.Select(a => new Models.Action
+                {
+                    Name = a.Name,
+                    AttackBonus = a.AttackBonus,
+                    DamageExpression = a.DamageExpression,
+                    Range = a.Range,
+                    Description = a.Description,
+                    Type = a.Type,
+                    Cost = a.Cost
+                }).ToList() ?? new List<Models.Action>(),
+                BonusActions = source.BonusActions?.Select(a => new Models.Action
+                {
+                    Name = a.Name,
+                    AttackBonus = a.AttackBonus,
+                    DamageExpression = a.DamageExpression,
+                    Range = a.Range,
+                    Description = a.Description,
+                    Type = a.Type,
+                    Cost = a.Cost
+                }).ToList() ?? new List<Models.Action>(),
+                Reactions = source.Reactions?.Select(a => new Models.Action
+                {
+                    Name = a.Name,
+                    AttackBonus = a.AttackBonus,
+                    DamageExpression = a.DamageExpression,
+                    Range = a.Range,
+                    Description = a.Description,
+                    Type = a.Type,
+                    Cost = a.Cost
+                }).ToList() ?? new List<Models.Action>(),
+                LegendaryActions = source.LegendaryActions?.Select(a => new Models.Action
+                {
+                    Name = a.Name,
+                    AttackBonus = a.AttackBonus,
+                    DamageExpression = a.DamageExpression,
+                    Range = a.Range,
+                    Description = a.Description,
+                    Type = a.Type,
+                    Cost = a.Cost
+                }).ToList() ?? new List<Models.Action>(),
+                Tags = source.Tags?.ToList() ?? new List<string>()
+            };
+        }
+
+        #endregion
 
         #region Helpers
 

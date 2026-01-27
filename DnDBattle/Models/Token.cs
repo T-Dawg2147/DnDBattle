@@ -2,6 +2,7 @@
 using DnDBattle.Services;
 using System;
 using System.ComponentModel;
+using System.Data.SQLite;
 using System.Windows;
 using System.Windows.Media;
 
@@ -171,22 +172,14 @@ namespace DnDBattle.Models
         public Condition Conditions
         {
             get => _conditions;
-            set => SetProperty(ref _conditions, value);
-        }
-
-        // Death Saving Throws
-        private int _deathSaveSuccesses = 0;
-        public int DeathSaveSuccesses
-        {
-            get => _deathSaveSuccesses;
-            set => SetProperty(ref _deathSaveSuccesses, value);
-        }
-
-        private int _deathSaveFailures = 0;
-        public int DeathSaveFailures
-        {
-            get => _deathSaveFailures;
-            set => SetProperty(ref _deathSaveFailures, value);
+            set
+            {
+                if (_conditions != value)
+                {
+                    SetProperty(ref _conditions, value);
+                    OnPropertyChanged(nameof(Conditions));
+                }
+            }
         }
 
         // Temporary HP
@@ -195,14 +188,6 @@ namespace DnDBattle.Models
         {
             get => _tempHP;
             set => SetProperty(ref _tempHP, value);
-        }
-
-        // Concentration spell name
-        private string _concentrationSpell;
-        public string ConcentrationSpell
-        {
-            get => _concentrationSpell;
-            set => SetProperty(ref _concentrationSpell, value);
         }
 
         #region Image States
@@ -271,13 +256,352 @@ namespace DnDBattle.Models
 
         public List<string> EncounterTags { get; set; } = new List<string>();
 
-        // Helper Properties
-        public bool IsUnconscious => HP <= 0 && !IsPlayer;
-        public bool IsDying => HP <= 0 && IsPlayer && DeathSaveSuccesses < 3 && DeathSaveFailures < 3;
-        public bool IsStable => HP <= 0 && IsPlayer && DeathSaveSuccesses >= 3;
-        public bool IsDead => (HP <= 0 && IsPlayer && DeathSaveFailures >= 3) || HP <= -MaxHP;
+        #region Damage Type Properties
 
+        public DamageType DamageImmunities => DamageTypeExtensions.ParseFromString(Immunities);
+
+        public DamageType DamageResistances => DamageTypeExtensions.ParseFromString(Resistances);
+
+        public DamageType DamageVulnerabilities => DamageTypeExtensions.ParseFromString(Vulnerabilities);
+
+        public (int effectiveDamage, string description) CalculateEffectiveDamage(int baseDamage, DamageType damageType)
+        {
+            if ((DamageImmunities & damageType) != 0)
+            {
+                return (0, $"Immune to {damageType.GetDisplayName()}");
+            }
+
+            if ((DamageVulnerabilities & damageType) != 0)
+            {
+                int doubleDamage = baseDamage * 2;
+                return (doubleDamage, $"Vulnerable to {damageType.GetDisplayName()} (×2)");
+            }
+
+            if ((DamageResistances & damageType) != 0)
+            {
+                int halfDamage = baseDamage / 2;
+                return (halfDamage, $"Resistant to {damageType.GetDisplayName()} (½)");
+            }
+
+            return (baseDamage, null);
+        }
+
+        public (int damageTaken, string description) TakeDamage(int baseDamage, DamageType damageType)
+        {
+            var (effectiveDamage, description) = CalculateEffectiveDamage(baseDamage, damageType);
+
+            if (TempHP > 0)
+            {
+                if (TempHP >= effectiveDamage)
+                {
+                    TempHP -= effectiveDamage;
+                    string tempDesc = description != null ? $"{description}, absorbed by Temp HP" : "Absorbed by Temp HP";
+                    return (0, tempDesc);
+                }
+                else
+                {
+                    int remaining = effectiveDamage - TempHP;
+                    TempHP = 0;
+                    HP = Math.Max(0, HP - remaining);
+                    string tempDesc = description != null ? $"{description}, partially abosrbed by Temp HP" : "Partially absorbed by Temp HP";
+                    return (remaining, tempDesc);
+                }
+            }
+
+            HP = Math.Max(0, HP - effectiveDamage);
+            return (effectiveDamage, description);
+        }
+
+        #endregion
+
+        #region Legendary Actions
+
+        private int _legendaryActionsMax = 0;
+        public int LegendaryActionsMax
+        {
+            get => _legendaryActionsMax;
+            set
+            {
+                if (SetProperty(ref _legendaryActionsMax, value))
+                {
+                    OnPropertyChanged(nameof(HasLegendaryActions));
+                    OnPropertyChanged(nameof(LegendaryActionsDisplay));
+                }
+            }
+        }
+
+        private int _legendaryActionsRemaining = 0;
+        public int LegendaryActionsRemaining
+        {
+            get => _legendaryActionsRemaining;
+            set
+            {
+                SetProperty(ref _legendaryActionsRemaining, Math.Clamp(value, 0, LegendaryActionsMax));
+                OnPropertyChanged(nameof(LegendaryActionsDisplay));
+            }
+        }
+
+        public bool HasLegendaryActions => LegendaryActionsMax > 0;
+        public string LegendaryActionsDisplay => $"{LegendaryActionsRemaining}/{LegendaryActionsMax}";
+
+        public bool UseLegendaryAction(int cost = 1)
+        {
+            if (LegendaryActionsRemaining >= cost)
+            {
+                LegendaryActionsRemaining -= cost;
+                return true;
+            }
+            return false;
+        }
+
+        public void ResetLegendaryActions()
+        {
+            LegendaryActionsRemaining = LegendaryActionsMax;
+        }
+
+        #endregion
+
+        #region Lair Actions
+
+        private bool _hasLairActions = false;
+        public bool HasLairActions
+        {
+            get => _hasLairActions;
+            set => SetProperty(ref _hasLairActions, value);
+        }
+
+        private string _lairActionDescription;
+        public string LairActionDescription
+        {
+            get => _lairActionDescription;
+            set => SetProperty(ref _lairActionDescription, value);
+        }
+
+        private bool _lairActionsUsedThisRound = false;
+        public bool LairActionUserThisRound
+        {
+            get => _lairActionsUsedThisRound;
+            set => SetProperty(ref _lairActionsUsedThisRound, value);
+        }
+
+        #endregion
+
+        #region Concentration Tracking
+
+        private bool _isConcentrating;
+        public bool IsConcentrating
+        {
+            get => _isConcentrating;
+            set
+            {
+                if (SetProperty(ref _isConcentrating, value))
+                {
+                    if (!value)
+                    {
+                        ConcentrationSpell = null;     
+                    }
+                    OnPropertyChanged(nameof(ConcentrationStatusText));
+                }
+            }
+        }
+
+        private string _concentrationSpell;
+        public string ConcentrationSpell
+        {
+            get => _concentrationSpell;
+            set
+            {
+                SetProperty(ref _concentrationSpell, value);
+                OnPropertyChanged(nameof(ConcentrationStatusText));
+            }
+        }
+
+        public string ConcentrationStatusText => IsConcentrating
+            ? $"Concentrating: {ConcentrationSpell ?? "Unknown Spell"}"
+            : null;
+
+        public int ConcentrationSaveModifier => (Con - 10) / 2;
+
+        public static int CalculateConcentrationDC(int damageTaken) =>
+            Math.Max(10, damageTaken / 2);
+
+        public void BreakConcentration()
+        {
+            string spell = ConcentrationSpell;
+            IsConcentrating = false;
+            ConcentrationSpell = null;
+        }
+
+        public void SetConcentration(string spellName)
+        {
+            IsConcentrating = true;
+            ConcentrationSpell = spellName;
+        }
+
+        #endregion
+
+        #region Death Saves
+
+        private int _deathSaveSuccesses;
+        public int DeathSaveSuccesses
+        {
+            get => _deathSaveSuccesses;
+            set
+            {
+                SetProperty(ref _deathSaveSuccesses, Math.Clamp(value, 0, 3));
+                OnPropertyChanged(nameof(DeathSaveStatusText));
+                OnPropertyChanged(nameof(IsStabilized));
+                OnPropertyChanged(nameof(IsDead));
+            }
+        }
+
+        private int _deathSaveFailures;
+        public int DeathSaveFailures
+        {
+            get => _deathSaveFailures;
+            set
+            {
+                SetProperty(ref _deathSaveFailures, Math.Clamp(value, 0, 3));
+                OnPropertyChanged(nameof(DeathSaveStatusText));
+                OnPropertyChanged(nameof(IsStabilized));
+                OnPropertyChanged(nameof(IsDead));
+            }
+        }
+
+        public bool IsUnconscious => HP <= 0 && !IsDead && !IsStabilized;
+        public bool IsStabilized => DeathSaveSuccesses >= 3;
+        public bool IsDead => DeathSaveFailures >= 3;
+
+        public string DeathSaveStatusText
+        {
+            get
+            {
+                if (HP > 0) return null;
+                if (IsDead) return "💀 DEAD";
+                if (IsStabilized) return "💤 Stabilized";
+                return $"Death Saves: {DeathSaveSuccesses}✓ / {DeathSaveFailures}✗";
+            }
+        }
+
+        public void ResetDeathSaves()
+        {
+            DeathSaveSuccesses = 0;
+            DeathSaveFailures = 0;
+        }
+
+        public string RecordDeathSave(int roll)
+        {
+            if (roll == 20)
+            {
+                HP = 1;
+                ResetDeathSaves();
+                return $"☀️ Natural 20! {Name} regains 1 HP and is conscious!";
+            }
+            else if (roll == 1)
+            {
+                DeathSaveFailures += 2;
+                if (IsDead)
+                    return $"💀 Natural 1! {Name} suffers two failures and has died!";
+                return $"😱 Natural 1! {Name} suffers two death save failures! ({DeathSaveSuccesses}✓ / {DeathSaveFailures}✗)";
+            }
+            else if (roll >= 10)
+            {
+                DeathSaveSuccesses++;
+                if (IsStabilized)
+                    return $"💤 {Name} succeeds and is now stabilized! ({DeathSaveSuccesses}✓ / {DeathSaveFailures}✗)";
+                return $"✓ {Name} succeeds a death save ({DeathSaveSuccesses}✓ / {DeathSaveFailures}✗)";
+            }
+            else
+            {
+                DeathSaveFailures++;
+                if (IsDead)
+                    return $"💀 {Name} fails and has died! ({DeathSaveSuccesses}✓ / {DeathSaveFailures}✗)";
+                return $"✗ {Name} fails a death save ({DeathSaveSuccesses}✓ / {DeathSaveFailures}✗)";
+            }
+        }
+
+        public string TakeDamageWhileUnconscious(int damage, bool wasCritical)
+        {
+            if (wasCritical)
+            {
+                DeathSaveFailures += 2;
+            }
+            else
+                DeathSaveFailures++;
+
+            if (IsDead)
+                return $"💀 {Name} takes damage while unconscious and has died!";
+
+            string critText = wasCritical ? " (Critical - 2 failures!)" : "";
+            return $"😵 {Name} takes damage while unconscious!{critText} ({DeathSaveSuccesses}✓ / {DeathSaveFailures}✗)";
+        }
+
+        #endregion
+
+        #region Conditions
         public string ConditionsDisplay => Conditions.ToDisplayString();
+
+        public void ToggleCondition(Condition condition)
+        {
+            if (HasCondition(condition))
+                Conditions &= ~condition;
+            else
+                Conditions |= condition;
+        }
+
+        #endregion
+
+        #region Spell Slots
+
+        private SpellSlots _spellSlots;
+        public SpellSlots SpellSlots
+        {
+            get => _spellSlots ??= new SpellSlots();
+            set => SetProperty(ref _spellSlots, value);
+        }
+
+        public bool HasSpellSlots => SpellSlots?.HasSpellSlots ?? false;
+
+        #endregion
+
+        #region Notes
+
+        private List<TokenNote> _combatNotes = new List<TokenNote>();
+        public List<TokenNote> CombatNotes
+        {
+            get => _combatNotes;
+            set => SetProperty(ref _combatNotes, value);
+        }
+
+        public void AddNote(string text, NoteType type = NoteType.General, int? expiresOnRound = null)
+        {
+            CombatNotes.Add(new TokenNote
+            {
+                Text = text,
+                Type = type,
+                ExpiresOnRound = expiresOnRound
+            });
+            OnPropertyChanged(nameof(CombatNotes));
+            OnPropertyChanged(nameof(HasNotes));
+        }
+
+        public void RemoveNote(string noteId)
+        {
+            CombatNotes.RemoveAll(n => n.Id == noteId);
+            OnPropertyChanged(nameof(CombatNotes));
+            OnPropertyChanged(nameof(HasNotes));
+        }
+
+        public void ClearExpiredNotes(int currentRound)
+        {
+            CombatNotes.RemoveAll(n => n.ExpiresOnRound.HasValue && n.ExpiresOnRound <= currentRound);
+            OnPropertyChanged(nameof(CombatNotes));
+            OnPropertyChanged(nameof(HasNotes));
+        }
+
+        public bool HasNotes => CombatNotes?.Count > 0;
+
+        #endregion
 
         // Helper Methods
         public bool HasTag(string tag) => Tags.Contains(tag, StringComparer.OrdinalIgnoreCase);
@@ -288,23 +612,11 @@ namespace DnDBattle.Models
         public void AddCondition(Condition condition)
         {
             Conditions |= condition;
-            OnPropertyChanged(nameof(ConditionsDisplay));
         }
 
         public void RemoveCondition(Condition condition)
         {
             Conditions &= ~condition;
-            OnPropertyChanged(nameof(ConditionsDisplay));
-        }
-
-        public void ToggleCondition(Condition condition)
-        {
-            if (HasCondition(condition))
-                RemoveCondition(condition);
-            else
-            {
-                AddCondition(condition);
-            }
         }
 
         public void ResetMovementForTurn()
@@ -312,10 +624,5 @@ namespace DnDBattle.Models
             
         }
 
-        public void ResetDeathSaves()
-        {
-            DeathSaveSuccesses = 0;
-            DeathSaveFailures = 0;
-        }
     }
 }

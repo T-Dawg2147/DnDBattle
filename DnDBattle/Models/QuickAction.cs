@@ -13,6 +13,7 @@ namespace DnDBattle.Models
         public string Icon { get; set; }
         public string Description { get; set; }
         public QuickActionType ActionType { get; set; }
+        public string Parameter { get; set; }
         public bool IsEnabled { get; set; } = true;
         public int SortOrder { get; set; }
 
@@ -28,6 +29,11 @@ namespace DnDBattle.Models
         RollInitiative,
         RollSave,
         RollAbilityCheck,
+        RollSavingThrow,
+        ApplyCondition,
+        Heal,
+        Damage,
+        AddTempHP,
         Custom
     }
 

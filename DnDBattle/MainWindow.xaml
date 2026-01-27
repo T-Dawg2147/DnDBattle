@@ -5,8 +5,8 @@
         xmlns:controls="clr-namespace:DnDBattle.Controls"
         xmlns:views="clr-namespace:DnDBattle.Views"
         Title="DnD Battle Builder" 
-        Height="900" Width="1400"
-        MinHeight="600" MinWidth="1000"
+        Height="950" Width="1720"
+        MinHeight="700" MinWidth="1000"
         Background="#1A1A1D"
         WindowStartupLocation="CenterScreen">
 
@@ -110,8 +110,8 @@
                 <MenuItem Header="Redo" Click="Redo_Click" InputGestureText="Ctrl+Y"/>
             </MenuItem>
             <MenuItem Header="_Encounter" Foreground="White">
-                <MenuItem Header="Add Creature..." Command="{Binding OpenCreatureBrowserCommand}"/>
-                <MenuItem Header="Roll All Initiative" Command="{Binding RollAllInitiativeCommand}"/>
+                <Button Content="📋 Encounter Builder" 
+                        Click="BtnEncounterBuilder_Click" />
                 <Separator/>
                 <MenuItem Header="Encounter Templates..." Click="MenuEncounterTemplates_Click"/>
             </MenuItem>
@@ -322,9 +322,16 @@
                     </Grid.RowDefinitions>
 
                     <!-- Area Effect Toolbar -->
-                    <views:AreaEffectToolbar x:Name="AoeToolbar" 
-                                  Grid.Row="0"
-                                  Visibility="Visible"/>
+                    <StackPanel>
+                        <views:AreaEffectToolbar x:Name="AoeToolbar" 
+                        Grid.Row="0"
+                        Visibility="Visible"/>
+
+                        <views:FogOfWarToolbar x:Name="FogToolbar" 
+                       Grid.Row="0"
+                       Visibility="Visible"/>
+                    </StackPanel>
+                    
 
                     <!-- Battle Grid - NOTE: Grid.Row="1" is required! -->
                     <controls:BattleGridControl x:Name="BattleGrid"

@@ -54,8 +54,22 @@ namespace DnDBattle
         /// <summary>
         /// Live mode dictates if manual dice will be used (true) or not (false). True by default.
         /// </summary>
-        public static bool LiveMode { get; set; } = false;
+        public static bool LiveMode { get; set; } = true;
 
         public static int UndoStackLimit { get; set; } = 200;
+
+        // Turn Timer
+        public static bool TurnTimerEnabled { get; set; } = false;
+        public static int TurnTimerSeconds { get; set; } = 120; // Default 2 minutes
+
+        // Sound Effects
+        public static bool SoundEffectsEnabled { get; set; } = true;
+        public static double SoundEffectsVolume { get; set; } = 0.5;
+
+        // Combat Statistics
+        public static bool TrackCombatStatistics { get; set; } = true;
+
+        // Dice History
+        public static int DiceHistoryMaxSize { get; set; } = 500;
     }
 }

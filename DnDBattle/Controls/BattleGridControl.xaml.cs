@@ -28,6 +28,7 @@ namespace DnDBattle.Controls
         public event Action<Token> RequestEditToken;
         public event Action<Point> RequestAddTokenAtPosition;
         public event Action<Token> TokenAddedToMap;
+        public event Action<Token> TargetSelected;
 
         // Dependency properties (including LockToGrid)
         public static readonly DependencyProperty GridCellSizeProperty =
@@ -62,6 +63,7 @@ namespace DnDBattle.Controls
         public bool ShowCoordinates { get => (bool)GetValue(ShowCoordinatesProperty); set => SetValue(ShowCoordinatesProperty, value); }
         public bool ShowCoordinatesRulers { get => _showCoordinateRulers; set { _showCoordinateRulers = value; DrawCoordinateRulers(); } }
         public AreaEffectService AreaEffectService => _areaEffectService;
+        public FogOfWarService FogService => _fogService;
 
         #region States
         // internal state
@@ -136,6 +138,19 @@ namespace DnDBattle.Controls
         private DateTime _lastDropTime = DateTime.MinValue;
         private string _lastDropPrototypeId = null;
         private readonly TimeSpan _duplicateDropThreshold = TimeSpan.FromMilliseconds(300);
+
+        // targeting fields
+        private bool _isInTargetingMode = false;
+        private TargetingState _currentTargetingState;
+        private Dictionary<Token, Border> _targetHighlights = new Dictionary<Token, Border>();
+
+        // Fog of war fields
+        private FogOfWarService _fogService;
+        private DrawingVisual _fogVisual;
+        private Canvas _fogCanvas;
+        private bool _isFogBrushActive = false;
+        private FogShapeTool _currentFogShapeTool = FogShapeTool.None;
+        private Point? _fogShapeStartPoint;
         #endregion
 
         public BattleGridControl()
@@ -201,6 +216,17 @@ namespace DnDBattle.Controls
                 UpdateGridVisual();
                 DrawCoordinateRulers();
             };
+        }
+
+        public void InitializeFogOfWar()
+        {
+            _fogService = new FogOfWarService();
+            _fogService.FogChanged += OnFogChanged;
+            _fogService.LogMessage += (msg) => Debug.WriteLine(msg);
+
+            int gridWidth = (int)(ActualWidth / GridCellSize) + 10;
+            int gridHeight = (int)(ActualHeight / GridCellSize) + 10;
+            _fogService.Initialize(Math.Max(50, gridWidth), Math.Max(50, gridHeight), GridCellSize);
         }
 
         private void AddVisualOverlay(DrawingVisual visual, int zIndex, bool makeBlur = false)
@@ -350,7 +376,6 @@ namespace DnDBattle.Controls
             return menu;
         }
 
-
         private void ShowHealDialog(Token token)
         {
             string input = Microsoft.VisualBasic.Interaction.InputBox(
@@ -426,21 +451,31 @@ namespace DnDBattle.Controls
         #region Handler Events
         private void Token_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            _draggingVisual = sender as FrameworkElement;
-
-            if (_draggingVisual != null && _draggingVisual.Tag is Token t)
+            var visual = sender as FrameworkElement;
+            if (visual?.Tag is Token clickedToken)
             {
-                _dragStartGridX = t.GridX;
-                _dragStartGridY = t.GridY;
+                // Check if we're in targeting mode
+                if (_isInTargetingMode)
+                {
+                    // Fire the target selected event
+                    TargetSelected?.Invoke(clickedToken);
+                    e.Handled = true;
+                    return;
+                }
 
-                // THIS IS THE IMPORTANT LINE - Set the selected token!
-                SelectedToken = t;
+                // Normal selection/drag behavior
+                _draggingVisual = visual;
+                _dragStartGridX = clickedToken.GridX;
+                _dragStartGridY = clickedToken.GridY;
+
+                // Set the selected token
+                SelectedToken = clickedToken;
+
+                _isDraggingToken = true;
+                _dragOrigin = e.GetPosition(RenderCanvas);
+                _draggingVisual?.CaptureMouse();
+                e.Handled = true;
             }
-
-            _isDraggingToken = true;
-            _dragOrigin = e.GetPosition(RenderCanvas);
-            _draggingVisual?.CaptureMouse();
-            e.Handled = true;
         }
 
         private void Token_MouseMove(object sender, MouseEventArgs e)
@@ -627,6 +662,14 @@ namespace DnDBattle.Controls
                 ClampPanToBoundaries();
                 RefreshAllVisuals();
                 e.Handled = true;
+            }
+        }
+
+        public void HandleKeyDown(Key key)
+        {
+            if (key == Key.Escape && _isInTargetingMode)
+            {
+                ExitTargetingMode();
             }
         }
 
@@ -1792,21 +1835,205 @@ namespace DnDBattle.Controls
         }
         #endregion
 
+        #region Battle Targeting
+
+        /// <summary>
+        /// Enters targeting mode - highlights valid targets
+        /// </summary>
+        public void EnterTargetingMode(TargetingState state)
+        {
+            _isInTargetingMode = true;
+            _currentTargetingState = state;
+
+            // Highlight valid targets
+            HighlightValidTargets();
+
+            // Change cursor
+            RenderCanvas.Cursor = Cursors.Cross;
+
+            // Update status
+            System.Diagnostics.Debug.WriteLine($"Entered targeting mode for {state.SelectedAction?.Name}");
+        }
+
+        /// <summary>
+        /// Exits targeting mode
+        /// </summary>
+        public void ExitTargetingMode()
+        {
+            _isInTargetingMode = false;
+            _currentTargetingState = null;
+
+            // Remove highlights
+            ClearTargetHighlights();
+
+            // Reset cursor
+            RenderCanvas.Cursor = Cursors.Arrow;
+
+            System.Diagnostics.Debug.WriteLine("Exited targeting mode");
+        }
+
+        /// <summary>
+        /// Highlights all valid targets on the grid
+        /// </summary>
+        private void HighlightValidTargets()
+        {
+            ClearTargetHighlights();
+
+            if (_currentTargetingState == null || Tokens == null) return;
+
+            var sourceToken = _currentTargetingState.SourceToken;
+            int actionRange = _currentTargetingState.ActionRange;
+
+            foreach (var token in Tokens)
+            {
+                // Skip the source token
+                if (token.Id == sourceToken.Id) continue;
+
+                // Calculate distance
+                int dx = Math.Abs(token.GridX - sourceToken.GridX);
+                int dy = Math.Abs(token.GridY - sourceToken.GridY);
+                int distance = Math.Max(dx, dy);
+
+                // Determine if in range (considering movement for melee)
+                bool inRange = false;
+                bool inRangeWithMovement = false;
+
+                if (_currentTargetingState.IsRangedAction)
+                {
+                    inRange = distance <= actionRange;
+                }
+                else // Melee
+                {
+                    int meleeRange = actionRange > 0 ? actionRange : 1;
+                    inRange = distance <= meleeRange;
+
+                    if (!inRange)
+                    {
+                        int movementNeeded = distance - meleeRange;
+                        inRangeWithMovement = movementNeeded <= sourceToken.MovementRemainingThisTurn;
+                    }
+                }
+
+                // Create highlight
+                if (inRange || inRangeWithMovement)
+                {
+                    var highlight = CreateTargetHighlight(token, inRange, inRangeWithMovement);
+                    _targetHighlights[token] = highlight;
+                    RenderCanvas.Children.Add(highlight);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Creates a highlight border around a potential target
+        /// </summary>
+        private Border CreateTargetHighlight(Token token, bool inRange, bool requiresMovement)
+        {
+            double size = token.SizeInSquares * GridCellSize;
+            double x = token.GridX * GridCellSize;
+            double y = token.GridY * GridCellSize;
+
+            Color highlightColor;
+            if (inRange)
+            {
+                highlightColor = Color.FromArgb(100, 76, 175, 80); // Green - in range
+            }
+            else if (requiresMovement)
+            {
+                highlightColor = Color.FromArgb(100, 255, 193, 7); // Yellow - requires movement
+            }
+            else
+            {
+                highlightColor = Color.FromArgb(100, 244, 67, 54); // Red - out of range
+            }
+
+            var highlight = new Border
+            {
+                Width = size + 8,
+                Height = size + 8,
+                Background = new SolidColorBrush(highlightColor),
+                BorderBrush = new SolidColorBrush(Color.FromArgb(200, highlightColor.R, highlightColor.G, highlightColor.B)),
+                BorderThickness = new Thickness(3),
+                CornerRadius = new CornerRadius(size / 2 + 4),
+                IsHitTestVisible = false,
+                Tag = "TargetHighlight"
+            };
+
+            Canvas.SetLeft(highlight, x - 4);
+            Canvas.SetTop(highlight, y - 4);
+            Canvas.SetZIndex(highlight, 50); // Above grid, below tokens
+
+            return highlight;
+        }
+
+        /// <summary>
+        /// Clears all target highlights
+        /// </summary>
+        private void ClearTargetHighlights()
+        {
+            foreach (var highlight in _targetHighlights.Values)
+            {
+                RenderCanvas.Children.Remove(highlight);
+            }
+            _targetHighlights.Clear();
+
+            // Also remove any stray highlights
+            var toRemove = RenderCanvas.Children.OfType<Border>()
+                .Where(b => b.Tag as string == "TargetHighlight")
+                .ToList();
+
+            foreach (var item in toRemove)
+            {
+                RenderCanvas.Children.Remove(item);
+            }
+        }
+
+        #endregion
+
         #region Tokens
         private void Token_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             if (sender is Token token)
             {
-                // Update visuals when HP or conditions change
-                if (e.PropertyName == nameof(Token.HP) ||
-                    e.PropertyName == nameof(Token.Conditions) ||
-                    e.PropertyName == nameof(Token.IsCurrentTurn))
+                // Properties that require full visual rebuild
+                if (e.PropertyName == nameof(Token.Conditions) ||
+                    e.PropertyName == nameof(Token.IsCurrentTurn) ||
+                    e.PropertyName == nameof(Token.IsConcentrating))
                 {
-                    Dispatcher.Invoke(() =>
+                    // Full rebuild needed for visual effects
+                    RebuildTokenVisuals();
+                    return;
+                }
+
+                // HP changes - just update the HP bar
+                if (e.PropertyName == nameof(Token.HP) ||
+                    e.PropertyName == nameof(Token.MaxHP) ||
+                    e.PropertyName == nameof(Token.TempHP))
+                {
+                    UpdateTokenHPBar(token);
+
+                    // Also rebuild if HP dropped to 0 (for death visual effects)
+                    if (token.HP <= 0)
                     {
-                        // Find and update just this token's visual instead of rebuilding all
-                        UpdateSingleTokenVisual(token);
-                    });
+                        RebuildTokenVisuals();
+                    }
+                    return;
+                }
+
+                // Position changes
+                if (e.PropertyName == nameof(Token.GridX) ||
+                    e.PropertyName == nameof(Token.GridY))
+                {
+                    LayoutTokens();
+                    return;
+                }
+
+                // Image changes
+                if (e.PropertyName == nameof(Token.Image) ||
+                    e.PropertyName == nameof(Token.DisplayImage))
+                {
+                    RebuildTokenVisuals();
+                    return;
                 }
             }
         }
@@ -1864,6 +2091,327 @@ namespace DnDBattle.Controls
             }
             return null;
         }
+
+        /// <summary>
+        /// Updates just the HP bar for a specific token without rebuilding all visuals
+        /// </summary>
+        private void UpdateTokenHPBar(Token token)
+        {
+            if (token == null) return;
+
+            // Find the container for this token
+            var container = RenderCanvas.Children.OfType<Grid>()
+                .FirstOrDefault(g => g.Tag is Token t && t.Id == token.Id);
+
+            if (container == null) return;
+
+            // Find the HP bar grid within the container
+            var hpBarContainer = container.Children.OfType<Grid>()
+                .FirstOrDefault(g => g.VerticalAlignment == VerticalAlignment.Bottom && g.Height == 4);
+
+            if (hpBarContainer == null) return;
+
+            // Calculate new HP percentage
+            double hpPercent = token.MaxHP > 0 ? (double)Math.Max(0, token.HP) / token.MaxHP : 0;
+
+            // Get the fill border (second child)
+            var fillBorder = hpBarContainer.Children.OfType<Border>().Skip(1).FirstOrDefault();
+
+            if (fillBorder != null)
+            {
+                // Update width
+                double barWidth = hpBarContainer.Width;
+                fillBorder.Width = barWidth * hpPercent;
+
+                // Update color based on HP percentage
+                Color fillColor = hpPercent > 0.5 ? Color.FromRgb(76, 175, 80) :    // Green
+                                  hpPercent > 0.25 ? Color.FromRgb(255, 193, 7) :   // Yellow
+                                  Color.FromRgb(244, 67, 54);                        // Red
+
+                fillBorder.Background = new SolidColorBrush(fillColor);
+            }
+
+            // Update tooltip as well
+            var img = container.Children.OfType<Image>().FirstOrDefault();
+            if (img != null)
+            {
+                try
+                {
+                    img.ToolTip = CreateTokenTooltip(token);
+                }
+                catch { }
+            }
+        }
+        #endregion
+
+        #region Fog Of War
+
+        private void OnFogChanged()
+        {
+            RedrawFog();
+        }
+
+        /// <summary>
+        /// Redraws the fog overlay
+        /// </summary>
+        public void RedrawFog()
+        {
+            if (_fogService == null) return;
+
+            if (!_fogService.IsEnabled)
+            {
+                // Remove fog layer if it exists
+                RemoveFogLayer();
+                return;
+            }
+
+            // Create new fog visual
+            RenderFogLayer();
+        }
+
+        private void RenderFogLayer()
+        {
+            // Find or create the fog canvas
+            if (_fogCanvas == null)
+            {
+                _fogCanvas = RenderCanvas.Children.OfType<Canvas>()
+                    .FirstOrDefault(c => c.Tag as string == "FogLayer");
+            }
+
+            if (_fogCanvas == null)
+            {
+                _fogCanvas = new Canvas
+                {
+                    Tag = "FogLayer",
+                    IsHitTestVisible = false
+                };
+                RenderCanvas.Children.Add(_fogCanvas);
+            }
+
+            // Clear existing fog rectangles
+            _fogCanvas.Children.Clear();
+
+            // Set Z-index high so fog is on top
+            Canvas.SetZIndex(_fogCanvas, 1000);
+
+            bool isPlayerView = _fogService.ShowPlayerView;
+            double opacity = isPlayerView ? _fogService.PlayerFogOpacity : _fogService.DmFogOpacity;
+            var fogBrush = new SolidColorBrush(_fogService.FogColor);
+
+            // Draw fog for each hidden cell
+            for (int x = 0; x < _fogService.GridWidth; x++)
+            {
+                for (int y = 0; y < _fogService.GridHeight; y++)
+                {
+                    if (!_fogService.IsCellRevealed(x, y))
+                    {
+                        var rect = new System.Windows.Shapes.Rectangle
+                        {
+                            Width = GridCellSize,
+                            Height = GridCellSize,
+                            Fill = fogBrush,
+                            Opacity = opacity,
+                            IsHitTestVisible = false
+                        };
+
+                        Canvas.SetLeft(rect, x * GridCellSize);
+                        Canvas.SetTop(rect, y * GridCellSize);
+                        _fogCanvas.Children.Add(rect);
+                    }
+                }
+            }
+        }
+
+        private void RemoveFogLayer()
+        {
+            if (_fogCanvas != null)
+            {
+                _fogCanvas.Children.Clear();
+
+                if (RenderCanvas.Children.Contains(_fogCanvas))
+                {
+                    RenderCanvas.Children.Remove(_fogCanvas);
+                }
+
+                _fogCanvas = null;
+            }
+
+            // Also remove any stray fog canvases
+            var fogCanvases = RenderCanvas.Children.OfType<Canvas>()
+                .Where(c => c.Tag as string == "FogLayer")
+                .ToList();
+
+            foreach (var canvas in fogCanvases)
+            {
+                RenderCanvas.Children.Remove(canvas);
+            }
+        }
+
+
+        /// <summary>
+        /// Sets fog enabled state
+        /// </summary>
+        public void SetFogEnabled(bool enabled)
+        {
+            _fogService.IsEnabled = enabled;
+            RedrawFog();
+        }
+
+        /// <summary>
+        /// Sets player view mode
+        /// </summary>
+        public void SetPlayerView(bool isPlayerView)
+        {
+            _fogService.ShowPlayerView = isPlayerView;
+            RedrawFog();
+
+            // Also update token visibility in player view
+            if (isPlayerView)
+            {
+                UpdateTokenVisibilityForPlayerView();
+            }
+            else
+            {
+                ShowAllTokens();
+            }
+        }
+
+        private void UpdateTokenVisibilityForPlayerView()
+        {
+            // Hide tokens that are in fog
+            foreach (var child in RenderCanvas.Children.OfType<FrameworkElement>())
+            {
+                if (child.Tag is Models.Token token && !token.IsPlayer)
+                {
+                    bool visible = _fogService.IsTokenVisible(token);
+                    child.Visibility = visible ? Visibility.Visible : Visibility.Hidden;
+                }
+            }
+        }
+
+        private void ShowAllTokens()
+        {
+            foreach (var child in RenderCanvas.Children.OfType<FrameworkElement>())
+            {
+                if (child.Tag is Models.Token)
+                {
+                    child.Visibility = Visibility.Visible;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Sets the brush mode for fog editing
+        /// </summary>
+        public void SetFogBrushMode(FogBrushMode mode)
+        {
+            _fogService.BrushMode = mode;
+        }
+
+        /// <summary>
+        /// Sets the brush size for fog editing
+        /// </summary>
+        public void SetFogBrushSize(int size)
+        {
+            _fogService.BrushSize = size;
+        }
+
+        /// <summary>
+        /// Starts a shape-based fog reveal/hide
+        /// </summary>
+        public void StartFogShapeTool(FogShapeTool tool)
+        {
+            _currentFogShapeTool = tool;
+            _fogShapeStartPoint = null;
+
+            if (tool != FogShapeTool.None)
+            {
+                RenderCanvas.Cursor = Cursors.Cross;
+            }
+        }
+
+        /// <summary>
+        /// Reveals area around all player tokens
+        /// </summary>
+        public void RevealAroundPlayers()
+        {
+            if (Tokens != null)
+            {
+                _fogService.RevealAroundTokens(Tokens, playersOnly: true);
+            }
+        }
+
+        private void HandleFogMouseDown(Point position)
+        {
+            if (!_fogService.IsEnabled) return;
+
+            int gridX = (int)(position.X / GridCellSize);
+            int gridY = (int)(position.Y / GridCellSize);
+
+            if (_currentFogShapeTool != FogShapeTool.None)
+            {
+                // Start shape drawing
+                _fogShapeStartPoint = new Point(gridX, gridY);
+            }
+            else
+            {
+                // Brush mode - start painting
+                _isFogBrushActive = true;
+                _fogService.ApplyBrush(gridX, gridY);
+            }
+        }
+
+        // Add to RenderCanvas_MouseMove
+        private void HandleFogMouseMove(Point position)
+        {
+            if (!_fogService.IsEnabled) return;
+
+            int gridX = (int)(position.X / GridCellSize);
+            int gridY = (int)(position.Y / GridCellSize);
+
+            if (_isFogBrushActive)
+            {
+                _fogService.ApplyBrush(gridX, gridY);
+            }
+        }
+
+        // Add to RenderCanvas_MouseLeftButtonUp
+        private void HandleFogMouseUp(Point position)
+        {
+            if (!_fogService.IsEnabled) return;
+
+            int gridX = (int)(position.X / GridCellSize);
+            int gridY = (int)(position.Y / GridCellSize);
+
+            if (_currentFogShapeTool != FogShapeTool.None && _fogShapeStartPoint.HasValue)
+            {
+                int startX = (int)_fogShapeStartPoint.Value.X;
+                int startY = (int)_fogShapeStartPoint.Value.Y;
+
+                if (_currentFogShapeTool == FogShapeTool.Rectangle)
+                {
+                    if (_fogService.BrushMode == FogBrushMode.Reveal)
+                        _fogService.RevealRectangle(startX, startY, gridX, gridY);
+                    else
+                        _fogService.HideRectangle(startX, startY, gridX, gridY);
+                }
+                else if (_currentFogShapeTool == FogShapeTool.Circle)
+                {
+                    int radius = (int)Math.Max(Math.Abs(gridX - startX), Math.Abs(gridY - startY));
+                    if (_fogService.BrushMode == FogBrushMode.Reveal)
+                        _fogService.RevealCircle(startX, startY, radius);
+                    else
+                        _fogService.HideCircle(startX, startY, radius);
+                }
+
+                _fogShapeStartPoint = null;
+                _currentFogShapeTool = FogShapeTool.None;
+                RenderCanvas.Cursor = Cursors.Arrow;
+            }
+
+            _isFogBrushActive = false;
+        }
+
         #endregion
 
         #region Condtions

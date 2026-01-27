@@ -1,0 +1,202 @@
+﻿<UserControl x:Class="DnDBattle.Views.FogOfWarToolbar"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="#252526"
+             Padding="10,8">
+
+    <UserControl.Resources>
+        <Style x:Key="ToolbarButton" TargetType="Button">
+            <Setter Property="Background" Value="#3E3E42"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="Margin" Value="0,0,5,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="4" 
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#4E4E52"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="#5E5E62"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ToolbarToggle" TargetType="ToggleButton">
+            <Setter Property="Background" Value="#3E3E42"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="Margin" Value="0,0,5,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="Bd" 
+                                Background="{TemplateBinding Background}" 
+                                CornerRadius="4" 
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#0078D4"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#4E4E52"/>
+                            </Trigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsMouseOver" Value="True"/>
+                                    <Condition Property="IsChecked" Value="True"/>
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="Bd" Property="Background" Value="#1084D8"/>
+                            </MultiTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <StackPanel Orientation="Horizontal">
+        <!-- Enable/Disable Fog -->
+        <ToggleButton x:Name="BtnEnableFog" 
+                      Style="{StaticResource ToolbarToggle}"
+                      ToolTip="Enable/Disable Fog of War"
+                      Checked="BtnEnableFog_Checked"
+                      Unchecked="BtnEnableFog_Unchecked">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="🌫️" Margin="0,0,5,0"/>
+                <TextBlock Text="Fog"/>
+            </StackPanel>
+        </ToggleButton>
+
+        <Border Width="1" Background="#444" Margin="5,2"/>
+
+        <!-- Brush Mode -->
+        <TextBlock Text="Mode:" Foreground="#888" VerticalAlignment="Center" Margin="5,0,8,0"/>
+
+        <RadioButton x:Name="RdoReveal" 
+                     GroupName="BrushMode" 
+                     IsChecked="True"
+                     Checked="BrushMode_Changed"
+                     Style="{StaticResource {x:Type RadioButton}}"
+                     Margin="0,0,5,0">
+            <RadioButton.Template>
+                <ControlTemplate TargetType="RadioButton">
+                    <Border x:Name="Bd" Background="#3E3E42" CornerRadius="4" Padding="10,6" Cursor="Hand">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="👁️" Margin="0,0,5,0"/>
+                            <TextBlock Text="Reveal" Foreground="White"/>
+                        </StackPanel>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#2E7D32"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#4E4E52"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </RadioButton.Template>
+        </RadioButton>
+
+        <RadioButton x:Name="RdoHide" 
+                     GroupName="BrushMode"
+                     Checked="BrushMode_Changed"
+                     Margin="0,0,10,0">
+            <RadioButton.Template>
+                <ControlTemplate TargetType="RadioButton">
+                    <Border x:Name="Bd" Background="#3E3E42" CornerRadius="4" Padding="10,6" Cursor="Hand">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🙈" Margin="0,0,5,0"/>
+                            <TextBlock Text="Hide" Foreground="White"/>
+                        </StackPanel>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#C62828"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#4E4E52"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </RadioButton.Template>
+        </RadioButton>
+
+        <Border Width="1" Background="#444" Margin="0,2,10,2"/>
+
+        <!-- Brush Size -->
+        <TextBlock Text="Size:" Foreground="#888" VerticalAlignment="Center" Margin="0,0,8,0"/>
+        <ComboBox x:Name="CmbBrushSize" 
+                  Width="60"
+                  SelectionChanged="CmbBrushSize_SelectionChanged"
+                  SelectedIndex="1">
+            <ComboBoxItem Content="1" Tag="1"/>
+            <ComboBoxItem Content="3" Tag="3"/>
+            <ComboBoxItem Content="5" Tag="5"/>
+            <ComboBoxItem Content="10" Tag="10"/>
+            <ComboBoxItem Content="20" Tag="20"/>
+        </ComboBox>
+
+        <Border Width="1" Background="#444" Margin="10,2"/>
+
+        <!-- Quick Actions -->
+        <Button Content="🔲 Reveal Rect" 
+                Style="{StaticResource ToolbarButton}"
+                Click="BtnRevealRect_Click"
+                ToolTip="Click and drag to reveal a rectangle"/>
+
+        <Button Content="⭕ Reveal Circle" 
+                Style="{StaticResource ToolbarButton}"
+                Click="BtnRevealCircle_Click"
+                ToolTip="Click and drag to reveal a circle"/>
+
+        <Border Width="1" Background="#444" Margin="5,2"/>
+
+        <Button Content="👥 Reveal Players" 
+                Style="{StaticResource ToolbarButton}"
+                Click="BtnRevealPlayers_Click"
+                ToolTip="Reveal area around all player tokens"/>
+
+        <Border Width="1" Background="#444" Margin="5,2"/>
+
+        <Button Content="🌅 Reveal All" 
+                Style="{StaticResource ToolbarButton}"
+                Click="BtnRevealAll_Click"
+                ToolTip="Reveal entire map"/>
+
+        <Button Content="🌑 Hide All" 
+                Style="{StaticResource ToolbarButton}"
+                Click="BtnHideAll_Click"
+                ToolTip="Reset fog - hide entire map"/>
+
+        <Border Width="1" Background="#444" Margin="5,2"/>
+
+        <!-- Player View Toggle -->
+        <ToggleButton x:Name="BtnPlayerView" 
+                      Style="{StaticResource ToolbarToggle}"
+                      ToolTip="Preview what players see"
+                      Checked="BtnPlayerView_Changed"
+                      Unchecked="BtnPlayerView_Changed">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="👤" Margin="0,0,5,0"/>
+                <TextBlock Text="Player View"/>
+            </StackPanel>
+        </ToggleButton>
+    </StackPanel>
+</UserControl>

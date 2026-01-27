@@ -143,13 +143,11 @@
 
                         <TextBlock Text="Type:" Foreground="#AAA" VerticalAlignment="Center" Margin="0,0,5,0"/>
                         <ComboBox x:Name="CmbTypeFilter" Width="120" Margin="0,0,15,0" 
-                                  SelectionChanged="CmbTypeFilter_SelectionChanged"
-                                  Background="#1E1E1E"/>
+                                  SelectionChanged="CmbTypeFilter_SelectionChanged"/>
 
                         <TextBlock Text="Group:" Foreground="#AAA" VerticalAlignment="Center" Margin="0,0,5,0"/>
                         <ComboBox x:Name="CmbGroupBy" Width="100" Margin="0,0,15,0"
-                                  SelectionChanged="CmbGroupBy_SelectionChanged"
-                                  Background="#1E1E1E">
+                                  SelectionChanged="CmbGroupBy_SelectionChanged">
                             <ComboBoxItem Content="None" Tag="None"/>
                             <ComboBoxItem Content="Type" Tag="Type" IsSelected="True"/>
                             <ComboBoxItem Content="CR" Tag="ChallengeRating"/>

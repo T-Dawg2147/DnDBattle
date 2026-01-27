@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:views="clr-namespace:DnDBattle.Views"
              mc:Ignorable="d" 
              d:DesignWidth="280"
              Background="#1E1E1E">
@@ -102,6 +103,7 @@
                     <TextBlock x:Name="TxtRound" Text="1" Foreground="#4FC3F7" FontSize="11" FontWeight="Bold"/>
                     <TextBlock Text="  •  " Foreground="#444" FontSize="11"/>
                     <TextBlock x:Name="TxtTurnCount" Text="0 creatures" Foreground="#888" FontSize="11"/>
+                    <views:TurnTimerDisplay x:Name="TurnTimer" Margin="0,0,0,10"/>
                 </StackPanel>
             </StackPanel>
         </Border>

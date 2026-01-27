@@ -1,24 +1,32 @@
 ﻿using DnDBattle.Models;
 using DnDBattle.Services;
-using DnDBattle.ViewModels;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Shapes;
 
 namespace DnDBattle.Views
 {
     public partial class SelectedTokenPanel : UserControl
     {
         private Token _token;
-        private MainViewModel _vm;
+        private ViewModels.MainViewModel _vm;
         private List<QuickAction> _quickActions;
+        private ActionTargetingService _targetingService;
 
-        public event Action<Token, Models.Action> ActionSelected;
+        // Events
         public event Action<string> LogAction;
-        public event System.Action QuickActionsConfigChanged;
+        public event Action<Token, Models.Action> ActionSelected;
+        public event Action<TargetingState> TargetingStarted;
+        public event System.Action TargetingCancelled;
+        public event Action<ActionResult> ActionResolved;
+
+        public ActionTargetingService TargetingService => _targetingService;
+        public bool IsTargeting => _targetingService?.CurrentState?.IsTargeting ?? false;
 
         public SelectedTokenPanel()
         {
@@ -26,21 +34,18 @@ namespace DnDBattle.Views
             Loaded += SelectedTokenPanel_Loaded;
 
             _quickActions = QuickActionsService.GetEnabledQuickActions();
+            _targetingService = new ActionTargetingService();
+            _targetingService.LogMessage += (msg) => LogAction?.Invoke(msg);
         }
 
         private void SelectedTokenPanel_Loaded(object sender, RoutedEventArgs e)
         {
-            if (Application.Current?.MainWindow?.DataContext is MainViewModel vm)
+            if (DataContext is ViewModels.MainViewModel vm)
             {
                 _vm = vm;
             }
-
-            BuildQuickActionsUI();
         }
 
-        /// <summary>
-        /// Updates the panel to display the selected token
-        /// </summary>
         public void SetToken(Token token)
         {
             _token = token;
@@ -58,9 +63,6 @@ namespace DnDBattle.Views
             UpdateDisplay();
         }
 
-        /// <summary>
-        /// Refreshes the display with current token data
-        /// </summary>
         public void UpdateDisplay()
         {
             if (_token == null) return;
@@ -75,6 +77,12 @@ namespace DnDBattle.Views
 
             // Conditions
             UpdateConditionsDisplay();
+
+            // Concentration
+            UpdateConcentrationDisplay();
+
+            // Death Saves
+            UpdateDeathSavesDisplay();
 
             // HP
             TxtCurrentHP.Text = _token.HP.ToString();
@@ -93,91 +101,134 @@ namespace DnDBattle.Views
                 TempHPPanel.Visibility = Visibility.Collapsed;
             }
 
-            // Core Stats
+            // Stats
             TxtAC.Text = _token.ArmorClass.ToString();
-            TxtInitiative.Text = _token.Initiative > 0 ? $"+{_token.Initiative}" : (_token.Initiative == 0 ? "—" : _token.Initiative.ToString());
-            TxtCR.Text = _token.ChallengeRating ?? "—";
+            TxtInitiative.Text = _token.InitiativeModifier >= 0 ? $"+{_token.InitiativeModifier}" : _token.InitiativeModifier.ToString();
+            TxtCR.Text = _token.ChallengeRating ?? "-";
 
             // Ability Scores
-            SetAbilityScore(TxtStr, TxtStrMod, _token.Str);
-            SetAbilityScore(TxtDex, TxtDexMod, _token.Dex);
-            SetAbilityScore(TxtCon, TxtConMod, _token.Con);
-            SetAbilityScore(TxtInt, TxtIntMod, _token.Int);
-            SetAbilityScore(TxtWis, TxtWisMod, _token.Wis);
-            SetAbilityScore(TxtCha, TxtChaMod, _token.Cha);
+            UpdateAbilityScores();
 
             // Speed
-            TxtSpeed.Text = !string.IsNullOrEmpty(_token.Speed) ? _token.Speed : "30 ft.";
+            TxtSpeed.Text = _token.Speed ?? "30 ft.";
 
-            // Movement (during combat)
-            if (_vm?.IsInCombat == true && _token.IsCurrentTurn)
-            {
-                MovementSection.Visibility = Visibility.Visible;
-                TxtMovementRemaining.Text = $"{_token.MovementRemainingThisTurn} / {_token.SpeedSquares} squares remaining";
-                UpdateMovementBar();
-            }
-            else
-            {
-                MovementSection.Visibility = Visibility.Collapsed;
-            }
+            // Legendary Actions
+            UpdateLegendaryActionsDisplay();
+
+            // Spell Slots
+            UpdateSpellSlotsDisplay();
+
+            // Notes
+            UpdateNotesDisplay();
 
             // Actions
             PopulateActions();
 
-            // Traits
-            if (!string.IsNullOrWhiteSpace(_token.Traits))
-            {
-                TraitsExpander.Visibility = Visibility.Visible;
-                TxtTraits.Text = _token.Traits;
-            }
-            else
-            {
-                TraitsExpander.Visibility = Visibility.Collapsed;
-            }
-
-            // Notes
-            TxtNotes.Text = _token.Notes ?? "";
+            // Quick Actions
+            PopulateQuickActions();
         }
 
-        private void SetAbilityScore(TextBlock scoreText, TextBlock modText, int score)
-        {
-            scoreText.Text = score.ToString();
-            int mod = (score - 10) / 2;
-            modText.Text = mod >= 0 ? $"+{mod}" : mod.ToString();
-        }
+        #region HP Management
 
         private void UpdateHPColor()
         {
-            double hpPercent = _token.MaxHP > 0 ? (double)Math.Max(0, _token.HP) / _token.MaxHP : 0;
+            double percent = _token.MaxHP > 0 ? (double)_token.HP / _token.MaxHP : 0;
 
-            if (hpPercent > 0.5)
-                TxtCurrentHP.Foreground = new SolidColorBrush(Color.FromRgb(76, 175, 80)); // Green
-            else if (hpPercent > 0.25)
-                TxtCurrentHP.Foreground = new SolidColorBrush(Color.FromRgb(255, 193, 7)); // Yellow
+            if (percent > 0.5)
+                TxtCurrentHP.Foreground = new SolidColorBrush(Color.FromRgb(76, 175, 80));
+            else if (percent > 0.25)
+                TxtCurrentHP.Foreground = new SolidColorBrush(Color.FromRgb(255, 193, 7));
             else
-                TxtCurrentHP.Foreground = new SolidColorBrush(Color.FromRgb(244, 67, 54)); // Red
+                TxtCurrentHP.Foreground = new SolidColorBrush(Color.FromRgb(244, 67, 54));
         }
 
         private void UpdateHPBar()
         {
-            double hpPercent = _token.MaxHP > 0 ? (double)Math.Max(0, _token.HP) / _token.MaxHP : 0;
-            HPBarFill.Width = HPBarFill.Parent is Grid parent ? parent.ActualWidth * hpPercent : 0;
+            double percent = _token.MaxHP > 0 ? (double)Math.Max(0, _token.HP) / _token.MaxHP : 0;
+            HPBarFill.Width = ActualWidth > 0 ? (ActualWidth - 44) * percent : 100 * percent;
 
-            if (hpPercent > 0.5)
+            if (percent > 0.5)
                 HPBarFill.Background = new SolidColorBrush(Color.FromRgb(76, 175, 80));
-            else if (hpPercent > 0.25)
+            else if (percent > 0.25)
                 HPBarFill.Background = new SolidColorBrush(Color.FromRgb(255, 193, 7));
             else
                 HPBarFill.Background = new SolidColorBrush(Color.FromRgb(244, 67, 54));
         }
 
-        private void UpdateMovementBar()
+        private void BtnHeal_Click(object sender, RoutedEventArgs e)
         {
-            double movePercent = _token.SpeedSquares > 0
-                ? (double)_token.MovementRemainingThisTurn / _token.SpeedSquares
-                : 0;
-            MovementBarFill.Width = MovementBarFill.Parent is Grid parent ? parent.ActualWidth * movePercent : 0;
+            if (_token == null) return;
+
+            string input = Microsoft.VisualBasic.Interaction.InputBox("Heal amount:", "Heal", "1");
+            if (int.TryParse(input, out int amount) && amount > 0)
+            {
+                _token.HP = Math.Min(_token.HP + amount, _token.MaxHP);
+                if (_token.HP > 0) _token.ResetDeathSaves();
+                LogAction?.Invoke($"💚 {_token.Name} healed for {amount} HP ({_token.HP}/{_token.MaxHP})");
+                UpdateDisplay();
+            }
         }
+
+        private void BtnDamage_Click(object sender, RoutedEventArgs e)
+        {
+            if (_token == null) return;
+
+            string input = Microsoft.VisualBasic.Interaction.InputBox("Damage amount:", "Damage", "1");
+            if (int.TryParse(input, out int amount) && amount > 0)
+            {
+                bool wasConcentrating = _token.IsConcentrating;
+                _token.HP = Math.Max(0, _token.HP - amount);
+                LogAction?.Invoke($"💔 {_token.Name} took {amount} damage ({_token.HP}/{_token.MaxHP})");
+
+                if (wasConcentrating && _token.IsConcentrating)
+                {
+                    PromptConcentrationCheck(amount);
+                }
+
+                UpdateDisplay();
+            }
+        }
+
+        private void BtnResetMovement_Click(object sender, RoutedEventArgs e)
+        {
+            if (_token == null) return;
+            _token.ResetMovementForNewTurn();
+            UpdateDisplay();
+        }
+
+        #endregion
+
+        #region Ability Scores
+
+        private void UpdateAbilityScores()
+        {
+            TxtStr.Text = _token.Str.ToString();
+            TxtStrMod.Text = FormatModifier((_token.Str - 10) / 2);
+
+            TxtDex.Text = _token.Dex.ToString();
+            TxtDexMod.Text = FormatModifier((_token.Dex - 10) / 2);
+
+            TxtCon.Text = _token.Con.ToString();
+            TxtConMod.Text = FormatModifier((_token.Con - 10) / 2);
+
+            TxtInt.Text = _token.Int.ToString();
+            TxtIntMod.Text = FormatModifier((_token.Int - 10) / 2);
+
+            TxtWis.Text = _token.Wis.ToString();
+            TxtWisMod.Text = FormatModifier((_token.Wis - 10) / 2);
+
+            TxtCha.Text = _token.Cha.ToString();
+            TxtChaMod.Text = FormatModifier((_token.Cha - 10) / 2);
+        }
+
+        private string FormatModifier(int mod)
+        {
+            return mod >= 0 ? $"+{mod}" : mod.ToString();
+        }
+
+        #endregion
+
+        #region Conditions Display
 
         private void UpdateConditionsDisplay()
         {
@@ -189,65 +240,494 @@ namespace DnDBattle.Views
                 return;
             }
 
+            var activeConditions = _token.Conditions.GetActiveConditions().ToList();
+            if (activeConditions.Count == 0)
+            {
+                ConditionsBar.Visibility = Visibility.Collapsed;
+                return;
+            }
+
             ConditionsBar.Visibility = Visibility.Visible;
 
-            foreach (var condition in _token.Conditions.GetActiveConditions())
+            foreach (var condition in activeConditions)
             {
                 var badge = new Border
                 {
-                    Background = new SolidColorBrush(ConditionExtensions.GetConditionColor(condition)),
+                    Width = 20,
+                    Height = 20,
                     CornerRadius = new CornerRadius(3),
-                    Padding = new Thickness(6, 3, 6, 3),
-                    Margin = new Thickness(0, 0, 5, 5),
-                    Cursor = System.Windows.Input.Cursors.Hand,
-                    Tag = condition,
-                    ToolTip = $"{ConditionExtensions.GetConditionName(condition)}\n{ConditionExtensions.GetConditionDescription(condition)}"
-                };
-
-                badge.Child = new TextBlock
-                {
-                    Text = $"{ConditionExtensions.GetConditionIcon(condition)} {ConditionExtensions.GetConditionName(condition)}",
-                    Foreground = Brushes.White,
-                    FontSize = 11
-                };
-
-                badge.MouseLeftButtonDown += (s, e) =>
-                {
-                    if (s is FrameworkElement fe && fe.Tag is Models.Condition c)
+                    Background = new SolidColorBrush(ConditionExtensions.GetConditionColor(condition)),
+                    Margin = new Thickness(2),
+                    Child = new TextBlock
                     {
-                        _token.ToggleCondition(c);
-                        UpdateConditionsDisplay();
-                        LogAction?.Invoke($"{_token.Name}: -{ConditionExtensions.GetConditionName(c)}");
+                        Text = ConditionExtensions.GetConditionIcon(condition),
+                        FontSize = 10,
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                        VerticalAlignment = VerticalAlignment.Center
                     }
                 };
 
+                badge.ToolTip = ConditionExtensions.GetConditionName(condition);
                 ConditionIconsPanel.Children.Add(badge);
             }
         }
 
+        #endregion
+
+        #region Concentration Tracking
+
+        private void UpdateConcentrationDisplay()
+        {
+            if (_token == null || !_token.IsConcentrating)
+            {
+                ConcentrationBar.Visibility = Visibility.Collapsed;
+                return;
+            }
+
+            ConcentrationBar.Visibility = Visibility.Visible;
+            TxtConcentrationSpell.Text = _token.ConcentrationSpell ?? "Unknown Spell";
+        }
+
+        private void BtnBreakConcentration_Click(object sender, RoutedEventArgs e)
+        {
+            if (_token == null || !_token.IsConcentrating) return;
+
+            string spell = _token.ConcentrationSpell;
+            _token.BreakConcentration();
+            UpdateConcentrationDisplay();
+            LogAction?.Invoke($"💔 {_token.Name} loses concentration on {spell}");
+        }
+
+        public void PromptConcentrationCheck(int damageTaken)
+        {
+            if (_token == null || !_token.IsConcentrating) return;
+
+            bool manualMode = !Options.LiveMode;
+
+            var dialog = new ConcentrationCheckDialog(_token, damageTaken, manualMode)
+            {
+                Owner = Window.GetWindow(this)
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                LogAction?.Invoke(dialog.ResultMessage);
+                UpdateConcentrationDisplay();
+                UpdateDisplay();
+            }
+        }
+
+        #endregion
+
+        #region Death Saves Tracking
+
+        private void UpdateDeathSavesDisplay()
+        {
+            if (_token == null || _token.HP > 0)
+            {
+                DeathSavesPanel.Visibility = Visibility.Collapsed;
+                return;
+            }
+
+            DeathSavesPanel.Visibility = Visibility.Visible;
+
+            FillDeathSaveIndicator(DeathSuccess1, _token.DeathSaveSuccesses >= 1, true);
+            FillDeathSaveIndicator(DeathSuccess2, _token.DeathSaveSuccesses >= 2, true);
+            FillDeathSaveIndicator(DeathSuccess3, _token.DeathSaveSuccesses >= 3, true);
+
+            FillDeathSaveIndicator(DeathFailure1, _token.DeathSaveFailures >= 1, false);
+            FillDeathSaveIndicator(DeathFailure2, _token.DeathSaveFailures >= 2, false);
+            FillDeathSaveIndicator(DeathFailure3, _token.DeathSaveFailures >= 3, false);
+
+            if (_token.IsStabilized)
+            {
+                TxtDeathSaveStatus.Text = "💤 Stabilized";
+                TxtDeathSaveStatus.Foreground = new SolidColorBrush(Color.FromRgb(129, 199, 132));
+                BtnRollDeathSave.Visibility = Visibility.Collapsed;
+            }
+            else if (_token.IsDead)
+            {
+                TxtDeathSaveStatus.Text = "💀 DEAD";
+                TxtDeathSaveStatus.Foreground = new SolidColorBrush(Color.FromRgb(244, 67, 54));
+                BtnRollDeathSave.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                TxtDeathSaveStatus.Text = $"{_token.DeathSaveSuccesses}✓ / {_token.DeathSaveFailures}✗";
+                TxtDeathSaveStatus.Foreground = new SolidColorBrush(Color.FromRgb(176, 190, 197));
+                BtnRollDeathSave.Visibility = Visibility.Visible;
+            }
+        }
+
+        private void FillDeathSaveIndicator(Ellipse indicator, bool filled, bool isSuccess)
+        {
+            if (indicator == null) return;
+
+            indicator.Fill = filled
+                ? new SolidColorBrush(isSuccess ? Color.FromRgb(76, 175, 80) : Color.FromRgb(244, 67, 54))
+                : Brushes.Transparent;
+        }
+
+        private void BtnRollDeathSave_Click(object sender, RoutedEventArgs e)
+        {
+            PromptDeathSave();
+        }
+
+        public void PromptDeathSave()
+        {
+            if (_token == null || _token.HP > 0 || _token.IsDead || _token.IsStabilized) return;
+
+            bool manualMode = !Options.LiveMode;
+
+            var dialog = new DeathSaveDialog(_token, manualMode)
+            {
+                Owner = Window.GetWindow(this)
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                LogAction?.Invoke(dialog.ResultMessage);
+                UpdateDeathSavesDisplay();
+                UpdateDisplay();
+            }
+        }
+
+        #endregion
+
+        #region Legendary Actions
+
+        private void UpdateLegendaryActionsDisplay()
+        {
+            LegendaryPointsContainer.Children.Clear();
+
+            if (_token == null || !_token.HasLegendaryActions)
+            {
+                LegendaryActionsPanel.Visibility = Visibility.Collapsed;
+                return;
+            }
+
+            LegendaryActionsPanel.Visibility = Visibility.Visible;
+
+            for (int i = 0; i < _token.LegendaryActionsMax; i++)
+            {
+                bool isAvailable = i < _token.LegendaryActionsRemaining;
+                var point = CreateLegendaryActionPoint(i, isAvailable);
+                LegendaryPointsContainer.Children.Add(point);
+            }
+
+            TxtLegendaryRemaining.Text = $"{_token.LegendaryActionsRemaining} of {_token.LegendaryActionsMax} remaining";
+
+            BtnResetLegendary.Visibility = _token.LegendaryActionsRemaining < _token.LegendaryActionsMax
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+        }
+
+        private Border CreateLegendaryActionPoint(int index, bool isAvailable)
+        {
+            var border = new Border
+            {
+                Width = 24,
+                Height = 24,
+                CornerRadius = new CornerRadius(12),
+                Background = isAvailable
+                    ? new SolidColorBrush(Color.FromRgb(255, 215, 0))
+                    : new SolidColorBrush(Color.FromRgb(60, 60, 60)),
+                BorderBrush = new SolidColorBrush(Color.FromRgb(255, 215, 0)),
+                BorderThickness = new Thickness(2),
+                Margin = new Thickness(3, 0, 3, 0),
+                Cursor = Cursors.Hand,
+                Tag = index
+            };
+
+            border.Child = new TextBlock
+            {
+                Text = "★",
+                Foreground = isAvailable ? Brushes.Black : new SolidColorBrush(Color.FromRgb(100, 100, 100)),
+                FontSize = 12,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+
+            border.ToolTip = isAvailable ? "Click to use" : "Click to restore";
+
+            border.MouseLeftButtonDown += (s, e) =>
+            {
+                if (isAvailable)
+                {
+                    _token.UseLegendaryAction(1);
+                    LogAction?.Invoke($"⭐ {_token.Name} used a legendary action ({_token.LegendaryActionsRemaining}/{_token.LegendaryActionsMax})");
+                }
+                else
+                {
+                    _token.LegendaryActionsRemaining++;
+                    LogAction?.Invoke($"⭐ {_token.Name} restored a legendary action ({_token.LegendaryActionsRemaining}/{_token.LegendaryActionsMax})");
+                }
+                UpdateLegendaryActionsDisplay();
+            };
+
+            return border;
+        }
+
+        private void BtnResetLegendary_Click(object sender, RoutedEventArgs e)
+        {
+            if (_token == null) return;
+            _token.ResetLegendaryActions();
+            LogAction?.Invoke($"⭐ {_token.Name}'s legendary actions reset to {_token.LegendaryActionsMax}");
+            UpdateLegendaryActionsDisplay();
+        }
+
+        #endregion
+
+        #region Spell Slots
+
+        private void UpdateSpellSlotsDisplay()
+        {
+            SpellSlotsContainer.Children.Clear();
+
+            if (_token?.SpellSlots == null || !_token.HasSpellSlots)
+            {
+                SpellSlotsPanel.Visibility = Visibility.Collapsed;
+                return;
+            }
+
+            SpellSlotsPanel.Visibility = Visibility.Visible;
+
+            for (int level = 1; level <= 9; level++)
+            {
+                int max = _token.SpellSlots.GetMaxSlots(level);
+                if (max == 0) continue;
+
+                int current = _token.SpellSlots.GetCurrentSlots(level);
+                var slotGroup = CreateSpellSlotGroup(level, current, max);
+                SpellSlotsContainer.Children.Add(slotGroup);
+            }
+        }
+
+        private Border CreateSpellSlotGroup(int level, int current, int max)
+        {
+            var border = new Border
+            {
+                Background = new SolidColorBrush(Color.FromRgb(45, 45, 48)),
+                CornerRadius = new CornerRadius(4),
+                Padding = new Thickness(8, 6, 8, 6),
+                Margin = new Thickness(0, 0, 6, 6)
+            };
+
+            var stack = new StackPanel();
+
+            stack.Children.Add(new TextBlock
+            {
+                Text = level == 1 ? "1st" : level == 2 ? "2nd" : level == 3 ? "3rd" : $"{level}th",
+                Foreground = new SolidColorBrush(Color.FromRgb(136, 136, 136)),
+                FontSize = 9,
+                HorizontalAlignment = HorizontalAlignment.Center
+            });
+
+            var circlePanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 4, 0, 0)
+            };
+
+            for (int i = 0; i < max; i++)
+            {
+                bool isFilled = i < current;
+                var circle = new Ellipse
+                {
+                    Width = 12,
+                    Height = 12,
+                    Stroke = new SolidColorBrush(Color.FromRgb(186, 104, 200)),
+                    StrokeThickness = 2,
+                    Fill = isFilled ? new SolidColorBrush(Color.FromRgb(186, 104, 200)) : Brushes.Transparent,
+                    Margin = new Thickness(2, 0, 2, 0),
+                    Cursor = Cursors.Hand,
+                    Tag = new Tuple<int, int>(level, i)
+                };
+
+                int slotIndex = i;
+                circle.MouseLeftButtonDown += (s, e) =>
+                {
+                    if (slotIndex < _token.SpellSlots.GetCurrentSlots(level))
+                    {
+                        _token.SpellSlots.UseSlot(level);
+                        LogAction?.Invoke($"✨ {_token.Name} used a level {level} spell slot");
+                    }
+                    else
+                    {
+                        _token.SpellSlots.RestoreSlot(level);
+                        LogAction?.Invoke($"✨ {_token.Name} restored a level {level} spell slot");
+                    }
+                    UpdateSpellSlotsDisplay();
+                };
+
+                circlePanel.Children.Add(circle);
+            }
+
+            stack.Children.Add(circlePanel);
+            border.Child = stack;
+            return border;
+        }
+
+        private void BtnLongRest_Click(object sender, RoutedEventArgs e)
+        {
+            if (_token?.SpellSlots == null) return;
+            _token.SpellSlots.LongRest();
+            LogAction?.Invoke($"🌙 {_token.Name} completed a long rest - all spell slots restored!");
+            UpdateSpellSlotsDisplay();
+        }
+
+        #endregion
+
+        #region Notes
+
+        private void UpdateNotesDisplay()
+        {
+            NotesContainer.Children.Clear();
+
+            if (_token?.CombatNotes == null || _token.CombatNotes.Count == 0)
+            {
+                NotesContainer.Children.Add(new TextBlock
+                {
+                    Text = "No notes",
+                    Foreground = new SolidColorBrush(Color.FromRgb(102, 102, 102)),
+                    FontStyle = FontStyles.Italic,
+                    FontSize = 10
+                });
+                return;
+            }
+
+            foreach (var note in _token.CombatNotes)
+            {
+                NotesContainer.Children.Add(CreateNoteItem(note));
+            }
+        }
+
+        private Border CreateNoteItem(TokenNote note)
+        {
+            var border = new Border
+            {
+                Background = new SolidColorBrush(Color.FromRgb(45, 45, 48)),
+                CornerRadius = new CornerRadius(3),
+                Padding = new Thickness(8, 5, 8, 5),
+                Margin = new Thickness(0, 0, 0, 4)
+            };
+
+            var grid = new Grid();
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            var icon = new TextBlock
+            {
+                Text = note.Type.GetIcon(),
+                FontSize = 12,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 6, 0)
+            };
+            Grid.SetColumn(icon, 0);
+            grid.Children.Add(icon);
+
+            var text = new TextBlock
+            {
+                Text = note.Text,
+                Foreground = Brushes.White,
+                FontSize = 11,
+                TextWrapping = TextWrapping.Wrap,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            Grid.SetColumn(text, 1);
+            grid.Children.Add(text);
+
+            var deleteBtn = new Button
+            {
+                Content = "×",
+                Width = 18,
+                Height = 18,
+                Background = Brushes.Transparent,
+                Foreground = new SolidColorBrush(Color.FromRgb(136, 136, 136)),
+                BorderThickness = new Thickness(0),
+                Cursor = Cursors.Hand,
+                Tag = note.Id,
+                Margin = new Thickness(5, 0, 0, 0)
+            };
+            deleteBtn.Click += (s, e) =>
+            {
+                _token.RemoveNote(note.Id);
+                UpdateNotesDisplay();
+            };
+            Grid.SetColumn(deleteBtn, 2);
+            grid.Children.Add(deleteBtn);
+
+            border.Child = grid;
+            return border;
+        }
+
+        private void BtnAddNote_Click(object sender, RoutedEventArgs e)
+        {
+            QuickAddNotePanel.Visibility = Visibility.Visible;
+            TxtQuickNote.Focus();
+        }
+
+        private void BtnConfirmNote_Click(object sender, RoutedEventArgs e)
+        {
+            AddNoteFromInput();
+        }
+
+        private void TxtQuickNote_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                AddNoteFromInput();
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Escape)
+            {
+                QuickAddNotePanel.Visibility = Visibility.Collapsed;
+                TxtQuickNote.Text = "";
+                e.Handled = true;
+            }
+        }
+
+        private void AddNoteFromInput()
+        {
+            string text = TxtQuickNote.Text?.Trim();
+            if (string.IsNullOrEmpty(text) || _token == null) return;
+
+            _token.AddNote(text, NoteType.General);
+            LogAction?.Invoke($"📝 Added note to {_token.Name}: {text}");
+
+            TxtQuickNote.Text = "";
+            QuickAddNotePanel.Visibility = Visibility.Collapsed;
+            UpdateNotesDisplay();
+        }
+
+        private void TxtNotes_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (_token != null)
+            {
+                _token.Notes = TxtDMNotes.Text;
+            }
+        }
+
+        #endregion
+
+        #region Actions Display
+
         private void PopulateActions()
         {
-            // Clear all panels
             ActionsPanel.Children.Clear();
             BonusActionsPanel.Children.Clear();
             ReactionsPanel.Children.Clear();
-            LegendaryActionsPanel.Children.Clear();
+            LegendaryActionsListPanel.Children.Clear();
 
             if (_token == null) return;
 
-            // Debug output
-            System.Diagnostics.Debug.WriteLine($"PopulateActions for {_token?.Name}");
-            System.Diagnostics.Debug.WriteLine($"  Actions: {_token?.Actions?.Count ?? 0}");
-            System.Diagnostics.Debug.WriteLine($"  BonusActions: {_token?.BonusActions?.Count ?? 0}");
-            System.Diagnostics.Debug.WriteLine($"  Reactions: {_token?.Reactions?.Count ?? 0}");
-            System.Diagnostics.Debug.WriteLine($"  LegendaryActions: {_token?.LegendaryActions?.Count ?? 0}");
+            bool hasActions = _token.Actions?.Count > 0;
+            bool hasBonusActions = _token.BonusActions?.Count > 0;
+            bool hasReactions = _token.Reactions?.Count > 0;
+            bool hasLegendaryActions = _token.LegendaryActions?.Count > 0;
 
-            bool hasActions = _token?.Actions?.Count > 0;
-            bool hasBonusActions = _token?.BonusActions?.Count > 0;
-            bool hasReactions = _token?.Reactions?.Count > 0;
-            bool hasLegendaryActions = _token?.LegendaryActions?.Count > 0;
-
-            // Actions
             if (hasActions)
             {
                 NoActionsText.Visibility = Visibility.Collapsed;
@@ -261,7 +741,6 @@ namespace DnDBattle.Views
                 NoActionsText.Visibility = Visibility.Visible;
             }
 
-            // Bonus Actions
             BonusActionsSection.Visibility = hasBonusActions ? Visibility.Visible : Visibility.Collapsed;
             if (hasBonusActions)
             {
@@ -271,7 +750,6 @@ namespace DnDBattle.Views
                 }
             }
 
-            // Reactions
             ReactionsSection.Visibility = hasReactions ? Visibility.Visible : Visibility.Collapsed;
             if (hasReactions)
             {
@@ -281,23 +759,18 @@ namespace DnDBattle.Views
                 }
             }
 
-            // Legendary Actions
             LegendaryActionsSection.Visibility = hasLegendaryActions ? Visibility.Visible : Visibility.Collapsed;
             if (hasLegendaryActions)
             {
                 foreach (var action in _token.LegendaryActions)
                 {
-                    LegendaryActionsPanel.Children.Add(CreateActionElement(action, "Legendary"));
+                    LegendaryActionsListPanel.Children.Add(CreateActionElement(action, "Legendary"));
                 }
             }
         }
 
-        /// <summary>
-        /// Creates a styled action element with badges and tooltip
-        /// </summary>
         private UIElement CreateActionElement(Models.Action action, string actionType)
         {
-            // Main container - clickable button with hover effect
             var border = new Border
             {
                 Background = new SolidColorBrush(Color.FromRgb(45, 45, 48)),
@@ -308,26 +781,21 @@ namespace DnDBattle.Views
                 Tag = action
             };
 
-            // Hover effects
             border.MouseEnter += (s, e) => border.Background = new SolidColorBrush(Color.FromRgb(60, 60, 64));
             border.MouseLeave += (s, e) => border.Background = new SolidColorBrush(Color.FromRgb(45, 45, 48));
 
-            // Click to use action
             border.MouseLeftButtonDown += (s, e) =>
             {
-                if (border.Tag is Models.Action clickedAction)
+                if (border.Tag is Models.Action clickedAction && _token != null)
                 {
-                    UseAction(clickedAction, actionType);
-                    ActionSelected?.Invoke(_token, clickedAction);
+                    StartActionTargeting(clickedAction, actionType);
+                    e.Handled = true;
                 }
             };
 
             var content = new StackPanel();
-
-            // First row: Name + badges
             var nameRow = new WrapPanel { Orientation = Orientation.Horizontal };
 
-            // Action name
             nameRow.Children.Add(new TextBlock
             {
                 Text = action.Name ?? "Unknown Action",
@@ -337,7 +805,6 @@ namespace DnDBattle.Views
                 VerticalAlignment = VerticalAlignment.Center
             });
 
-            // Attack bonus badge (green)
             if (action.AttackBonus != null && action.AttackBonus != 0)
             {
                 nameRow.Children.Add(new Border
@@ -357,7 +824,6 @@ namespace DnDBattle.Views
                 });
             }
 
-            // Damage badge (red)
             if (!string.IsNullOrEmpty(action.DamageExpression))
             {
                 nameRow.Children.Add(new Border
@@ -377,7 +843,6 @@ namespace DnDBattle.Views
                 });
             }
 
-            // Range badge (blue)
             if (!string.IsNullOrEmpty(action.Range))
             {
                 nameRow.Children.Add(new Border
@@ -398,7 +863,6 @@ namespace DnDBattle.Views
 
             content.Children.Add(nameRow);
 
-            // Description (truncated)
             if (!string.IsNullOrEmpty(action.Description))
             {
                 string truncatedDesc = action.Description.Length > 80
@@ -416,16 +880,11 @@ namespace DnDBattle.Views
             }
 
             border.Child = content;
-
-            // Create detailed tooltip
             border.ToolTip = CreateActionTooltip(action);
 
             return border;
         }
 
-        /// <summary>
-        /// Creates a detailed tooltip for an action
-        /// </summary>
         private ToolTip CreateActionTooltip(Models.Action action)
         {
             var tooltip = new ToolTip
@@ -439,7 +898,6 @@ namespace DnDBattle.Views
 
             var stack = new StackPanel();
 
-            // Action name
             stack.Children.Add(new TextBlock
             {
                 Text = action.Name ?? "Unknown Action",
@@ -449,7 +907,6 @@ namespace DnDBattle.Views
                 Margin = new Thickness(0, 0, 0, 8)
             });
 
-            // Stats row
             var statsPanel = new WrapPanel { Margin = new Thickness(0, 0, 0, 8) };
 
             if (action.AttackBonus != null && action.AttackBonus != 0)
@@ -489,7 +946,6 @@ namespace DnDBattle.Views
                 stack.Children.Add(statsPanel);
             }
 
-            // Full description
             if (!string.IsNullOrEmpty(action.Description))
             {
                 stack.Children.Add(new TextBlock
@@ -501,7 +957,6 @@ namespace DnDBattle.Views
                 });
             }
 
-            // Click hint
             stack.Children.Add(new TextBlock
             {
                 Text = "Click to use this action",
@@ -515,297 +970,167 @@ namespace DnDBattle.Views
             return tooltip;
         }
 
-        /// <summary>
-        /// Executes an action - rolls attack and damage
-        /// </summary>
-        private void UseAction(Models.Action action, string actionType)
+        #endregion
+
+        #region Action Targeting
+
+        private void StartActionTargeting(Models.Action action, string actionType)
         {
             if (_token == null || action == null) return;
 
-            // Roll attack if applicable
-            if (action.AttackBonus != null && action.AttackBonus != 0)
-            {
-                var attackRoll = Utils.DiceRoller.RollExpression("1d20");
-                int total = attackRoll.Total + (action.AttackBonus ?? 0);
+            _targetingService.StartTargeting(_token, action);
 
-                string message = $"🎯 {_token.Name} uses {action.Name}: Attack roll {attackRoll.Total} + {action.AttackBonus} = {total}";
+            ShowTargetingIndicator(action.Name);
 
-                if (attackRoll.Total == 20)
-                    message += " ⚡ CRITICAL HIT!";
-                else if (attackRoll.Total == 1)
-                    message += " 💀 CRITICAL MISS!";
+            TargetingStarted?.Invoke(_targetingService.CurrentState);
+            ActionSelected?.Invoke(_token, action);
 
-                LogAction?.Invoke(message);
-
-                // If hit, offer to roll damage
-                if (!string.IsNullOrEmpty(action.DamageExpression))
-                {
-                    var result = MessageBox.Show(
-                        $"Attack roll: {total}\n\nRoll damage ({action.DamageExpression})?",
-                        action.Name,
-                        MessageBoxButton.YesNo,
-                        MessageBoxImage.Question);
-
-                    if (result == MessageBoxResult.Yes)
-                    {
-                        var damageRoll = Utils.DiceRoller.RollExpression(action.DamageExpression);
-                        int damage = damageRoll.Total;
-
-                        if (attackRoll.Total == 20) // Critical hit - double dice
-                        {
-                            var critRoll = Utils.DiceRoller.RollExpression(action.DamageExpression);
-                            damage += critRoll.Total;
-                            LogAction?.Invoke($"💥 {_token.Name} deals {damage} damage (CRIT: {damageRoll.Total} + {critRoll.Total})!");
-                        }
-                        else
-                        {
-                            LogAction?.Invoke($"💥 {_token.Name} deals {damage} damage ({damageRoll.Total})!");
-                        }
-                    }
-                }
-            }
-            else
-            {
-                // Non-attack action (like abilities or spells without attack rolls)
-                LogAction?.Invoke($"✨ {_token.Name} uses {action.Name}");
-
-                // Still roll damage if there is any (like saving throw spells)
-                if (!string.IsNullOrEmpty(action.DamageExpression))
-                {
-                    var result = MessageBox.Show(
-                        $"{action.Name}\n\nRoll damage ({action.DamageExpression})?",
-                        action.Name,
-                        MessageBoxButton.YesNo,
-                        MessageBoxImage.Question);
-
-                    if (result == MessageBoxResult.Yes)
-                    {
-                        var damageRoll = Utils.DiceRoller.RollExpression(action.DamageExpression);
-                        LogAction?.Invoke($"💥 {action.Name} deals {damageRoll.Total} damage!");
-                    }
-                }
-            }
+            LogAction?.Invoke($"🎯 Select a target for {action.Name} (Click a token on the map, or press Escape to cancel)");
         }
 
-        /// <summary>
-        /// Rebuilds the quick actions buttons based on user configuration
-        /// </summary>
-        public void BuildQuickActionsUI()
+        private void ShowTargetingIndicator(string actionName)
         {
-            _quickActions = QuickActionsService.GetEnabledQuickActions();
+            TxtTargetingAction.Text = $"🎯 Using: {actionName}";
+            TargetingIndicator.Visibility = Visibility.Visible;
+        }
 
-            // Find the Quick Actions section in XAML and rebuild it
-            // We need to find the WrapPanel that contains the quick action buttons
+        private void HideTargetingIndicator()
+        {
+            TargetingIndicator.Visibility = Visibility.Collapsed;
+        }
 
-            // Clear existing quick action buttons (find the WrapPanel after "Quick Actions" header)
-            var quickActionsPanel = FindQuickActionsPanel();
-            if (quickActionsPanel == null) return;
+        private void BtnCancelTargeting_Click(object sender, RoutedEventArgs e)
+        {
+            CancelTargeting();
+        }
 
-            quickActionsPanel.Children.Clear();
+        public void CancelTargeting()
+        {
+            _targetingService.CancelTargeting();
+            HideTargetingIndicator();
+            TargetingCancelled?.Invoke();
+            LogAction?.Invoke("❌ Targeting cancelled");
+        }
 
-            foreach (var action in _quickActions)
+        public TargetingState GetTargetingState() => _targetingService?.CurrentState;
+
+        public void OnTargetSelected(Token target)
+        {
+            if (!_targetingService.CurrentState.IsTargeting) return;
+
+            var (isValid, reason) = _targetingService.ValidateTarget(target, _vm?.GridCellSize ?? 48);
+
+            if (!isValid)
             {
-                var button = new Button
+                LogAction?.Invoke($"❌ Invalid target: {reason}");
+                return;
+            }
+
+            var state = _targetingService.CurrentState;
+            bool manualMode = !Options.LiveMode;
+
+            var dialog = new ActionResolutionDialog(
+                state.SourceToken,
+                target,
+                state.SelectedAction,
+                state.DamageType,
+                manualMode)
+            {
+                Owner = Window.GetWindow(this)
+            };
+
+            if (dialog.ShowDialog() == true && dialog.Result != null)
+            {
+                LogAction?.Invoke(dialog.Result.Message);
+                ActionResolved?.Invoke(dialog.Result);
+                UpdateDisplay();
+            }
+
+            CancelTargeting();
+        }
+
+        #endregion
+
+        #region Quick Actions
+
+        private void PopulateQuickActions()
+        {
+            QuickActionsPanel.Children.Clear();
+
+            if (_quickActions == null) return;
+
+            foreach (var qa in _quickActions)
+            {
+                var btn = new Button
                 {
-                    Content = $"{action.Icon} {action.Name}",
-                    Tag = action,
-                    ToolTip = action.Description,
+                    Content = $"{qa.Icon} {qa.Name}",
                     Style = (Style)FindResource("QuickActionButtonStyle"),
-                    Margin = new Thickness(0, 0, 4, 4)
+                    Tag = qa
                 };
 
-                button.Click += QuickActionButton_Click;
-                quickActionsPanel.Children.Add(button);
+                btn.Click += QuickAction_Click;
+                QuickActionsPanel.Children.Add(btn);
             }
 
-            // Add configure button
-            var configButton = new Button
+            // Add Set Concentration button
+            var concBtn = new Button
             {
-                Content = "⚙️",
-                ToolTip = "Configure Quick Actions",
-                Style = (Style)FindResource("QuickActionButtonStyle"),
-                Margin = new Thickness(0, 0, 4, 4),
-                Width = 28
+                Content = "🎯 Set Concentration",
+                Style = (Style)FindResource("QuickActionButtonStyle")
             };
-            configButton.Click += BtnConfigureQuickActions_Click;
-            quickActionsPanel.Children.Add(configButton);
+            concBtn.Click += (s, e) => PromptSetConcentration();
+            QuickActionsPanel.Children.Add(concBtn);
         }
 
-        private WrapPanel FindQuickActionsPanel()
+        private void QuickAction_Click(object sender, RoutedEventArgs e)
         {
-            return QuickActionsPanel;
+            if (sender is Button btn && btn.Tag is QuickAction qa && _token != null)
+            {
+                ExecuteQuickAction(qa);
+            }
         }
 
-        private void QuickActionButton_Click(object sender, RoutedEventArgs e)
+        private void ExecuteQuickAction(QuickAction qa)
         {
             if (_token == null) return;
-            if (sender is not Button btn || btn.Tag is not QuickAction action) return;
 
-            ExecuteQuickAction(action);
-        }
-
-        private void ExecuteQuickAction(QuickAction action)
-        {
-            switch (action.ActionType)
+            switch (qa.ActionType)
             {
-                case QuickActionType.ToggleCondition:
-                    // Safely get the condition value
-                    Models.Condition? conditionNullable = action.ConditionToToggle;
-                    if (conditionNullable.HasValue && conditionNullable.Value != Models.Condition.None)
-                    {
-                        Models.Condition condition = conditionNullable.Value;
+                case QuickActionType.RollInitiative:
+                    var initRoll = Utils.DiceRoller.RollExpression("1d20");
+                    int initTotal = initRoll.Total + _token.InitiativeModifier;
+                    _token.Initiative = initTotal;
+                    LogAction?.Invoke($"🎲 {_token.Name} rolled initiative: {initRoll.Total} + {_token.InitiativeModifier} = {initTotal}");
+                    break;
 
-                        // Special handling for Concentration
-                        if (condition == Models.Condition.Concentrating)
-                        {
-                            HandleConcentration();
-                        }
-                        else
-                        {
-                            _token.ToggleCondition(condition);
-                            bool isActive = _token.HasCondition(condition);
-                            LogAction?.Invoke($"{_token.Name}: {(isActive ? "+" : "-")}{action.Name}");
-                        }
+                case QuickActionType.RollSavingThrow:
+                    PromptSavingThrow(qa.Parameter);
+                    break;
+
+                case QuickActionType.RollAbilityCheck:
+                    PromptAbilityCheck(qa.Parameter);
+                    break;
+
+                case QuickActionType.ApplyCondition:
+                    if (Enum.TryParse<Models.Condition>(qa.Parameter, out var condition))
+                    {
+                        _token.ToggleCondition(condition);
+                        LogAction?.Invoke($"🎯 {_token.Name}: {(qa.Parameter)} {(_token.HasCondition(condition) ? "applied" : "removed")}");
                         UpdateDisplay();
                     }
                     break;
 
-                case QuickActionType.RollInitiative:
-                    RollInitiative();
-                    break;
-
-                case QuickActionType.RollSave:
-                    RollSavingThrow(action.CustomCommand);
-                    break;
-
-                case QuickActionType.RollAbilityCheck:
-                    RollAbilityCheck(action.CustomCommand);
-                    break;
-
-                case QuickActionType.RollDice:
-                    RollDice(action.Name, action.DiceExpression);
-                    break;
-
                 case QuickActionType.Custom:
-                    // Future: Handle custom actions
+                    LogAction?.Invoke($"✨ {_token.Name}: {qa.Name}");
                     break;
             }
         }
 
-        private void HandleConcentration()
+        private void PromptSavingThrow(string ability)
         {
-            if (_token.HasCondition(Models.Condition.Concentrating))
-            {
-                _token.RemoveCondition(Models.Condition.Concentrating);
-                _token.ConcentrationSpell = null;
-                LogAction?.Invoke($"{_token.Name} drops concentration");
-            }
-            else
-            {
-                string spell = Microsoft.VisualBasic.Interaction.InputBox(
-                    "What spell is being concentrated on?", "Concentration", "");
+            if (_token == null) return;
 
-                if (!string.IsNullOrWhiteSpace(spell))
-                {
-                    _token.AddCondition(Models.Condition.Concentrating);
-                    _token.ConcentrationSpell = spell;
-                    LogAction?.Invoke($"{_token.Name} concentrating on {spell}");
-                }
-            }
-            UpdateDisplay();
-        }
-
-        private void RollInitiative()
-        {
-            var roll = Utils.DiceRoller.RollExpression("1d20");
-            _token.Initiative = roll.Total + _token.InitiativeModifier;
-            UpdateDisplay();
-            LogAction?.Invoke($"{_token.Name} rolled initiative: {roll.Total} + {_token.InitiativeModifier} = {_token.Initiative}");
-        }
-
-        private void RollSavingThrow(string ability)
-        {
-            int modifier = GetAbilityModifier(ability);
-            var roll = Utils.DiceRoller.RollExpression("1d20");
-            int total = roll.Total + modifier;
-
-            string modStr = modifier >= 0 ? $"+{modifier}" : modifier.ToString();
-            LogAction?.Invoke($"{_token.Name} {ability} Save: {roll.Total} {modStr} = {total}");
-
-            MessageBox.Show(
-                $"{ability} Saving Throw\n\nRoll: {roll.Total}\nModifier: {modStr}\nTotal: {total}",
-                $"{_token.Name} - {ability} Save",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
-        }
-
-        private void RollAbilityCheck(string command)
-        {
-            // Format: "ABILITY:Skill" or just "ABILITY"
-            var parts = command.Split(':');
-            var ability = parts[0];
-            var skill = parts.Length > 1 ? parts[1] : null;
-
-            int modifier = GetAbilityModifier(ability);
-
-            // TODO: Add proficiency if the token has the skill
-
-            var roll = Utils.DiceRoller.RollExpression("1d20");
-            int total = roll.Total + modifier;
-
-            string checkName = skill ?? ability;
-            string modStr = modifier >= 0 ? $"+{modifier}" : modifier.ToString();
-            LogAction?.Invoke($"{_token.Name} {checkName}: {roll.Total} {modStr} = {total}");
-
-            MessageBox.Show(
-                $"{checkName} Check\n\nRoll: {roll.Total}\nModifier: {modStr}\nTotal: {total}",
-                $"{_token.Name} - {checkName}",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
-        }
-
-        private void RollDice(string name, string expression)
-        {
-            var roll = Utils.DiceRoller.RollExpression(expression);
-            LogAction?.Invoke($"{_token.Name} {name}: {roll.Total}");
-
-            // Special handling for death saves
-            if (name == "Death Save")
-            {
-                if (roll.Total >= 10)
-                {
-                    _token.DeathSaveSuccesses++;
-                    if (roll.Total == 20)
-                    {
-                        _token.HP = 1;
-                        _token.DeathSaveSuccesses = 0;
-                        _token.DeathSaveFailures = 0;
-                        LogAction?.Invoke($"{_token.Name} rolled a 20! Regains 1 HP and is conscious!");
-                    }
-                    else if (_token.DeathSaveSuccesses >= 3)
-                    {
-                        LogAction?.Invoke($"{_token.Name} is stable!");
-                    }
-                }
-                else
-                {
-                    _token.DeathSaveFailures++;
-                    if (roll.Total == 1)
-                    {
-                        _token.DeathSaveFailures++; // Natural 1 = 2 failures
-                    }
-                    if (_token.DeathSaveFailures >= 3)
-                    {
-                        LogAction?.Invoke($"{_token.Name} has died!");
-                    }
-                }
-                UpdateDisplay();
-            }
-        }
-
-        private int GetAbilityModifier(string ability)
-        {
-            return ability?.ToUpper() switch
+            int mod = ability?.ToUpper() switch
             {
                 "STR" => (_token.Str - 10) / 2,
                 "DEX" => (_token.Dex - 10) / 2,
@@ -815,93 +1140,50 @@ namespace DnDBattle.Views
                 "CHA" => (_token.Cha - 10) / 2,
                 _ => 0
             };
+
+            var roll = Utils.DiceRoller.RollExpression("1d20");
+            int total = roll.Total + mod;
+            string modStr = mod >= 0 ? $"+{mod}" : mod.ToString();
+
+            LogAction?.Invoke($"🎲 {_token.Name} {ability} Save: {roll.Total}{modStr} = {total}");
         }
 
-        private void BtnConfigureQuickActions_Click(object sender, RoutedEventArgs e)
+        private void PromptAbilityCheck(string ability)
         {
-            var allActions = QuickActionsService.GetQuickActions();
-            var window = new QuickActionsSettingsWindow(allActions)
+            if (_token == null) return;
+
+            int mod = ability?.ToUpper() switch
             {
-                Owner = Window.GetWindow(this)
+                "STR" => (_token.Str - 10) / 2,
+                "DEX" => (_token.Dex - 10) / 2,
+                "CON" => (_token.Con - 10) / 2,
+                "INT" => (_token.Int - 10) / 2,
+                "WIS" => (_token.Wis - 10) / 2,
+                "CHA" => (_token.Cha - 10) / 2,
+                _ => 0
             };
 
-            if (window.ShowDialog() == true && window.ResultActions != null)
-            {
-                QuickActionsService.SaveQuickActions(window.ResultActions);
-                BuildQuickActionsUI();
-                QuickActionsConfigChanged?.Invoke();
-            }
+            var roll = Utils.DiceRoller.RollExpression("1d20");
+            int total = roll.Total + mod;
+            string modStr = mod >= 0 ? $"+{mod}" : mod.ToString();
+
+            LogAction?.Invoke($"🎲 {_token.Name} {ability} Check: {roll.Total}{modStr} = {total}");
         }
 
-        #region Button Handlers
-
-        private void BtnHeal_Click(object sender, RoutedEventArgs e)
+        public void PromptSetConcentration()
         {
             if (_token == null) return;
 
-            string input = Microsoft.VisualBasic.Interaction.InputBox(
-                $"Heal {_token.Name} by how much?", "Heal", "0");
+            string spellName = Microsoft.VisualBasic.Interaction.InputBox(
+                "Enter the spell name:",
+                "Set Concentration",
+                _token.ConcentrationSpell ?? "");
 
-            if (int.TryParse(input, out int amount) && amount > 0)
+            if (!string.IsNullOrWhiteSpace(spellName))
             {
-                int oldHP = _token.HP;
-                _token.HP = Math.Min(_token.HP + amount, _token.MaxHP);
-                UpdateDisplay();
-                LogAction?.Invoke($"{_token.Name} healed for {_token.HP - oldHP} HP ({_token.HP}/{_token.MaxHP})");
-            }
-        }
-
-        private void BtnDamage_Click(object sender, RoutedEventArgs e)
-        {
-            if (_token == null) return;
-
-            string input = Microsoft.VisualBasic.Interaction.InputBox(
-                $"Damage {_token.Name} by how much?", "Damage", "0");
-
-            if (int.TryParse(input, out int amount) && amount > 0)
-            {
-                // Apply to Temp HP first
-                if (_token.TempHP > 0)
-                {
-                    int tempDamage = Math.Min(amount, _token.TempHP);
-                    _token.TempHP -= tempDamage;
-                    amount -= tempDamage;
-                }
-
-                if (amount > 0)
-                {
-                    _token.HP = Math.Max(_token.HP - amount, 0);
-                }
-
-                UpdateDisplay();
-                LogAction?.Invoke($"{_token.Name} took {amount} damage ({_token.HP}/{_token.MaxHP})");
-
-                // Check for concentration
-                if (_token.HasCondition(Models.Condition.Concentrating))
-                {
-                    int dc = Math.Max(10, amount / 2);
-                    MessageBox.Show(
-                        $"{_token.Name} must make a DC {dc} Constitution save to maintain concentration!",
-                        "Concentration Check",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
-                }
-            }
-        }
-
-        private void BtnResetMovement_Click(object sender, RoutedEventArgs e)
-        {
-            if (_token == null) return;
-            _token.ResetMovementForTurn();
-            UpdateDisplay();
-            LogAction?.Invoke($"{_token.Name} movement reset");
-        }
-
-        private void TxtNotes_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            if (_token != null)
-            {
-                _token.Notes = TxtNotes.Text;
+                _token.SetConcentration(spellName);
+                UpdateConcentrationDisplay();
+                LogAction?.Invoke($"🎯 {_token.Name} is now concentrating on {spellName}");
             }
         }
 
