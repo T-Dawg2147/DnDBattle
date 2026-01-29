@@ -120,6 +120,38 @@ namespace DnDBattle.Controls
 
         #endregion
 
+        #region Cached Resources
+
+        // Wall type pens - created once, reused forever
+        private static readonly Pen WallSolidPen;
+        private static readonly Pen WallDoorPen;
+        private static readonly Pen WallDoorOpenPen;
+        private static readonly Pen WallWindowPen;
+        private static readonly Pen WallHalfwallPen;
+        private static readonly Pen WallSelectedPen;
+
+        // Shadow pens for each wall thickness
+        private static readonly Pen WallShadowPen6;  // For solid/door walls (thickness 6)
+        private static readonly Pen WallShadowPen4;  // For window/halfwall/open door (thickness 4)
+
+        // Handle drawing
+        private static readonly Pen WallHandlePen;
+
+        // Origin point marker
+        private static readonly Pen AreaEffectOriginPen;
+
+        // Label background
+        private static readonly SolidColorBrush AreaEffectLabelBackgroundBrush;
+
+        // Preview pen dash style (shared)
+        private static readonly DashStyle PreviewDashStyle = DashStyles.Dash;
+
+        // Simple cache for effect brushes by color (limited size)
+        private readonly Dictionary<Color, (SolidColorBrush fill, Pen outline, Pen previewOutline)> _effectBrushCache = new();
+        private const int MaxEffectBrushCacheSize = 20;
+
+        #endregion
+
         // AOE State
         private readonly AreaEffectService _areaEffectService = new AreaEffectService();
         private readonly DrawingVisual _areaEffectVisual = new DrawingVisual();
@@ -243,6 +275,54 @@ namespace DnDBattle.Controls
 
             LightCenterPen = new Pen(Brushes.Orange, 2);
             LightCenterPen.Freeze();
+
+            // Initialize wall pens
+            var solidBrush = new SolidColorBrush(Color.FromArgb(255, 139, 90, 43));
+            solidBrush.Freeze();
+            WallSolidPen = new Pen(solidBrush, 6) { DashStyle = DashStyles.Solid };
+            WallSolidPen.Freeze();
+
+            var doorBrush = new SolidColorBrush(Color.FromArgb(255, 101, 67, 33));
+            doorBrush.Freeze();
+            WallDoorPen = new Pen(doorBrush, 6) { DashStyle = DashStyles.Solid };
+            WallDoorPen.Freeze();
+
+            var doorOpenBrush = new SolidColorBrush(Color.FromArgb(150, 101, 67, 33));
+            doorOpenBrush.Freeze();
+            WallDoorOpenPen = new Pen(doorOpenBrush, 4) { DashStyle = DashStyles.Dash };
+            WallDoorOpenPen.Freeze();
+
+            var windowBrush = new SolidColorBrush(Color.FromArgb(200, 135, 206, 235));
+            windowBrush.Freeze();
+            WallWindowPen = new Pen(windowBrush, 4) { DashStyle = DashStyles.DashDot };
+            WallWindowPen.Freeze();
+
+            var halfwallBrush = new SolidColorBrush(Color.FromArgb(180, 169, 169, 169));
+            halfwallBrush.Freeze();
+            WallHalfwallPen = new Pen(halfwallBrush, 4) { DashStyle = DashStyles.Dot };
+            WallHalfwallPen.Freeze();
+
+            WallSelectedPen = new Pen(Brushes.Yellow, 3);
+            WallSelectedPen.Freeze();
+
+            // Shadow pens
+            var shadowBrush = new SolidColorBrush(Color.FromArgb(100, 0, 0, 0));
+            shadowBrush.Freeze();
+            WallShadowPen6 = new Pen(shadowBrush, 6);
+            WallShadowPen6.Freeze();
+            WallShadowPen4 = new Pen(shadowBrush, 4);
+            WallShadowPen4.Freeze();
+
+            // Handle pen
+            WallHandlePen = new Pen(Brushes.Black, 2);
+            WallHandlePen.Freeze();
+
+            // Area effect resources
+            AreaEffectOriginPen = new Pen(Brushes.Black, 1);
+            AreaEffectOriginPen.Freeze();
+
+            AreaEffectLabelBackgroundBrush = new SolidColorBrush(Color.FromArgb(150, 0, 0, 0));
+            AreaEffectLabelBackgroundBrush.Freeze();
         }
 
         public BattleGridControl()
@@ -2877,25 +2957,7 @@ namespace DnDBattle.Controls
         {
             using (var dc = _wallVisual.RenderOpen())
             {
-                var solidPen = new Pen(new SolidColorBrush(Color.FromArgb(255, 139, 90, 43)), 6);
-                var doorPen = new Pen(new SolidColorBrush(Color.FromArgb(255, 101, 67, 33)), 6);
-                var doorOpenPen = new Pen(new SolidColorBrush(Color.FromArgb(150, 101, 67, 33)), 4);
-                var windowPen = new Pen(new SolidColorBrush(Color.FromArgb(200, 135, 206, 235)), 4);
-                var halfWallPen = new Pen(new SolidColorBrush(Color.FromArgb(180, 169, 169, 169)), 4);
-                var selectedPen = new Pen(Brushes.Yellow, 3);
-
-                solidPen.DashStyle = DashStyles.Solid;
-                doorPen.DashStyle = DashStyles.Solid;
-                doorOpenPen.DashStyle = DashStyles.Dash;
-                windowPen.DashStyle = DashStyles.DashDot;
-                halfWallPen.DashStyle = DashStyles.Dot;
-
-                solidPen.Freeze();
-                doorPen.Freeze();
-                doorOpenPen.Freeze();
-                windowPen.Freeze();
-                halfWallPen.Freeze();
-                selectedPen.Freeze();                
+                // ✅ Use cached pens - zero allocations!
 
                 foreach (var wall in _wallService.Walls)
                 {
@@ -2906,39 +2968,44 @@ namespace DnDBattle.Controls
                         wall.EndPoint.X * GridCellSize + GridCellSize / 2,
                         wall.EndPoint.Y * GridCellSize + GridCellSize / 2);
 
+                    // Select the appropriate cached pen
                     Pen wallPen = wall.WallType switch
                     {
-                        WallType.Solid => solidPen,
-                        WallType.Door => wall.IsOpen ? doorOpenPen : doorPen,
-                        WallType.Window => windowPen,
-                        WallType.Halfwall => halfWallPen,
-                        _ => solidPen
+                        WallType.Solid => WallSolidPen,
+                        WallType.Door => wall.IsOpen ? WallDoorOpenPen : WallDoorPen,
+                        WallType.Window => WallWindowPen,
+                        WallType.Halfwall => WallHalfwallPen,
+                        _ => WallSolidPen
                     };
 
-                    var shadowPen = new Pen(new SolidColorBrush(Color.FromArgb(100, 0, 0, 0)), wallPen.Thickness);
-                    shadowPen.Freeze();
+                    // Use appropriate cached shadow pen based on wall thickness
+                    Pen shadowPen = (wallPen.Thickness >= 6) ? WallShadowPen6 : WallShadowPen4;
+
+                    // Draw shadow
                     dc.DrawLine(shadowPen,
                         new Point(startPx.X + 2, startPx.Y + 2),
                         new Point(endPx.X + 2, endPx.Y + 2));
 
+                    // Draw wall
                     dc.DrawLine(wallPen, startPx, endPx);
 
+                    // Draw selection highlight
                     if (wall == _selectedWall)
                     {
-                        dc.DrawLine(selectedPen, startPx, endPx);
+                        dc.DrawLine(WallSelectedPen, startPx, endPx);
 
-                        var handleBrush = Brushes.Yellow;
-                        dc.DrawEllipse(handleBrush, new Pen(Brushes.Black, 2), startPx, 8, 8);
-                        dc.DrawEllipse(handleBrush, new Pen(Brushes.Black, 2), endPx, 8, 8);
+                        // Draw handles
+                        dc.DrawEllipse(Brushes.Yellow, WallHandlePen, startPx, 8, 8);
+                        dc.DrawEllipse(Brushes.Yellow, WallHandlePen, endPx, 8, 8);
                     }
 
+                    // Draw labels (unchanged - dynamic text requires FormattedText)
                     if (wall == _selectedWall || !string.IsNullOrEmpty(wall.Label))
                     {
                         var midPoint = new Point(
                             (startPx.X + endPx.X) / 2,
                             (startPx.Y + endPx.Y) / 2);
 
-                        // Only show label if wall is selected or has a custom label
                         string labelText = wall.Label ?? $"{wall.WallType}";
 
                         if (wall == _selectedWall || wall.WallType == WallType.Door)
@@ -2947,7 +3014,7 @@ namespace DnDBattle.Controls
                                 labelText,
                                 CultureInfo.CurrentCulture,
                                 FlowDirection.LeftToRight,
-                                new Typeface("Segoe UI"),
+                                CachedTypefaces.SegoeUI,  // ✅ Use cached typeface
                                 10,
                                 Brushes.White,
                                 1.0);
@@ -3969,18 +4036,9 @@ namespace DnDBattle.Controls
         {
             var geometry = AreaEffectService.GetEffectGeometry(effect, GridCellSize);
 
-            // Create fill brush with transparency
-            var fillBrush = new SolidColorBrush(effect.Color);
-            fillBrush.Freeze();
-
-            // Create outline pen
-            var outlineColor = Color.FromArgb(200, effect.Color.R, effect.Color.G, effect.Color.B);
-            var pen = new Pen(new SolidColorBrush(outlineColor), effect.IsPreview ? 2 : 3);
-            if (effect.IsPreview)
-            {
-                pen.DashStyle = DashStyles.Dash;
-            }
-            pen.Freeze();
+            // ✅ Get cached brushes for this color
+            var (fillBrush, outlinePen, previewOutlinePen) = GetEffectBrushes(effect.Color);
+            var pen = effect.IsPreview ? previewOutlinePen : outlinePen;
 
             dc.DrawGeometry(fillBrush, pen, geometry);
 
@@ -3990,9 +4048,10 @@ namespace DnDBattle.Controls
                 double originX = effect.Origin.X * GridCellSize;
                 double originY = effect.Origin.Y * GridCellSize;
 
+                // ✅ Use cached pen
                 dc.DrawEllipse(
                     Brushes.White,
-                    new Pen(Brushes.Black, 1),
+                    AreaEffectOriginPen,
                     new Point(originX, originY),
                     5, 5);
             }
@@ -4005,17 +4064,22 @@ namespace DnDBattle.Controls
                     effect.Name,
                     System.Globalization.CultureInfo.CurrentCulture,
                     FlowDirection.LeftToRight,
-                    new Typeface("Segoe UI"),
+                    CachedTypefaces.SegoeUI,  // ✅ Use cached typeface
                     12,
                     Brushes.White,
                     1.0);
 
                 // Draw text background
-                var textPos = new Point(bounds.X + (bounds.Width - text.Width) / 2, bounds.Y + (bounds.Height - text.Height) / 2);
+                var textPos = new Point(
+                    bounds.X + (bounds.Width - text.Width) / 2,
+                    bounds.Y + (bounds.Height - text.Height) / 2);
+
+                // ✅ Use cached brush
                 dc.DrawRectangle(
-                    new SolidColorBrush(Color.FromArgb(150, 0, 0, 0)),
+                    AreaEffectLabelBackgroundBrush,
                     null,
                     new Rect(textPos.X - 4, textPos.Y - 2, text.Width + 8, text.Height + 4));
+
                 dc.DrawText(text, textPos);
             }
         }
@@ -4763,6 +4827,43 @@ namespace DnDBattle.Controls
         {
             _tokenVisualLookup.TryGetValue(tokenId, out var container);
             return container;
+        }
+
+        /// <summary>
+        /// Gets or creates cached brushes and pens for an area effect color.
+        /// </summary>
+        private (SolidColorBrush fill, Pen outline, Pen previewOutline) GetEffectBrushes(Color color)
+        {
+            if (_effectBrushCache.TryGetValue(color, out var cached))
+            {
+                return cached;
+            }
+
+            // Evict oldest if cache is full (simple LRU approximation)
+            if (_effectBrushCache.Count >= MaxEffectBrushCacheSize)
+            {
+                // Remove first entry (not perfect LRU but simple and effective)
+                var firstKey = _effectBrushCache.Keys.First();
+                _effectBrushCache.Remove(firstKey);
+            }
+
+            // Create and cache new brushes
+            var fillBrush = new SolidColorBrush(color);
+            fillBrush.Freeze();
+
+            var outlineColor = Color.FromArgb(200, color.R, color.G, color.B);
+            var outlineBrush = new SolidColorBrush(outlineColor);
+            outlineBrush.Freeze();
+
+            var outlinePen = new Pen(outlineBrush, 3);
+            outlinePen.Freeze();
+
+            var previewPen = new Pen(outlineBrush, 2) { DashStyle = DashStyles.Dash };
+            previewPen.Freeze();
+
+            var entry = (fillBrush, outlinePen, previewPen);
+            _effectBrushCache[color] = entry;
+            return entry;
         }
         #endregion
     }
