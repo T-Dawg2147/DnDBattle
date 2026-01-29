@@ -71,6 +71,7 @@ namespace DnDBattle.Controls
         // internal state
         private readonly SpatialIndex _spatialIndex = new SpatialIndex(1);
         private readonly List<LightSource> _lights = new List<LightSource>();
+        private LightingService _lightingService = new LightingService();
 
         private readonly DrawingVisual _movementVisual = new DrawingVisual();
         private readonly DrawingVisual _pathVisual = new DrawingVisual();
@@ -206,6 +207,9 @@ namespace DnDBattle.Controls
         private Wall _selectedWall = null;
         private bool _isDraggingWallEndpoint = false;
         private bool _draggingWallIsStart = false;
+
+        private bool _isDrawingWalls = false;
+        private List<List<Point>> _wallSegments = new List<List<Point>>();
 
         private bool _roomDrawMode = false;
         private List<Point> _roomVertices = new List<Point>();
@@ -508,7 +512,7 @@ namespace DnDBattle.Controls
 
             SizeChanged += (s, e) =>
             {
-                RefreshAllVisualsImmediate();
+                RefreshAllVisuals();
             };
 
             RenderCanvas.AllowDrop = true;
@@ -985,7 +989,7 @@ namespace DnDBattle.Controls
             if (handled)
             {
                 ClampPanToBoundaries();
-                RefreshAllVisualsImmediate();
+                RefreshAllVisuals();
                 e.Handled = true;
             }
         }
@@ -1016,8 +1020,6 @@ namespace DnDBattle.Controls
             _pan.X = absX - centerX * _zoom.ScaleX;
             _pan.Y = absY - centerY * _zoom.ScaleY;
         }
-
-        // Add these event handlers that redirect to the RenderCanvas logic
 
         private void GridBackground_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
@@ -1217,7 +1219,7 @@ namespace DnDBattle.Controls
                 _lastPanPoint = pt;
 
                 ClampPanToBoundaries();
-                RefreshAllVisualsImmediate();
+                RefreshAllVisuals();
                 e.Handled = true;
             }
 
@@ -1232,7 +1234,7 @@ namespace DnDBattle.Controls
                 _middlePanLast = pt;
 
                 ClampPanToBoundaries();
-                RefreshAllVisualsImmediate();
+                RefreshAllVisuals();
                 e.Handled = true;
             }
         }
@@ -1257,7 +1259,7 @@ namespace DnDBattle.Controls
             _pan.Y = absY - pos.Y * _zoom.ScaleY;
 
             ClampPanToBoundaries();
-            RefreshAllVisualsImmediate();
+            RefreshAllVisuals();
             e.Handled = true;
         }
 
@@ -3054,6 +3056,19 @@ namespace DnDBattle.Controls
 
         #region Wall Drawing
 
+        public void SetWallDrawMode(bool enabled)
+        {
+            _isDrawingWalls = enabled;
+            InvalidateVisual();
+        }
+
+        public void SaveWalls()
+        {
+            _isDrawingWalls = false;
+            // TODO: persist _wallSegments to your map/wall storage
+            InvalidateVisual();
+        }
+
         public void SetWallDrawMode(bool enabled, WallType wallType = WallType.Solid)
         {
             _wallDrawMode = enabled;
@@ -4236,6 +4251,10 @@ namespace DnDBattle.Controls
         {
             _lights.Add(light);
             _spatialIndex.IndexLight(light);
+
+            var dc = _lightingVisual.RenderOpen();
+            DrawLight(dc, light);
+
             MarkLightingDirty();
             RedrawLighting();
         }

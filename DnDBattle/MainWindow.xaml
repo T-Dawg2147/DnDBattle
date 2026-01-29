@@ -322,15 +322,21 @@
                     </Grid.RowDefinitions>
 
                     <!-- Area Effect Toolbar -->
-                    <StackPanel>
-                        <views:AreaEffectToolbar x:Name="AoeToolbar" 
-                        Grid.Row="0"
-                        Visibility="Visible"/>
-
-                        <views:FogOfWarToolbar x:Name="FogToolbar" 
-                       Grid.Row="0"
-                       Visibility="Visible"/>
-                    </StackPanel>
+                    <TabControl>
+                        <TabItem>
+                            <views:AreaEffectToolbar x:Name="AoeToolbar" 
+                                Grid.Row="0"
+                                Visibility="Visible"/>
+                        </TabItem>
+                        <TabItem>
+                            <views:FogOfWarToolbar x:Name="FogToolbar" 
+                                Visibility="Visible"/>
+                        </TabItem>
+                        <TabItem>
+                            <views:WallToolbar x:Name="WallToolbar" />
+                        </TabItem>                        
+                        
+                    </TabControl>
                     
 
                     <!-- Battle Grid - NOTE: Grid.Row="1" is required! -->

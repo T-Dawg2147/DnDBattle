@@ -7,55 +7,51 @@ using DnDBattle.Models;
 
 namespace DnDBattle.Services
 {
-    class LightingService
+    public class LightingService
     {
-        /*public static StreamGeometry ComputeLitGeometry(Point center, double radiusPx, IEnumerable<Obstacle> obstaclesPixelPolys, int maxAngles = 512)
+        // List of current lights (could also be managed elsewhere)
+        public List<LightSource> Lights { get; } = new List<LightSource>();
+
+        /// <summary>
+        /// Calculate the lit region from a given light source, considering obstacles.
+        /// </summary>
+        /// <param name="center">Light center in pixel coordinates</param>
+        /// <param name="radiusPx">Light radius in pixels</param>
+        /// <param name="obstaclesPixelPolys">List of polygons representing obstacles (in pixel coords)</param>
+        /// <param name="maxAngles">Ray count (quality/cost tradeoff)</param>
+        /// <returns>Geometry representing the lit area</returns>
+        public static StreamGeometry GetLitGeometry(Point center, double radiusPx, IEnumerable<List<Point>> obstaclesPixelPolys, int maxAngles = 512)
         {
             var obstacleSegments = new List<(Point a, Point b)>();
-
-            // gather obstacle vertices as candidate angles
             var candidateAngles = new List<double>();
+
             if (obstaclesPixelPolys != null)
             {
-                foreach (var obs in obstaclesPixelPolys)
+                foreach (var poly in obstaclesPixelPolys)
                 {
-                    var pts = obs.PolygonGridPoints;
-                    for (int i = 0; i < pts.Count; i++)
+                    for (int i = 0; i < poly.Count; i++)
                     {
-                        var v = pts[i];
+                        var v = poly[i];
                         double ang = Math.Atan2(v.Y - center.Y, v.X - center.X);
-                        // add small offsets to handle grazing edges
                         candidateAngles.Add(NormalizeAngle(ang - 1e-4));
                         candidateAngles.Add(NormalizeAngle(ang));
                         candidateAngles.Add(NormalizeAngle(ang + 1e-4));
-                    }
 
-                    // add segments for intersection tests
-                    for (int i = 0; i < pts.Count; i++)
-                    {
-                        var a = pts[i];
-                        var b = pts[(i + 1) % pts.Count];
+                        var a = poly[i];
+                        var b = poly[(i + 1) % poly.Count];
                         obstacleSegments.Add((a, b));
                     }
                 }
             }
 
-            // If not enough vertex-driven angles, sample the circle uniformly
-            int vertexAngleCount = candidateAngles.Count;
-            if (vertexAngleCount < 16)
+            // If too few, add uniform circle
+            int baseSamples = Math.Min(Math.Max(16, maxAngles / 8), maxAngles);
+            if (candidateAngles.Count < 16)
             {
-                // create a base set of circle samples
-                int circleSamples = Math.Min(Math.Max(16, maxAngles / 8), maxAngles);
-                for (int i = 0; i < circleSamples; i++)
-                {
-                    candidateAngles.Add(NormalizeAngle(2.0 * Math.PI * i / circleSamples));
-                }
+                for (int i = 0; i < baseSamples; i++)
+                    candidateAngles.Add(NormalizeAngle(2.0 * Math.PI * i / baseSamples));
             }
-
-            // Deduplicate and sort angles
             var angles = candidateAngles.Distinct().OrderBy(a => a).ToList();
-
-            // If we have too many angles, downsample evenly to maxAngles
             if (angles.Count > maxAngles)
             {
                 var reduced = new List<double>();
@@ -78,7 +74,7 @@ namespace DnDBattle.Services
 
                 foreach (var seg in obstacleSegments)
                 {
-                    if (SegmentIntersection(center, rayEnd, seg.a, seg.b, out Point ip))
+                    if (SegmentsIntersect(center, rayEnd, seg.a, seg.b, out Point ip))
                     {
                         double d = (ip - center).Length;
                         if (d < nearestDist)
@@ -102,46 +98,43 @@ namespace DnDBattle.Services
                 }
             }
 
-            // Build geometry
             var geom = new StreamGeometry();
-            using (var ctx = geom.Open())
+            using (var gc = geom.Open())
             {
                 if (ptsOut.Count > 0)
                 {
-                    ctx.BeginFigure(ptsOut[0], true, true);
-                    for (int i = 1; i < ptsOut.Count; i++)
-                        ctx.LineTo(ptsOut[i], true, false);
+                    gc.BeginFigure(ptsOut[0], true, true);
+                    gc.PolyLineTo(ptsOut.Skip(1).ToList(), true, false);
                 }
             }
             geom.Freeze();
             return geom;
-        }*/
+        }
 
         private static double NormalizeAngle(double a)
         {
-            while (a <= -Math.PI) a += 2 * Math.PI;
-            while (a > Math.PI) a -= 2 * Math.PI;
+            while (a < 0) a += 2 * Math.PI;
+            while (a > 2 * Math.PI) a -= 2 * Math.PI;
             return a;
         }
 
-        private static bool SegmentIntersection(Point p, Point q, Point r, Point s, out Point ip)
+        /// <summary>Ray segments intersection—returns true and outputs intersection point if intersects, else false.</summary>
+        private static bool SegmentsIntersect(Point p1, Point p2, Point p3, Point p4, out Point intersection)
         {
-            ip = new Point();
-            var rvec = q - p;
-            var svec = s - r;
-            double rxs = Cross(rvec, svec);
-            if (Math.Abs(rxs) < 1e-9) return false;
+            intersection = new Point();
+            double dx1 = p2.X - p1.X, dy1 = p2.Y - p1.Y;
+            double dx2 = p4.X - p3.X, dy2 = p4.Y - p3.Y;
+            double denom = dx1 * dy2 - dy1 * dx2;
+            if (Math.Abs(denom) < 1e-10) return false;
 
-            double t = Cross(r - p, svec) / rxs;
-            double u = Cross(r - p, rvec) / rxs;
+            double t = ((p3.X - p1.X) * dy2 - (p3.Y - p1.Y) * dx2) / denom;
+            double u = ((p3.X - p1.X) * dy1 - (p3.Y - p1.Y) * dx1) / denom;
             if (t >= 0 && t <= 1 && u >= 0 && u <= 1)
             {
-                ip = p + t * rvec;
+                intersection = new Point(p1.X + t * dx1, p1.Y + t * dy1);
                 return true;
             }
             return false;
         }
-
-        private static double Cross(Vector a, Vector b) => a.X * b.Y - a.Y * b.X;
     }
 }

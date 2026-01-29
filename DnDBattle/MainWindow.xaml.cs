@@ -29,6 +29,8 @@ namespace DnDBattle
         public MainWindow()
         {
             InitializeComponent();
+            InitializeServices();
+
             var vm = new MainViewModel();
             DataContext = vm;
 
@@ -69,10 +71,10 @@ namespace DnDBattle
 
             // Setup panels
             SetupInitiativeTracker();
-
             SetupSelectedTokenPanel();
-
             SetupAreaEffectToolbar();
+            SetupFogOfWar();
+            SetupWallToolbar();
 
             BattleGrid.TokenAddedToMap += (token) =>
             {
@@ -350,6 +352,16 @@ namespace DnDBattle
             FogToolbar.ShapeToolSelected += (tool) =>
             {
                 BattleGrid.StartFogShapeTool(tool);
+            };
+        }
+
+        private void SetupWallToolbar()
+        {
+            WallToolbar.DrawModeToggled += (s, e) => {
+                BattleGrid.SetWallDrawMode(WallToolbar.IsDrawMode);
+            };
+            WallToolbar.SaveRequested += (s, e) => {
+                BattleGrid.SaveWalls();
             };
         }
         #endregion
