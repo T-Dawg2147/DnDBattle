@@ -11,7 +11,6 @@ namespace DnDBattle.Controls
     /// </summary>
     public class GridVisualHost : FrameworkElement
     {
-        #region Cached Drawing Resources
         // Grid line brushes and pens - created once, reused forever
         private static readonly SolidColorBrush MinorLineBrush;
         private static readonly SolidColorBrush MajorLineBrush;
@@ -24,6 +23,10 @@ namespace DnDBattle.Controls
         private static readonly SolidColorBrush LabelBrush;
         private static readonly SolidColorBrush LabelBackgroundBrush;
         private static readonly Typeface LabelTypeface;
+
+        #region Viewport Cache (skip redraw if unchanged)
+        private double _lastCellSize;
+        #endregion
 
         static GridVisualHost()
         {
@@ -60,7 +63,6 @@ namespace DnDBattle.Controls
                 FontWeights.SemiBold,
                 FontStretches.Normal);
         }
-        #endregion
 
         private readonly DrawingVisual _visual = new DrawingVisual();
 
@@ -158,6 +160,11 @@ namespace DnDBattle.Controls
                     new Point(viewWorldPixels.Left, y),
                     new Point(viewWorldPixels.Right, y));
             }
+        }
+
+        public void InvalidateGrid()
+        {
+            _lastCellSize = -1;
         }
 
         private void DrawCoordinateLabels(DrawingContext dc, double cellSize, int startCol, int endCol,

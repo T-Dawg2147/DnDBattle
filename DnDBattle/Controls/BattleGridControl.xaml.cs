@@ -150,6 +150,25 @@ namespace DnDBattle.Controls
         private readonly Dictionary<Color, (SolidColorBrush fill, Pen outline, Pen previewOutline)> _effectBrushCache = new();
         private const int MaxEffectBrushCacheSize = 20;
 
+        // Movement overlay
+        private static readonly SolidColorBrush MovementOverlayBrush;
+        private static readonly Pen MovementOverlayBorderPen;
+
+        // Path preview
+        private static readonly Pen PathPreviewLinePen;
+        private static readonly SolidColorBrush PathStepBrush;
+        private static readonly SolidColorBrush PathAOOBrush;
+        private static readonly Pen PathAOOPen;
+
+        // Measurement line
+        private static readonly Pen MeasureLinePen;
+        private static readonly Pen MeasureShadowPen;
+        private static readonly Pen MeasureEndpointPen;
+
+        // Measurement label
+        private static readonly SolidColorBrush MeasureLabelBackgroundBrush;
+        private static readonly Pen MeasureLabelBorderPen;
+
         #endregion
 
         // AOE State
@@ -180,15 +199,22 @@ namespace DnDBattle.Controls
         private int _lightingLightCount = -1;
 
         // Cached Light Gradient Brushes
-        private static readonly Dictionary<int, RadialGradientBrush> _lightGradientCache = new();
         private static readonly object _lightGradientCacheLock = new();
 
         // Cached brush for light center indicator
         private static readonly SolidColorBrush LightCenterBrush;
         private static readonly Pen LightCenterPen;
 
+        // Light source indicator
+        private static readonly Pen LightIndicatorPen;
+
+        // Cache for light gradients by intensity (most lights use standard intensities)
+        private readonly Dictionary<double, RadialGradientBrush> _lightGradientCache = new();
+        private const int MaxLightGradientCacheSize = 10;
+
         #endregion
 
+        #region Ruler
         // Measurement Tool State
         private bool _measureMode = false;
         private Point? _measureStart = null;
@@ -196,7 +222,15 @@ namespace DnDBattle.Controls
         private readonly DrawingVisual _measureVisual = new DrawingVisual();
         private bool _showCoordinateRulers = true;
 
-        public WallService WallService => _wallService;
+        // Ruler brushes
+        private static readonly SolidColorBrush RulerBackgroundBrush;
+        private static readonly SolidColorBrush RulerTextBrush;
+        private static readonly SolidColorBrush RulerLineBrush;
+        private static readonly FontFamily RulerFontFamily;
+
+        // Reusable background rectangles (updated instead of recreated)
+        private System.Windows.Shapes.Rectangle _topRulerBackground;
+        private System.Windows.Shapes.Rectangle _leftRulerBackground;
 
         // Coordinates Ruler Pooling fields
         private readonly List<TextBlock> _colLabelPool = new();
@@ -209,8 +243,10 @@ namespace DnDBattle.Controls
 
         // Cached brushes for rulers
         private static readonly SolidColorBrush RulerBgBrush = new(Color.FromRgb(37, 37, 38));
-        private static readonly SolidColorBrush RulerTextBrush = new(Color.FromRgb(200, 200, 200));
-        private static readonly SolidColorBrush RulerLineBrush = new(Color.FromRgb(80, 80, 80));
+
+        #endregion
+
+        public WallService WallService => _wallService;        
 
         // token drag
         private bool _isDraggingToken = false;
@@ -276,6 +312,10 @@ namespace DnDBattle.Controls
             LightCenterPen = new Pen(Brushes.Orange, 2);
             LightCenterPen.Freeze();
 
+            // Lighting resources
+            LightIndicatorPen = new Pen(Brushes.Orange, 2);
+            LightIndicatorPen.Freeze();
+
             // Initialize wall pens
             var solidBrush = new SolidColorBrush(Color.FromArgb(255, 139, 90, 43));
             solidBrush.Freeze();
@@ -323,6 +363,58 @@ namespace DnDBattle.Controls
 
             AreaEffectLabelBackgroundBrush = new SolidColorBrush(Color.FromArgb(150, 0, 0, 0));
             AreaEffectLabelBackgroundBrush.Freeze();
+
+            // Movement overlay resources
+            MovementOverlayBrush = new SolidColorBrush(Color.FromArgb(80, 30, 144, 255));
+            MovementOverlayBrush.Freeze();
+
+            var movementBorderBrush = new SolidColorBrush(Color.FromArgb(150, 30, 144, 255));
+            movementBorderBrush.Freeze();
+            MovementOverlayBorderPen = new Pen(movementBorderBrush, 1);
+            MovementOverlayBorderPen.Freeze();
+
+            // Path preview resources
+            PathPreviewLinePen = new Pen(Brushes.LightBlue, 2);
+            PathPreviewLinePen.Freeze();
+
+            PathStepBrush = new SolidColorBrush(Color.FromArgb(200, 100, 180, 255));
+            PathStepBrush.Freeze();
+
+            PathAOOBrush = new SolidColorBrush(Color.FromArgb(220, 220, 50, 50));
+            PathAOOBrush.Freeze();
+
+            PathAOOPen = new Pen(PathAOOBrush, 3);
+            PathAOOPen.Freeze();
+
+            // Measurement resources
+            MeasureLinePen = new Pen(Brushes.Yellow, 3) { DashStyle = DashStyles.Dash };
+            MeasureLinePen.Freeze();
+
+            var measureShadowBrush = new SolidColorBrush(Color.FromArgb(150, 0, 0, 0));
+            measureShadowBrush.Freeze();
+            MeasureShadowPen = new Pen(measureShadowBrush, 5);
+            MeasureShadowPen.Freeze();
+
+            MeasureEndpointPen = new Pen(Brushes.Black, 2);
+            MeasureEndpointPen.Freeze();
+
+            MeasureLabelBackgroundBrush = new SolidColorBrush(Color.FromArgb(220, 30, 30, 30));
+            MeasureLabelBackgroundBrush.Freeze();
+
+            MeasureLabelBorderPen = new Pen(Brushes.Yellow, 2);
+            MeasureLabelBorderPen.Freeze();
+
+            // Ruler resources
+            RulerBackgroundBrush = new SolidColorBrush(Color.FromRgb(37, 37, 38));
+            RulerBackgroundBrush.Freeze();
+
+            RulerTextBrush = new SolidColorBrush(Color.FromRgb(200, 200, 200));
+            RulerTextBrush.Freeze();
+
+            RulerLineBrush = new SolidColorBrush(Color.FromRgb(80, 80, 80));
+            RulerLineBrush.Freeze();
+
+            RulerFontFamily = new FontFamily("Segoe UI");
         }
 
         public BattleGridControl()
@@ -3416,38 +3508,28 @@ namespace DnDBattle.Controls
                     _measureEnd.X * GridCellSize + GridCellSize / 2,
                     _measureEnd.Y * GridCellSize + GridCellSize / 2);
 
-                // Draw the measurement line
-                var linePen = new Pen(Brushes.Yellow, 3);
-                linePen.DashStyle = DashStyles.Dash;
-                linePen.Freeze();
+                // ✅ Use cached pens - zero allocations!
 
-                // Shadow line
-                var shadowPen = new Pen(new SolidColorBrush(Color.FromArgb(150, 0, 0, 0)), 5);
-                shadowPen.Freeze();
-                dc.DrawLine(shadowPen,
+                // Draw shadow line
+                dc.DrawLine(MeasureShadowPen,
                     new Point(startPx.X + 2, startPx.Y + 2),
                     new Point(endPx.X + 2, endPx.Y + 2));
 
-                dc.DrawLine(linePen, startPx, endPx);
+                // Draw main measurement line
+                dc.DrawLine(MeasureLinePen, startPx, endPx);
 
-                // Draw endpoints
-                dc.DrawEllipse(Brushes.Yellow, new Pen(Brushes.Black, 2), startPx, 8, 8);
-                dc.DrawEllipse(Brushes.Yellow, new Pen(Brushes.Black, 2), endPx, 8, 8);
+                // Draw endpoints with cached pen
+                dc.DrawEllipse(Brushes.Yellow, MeasureEndpointPen, startPx, 8, 8);
+                dc.DrawEllipse(Brushes.Yellow, MeasureEndpointPen, endPx, 8, 8);
 
                 // Calculate distances
                 double dx = _measureEnd.X - _measureStart.Value.X;
                 double dy = _measureEnd.Y - _measureStart.Value.Y;
 
-                // D&D uses different movement costs:
-                // - Orthogonal (straight): 1 square = 5ft
-                // - Diagonal: Using the 5-10-5 rule or Euclidean
                 double euclideanSquares = Math.Sqrt(dx * dx + dy * dy);
-                double manhattanSquares = Math.Abs(dx) + Math.Abs(dy);
-
-                // 5-10-5 diagonal rule approximation
                 double diagonals = Math.Min(Math.Abs(dx), Math.Abs(dy));
                 double straights = Math.Max(Math.Abs(dx), Math.Abs(dy)) - diagonals;
-                double dndSquares = straights + diagonals * 1.5; // Each diagonal costs 1.5 squares
+                double dndSquares = straights + diagonals * 1.5;
 
                 double feetEuclidean = euclideanSquares * 5;
                 double feetDnd = dndSquares * 5;
@@ -3458,6 +3540,7 @@ namespace DnDBattle.Controls
                 string measureText = $"📏 {euclideanSquares:F1} squares ({feetEuclidean:F0} ft)\n" +
                                     $"🎲 D&D: {dndSquares:F1} squares ({feetDnd:F0} ft)";
 
+                // ✅ Use cached typeface
                 var formattedText = new FormattedText(
                     measureText,
                     System.Globalization.CultureInfo.CurrentCulture,
@@ -3467,16 +3550,17 @@ namespace DnDBattle.Controls
                     Brushes.White,
                     1.0);
 
-                // Background for text
+                // Background for text - use cached resources
                 var textBounds = new Rect(
                     midPoint.X - formattedText.Width / 2 - 8,
                     midPoint.Y - 4,
                     formattedText.Width + 16,
                     formattedText.Height + 8);
 
+                // ✅ Use cached brush and pen
                 dc.DrawRoundedRectangle(
-                    new SolidColorBrush(Color.FromArgb(220, 30, 30, 30)),
-                    new Pen(Brushes.Yellow, 2),
+                    MeasureLabelBackgroundBrush,
+                    MeasureLabelBorderPen,
                     textBounds, 6, 6);
 
                 dc.DrawText(formattedText, new Point(midPoint.X - formattedText.Width / 2, midPoint.Y));
@@ -3567,17 +3651,10 @@ namespace DnDBattle.Controls
                     _cachedReachableWallVersion = _wallVersion;
                 }
 
-                // Draw the reachable squares (always needed since visual position changes with pan/zoom)
-                var brush = new SolidColorBrush(Color.FromArgb(80, 30, 144, 255));
-                brush.Freeze();
-
-                var borderPen = new Pen(new SolidColorBrush(Color.FromArgb(150, 30, 144, 255)), 1);
-                borderPen.Freeze();
-
                 foreach (var cell in reachable)
                 {
                     var rect = new Rect(cell.x * GridCellSize, cell.y * GridCellSize, GridCellSize, GridCellSize);
-                    dc.DrawRectangle(brush, borderPen, rect);
+                    dc.DrawRectangle(MovementOverlayBrush, MovementOverlayBorderPen, rect);
                 }
             }
         }
@@ -3666,71 +3743,88 @@ namespace DnDBattle.Controls
             {
                 if (_lastPreviewPath == null || _lastPreviewPath.Count == 0) return;
 
-                var pen = new Pen(Brushes.LightBlue, 2); pen.Freeze();
-                var stepBrush = new SolidColorBrush(Color.FromArgb(200, 100, 180, 255)); stepBrush.Freeze();
-                var aooBrush = new SolidColorBrush(Color.FromArgb(220, 220, 50, 50)); aooBrush.Freeze();
-
                 for (int i = 0; i < _lastPreviewPath.Count; i++)
                 {
                     var s = _lastPreviewPath[i];
                     var rect = new Rect(s.x * GridCellSize, s.y * GridCellSize, GridCellSize, GridCellSize);
-                    dc.DrawRectangle(stepBrush, null, rect);
+                    dc.DrawRectangle(PathStepBrush, null, rect);
 
                     if (_lastAooIndices != null && _lastAooIndices.Contains(i))
                     {
                         var cx = rect.Left + rect.Width / 2;
                         var cy = rect.Top + rect.Height / 2;
-                        dc.DrawEllipse(null, new Pen(aooBrush, 3), new Point(cx, cy), rect.Width * 0.35, rect.Height * 0.35);
+                        // ✅ Use cached pen instead of creating new one
+                        dc.DrawEllipse(null, PathAOOPen, new Point(cx, cy), rect.Width * 0.35, rect.Height * 0.35);
                     }
                 }
 
-                var pts = _lastPreviewPath.Select(p => new Point(p.x * GridCellSize + GridCellSize / 2.0, p.y * GridCellSize + GridCellSize / 2.0)).ToArray();
+                // Draw path line
+                var pts = _lastPreviewPath
+                    .Select(p => new Point(p.x * GridCellSize + GridCellSize / 2.0, p.y * GridCellSize + GridCellSize / 2.0))
+                    .ToArray();
+
                 if (pts.Length >= 2)
                 {
                     var pg = new PathGeometry();
                     var pf = new PathFigure { StartPoint = pts[0], IsClosed = false };
-                    for (int i = 1; i < pts.Length; i++) pf.Segments.Add(new LineSegment(pts[i], true));
+                    for (int i = 1; i < pts.Length; i++)
+                        pf.Segments.Add(new LineSegment(pts[i], true));
                     pg.Figures.Add(pf);
-                    dc.DrawGeometry(null, pen, pg);
+                    dc.DrawGeometry(null, PathPreviewLinePen, pg);
                 }
             }
         }
 
         /// <summary>
         /// Draws coordinate rulers along the top and left edges of the screen.
-        /// Uses object pooling to avoid GC pressure during pan/zoom.
+        /// Uses cached brushes to avoid allocations.
         /// </summary>
         private void DrawCoordinateRulers()
         {
-            if (!_showCoordinateRulers)
+            // Clear tick marks and labels, but keep backgrounds if they exist
+            // This is more efficient than clearing everything
+            for (int i = RulerCanvas.Children.Count - 1; i >= 0; i--)
             {
-                // Hide all ruler elements
-                if (_topRulerBg != null) _topRulerBg.Visibility = Visibility.Collapsed;
-                if (_leftRulerBg != null) _leftRulerBg.Visibility = Visibility.Collapsed;
-                foreach (var lbl in _colLabelPool) lbl.Visibility = Visibility.Collapsed;
-                foreach (var lbl in _rowLabelPool) lbl.Visibility = Visibility.Collapsed;
-                foreach (var tick in _colTickPool) tick.Visibility = Visibility.Collapsed;
-                foreach (var tick in _rowTickPool) tick.Visibility = Visibility.Collapsed;
-                return;
+                var child = RulerCanvas.Children[i];
+                if (child != _topRulerBackground && child != _leftRulerBackground)
+                {
+                    RulerCanvas.Children.RemoveAt(i);
+                }
             }
 
+            if (!_showCoordinateRulers) return;
             if (ActualWidth <= 0 || ActualHeight <= 0) return;
 
-            const double rulerHeight = 20.0;
-            const double rulerWidth = 25.0;
+            var rulerHeight = 20.0;
+            var rulerWidth = 25.0;
 
-            // Initialize pools and background rectangles if needed
-            if (!_rulerPoolsInitialized)
+            // Create or update top ruler background
+            if (_topRulerBackground == null)
             {
-                InitializeRulerPools(rulerWidth, rulerHeight);
+                _topRulerBackground = new System.Windows.Shapes.Rectangle
+                {
+                    Fill = RulerBackgroundBrush  // ✅ Cached brush
+                };
+                Canvas.SetLeft(_topRulerBackground, 0);
+                Canvas.SetTop(_topRulerBackground, 0);
+                RulerCanvas.Children.Add(_topRulerBackground);
             }
+            _topRulerBackground.Width = ActualWidth;
+            _topRulerBackground.Height = rulerHeight;
 
-            // Update background rectangles
-            _topRulerBg.Width = ActualWidth;
-            _topRulerBg.Visibility = Visibility.Visible;
-
-            _leftRulerBg.Height = ActualHeight;
-            _leftRulerBg.Visibility = Visibility.Visible;
+            // Create or update left ruler background
+            if (_leftRulerBackground == null)
+            {
+                _leftRulerBackground = new System.Windows.Shapes.Rectangle
+                {
+                    Fill = RulerBackgroundBrush  // ✅ Cached brush
+                };
+                Canvas.SetLeft(_leftRulerBackground, 0);
+                Canvas.SetTop(_leftRulerBackground, 0);
+                RulerCanvas.Children.Add(_leftRulerBackground);
+            }
+            _leftRulerBackground.Width = rulerWidth;
+            _leftRulerBackground.Height = ActualHeight;
 
             // Calculate visible grid range
             var topLeft = ScreenToWorld(new Point(rulerWidth, rulerHeight));
@@ -3741,8 +3835,7 @@ namespace DnDBattle.Controls
             int startRow = Math.Max(_gridMinY, (int)Math.Floor(topLeft.Y / GridCellSize));
             int endRow = Math.Min(_gridMaxY, (int)Math.Ceiling(bottomRight.Y / GridCellSize));
 
-            // Update column labels and ticks
-            int colIndex = 0;
+            // Draw column labels (A, B, C, ..., AA, AB, ...)
             for (int col = startCol; col <= endCol; col++)
             {
                 if (col < _gridMinX) continue;
@@ -3752,36 +3845,34 @@ namespace DnDBattle.Controls
 
                 if (screenX < rulerWidth || screenX > ActualWidth) continue;
 
-                // Ensure we have enough pooled elements
-                EnsureColPoolSize(colIndex + 1, rulerHeight);
+                // Draw tick mark with cached brush
+                var tick = new System.Windows.Shapes.Line
+                {
+                    X1 = screenX,
+                    Y1 = rulerHeight - 5,
+                    X2 = screenX,
+                    Y2 = rulerHeight,
+                    Stroke = RulerLineBrush,  // ✅ Cached brush
+                    StrokeThickness = 1
+                };
+                RulerCanvas.Children.Add(tick);
 
-                // Update tick
-                var tick = _colTickPool[colIndex];
-                tick.X1 = screenX;
-                tick.X2 = screenX;
-                tick.Visibility = Visibility.Visible;
-
-                // Update label
-                var text = _colLabelPool[colIndex];
+                // Draw label with cached resources
                 string label = GetColumnLabel(col);
-                if (text.Text != label) text.Text = label;
-
+                var text = new TextBlock
+                {
+                    Text = label,
+                    Foreground = RulerTextBrush,    // ✅ Cached brush
+                    FontSize = 10,
+                    FontFamily = RulerFontFamily     // ✅ Cached FontFamily
+                };
                 text.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
                 Canvas.SetLeft(text, screenX + (GridCellSize * _zoom.ScaleX / 2) - text.DesiredSize.Width / 2);
-                text.Visibility = Visibility.Visible;
-
-                colIndex++;
+                Canvas.SetTop(text, 2);
+                RulerCanvas.Children.Add(text);
             }
 
-            // Hide unused column elements
-            for (int i = colIndex; i < _colLabelPool.Count; i++)
-            {
-                _colLabelPool[i].Visibility = Visibility.Collapsed;
-                _colTickPool[i].Visibility = Visibility.Collapsed;
-            }
-
-            // Update row labels and ticks
-            int rowIndex = 0;
+            // Draw row labels (1, 2, 3, ...)
             for (int row = startRow; row <= endRow; row++)
             {
                 if (row < _gridMinY) continue;
@@ -3791,33 +3882,31 @@ namespace DnDBattle.Controls
 
                 if (screenY < rulerHeight || screenY > ActualHeight) continue;
 
-                // Ensure we have enough pooled elements
-                EnsureRowPoolSize(rowIndex + 1, rulerWidth);
+                // Draw tick mark with cached brush
+                var tick = new System.Windows.Shapes.Line
+                {
+                    X1 = rulerWidth - 5,
+                    Y1 = screenY,
+                    X2 = rulerWidth,
+                    Y2 = screenY,
+                    Stroke = RulerLineBrush,  // ✅ Cached brush
+                    StrokeThickness = 1
+                };
+                RulerCanvas.Children.Add(tick);
 
-                // Update tick
-                var tick = _rowTickPool[rowIndex];
-                tick.Y1 = screenY;
-                tick.Y2 = screenY;
-                tick.Visibility = Visibility.Visible;
-
-                // Update label
-                var text = _rowLabelPool[rowIndex];
+                // Draw label with cached resources
                 string label = (row + 1).ToString();
-                if (text.Text != label) text.Text = label;
-
+                var text = new TextBlock
+                {
+                    Text = label,
+                    Foreground = RulerTextBrush,    // ✅ Cached brush
+                    FontSize = 10,
+                    FontFamily = RulerFontFamily     // ✅ Cached FontFamily
+                };
                 text.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
                 Canvas.SetLeft(text, rulerWidth - text.DesiredSize.Width - 3);
                 Canvas.SetTop(text, screenY + (GridCellSize * _zoom.ScaleY / 2) - text.DesiredSize.Height / 2);
-                text.Visibility = Visibility.Visible;
-
-                rowIndex++;
-            }
-
-            // Hide unused row elements
-            for (int i = rowIndex; i < _rowLabelPool.Count; i++)
-            {
-                _rowLabelPool[i].Visibility = Visibility.Collapsed;
-                _rowTickPool[i].Visibility = Visibility.Collapsed;
+                RulerCanvas.Children.Add(text);
             }
         }
 
@@ -4160,11 +4249,12 @@ namespace DnDBattle.Controls
                     // Compute lit polygon using wall service
                     var litPolygonGrid = _wallService.ComputeLitPolygon(centerGrid, light.RadiusSquares, 180);
 
+                    // ✅ Get cached gradient brush
+                    var rg = GetLightGradient(light.Intensity);
+
                     if (litPolygonGrid.Count < 3)
                     {
                         // No walls blocking - draw full circle
-                        // Use cached gradient brush
-                        var rg = GetLightGradientBrush(light.Intensity);
                         dc.DrawEllipse(rg, null, centerPixel, radiusPx, radiusPx);
                     }
                     else
@@ -4191,9 +4281,7 @@ namespace DnDBattle.Controls
 
                         litGeometry.Figures.Add(figure);
 
-                        // Draw with cached radial gradient clipped to lit area
-                        var rg = GetLightGradientBrush(light.Intensity);
-
+                        // Draw with radial gradient clipped to lit area
                         dc.PushClip(litGeometry);
                         dc.PushTransform(new TranslateTransform(centerPixel.X - radiusPx, centerPixel.Y - radiusPx));
                         dc.DrawRectangle(rg, null, new Rect(0, 0, radiusPx * 2, radiusPx * 2));
@@ -4201,8 +4289,8 @@ namespace DnDBattle.Controls
                         dc.Pop();
                     }
 
-                    // Draw light source indicator using cached brush/pen
-                    dc.DrawEllipse(LightCenterBrush, LightCenterPen, centerPixel, 8, 8);
+                    // ✅ Draw light source indicator with cached resources
+                    dc.DrawEllipse(LightCenterBrush, LightIndicatorPen, centerPixel, 8, 8);
                 }
             }
         }
@@ -4268,28 +4356,36 @@ namespace DnDBattle.Controls
         }
 
         /// <summary>
-        /// Gets or creates a cached light gradient brush for the given intensity.
-        /// Intensity is quantized to 5% increments to limit cache size.
+        /// Gets or creates a cached light gradient for the given intensity.
+        /// Intensities are rounded to 2 decimal places for better cache hits.
         /// </summary>
-        private static RadialGradientBrush GetLightGradientBrush(double intensity)
+        private RadialGradientBrush GetLightGradient(double intensity)
         {
-            // Quantize intensity to 5% increments (0, 5, 10, 15, ... 100)
-            // This limits cache to max 21 entries
-            int quantizedIntensity = (int)(Math.Round(intensity * 20) * 5);
-            quantizedIntensity = Math.Clamp(quantizedIntensity, 0, 100);
+            // Round to 2 decimal places for better cache hits
+            double roundedIntensity = Math.Round(intensity, 2);
 
-            lock (_lightGradientCacheLock)
+            if (_lightGradientCache.TryGetValue(roundedIntensity, out var cached))
             {
-                if (_lightGradientCache.TryGetValue(quantizedIntensity, out var cached))
-                {
-                    return cached;
-                }
-
-                // Create and cache new brush
-                var rg = CreateLightGradientInternal(quantizedIntensity / 100.0);
-                _lightGradientCache[quantizedIntensity] = rg;
-                return rg;
+                return cached;
             }
+
+            // Evict oldest if cache is full
+            if (_lightGradientCache.Count >= MaxLightGradientCacheSize)
+            {
+                var firstKey = _lightGradientCache.Keys.First();
+                _lightGradientCache.Remove(firstKey);
+            }
+
+            // Create new gradient
+            var rg = new RadialGradientBrush();
+            byte centerAlpha = (byte)(200 * roundedIntensity);
+            rg.GradientStops.Add(new GradientStop(Color.FromArgb(centerAlpha, 255, 255, 200), 0.0));
+            rg.GradientStops.Add(new GradientStop(Color.FromArgb((byte)(centerAlpha * 0.5), 255, 220, 150), 0.5));
+            rg.GradientStops.Add(new GradientStop(Color.FromArgb(0, 255, 200, 100), 1.0));
+            rg.Freeze();
+
+            _lightGradientCache[roundedIntensity] = rg;
+            return rg;
         }
 
         /// <summary>
