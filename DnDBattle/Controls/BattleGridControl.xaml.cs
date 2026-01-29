@@ -169,6 +169,24 @@ namespace DnDBattle.Controls
         private static readonly SolidColorBrush MeasureLabelBackgroundBrush;
         private static readonly Pen MeasureLabelBorderPen;
 
+        // Target highlight brushes - only 3 states possible
+        private static readonly SolidColorBrush TargetInRangeBackgroundBrush;
+        private static readonly SolidColorBrush TargetInRangeBorderBrush;
+        private static readonly SolidColorBrush TargetRequiresMovementBackgroundBrush;
+        private static readonly SolidColorBrush TargetRequiresMovementBorderBrush;
+        private static readonly SolidColorBrush TargetOutOfRangeBackgroundBrush;
+        private static readonly SolidColorBrush TargetOutOfRangeBorderBrush;
+
+        // Current turn glow brush
+        private static readonly SolidColorBrush CurrentTurnGlowBrush;
+        private static readonly Color CurrentTurnGlowColor = Color.FromRgb(76, 175, 80);
+
+        // Note: DropShadowEffect cannot be frozen and shared directly because it's a DependencyObject
+        // that can only have one parent. We cache the parameters instead.
+        private const double GlowBlurRadius = 15;
+        private const double GlowShadowDepth = 0;
+        private const double GlowOpacity = 0.8;
+
         #endregion
 
         // AOE State
@@ -415,6 +433,28 @@ namespace DnDBattle.Controls
             RulerLineBrush.Freeze();
 
             RulerFontFamily = new FontFamily("Segoe UI");
+
+            // Target highlight brushes - Green (in range)
+            TargetInRangeBackgroundBrush = new SolidColorBrush(Color.FromArgb(100, 76, 175, 80));
+            TargetInRangeBackgroundBrush.Freeze();
+            TargetInRangeBorderBrush = new SolidColorBrush(Color.FromArgb(200, 76, 175, 80));
+            TargetInRangeBorderBrush.Freeze();
+
+            // Yellow (requires movement)
+            TargetRequiresMovementBackgroundBrush = new SolidColorBrush(Color.FromArgb(100, 255, 193, 7));
+            TargetRequiresMovementBackgroundBrush.Freeze();
+            TargetRequiresMovementBorderBrush = new SolidColorBrush(Color.FromArgb(200, 255, 193, 7));
+            TargetRequiresMovementBorderBrush.Freeze();
+
+            // Red (out of range) - note: currently not used since out-of-range tokens don't get highlights
+            TargetOutOfRangeBackgroundBrush = new SolidColorBrush(Color.FromArgb(100, 244, 67, 54));
+            TargetOutOfRangeBackgroundBrush.Freeze();
+            TargetOutOfRangeBorderBrush = new SolidColorBrush(Color.FromArgb(200, 244, 67, 54));
+            TargetOutOfRangeBorderBrush.Freeze();
+
+            // Turn glow brush
+            CurrentTurnGlowBrush = new SolidColorBrush(CurrentTurnGlowColor);
+            CurrentTurnGlowBrush.Freeze();
         }
 
         public BattleGridControl()
@@ -1418,7 +1458,22 @@ namespace DnDBattle.Controls
                         Background = Brushes.Transparent
                     };
 
-                    // ... rest of token visual creation code unchanged ...
+                    // Current turn glow
+                    if (token.IsCurrentTurn)
+                    {
+                        var glowBorder = new Border()
+                        {
+                            Width = GridCellSize * token.SizeInSquares + 4,
+                            Height = GridCellSize * token.SizeInSquares + 4,
+                            CornerRadius = new CornerRadius(4),
+                            BorderBrush = CurrentTurnGlowBrush,  // ✅ Cached brush
+                            BorderThickness = new Thickness(3),
+                            HorizontalAlignment = HorizontalAlignment.Center,
+                            VerticalAlignment = VerticalAlignment.Center,
+                            Effect = CreateTurnGlowEffect()       // ✅ Uses cached parameters
+                        };
+                        container.Children.Insert(0, glowBorder);
+                    }
 
                     RenderCanvas.Children.Add(container);
                     Canvas.SetZIndex(container, token.IsCurrentTurn ? 150 : 100);
@@ -1441,9 +1496,9 @@ namespace DnDBattle.Controls
         {
             var tooltip = new ToolTip
             {
-                Background = new SolidColorBrush(Color.FromRgb(30, 30, 30)),
-                Foreground = Brushes.White,
-                BorderBrush = new SolidColorBrush(Color.FromRgb(60, 60, 60)),
+                Background = UIThemeBrushes.TooltipBackground,  // ✅ Cached
+                Foreground = UIThemeBrushes.PrimaryText,        // ✅ Cached
+                BorderBrush = UIThemeBrushes.TooltipBorder,     // ✅ Cached
                 BorderThickness = new Thickness(1),
                 Padding = new Thickness(0),
                 HasDropShadow = true
@@ -1451,7 +1506,7 @@ namespace DnDBattle.Controls
 
             var mainBorder = new Border
             {
-                Background = new SolidColorBrush(Color.FromRgb(30, 30, 30)),
+                Background = UIThemeBrushes.TooltipBackground,  // ✅ Cached
                 CornerRadius = new CornerRadius(6),
                 Padding = new Thickness(12),
                 MinWidth = 180
@@ -1459,17 +1514,17 @@ namespace DnDBattle.Controls
 
             var stack = new StackPanel();
 
-            // Name (bold, larger)
+            // Name
             stack.Children.Add(new TextBlock
             {
                 Text = token.Name ?? "Unknown",
                 FontWeight = FontWeights.Bold,
                 FontSize = 15,
-                Foreground = Brushes.White,
+                Foreground = UIThemeBrushes.PrimaryText,  // ✅ Cached
                 Margin = new Thickness(0, 0, 0, 2)
             });
 
-            // Type and Size
+            // Subtitle
             var subtitleText = "";
             if (!string.IsNullOrEmpty(token.Size)) subtitleText += token.Size;
             if (!string.IsNullOrEmpty(token.Type))
@@ -1482,16 +1537,15 @@ namespace DnDBattle.Controls
                 stack.Children.Add(new TextBlock
                 {
                     Text = subtitleText,
-                    Foreground = new SolidColorBrush(Color.FromRgb(150, 150, 150)),
+                    Foreground = UIThemeBrushes.SecondaryText,  // ✅ Cached
                     FontSize = 11,
                     FontStyle = FontStyles.Italic,
                     Margin = new Thickness(0, 0, 0, 10)
                 });
             }
 
-            // HP Bar
+            // HP Panel
             var hpPanel = new StackPanel { Margin = new Thickness(0, 0, 0, 8) };
-
             var hpHeader = new Grid();
             hpHeader.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             hpHeader.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
@@ -1500,31 +1554,27 @@ namespace DnDBattle.Controls
             {
                 Text = "Hit Points",
                 FontSize = 10,
-                Foreground = new SolidColorBrush(Color.FromRgb(130, 130, 130))
+                Foreground = UIThemeBrushes.TertiaryText  // ✅ Cached
             });
 
+            double hpPercent = token.MaxHP > 0 ? (double)Math.Max(0, token.HP) / token.MaxHP : 0;
             var hpText = new TextBlock
             {
                 Text = $"{token.HP} / {token.MaxHP}",
                 FontSize = 10,
                 FontWeight = FontWeights.Bold,
-                HorizontalAlignment = HorizontalAlignment.Right
+                HorizontalAlignment = HorizontalAlignment.Right,
+                Foreground = UIThemeBrushes.GetHPBrush(hpPercent)  // ✅ Cached
             };
-
-            // Color the HP text based on health percentage
-            double hpPercent = token.MaxHP > 0 ? (double)Math.Max(0, token.HP) / token.MaxHP : 0;
-            hpText.Foreground = hpPercent > 0.5 ? new SolidColorBrush(Color.FromRgb(76, 175, 80)) :
-                                hpPercent > 0.25 ? new SolidColorBrush(Color.FromRgb(255, 193, 7)) :
-                                new SolidColorBrush(Color.FromRgb(244, 67, 54));
 
             Grid.SetColumn(hpText, 1);
             hpHeader.Children.Add(hpText);
             hpPanel.Children.Add(hpHeader);
 
-            // HP Bar visual
+            // HP Bar
             var hpBarBg = new Border
             {
-                Background = new SolidColorBrush(Color.FromRgb(50, 50, 50)),
+                Background = UIThemeBrushes.BarBackground,  // ✅ Cached
                 CornerRadius = new CornerRadius(3),
                 Height = 8,
                 Margin = new Thickness(0, 4, 0, 0)
@@ -1532,24 +1582,18 @@ namespace DnDBattle.Controls
 
             var hpBarFill = new Border
             {
-                Background = hpPercent > 0.5 ? new SolidColorBrush(Color.FromRgb(76, 175, 80)) :
-                             hpPercent > 0.25 ? new SolidColorBrush(Color.FromRgb(255, 193, 7)) :
-                             new SolidColorBrush(Color.FromRgb(244, 67, 54)),
+                Background = UIThemeBrushes.GetHPBrush(hpPercent),  // ✅ Cached
                 CornerRadius = new CornerRadius(3),
-                Height = 8,
                 HorizontalAlignment = HorizontalAlignment.Left,
-                Width = Math.Max(0, 156 * hpPercent) // 156 = minWidth - padding
+                Width = 150 * hpPercent
             };
 
-            var hpBarGrid = new Grid { Height = 8, Margin = new Thickness(0, 4, 0, 0) };
-            hpBarGrid.Children.Add(hpBarBg);
-            hpBarGrid.Children.Add(hpBarFill);
-            hpPanel.Children.Add(hpBarGrid);
-
+            hpBarBg.Child = hpBarFill;
+            hpPanel.Children.Add(hpBarBg);
             stack.Children.Add(hpPanel);
 
-            // Stats row (AC, CR, Speed)
-            var statsGrid = new Grid { Margin = new Thickness(0, 0, 0, 5) };
+            // Stats Grid (AC, CR, Initiative)
+            var statsGrid = new Grid { Margin = new Thickness(0, 5, 0, 0) };
             statsGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             statsGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             statsGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -1560,7 +1604,7 @@ namespace DnDBattle.Controls
             {
                 Text = "AC",
                 FontSize = 9,
-                Foreground = new SolidColorBrush(Color.FromRgb(130, 130, 130)),
+                Foreground = UIThemeBrushes.TertiaryText,  // ✅ Cached
                 HorizontalAlignment = HorizontalAlignment.Center
             });
             acPanel.Children.Add(new TextBlock
@@ -1568,7 +1612,7 @@ namespace DnDBattle.Controls
                 Text = token.ArmorClass.ToString(),
                 FontSize = 14,
                 FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(Color.FromRgb(100, 181, 246)),
+                Foreground = UIThemeBrushes.ACColor,  // ✅ Cached
                 HorizontalAlignment = HorizontalAlignment.Center
             });
             Grid.SetColumn(acPanel, 0);
@@ -1580,7 +1624,7 @@ namespace DnDBattle.Controls
             {
                 Text = "CR",
                 FontSize = 9,
-                Foreground = new SolidColorBrush(Color.FromRgb(130, 130, 130)),
+                Foreground = UIThemeBrushes.TertiaryText,  // ✅ Cached
                 HorizontalAlignment = HorizontalAlignment.Center
             });
             crPanel.Children.Add(new TextBlock
@@ -1588,19 +1632,19 @@ namespace DnDBattle.Controls
                 Text = token.ChallengeRating ?? "—",
                 FontSize = 14,
                 FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(Color.FromRgb(255, 193, 7)),
+                Foreground = UIThemeBrushes.CRColor,  // ✅ Cached
                 HorizontalAlignment = HorizontalAlignment.Center
             });
             Grid.SetColumn(crPanel, 1);
             statsGrid.Children.Add(crPanel);
 
-            // Initiative (if rolled)
+            // Initiative
             var initPanel = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center };
             initPanel.Children.Add(new TextBlock
             {
                 Text = "Init",
                 FontSize = 9,
-                Foreground = new SolidColorBrush(Color.FromRgb(130, 130, 130)),
+                Foreground = UIThemeBrushes.TertiaryText,  // ✅ Cached
                 HorizontalAlignment = HorizontalAlignment.Center
             });
             initPanel.Children.Add(new TextBlock
@@ -1608,7 +1652,7 @@ namespace DnDBattle.Controls
                 Text = token.Initiative > 0 ? token.Initiative.ToString() : "—",
                 FontSize = 14,
                 FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(Color.FromRgb(186, 104, 200)),
+                Foreground = UIThemeBrushes.InitiativeColor,  // ✅ Cached
                 HorizontalAlignment = HorizontalAlignment.Center
             });
             Grid.SetColumn(initPanel, 2);
@@ -1616,82 +1660,24 @@ namespace DnDBattle.Controls
 
             stack.Children.Add(statsGrid);
 
-            // Speed (smaller, below stats)
+            // Speed
             if (!string.IsNullOrEmpty(token.Speed))
             {
                 stack.Children.Add(new TextBlock
                 {
                     Text = $"Speed: {token.Speed}",
                     FontSize = 10,
-                    Foreground = new SolidColorBrush(Color.FromRgb(150, 150, 150)),
+                    Foreground = UIThemeBrushes.SecondaryText,  // ✅ Cached
                     Margin = new Thickness(0, 5, 0, 0)
                 });
             }
 
-            bool showMovement = false;
-            if (Application.Current?.MainWindow?.DataContext is MainViewModel vm && vm.IsInCombat)
-            {
-                showMovement = true;
-            }
-
-            if (showMovement)
-            {
-                var movementPanel = new StackPanel { Margin = new Thickness(0, 8, 0, 0) };
-
-                var movementHeader = new Grid();
-                movementHeader.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-                movementHeader.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-
-                movementHeader.Children.Add(new TextBlock
-                {
-                    Text = "Movement",
-                    FontSize = 10,
-                    Foreground = new SolidColorBrush(Color.FromRgb(130, 130, 130))
-                });
-
-                var movementText = new TextBlock
-                {
-                    Text = $"{token.MovementRemainingThisTurn} / {token.SpeedSquares}",
-                    FontSize = 10,
-                    FontWeight = FontWeights.Bold,
-                    HorizontalAlignment = HorizontalAlignment.Right,
-                    Foreground = token.CanMoveThisTurn
-                        ? new SolidColorBrush(Color.FromRgb(100, 181, 246))
-                        : new SolidColorBrush(Color.FromRgb(244, 67, 54))
-                };
-                Grid.SetColumn(movementText, 1);
-                movementHeader.Children.Add(movementText);
-                movementPanel.Children.Add(movementHeader);
-
-                // Movement bar
-                double movePercent = token.SpeedSquares > 0
-                    ? (double)token.MovementRemainingThisTurn / token.SpeedSquares
-                    : 0;
-
-                var moveBarGrid = new Grid { Height = 6, Margin = new Thickness(0, 4, 0, 0) };
-                moveBarGrid.Children.Add(new Border
-                {
-                    Background = new SolidColorBrush(Color.FromRgb(50, 50, 50)),
-                    CornerRadius = new CornerRadius(3)
-                });
-                moveBarGrid.Children.Add(new Border
-                {
-                    Background = new SolidColorBrush(Color.FromRgb(100, 181, 246)),
-                    CornerRadius = new CornerRadius(3),
-                    HorizontalAlignment = HorizontalAlignment.Left,
-                    Width = Math.Max(0, 156 * movePercent)
-                });
-                movementPanel.Children.Add(moveBarGrid);
-
-                stack.Children.Add(movementPanel);
-            }
-
-            // Conditions
+            // Conditions (if any)
             if (token.Conditions != Models.Condition.None)
             {
                 var conditionsBorder = new Border
                 {
-                    Background = new SolidColorBrush(Color.FromRgb(50, 40, 30)),
+                    Background = UIThemeBrushes.ConditionPanelBackground,  // ✅ Cached
                     CornerRadius = new CornerRadius(4),
                     Padding = new Thickness(8, 5, 8, 5),
                     Margin = new Thickness(0, 8, 0, 0)
@@ -1712,16 +1698,12 @@ namespace DnDBattle.Controls
                 {
                     Text = token.ConditionsDisplay,
                     FontSize = 10,
-                    Foreground = new SolidColorBrush(Color.FromRgb(255, 152, 0)),
-                    TextWrapping = TextWrapping.Wrap,
+                    Foreground = UIThemeBrushes.CRColor,  // ✅ Cached (orange)
                     VerticalAlignment = VerticalAlignment.Center
                 };
+                conditionsPanel.Children.Add(condText);
 
-                var condStack = new StackPanel { Orientation = Orientation.Horizontal };
-                condStack.Children.Add(conditionsPanel);
-                condStack.Children.Add(condText);
-
-                conditionsBorder.Child = condStack;
+                conditionsBorder.Child = conditionsPanel;
                 stack.Children.Add(conditionsBorder);
             }
 
@@ -1729,11 +1711,12 @@ namespace DnDBattle.Controls
             if (token.Tags != null && token.Tags.Count > 0)
             {
                 var tagsPanel = new WrapPanel { Margin = new Thickness(0, 8, 0, 0) };
-                foreach (var tag in token.Tags.Take(4)) // Limit to 4 tags
+
+                foreach (var tag in token.Tags.Take(4))
                 {
                     tagsPanel.Children.Add(new Border
                     {
-                        Background = new SolidColorBrush(Color.FromRgb(40, 80, 35)),
+                        Background = UIThemeBrushes.TagBackground,  // ✅ Cached
                         CornerRadius = new CornerRadius(3),
                         Padding = new Thickness(6, 2, 6, 2),
                         Margin = new Thickness(0, 0, 4, 0),
@@ -1741,17 +1724,18 @@ namespace DnDBattle.Controls
                         {
                             Text = tag,
                             FontSize = 9,
-                            Foreground = Brushes.White
+                            Foreground = UIThemeBrushes.PrimaryText  // ✅ Cached
                         }
                     });
                 }
+
                 if (token.Tags.Count > 4)
                 {
                     tagsPanel.Children.Add(new TextBlock
                     {
                         Text = $"+{token.Tags.Count - 4} more",
                         FontSize = 9,
-                        Foreground = new SolidColorBrush(Color.FromRgb(130, 130, 130)),
+                        Foreground = UIThemeBrushes.TertiaryText,  // ✅ Cached
                         VerticalAlignment = VerticalAlignment.Center
                     });
                 }
@@ -2255,7 +2239,8 @@ namespace DnDBattle.Controls
         }
 
         /// <summary>
-        /// Creates a highlight border around a potential target
+        /// Creates a highlight border around a potential target.
+        /// Uses cached brushes to avoid allocations.
         /// </summary>
         private Border CreateTargetHighlight(Token token, bool inRange, bool requiresMovement)
         {
@@ -2263,26 +2248,32 @@ namespace DnDBattle.Controls
             double x = token.GridX * GridCellSize;
             double y = token.GridY * GridCellSize;
 
-            Color highlightColor;
+            // ✅ Select cached brushes based on state
+            SolidColorBrush backgroundBrush;
+            SolidColorBrush borderBrush;
+
             if (inRange)
             {
-                highlightColor = Color.FromArgb(100, 76, 175, 80); // Green - in range
+                backgroundBrush = TargetInRangeBackgroundBrush;
+                borderBrush = TargetInRangeBorderBrush;
             }
             else if (requiresMovement)
             {
-                highlightColor = Color.FromArgb(100, 255, 193, 7); // Yellow - requires movement
+                backgroundBrush = TargetRequiresMovementBackgroundBrush;
+                borderBrush = TargetRequiresMovementBorderBrush;
             }
             else
             {
-                highlightColor = Color.FromArgb(100, 244, 67, 54); // Red - out of range
+                backgroundBrush = TargetOutOfRangeBackgroundBrush;
+                borderBrush = TargetOutOfRangeBorderBrush;
             }
 
             var highlight = new Border
             {
                 Width = size + 8,
                 Height = size + 8,
-                Background = new SolidColorBrush(highlightColor),
-                BorderBrush = new SolidColorBrush(Color.FromArgb(200, highlightColor.R, highlightColor.G, highlightColor.B)),
+                Background = backgroundBrush,      // ✅ Cached
+                BorderBrush = borderBrush,         // ✅ Cached
                 BorderThickness = new Thickness(3),
                 CornerRadius = new CornerRadius(size / 2 + 4),
                 IsHitTestVisible = false,
@@ -2291,26 +2282,48 @@ namespace DnDBattle.Controls
 
             Canvas.SetLeft(highlight, x - 4);
             Canvas.SetTop(highlight, y - 4);
-            Canvas.SetZIndex(highlight, 50); // Above grid, below tokens
+            Canvas.SetZIndex(highlight, 50);
 
             return highlight;
         }
 
         /// <summary>
-        /// Clears all target highlights
+        /// Creates a new DropShadowEffect for the current turn glow.
+        /// Effects cannot be shared between elements, but we use cached parameters.
+        /// </summary>
+        private static System.Windows.Media.Effects.DropShadowEffect CreateTurnGlowEffect()
+        {
+            return new System.Windows.Media.Effects.DropShadowEffect()
+            {
+                Color = CurrentTurnGlowColor,
+                BlurRadius = GlowBlurRadius,
+                ShadowDepth = GlowShadowDepth,
+                Opacity = GlowOpacity
+            };
+        }
+
+        /// <summary>
+        /// Clears all target highlights.
+        /// Uses direct iteration to avoid LINQ allocations.
         /// </summary>
         private void ClearTargetHighlights()
         {
+            // Remove tracked highlights
             foreach (var highlight in _targetHighlights.Values)
             {
                 RenderCanvas.Children.Remove(highlight);
             }
             _targetHighlights.Clear();
 
-            // Also remove any stray highlights
-            var toRemove = RenderCanvas.Children.OfType<Border>()
-                .Where(b => b.Tag as string == "TargetHighlight")
-                .ToList();
+            // Also remove any stray highlights - direct iteration instead of LINQ
+            var toRemove = new List<UIElement>();
+            foreach (UIElement child in RenderCanvas.Children)
+            {
+                if (child is Border b && b.Tag as string == "TargetHighlight")
+                {
+                    toRemove.Add(child);
+                }
+            }
 
             foreach (var item in toRemove)
             {
@@ -2384,7 +2397,8 @@ namespace DnDBattle.Controls
 
                 hpBar.Width = Math.Max(0, barWidth * hpPercent);
 
-                var newBrush = GetHPBarBrush(hpPercent);
+                // ✅ Use cached brush
+                var newBrush = UIThemeBrushes.GetHPBrush(hpPercent);
                 if (hpBar.Background != newBrush)
                 {
                     hpBar.Background = newBrush;
@@ -2417,16 +2431,16 @@ namespace DnDBattle.Controls
         }
 
         /// <summary>
-        /// Updates the glow effect for the current turn indicator
+        /// Updates the glow effect for the current turn indicator.
+        /// Uses cached brush for efficiency.
         /// </summary>
         private void UpdateTokenGlow(Grid container, Token token)
         {
-            // Find existing glow border (it's a Border with green glow effect)
+            // Find existing glow border by checking for the cached brush
             Border existingGlow = null;
             foreach (UIElement child in container.Children)
             {
-                if (child is Border b && b.BorderBrush is SolidColorBrush brush &&
-                    brush.Color == Color.FromRgb(76, 175, 80))
+                if (child is Border b && b.BorderBrush == CurrentTurnGlowBrush)
                 {
                     existingGlow = b;
                     break;
@@ -2443,19 +2457,12 @@ namespace DnDBattle.Controls
                         Width = GridCellSize * token.SizeInSquares + 4,
                         Height = GridCellSize * token.SizeInSquares + 4,
                         CornerRadius = new CornerRadius(4),
-                        BorderBrush = new SolidColorBrush(Color.FromRgb(76, 175, 80)),
+                        BorderBrush = CurrentTurnGlowBrush,  // ✅ Cached brush
                         BorderThickness = new Thickness(3),
                         HorizontalAlignment = HorizontalAlignment.Center,
                         VerticalAlignment = VerticalAlignment.Center,
-                        Effect = new System.Windows.Media.Effects.DropShadowEffect()
-                        {
-                            Color = Color.FromRgb(76, 175, 80),
-                            BlurRadius = 15,
-                            ShadowDepth = 0,
-                            Opacity = 0.8
-                        }
+                        Effect = CreateTurnGlowEffect()       // ✅ Uses cached parameters
                     };
-                    // Insert at index 0 so it's behind other elements
                     container.Children.Insert(0, glowBorder);
                 }
             }
@@ -2494,13 +2501,13 @@ namespace DnDBattle.Controls
 
         /// <summary>
         /// Updates just the HP bar for a specific token without rebuilding all visuals.
-        /// Uses O(1) dictionary lookup instead of linear search.
+        /// Uses cached brushes to avoid allocations.
         /// </summary>
         private void UpdateTokenHPBar(Token token)
         {
             if (token == null) return;
 
-            // ✅ O(1) lookup instead of linear search
+            // Use the dictionary lookup (from optimization #21)
             var container = GetTokenVisual(token.Id);
             if (container == null) return;
 
@@ -2538,14 +2545,29 @@ namespace DnDBattle.Controls
 
             if (fillBorder != null)
             {
+                // Update width
                 double barWidth = hpBarContainer.Width;
                 fillBorder.Width = Math.Max(0, barWidth * hpPercent);
 
-                var newBrush = GetHPBarBrush(hpPercent);
+                // Update color - use cached brush
+                var newBrush = UIThemeBrushes.GetHPBrush(hpPercent);  // ✅ Cached
+
+                // Only change if brush actually changed (reference comparison)
                 if (fillBorder.Background != newBrush)
                 {
                     fillBorder.Background = newBrush;
                 }
+            }
+
+            // Update tooltip
+            var img = container.Children.OfType<Image>().FirstOrDefault();
+            if (img != null)
+            {
+                try
+                {
+                    img.ToolTip = CreateTokenTooltip(token);
+                }
+                catch { }
             }
         }
         #endregion
@@ -2823,113 +2845,130 @@ namespace DnDBattle.Controls
         #region Condtions
         /// <summary>
         /// Creates condition badge icons that appear around the token.
-        /// Uses cached brushes to avoid allocations.
+        /// Uses cached brushes for each condition type.
         /// </summary>
         private FrameworkElement CreateConditionBadges(Token token)
         {
-            if (token.Conditions == Models.Condition.None)
-                return null;
+            if (token.Conditions == Models.Condition.None) return null;
 
             var activeConditions = token.Conditions.GetActiveConditions().ToList();
-            if (activeConditions.Count == 0)
-                return null;
+            if (activeConditions.Count == 0) return null;
 
-            var badgePanel = new WrapPanel
+            var panel = new WrapPanel
             {
-                HorizontalAlignment = HorizontalAlignment.Left,
+                HorizontalAlignment = HorizontalAlignment.Right,
                 VerticalAlignment = VerticalAlignment.Top,
-                MaxWidth = GridCellSize * token.SizeInSquares,
-                Margin = new Thickness(2, 2, 0, 0)
+                Margin = new Thickness(0, -2, -2, 0),
+                MaxWidth = GridCellSize * token.SizeInSquares
             };
 
-            int maxBadges = 6;
-            int count = 0;
+            // Calculate badge size based on token size
+            double badgeSize = Math.Max(12, Math.Min(20, GridCellSize * token.SizeInSquares / 4));
+            double iconSize = badgeSize * 0.6;
 
-            foreach (var condition in activeConditions)
+            // Show up to 4 condition badges
+            foreach (var condition in activeConditions.Take(4))
             {
-                if (count >= maxBadges) break;
+                // ✅ Get cached brushes for this condition
+                var (backgroundBrush, borderBrush) = UIThemeBrushes.GetConditionBrushes(condition);
 
                 var badge = new Border
                 {
-                    Width = 16,
-                    Height = 16,
-                    CornerRadius = new CornerRadius(3),
-                    // Use cached brush instead of new SolidColorBrush
-                    Background = ConditionExtensions.GetConditionBrush(condition),
+                    Width = badgeSize,
+                    Height = badgeSize,
+                    CornerRadius = new CornerRadius(badgeSize / 2),
+                    Background = backgroundBrush,   // ✅ Cached
+                    BorderBrush = borderBrush,      // ✅ Cached
+                    BorderThickness = new Thickness(1),
                     Margin = new Thickness(1),
                     ToolTip = CreateConditionTooltip(condition),
                     Child = new TextBlock
                     {
                         Text = ConditionExtensions.GetConditionIcon(condition),
-                        FontSize = 10,
+                        FontSize = iconSize,
+                        Foreground = Brushes.White,
                         HorizontalAlignment = HorizontalAlignment.Center,
-                        VerticalAlignment = VerticalAlignment.Center
+                        VerticalAlignment = VerticalAlignment.Center,
+                        TextAlignment = TextAlignment.Center
                     }
                 };
 
-                badgePanel.Children.Add(badge);
-                count++;
+                panel.Children.Add(badge);
             }
 
-            // Show "+X" if there are more conditions
-            if (activeConditions.Count > maxBadges)
+            // Show overflow indicator if more than 4 conditions
+            if (activeConditions.Count > 4)
             {
-                var moreBadge = new Border
+                panel.Children.Add(new Border
                 {
-                    Width = 16,
-                    Height = 16,
-                    CornerRadius = new CornerRadius(3),
-                    // Use cached brush
-                    Background = ConditionExtensions.GetOverflowBadgeBrush(),
+                    Width = badgeSize,
+                    Height = badgeSize,
+                    CornerRadius = new CornerRadius(badgeSize / 2),
+                    Background = UIThemeBrushes.ConditionOverflowBackground,  // ✅ Cached
                     Margin = new Thickness(1),
                     Child = new TextBlock
                     {
-                        Text = $"+{activeConditions.Count - maxBadges}",
-                        FontSize = 8,
+                        Text = $"+{activeConditions.Count - 4}",
+                        FontSize = iconSize * 0.8,
                         Foreground = Brushes.White,
                         HorizontalAlignment = HorizontalAlignment.Center,
                         VerticalAlignment = VerticalAlignment.Center
                     }
-                };
-                badgePanel.Children.Add(moreBadge);
+                });
             }
 
-            return badgePanel;
+            return panel;
         }
 
         /// <summary>
         /// Creates a tooltip for a condition badge.
-        /// Uses cached brushes to avoid allocations.
+        /// Uses cached brushes for consistent theming.
         /// </summary>
         private ToolTip CreateConditionTooltip(Models.Condition condition)
         {
+            var (backgroundBrush, _) = UIThemeBrushes.GetConditionBrushes(condition);
+
             var tooltip = new ToolTip
             {
-                // Use cached brushes
-                Background = ConditionExtensions.GetTooltipBackgroundBrush(),
-                Foreground = ConditionExtensions.GetTooltipTextBrush(),
-                BorderBrush = ConditionExtensions.GetConditionBrush(condition),
-                BorderThickness = new Thickness(2),
-                Padding = new Thickness(10)
+                Background = UIThemeBrushes.TooltipBackground,  // ✅ Cached
+                BorderBrush = UIThemeBrushes.TooltipBorder,     // ✅ Cached
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(10),
+                MaxWidth = 300
             };
 
-            var stack = new StackPanel { MaxWidth = 300 };
+            var stack = new StackPanel();
 
-            stack.Children.Add(new TextBlock
+            // Condition name with colored background
+            var headerBorder = new Border
+            {
+                Background = backgroundBrush,  // ✅ Cached
+                CornerRadius = new CornerRadius(3),
+                Padding = new Thickness(8, 4, 8, 4),
+                Margin = new Thickness(0, 0, 0, 8)
+            };
+
+            headerBorder.Child = new TextBlock
             {
                 Text = $"{ConditionExtensions.GetConditionIcon(condition)} {ConditionExtensions.GetConditionName(condition)}",
+                Foreground = Brushes.White,
                 FontWeight = FontWeights.Bold,
-                FontSize = 14,
-                Margin = new Thickness(0, 0, 0, 8)
-            });
+                FontSize = 12
+            };
+            stack.Children.Add(headerBorder);
 
-            stack.Children.Add(new TextBlock
+            // Condition description
+            string description = ConditionExtensions.GetConditionDescription(condition);
+            if (!string.IsNullOrEmpty(description))
             {
-                Text = ConditionExtensions.GetConditionDescription(condition),
-                TextWrapping = TextWrapping.Wrap,
-                // Use cached brush
-                Foreground = ConditionExtensions.GetConditionDescriptionBrush()
-            });
+                stack.Children.Add(new TextBlock
+                {
+                    Text = description,
+                    Foreground = UIThemeBrushes.SecondaryText,  // ✅ Cached
+                    TextWrapping = TextWrapping.Wrap,
+                    FontSize = 11
+                });
+            }
 
             tooltip.Content = stack;
             return tooltip;
@@ -2974,7 +3013,8 @@ namespace DnDBattle.Controls
         }
 
         /// <summary>
-        /// Creates a small HP bar under the token
+        /// Creates a small HP bar under the token.
+        /// Uses cached brushes to avoid allocations.
         /// </summary>
         private FrameworkElement CreateTokenHPBar(Token token)
         {
@@ -2994,7 +3034,7 @@ namespace DnDBattle.Controls
             // Background - use cached brush
             container.Children.Add(new Border
             {
-                Background = HPBarBackgroundBrush,
+                Background = UIThemeBrushes.HPBarBackground,  // ✅ Cached
                 CornerRadius = new CornerRadius(2),
                 Opacity = 0.8
             });
@@ -3002,7 +3042,7 @@ namespace DnDBattle.Controls
             // HP fill - use cached brush
             container.Children.Add(new Border
             {
-                Background = GetHPBarBrush(hpPercent),
+                Background = UIThemeBrushes.GetHPBrush(hpPercent),  // ✅ Cached
                 CornerRadius = new CornerRadius(2),
                 HorizontalAlignment = HorizontalAlignment.Left,
                 Width = Math.Max(0, barWidth * hpPercent)

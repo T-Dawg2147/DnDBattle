@@ -1,5 +1,6 @@
 ﻿using DnDBattle.Models;
 using DnDBattle.Services;
+using DnDBattle.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -147,12 +148,12 @@ namespace DnDBattle.Views
             double percent = _token.MaxHP > 0 ? (double)Math.Max(0, _token.HP) / _token.MaxHP : 0;
             HPBarFill.Width = ActualWidth > 0 ? (ActualWidth - 44) * percent : 100 * percent;
 
-            if (percent > 0.5)
-                HPBarFill.Background = new SolidColorBrush(Color.FromRgb(76, 175, 80));
-            else if (percent > 0.25)
-                HPBarFill.Background = new SolidColorBrush(Color.FromRgb(255, 193, 7));
-            else
-                HPBarFill.Background = new SolidColorBrush(Color.FromRgb(244, 67, 54));
+            // ✅ Use cached brush
+            var newBrush = UIThemeBrushes.GetHPBrush(percent);
+            if (HPBarFill.Background != newBrush)
+            {
+                HPBarFill.Background = newBrush;
+            }
         }
 
         private void BtnHeal_Click(object sender, RoutedEventArgs e)
@@ -774,7 +775,7 @@ namespace DnDBattle.Views
         {
             var border = new Border
             {
-                Background = new SolidColorBrush(Color.FromRgb(45, 45, 48)),
+                Background = UIThemeBrushes.PanelBackground,  // ✅ Cached
                 CornerRadius = new CornerRadius(4),
                 Padding = new Thickness(10, 6, 10, 6),
                 Margin = new Thickness(0, 0, 0, 4),
@@ -782,8 +783,9 @@ namespace DnDBattle.Views
                 Tag = action
             };
 
-            border.MouseEnter += (s, e) => border.Background = new SolidColorBrush(Color.FromRgb(60, 60, 64));
-            border.MouseLeave += (s, e) => border.Background = new SolidColorBrush(Color.FromRgb(45, 45, 48));
+            // ✅ Use cached brushes for hover - NO allocations!
+            border.MouseEnter += (s, e) => border.Background = UIThemeBrushes.PanelBackgroundHover;
+            border.MouseLeave += (s, e) => border.Background = UIThemeBrushes.PanelBackground;
 
             border.MouseLeftButtonDown += (s, e) =>
             {
@@ -800,17 +802,18 @@ namespace DnDBattle.Views
             nameRow.Children.Add(new TextBlock
             {
                 Text = action.Name ?? "Unknown Action",
-                Foreground = Brushes.White,
+                Foreground = UIThemeBrushes.PrimaryText,  // ✅ Cached
                 FontWeight = FontWeights.SemiBold,
                 FontSize = 11,
                 VerticalAlignment = VerticalAlignment.Center
             });
 
+            // Attack bonus badge
             if (action.AttackBonus != null && action.AttackBonus != 0)
             {
                 nameRow.Children.Add(new Border
                 {
-                    Background = new SolidColorBrush(Color.FromRgb(76, 175, 80)),
+                    Background = UIThemeBrushes.AttackBonusColor,  // ✅ Cached
                     CornerRadius = new CornerRadius(3),
                     Padding = new Thickness(4, 1, 4, 1),
                     Margin = new Thickness(6, 0, 0, 0),
@@ -818,18 +821,19 @@ namespace DnDBattle.Views
                     Child = new TextBlock
                     {
                         Text = action.AttackBonus > 0 ? $"+{action.AttackBonus}" : action.AttackBonus.ToString(),
-                        Foreground = Brushes.White,
+                        Foreground = UIThemeBrushes.PrimaryText,  // ✅ Cached
                         FontSize = 9,
                         FontWeight = FontWeights.Bold
                     }
                 });
             }
 
+            // Damage badge
             if (!string.IsNullOrEmpty(action.DamageExpression))
             {
                 nameRow.Children.Add(new Border
                 {
-                    Background = new SolidColorBrush(Color.FromRgb(244, 67, 54)),
+                    Background = UIThemeBrushes.DamageColor,  // ✅ Cached
                     CornerRadius = new CornerRadius(3),
                     Padding = new Thickness(4, 1, 4, 1),
                     Margin = new Thickness(4, 0, 0, 0),
@@ -837,18 +841,19 @@ namespace DnDBattle.Views
                     Child = new TextBlock
                     {
                         Text = action.DamageExpression,
-                        Foreground = Brushes.White,
+                        Foreground = UIThemeBrushes.PrimaryText,  // ✅ Cached
                         FontSize = 9,
                         FontWeight = FontWeights.Bold
                     }
                 });
             }
 
+            // Range badge
             if (!string.IsNullOrEmpty(action.Range))
             {
                 nameRow.Children.Add(new Border
                 {
-                    Background = new SolidColorBrush(Color.FromRgb(100, 181, 246)),
+                    Background = UIThemeBrushes.RangeColor,  // ✅ Cached
                     CornerRadius = new CornerRadius(3),
                     Padding = new Thickness(4, 1, 4, 1),
                     Margin = new Thickness(4, 0, 0, 0),
@@ -864,6 +869,7 @@ namespace DnDBattle.Views
 
             content.Children.Add(nameRow);
 
+            // Description
             if (!string.IsNullOrEmpty(action.Description))
             {
                 string truncatedDesc = action.Description.Length > 80
@@ -873,7 +879,7 @@ namespace DnDBattle.Views
                 content.Children.Add(new TextBlock
                 {
                     Text = truncatedDesc,
-                    Foreground = new SolidColorBrush(Color.FromRgb(150, 150, 150)),
+                    Foreground = UIThemeBrushes.SecondaryText,  // ✅ Cached
                     FontSize = 10,
                     TextWrapping = TextWrapping.Wrap,
                     Margin = new Thickness(0, 3, 0, 0)
@@ -890,8 +896,8 @@ namespace DnDBattle.Views
         {
             var tooltip = new ToolTip
             {
-                Background = new SolidColorBrush(Color.FromRgb(30, 30, 30)),
-                BorderBrush = new SolidColorBrush(Color.FromRgb(80, 80, 80)),
+                Background = UIThemeBrushes.TooltipBackground,  // ✅ Cached
+                BorderBrush = UIThemeBrushes.PanelBorder,       // ✅ Cached
                 BorderThickness = new Thickness(1),
                 Padding = new Thickness(12),
                 MaxWidth = 350
@@ -904,7 +910,7 @@ namespace DnDBattle.Views
                 Text = action.Name ?? "Unknown Action",
                 FontWeight = FontWeights.Bold,
                 FontSize = 14,
-                Foreground = Brushes.White,
+                Foreground = UIThemeBrushes.PrimaryText,  // ✅ Cached
                 Margin = new Thickness(0, 0, 0, 8)
             });
 
@@ -915,7 +921,7 @@ namespace DnDBattle.Views
                 statsPanel.Children.Add(new TextBlock
                 {
                     Text = $"Attack: +{action.AttackBonus}",
-                    Foreground = new SolidColorBrush(Color.FromRgb(76, 175, 80)),
+                    Foreground = UIThemeBrushes.AttackBonusColor,  // ✅ Cached
                     Margin = new Thickness(0, 0, 15, 0),
                     FontWeight = FontWeights.SemiBold
                 });
@@ -926,7 +932,7 @@ namespace DnDBattle.Views
                 statsPanel.Children.Add(new TextBlock
                 {
                     Text = $"Damage: {action.DamageExpression}",
-                    Foreground = new SolidColorBrush(Color.FromRgb(244, 67, 54)),
+                    Foreground = UIThemeBrushes.DamageColor,  // ✅ Cached
                     Margin = new Thickness(0, 0, 15, 0),
                     FontWeight = FontWeights.SemiBold
                 });
@@ -937,7 +943,7 @@ namespace DnDBattle.Views
                 statsPanel.Children.Add(new TextBlock
                 {
                     Text = $"Range: {action.Range}",
-                    Foreground = new SolidColorBrush(Color.FromRgb(100, 181, 246)),
+                    Foreground = UIThemeBrushes.RangeColor,  // ✅ Cached
                     FontWeight = FontWeights.SemiBold
                 });
             }
@@ -952,7 +958,7 @@ namespace DnDBattle.Views
                 stack.Children.Add(new TextBlock
                 {
                     Text = action.Description,
-                    Foreground = new SolidColorBrush(Color.FromRgb(200, 200, 200)),
+                    Foreground = UIThemeBrushes.SecondaryText,  // ✅ Cached
                     TextWrapping = TextWrapping.Wrap,
                     FontSize = 12
                 });
@@ -961,7 +967,7 @@ namespace DnDBattle.Views
             stack.Children.Add(new TextBlock
             {
                 Text = "Click to use this action",
-                Foreground = new SolidColorBrush(Color.FromRgb(100, 100, 100)),
+                Foreground = UIThemeBrushes.MutedText,  // ✅ Cached
                 FontStyle = FontStyles.Italic,
                 FontSize = 10,
                 Margin = new Thickness(0, 10, 0, 0)
