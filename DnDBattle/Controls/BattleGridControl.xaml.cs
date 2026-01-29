@@ -199,7 +199,8 @@ namespace DnDBattle.Controls
         private int _currentAoeSize = 20;
         private Color _currentAoeColor = Color.FromArgb(120, 255, 69, 0);
 
-        // Wall Drawing State
+        // Walls
+        private List<Wall> _walls = new List<Wall>();
         private bool _wallDrawMode = false;
         private Point? _wallDrawStart = null;
         private Point _wallDrawPreview;
@@ -207,6 +208,7 @@ namespace DnDBattle.Controls
         private Wall _selectedWall = null;
         private bool _isDraggingWallEndpoint = false;
         private bool _draggingWallIsStart = false;
+        private Point? _wallStartPoint = null;
 
         private bool _isDrawingWalls = false;
         private List<List<Point>> _wallSegments = new List<List<Point>>();
@@ -233,7 +235,6 @@ namespace DnDBattle.Controls
         // Cache for light gradients by intensity (most lights use standard intensities)
         private readonly Dictionary<double, RadialGradientBrush> _lightGradientCache = new();
         private const int MaxLightGradientCacheSize = 10;
-
         #endregion
 
         #region Ruler
@@ -3335,6 +3336,7 @@ namespace DnDBattle.Controls
                 }
             }
         }
+
 
         private void HandleWallDrawClick(Point gridPoint, MouseButtonEventArgs e)
         {
