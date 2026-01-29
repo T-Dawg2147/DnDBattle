@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Windows.Media;
 
 namespace DnDBattle.Models
 {
@@ -49,6 +50,44 @@ namespace DnDBattle.Models
     /// </summary>
     public static class ConditionExtensions
     {
+        // Static cache of frozen brushes for each condition color
+        private static readonly Dictionary<Condition, SolidColorBrush> _conditionBrushCache = new();
+        private static readonly object _brushCacheLock = new();
+
+        // Common UI brushes used for condition badges
+        private static readonly SolidColorBrush OverflowBadgeBrush;
+        private static readonly SolidColorBrush TooltipBackgroundBrush;
+        private static readonly SolidColorBrush TooltipTextBrush;
+        private static readonly SolidColorBrush ConditionDescriptionBrush;
+
+        static ConditionExtensions()
+        {
+            // Initialize common brushes
+            OverflowBadgeBrush = new SolidColorBrush(Color.FromRgb(80, 80, 80));
+            OverflowBadgeBrush.Freeze();
+
+            TooltipBackgroundBrush = new SolidColorBrush(Color.FromRgb(30, 30, 30));
+            TooltipBackgroundBrush.Freeze();
+
+            TooltipTextBrush = new SolidColorBrush(Colors.White);
+            TooltipTextBrush.Freeze();
+
+            ConditionDescriptionBrush = new SolidColorBrush(Color.FromRgb(200, 200, 200));
+            ConditionDescriptionBrush.Freeze();
+
+            // Pre-populate brush cache for all conditions
+            foreach (Condition c in Enum.GetValues(typeof(Condition)))
+            {
+                if (c != Condition.None)
+                {
+                    var color = GetConditionColor(c);
+                    var brush = new SolidColorBrush(color);
+                    brush.Freeze();
+                    _conditionBrushCache[c] = brush;
+                }
+            }
+        }
+
         /// <summary>
         /// Gets a display-friendly string of all active conditions
         /// </summary>
@@ -258,5 +297,49 @@ namespace DnDBattle.Models
                 _ => conditions
             };
         }
+
+        /// <summary>
+        /// Gets a cached, frozen brush for the condition's color.
+        /// Use this instead of creating new SolidColorBrush instances.
+        /// </summary>
+        public static SolidColorBrush GetConditionBrush(Condition condition)
+        {
+            if (_conditionBrushCache.TryGetValue(condition, out var brush))
+            {
+                return brush;
+            }
+
+            // Fallback for unknown conditions (shouldn't happen)
+            lock (_brushCacheLock)
+            {
+                if (!_conditionBrushCache.TryGetValue(condition, out brush))
+                {
+                    brush = new SolidColorBrush(GetConditionColor(condition));
+                    brush.Freeze();
+                    _conditionBrushCache[condition] = brush;
+                }
+            }
+            return brush;
+        }
+
+        /// <summary>
+        /// Gets the cached brush for the "+X" overflow badge
+        /// </summary>
+        public static SolidColorBrush GetOverflowBadgeBrush() => OverflowBadgeBrush;
+
+        /// <summary>
+        /// Gets the cached brush for tooltip backgrounds
+        /// </summary>
+        public static SolidColorBrush GetTooltipBackgroundBrush() => TooltipBackgroundBrush;
+
+        /// <summary>
+        /// Gets the cached brush for tooltip text
+        /// </summary>
+        public static SolidColorBrush GetTooltipTextBrush() => TooltipTextBrush;
+
+        /// <summary>
+        /// Gets the cached brush for condition descriptions
+        /// </summary>
+        public static SolidColorBrush GetConditionDescriptionBrush() => ConditionDescriptionBrush;
     }
 }

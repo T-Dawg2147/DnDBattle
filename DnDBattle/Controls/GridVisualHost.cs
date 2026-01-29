@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DnDBattle.Utils;
+using System;
 using System.Windows;
 using System.Windows.Media;
 
@@ -174,11 +175,12 @@ namespace DnDBattle.Controls
             }
         }
 
-        private void DrawCoordinateLabels(DrawingContext dc, double cellSize, int startCol, int endCol,
-            int startRow, int endRow)
+        private void DrawCoordinateLabels(DrawingContext dc, double cellSize, int startCol, int endCol, int startRow, int endRow)
         {
+            // Only draw labels if cells are big enough to show them
             if (cellSize < 24) return;
 
+            // Use cached brushes and typeface
             double fontSize = Math.Min(12, cellSize / 4);
 
             // Draw column letters at the top
@@ -191,15 +193,15 @@ namespace DnDBattle.Controls
                     colLabel,
                     System.Globalization.CultureInfo.CurrentCulture,
                     FlowDirection.LeftToRight,
-                    LabelTypeface,
+                    CachedTypefaces.SegoeUISemiBold,  // ✅ Cached typeface
                     fontSize,
-                    LabelBrush,
+                    CachedDrawingResources.LabelBrush,  // ✅ Cached brush
                     1.0);
 
                 double x = c * cellSize + (cellSize - formattedText.Width) / 2;
                 double y = startRow * cellSize + 2;
 
-                dc.DrawRectangle(LabelBgBrush, null,
+                dc.DrawRectangle(CachedDrawingResources.LabelBackgroundBrush, null,  // ✅ Cached brush
                     new Rect(x - 2, y - 1, formattedText.Width + 4, formattedText.Height + 2));
                 dc.DrawText(formattedText, new Point(x, y));
             }
@@ -214,15 +216,15 @@ namespace DnDBattle.Controls
                     rowLabel,
                     System.Globalization.CultureInfo.CurrentCulture,
                     FlowDirection.LeftToRight,
-                    LabelTypeface,
+                    CachedTypefaces.SegoeUISemiBold,  // ✅ Cached typeface
                     fontSize,
-                    LabelBrush,
+                    CachedDrawingResources.LabelBrush,  // ✅ Cached brush
                     1.0);
 
                 double x = startCol * cellSize + 2;
                 double y = r * cellSize + (cellSize - formattedText.Height) / 2;
 
-                dc.DrawRectangle(LabelBgBrush, null,
+                dc.DrawRectangle(CachedDrawingResources.LabelBackgroundBrush, null,  // ✅ Cached brush
                     new Rect(x - 2, y - 1, formattedText.Width + 4, formattedText.Height + 2));
                 dc.DrawText(formattedText, new Point(x, y));
             }

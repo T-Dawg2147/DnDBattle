@@ -256,7 +256,8 @@ namespace DnDBattle.Views
                     Width = 20,
                     Height = 20,
                     CornerRadius = new CornerRadius(3),
-                    Background = new SolidColorBrush(ConditionExtensions.GetConditionColor(condition)),
+                    // Use cached brush
+                    Background = ConditionExtensions.GetConditionBrush(condition),
                     Margin = new Thickness(2),
                     Child = new TextBlock
                     {
