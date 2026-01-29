@@ -88,11 +88,24 @@ namespace DnDBattle.Controls
         private bool _isPanning = false;
         private Point _lastPanPoint;
 
+        #region Grid fields
         // Grid State
         private int _gridMinX = 0;
         private int _gridMinY = 0;
         private int _gridMaxX = 100;
         private int _gridMaxY = 100;
+
+        // Cache for movement overlay to avoid recalculating during pan/zoom
+        private HashSet<(int x, int y)> _cachedReachableSquares;
+        private Guid? _cachedReachableTokenId;
+        private int _cachedReachableStartX;
+        private int _cachedReachableStartY;
+        private int _cachedReachableMaxSquares;
+        private int _cachedReachableWallVersion;
+
+        // Track wall changes for cache invalidation
+        private int _wallVersion = 0;
+        #endregion
 
         #region Token Fields
         //Hp Bar
@@ -178,7 +191,6 @@ namespace DnDBattle.Controls
         private (int x, int y)? _cachedPathStart = null;
         private (int x, int y)? _cachedPathGoal = null;
         private int _cachedPathWallVersion = -1;
-        private int _wallVersion = 0;  // Incremented when walls change
 
         // visuals sizing
         private int _gridWidth = 200, _gridHeight = 200;
@@ -538,6 +550,7 @@ namespace DnDBattle.Controls
         private static void OnSelectedTokenChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var ctrl = (BattleGridControl)d;
+            ctrl.InvalidateReachableCache();
             ctrl.InvalidatePathCache();
             ctrl.ClearPathVisual();
             ctrl.RedrawMovementOverlay();
@@ -1193,11 +1206,24 @@ namespace DnDBattle.Controls
         {
             System.Diagnostics.Debug.WriteLine($"=== RebuildTokenVisuals called ===");
 
-            var existing = RenderCanvas.Children.OfType<FrameworkElement>().Where(c => c.Tag is Token).ToList();
-            foreach (var c in existing)
-                RenderCanvas.Children.Remove(c);
+            // Remove existing token visuals - collect to temporary list to avoid modifying during iteration
+            // Use pre-sized list to avoid resizing
+            var toRemove = new List<UIElement>(RenderCanvas.Children.Count);
+            foreach (UIElement child in RenderCanvas.Children)
+            {
+                if (child is FrameworkElement fe && fe.Tag is Token)
+                {
+                    toRemove.Add(child);
+                }
+            }
+
+            foreach (var child in toRemove)
+            {
+                RenderCanvas.Children.Remove(child);
+            }
 
             if (Tokens == null) return;
+
 
             foreach (var token in Tokens)
             {
@@ -1811,14 +1837,16 @@ namespace DnDBattle.Controls
 
         private void LayoutTokens()
         {
-            var tokenVisuals = RenderCanvas.Children.OfType<FrameworkElement>().Where(c => c.Tag is Token);
-            foreach (var vis in tokenVisuals)
+            // Direct iteration - no LINQ allocations
+            foreach (UIElement child in RenderCanvas.Children)
             {
-                var token = (Token)vis.Tag;
-                Canvas.SetLeft(vis, token.GridX * GridCellSize);
-                Canvas.SetTop(vis, token.GridY * GridCellSize);
-                vis.Width = GridCellSize * token.SizeInSquares;
-                vis.Height = GridCellSize * token.SizeInSquares;
+                if (child is FrameworkElement fe && fe.Tag is Token token)
+                {
+                    Canvas.SetLeft(fe, token.GridX * GridCellSize);
+                    Canvas.SetTop(fe, token.GridY * GridCellSize);
+                    fe.Width = GridCellSize * token.SizeInSquares;
+                    fe.Height = GridCellSize * token.SizeInSquares;
+                }
             }
         }
 
@@ -2209,24 +2237,14 @@ namespace DnDBattle.Controls
         {
             if (sender is Token token)
             {
-                // Properties that require full visual rebuild
-                if (e.PropertyName == nameof(Token.Conditions) ||
-                    e.PropertyName == nameof(Token.IsCurrentTurn) ||
-                    e.PropertyName == nameof(Token.IsConcentrating))
-                {
-                    // Full rebuild needed for visual effects
-                    RebuildTokenVisuals();
-                    return;
-                }
-
-                // HP changes - just update the HP bar
+                // HP changes - just update the HP bar (most common case)
                 if (e.PropertyName == nameof(Token.HP) ||
                     e.PropertyName == nameof(Token.MaxHP) ||
                     e.PropertyName == nameof(Token.TempHP))
                 {
                     UpdateTokenHPBar(token);
 
-                    // Also rebuild if HP dropped to 0 (for death visual effects)
+                    // Also do full rebuild if HP dropped to 0 (for death visual effects)
                     if (token.HP <= 0)
                     {
                         RebuildTokenVisuals();
@@ -2234,15 +2252,27 @@ namespace DnDBattle.Controls
                     return;
                 }
 
-                // Position changes
+                // Position changes - just re-layout (very cheap)
                 if (e.PropertyName == nameof(Token.GridX) ||
                     e.PropertyName == nameof(Token.GridY))
                 {
                     LayoutTokens();
+                    InvalidateReachableCache(); // If it's the selected token
                     return;
                 }
 
-                // Image changes
+                // Properties that can be updated on a single token without full rebuild
+                if (e.PropertyName == nameof(Token.Conditions) ||
+                    e.PropertyName == nameof(Token.IsCurrentTurn) ||
+                    e.PropertyName == nameof(Token.IsConcentrating))
+                {
+                    // Update just this one token instead of rebuilding everything!
+                    UpdateSingleTokenVisual(token);
+                    return;
+                }
+
+                // Image changes - need full rebuild for this token
+                // (could be optimized further, but less common)
                 if (e.PropertyName == nameof(Token.Image) ||
                     e.PropertyName == nameof(Token.DisplayImage))
                 {
@@ -2254,52 +2284,132 @@ namespace DnDBattle.Controls
 
         private void UpdateSingleTokenVisual(Token token)
         {
-            // Find the token's container
-            var container = RenderCanvas.Children.OfType<FrameworkElement>()
-                .FirstOrDefault(c => c.Tag is Token t && t.Id == token.Id);
-
-            if (container is Grid grid)
+            // Find the token's container - direct iteration
+            Grid grid = null;
+            foreach (UIElement child in RenderCanvas.Children)
             {
-                // Update HP bar using cached brushes
-                var hpBar = FindHPBar(grid);
-                if (hpBar != null)
+                if (child is Grid g && g.Tag is Token t && t.Id == token.Id)
                 {
-                    double hpPercent = token.MaxHP > 0 ? (double)Math.Max(0, token.HP) / token.MaxHP : 0;
-                    double barWidth = GridCellSize * token.SizeInSquares - 8;
-
-                    hpBar.Width = Math.Max(0, barWidth * hpPercent);
-
-                    // Use cached brush
-                    var newBrush = GetHPBarBrush(hpPercent);
-                    if (hpBar.Background != newBrush)
-                    {
-                        hpBar.Background = newBrush;
-                    }
+                    grid = g;
+                    break;
                 }
+            }
 
-                // Update condition badges - just rebuild them
-                var oldBadges = grid.Children.OfType<WrapPanel>().FirstOrDefault();
-                if (oldBadges != null)
-                    grid.Children.Remove(oldBadges);
+            if (grid == null) return;
 
-                var newBadges = CreateConditionBadges(token);
-                if (newBadges != null)
-                    grid.Children.Add(newBadges);
+            // Update HP bar
+            var hpBar = FindHPBar(grid);
+            if (hpBar != null)
+            {
+                double hpPercent = token.MaxHP > 0 ? (double)Math.Max(0, token.HP) / token.MaxHP : 0;
+                double barWidth = GridCellSize * token.SizeInSquares - 8;
 
-                // Update Z-index for current turn
-                Canvas.SetZIndex(container, token.IsCurrentTurn ? 150 : 100);
+                hpBar.Width = Math.Max(0, barWidth * hpPercent);
+
+                // Use cached brush
+                var newBrush = GetHPBarBrush(hpPercent);
+                if (hpBar.Background != newBrush)
+                {
+                    hpBar.Background = newBrush;
+                }
+            }
+
+            // Update condition badges
+            WrapPanel oldBadges = null;
+            foreach (UIElement child in grid.Children)
+            {
+                if (child is WrapPanel wp)
+                {
+                    oldBadges = wp;
+                    break;
+                }
+            }
+
+            if (oldBadges != null)
+                grid.Children.Remove(oldBadges);
+
+            var newBadges = CreateConditionBadges(token);
+            if (newBadges != null)
+                grid.Children.Add(newBadges);
+
+            // Update current turn glow border
+            UpdateTokenGlow(grid, token);
+
+            // Update Z-index for current turn
+            Canvas.SetZIndex(grid, token.IsCurrentTurn ? 150 : 100);
+        }
+
+        /// <summary>
+        /// Updates the glow effect for the current turn indicator
+        /// </summary>
+        private void UpdateTokenGlow(Grid container, Token token)
+        {
+            // Find existing glow border (it's a Border with green glow effect)
+            Border existingGlow = null;
+            foreach (UIElement child in container.Children)
+            {
+                if (child is Border b && b.BorderBrush is SolidColorBrush brush &&
+                    brush.Color == Color.FromRgb(76, 175, 80))
+                {
+                    existingGlow = b;
+                    break;
+                }
+            }
+
+            if (token.IsCurrentTurn)
+            {
+                // Add glow if not present
+                if (existingGlow == null)
+                {
+                    var glowBorder = new Border()
+                    {
+                        Width = GridCellSize * token.SizeInSquares + 4,
+                        Height = GridCellSize * token.SizeInSquares + 4,
+                        CornerRadius = new CornerRadius(4),
+                        BorderBrush = new SolidColorBrush(Color.FromRgb(76, 175, 80)),
+                        BorderThickness = new Thickness(3),
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                        VerticalAlignment = VerticalAlignment.Center,
+                        Effect = new System.Windows.Media.Effects.DropShadowEffect()
+                        {
+                            Color = Color.FromRgb(76, 175, 80),
+                            BlurRadius = 15,
+                            ShadowDepth = 0,
+                            Opacity = 0.8
+                        }
+                    };
+                    // Insert at index 0 so it's behind other elements
+                    container.Children.Insert(0, glowBorder);
+                }
+            }
+            else
+            {
+                // Remove glow if present
+                if (existingGlow != null)
+                {
+                    container.Children.Remove(existingGlow);
+                }
             }
         }
 
         private Border FindHPBar(Grid container)
         {
             // Find the HP bar container (Grid at the bottom with the fill border)
-            foreach (var child in container.Children)
+            foreach (UIElement child in container.Children)
             {
                 if (child is Grid hpGrid && hpGrid.VerticalAlignment == VerticalAlignment.Bottom)
                 {
-                    // Return the fill border (second child)
-                    return hpGrid.Children.OfType<Border>().Skip(1).FirstOrDefault();
+                    // Return the fill border (second Border child)
+                    int borderCount = 0;
+                    foreach (UIElement hpChild in hpGrid.Children)
+                    {
+                        if (hpChild is Border b)
+                        {
+                            borderCount++;
+                            if (borderCount == 2)
+                                return b;
+                        }
+                    }
                 }
             }
             return null;
@@ -2307,29 +2417,56 @@ namespace DnDBattle.Controls
 
         /// <summary>
         /// Updates just the HP bar for a specific token without rebuilding all visuals.
-        /// Uses cached brushes to avoid allocations.
+        /// Uses direct iteration to avoid LINQ allocations.
         /// </summary>
         private void UpdateTokenHPBar(Token token)
         {
             if (token == null) return;
 
-            // Find the container for this token
-            var container = RenderCanvas.Children.OfType<Grid>()
-                .FirstOrDefault(g => g.Tag is Token t && t.Id == token.Id);
+            // Find the container for this token - direct iteration
+            Grid container = null;
+            foreach (UIElement child in RenderCanvas.Children)
+            {
+                if (child is Grid g && g.Tag is Token t && t.Id == token.Id)
+                {
+                    container = g;
+                    break;
+                }
+            }
 
             if (container == null) return;
 
-            // Find the HP bar grid within the container
-            var hpBarContainer = container.Children.OfType<Grid>()
-                .FirstOrDefault(g => g.VerticalAlignment == VerticalAlignment.Bottom && g.Height == 4);
+            // Find the HP bar grid within the container - direct iteration
+            Grid hpBarContainer = null;
+            foreach (UIElement child in container.Children)
+            {
+                if (child is Grid g && g.VerticalAlignment == VerticalAlignment.Bottom && g.Height == 4)
+                {
+                    hpBarContainer = g;
+                    break;
+                }
+            }
 
             if (hpBarContainer == null) return;
 
             // Calculate new HP percentage
             double hpPercent = token.MaxHP > 0 ? (double)Math.Max(0, token.HP) / token.MaxHP : 0;
 
-            // Get the fill border (second child)
-            var fillBorder = hpBarContainer.Children.OfType<Border>().Skip(1).FirstOrDefault();
+            // Find the fill border (second Border child) - direct iteration
+            Border fillBorder = null;
+            int borderCount = 0;
+            foreach (UIElement child in hpBarContainer.Children)
+            {
+                if (child is Border b)
+                {
+                    borderCount++;
+                    if (borderCount == 2) // Second border is the fill
+                    {
+                        fillBorder = b;
+                        break;
+                    }
+                }
+            }
 
             if (fillBorder != null)
             {
@@ -2337,7 +2474,7 @@ namespace DnDBattle.Controls
                 double barWidth = hpBarContainer.Width;
                 fillBorder.Width = Math.Max(0, barWidth * hpPercent);
 
-                // Update color using cached brush (only changes reference if tier changed)
+                // Update color using cached brush (from previous optimization)
                 var newBrush = GetHPBarBrush(hpPercent);
                 if (fillBorder.Background != newBrush)
                 {
@@ -3417,26 +3554,50 @@ namespace DnDBattle.Controls
                 int startY = SelectedToken.GridY;
                 int maxSquares = SelectedToken.SpeedSquares;
 
-                // Check if movement is blocked by walls
-                Func<int, int, bool> isBlocked = (gx, gy) =>
+                // Check if we can use cached result
+                bool cacheValid = _cachedReachableSquares != null &&
+                                  _cachedReachableTokenId == SelectedToken.Id &&
+                                  _cachedReachableStartX == startX &&
+                                  _cachedReachableStartY == startY &&
+                                  _cachedReachableMaxSquares == maxSquares &&
+                                  _cachedReachableWallVersion == _wallVersion;
+
+                HashSet<(int x, int y)> reachable;
+
+                if (cacheValid)
                 {
-                    // Check if any wall blocks movement into this cell
-                    var cellCenter = new Point(gx + 0.5, gy + 0.5);
-
-                    foreach (var wall in _wallService.Walls)
+                    // Use cached result
+                    reachable = _cachedReachableSquares;
+                }
+                else
+                {
+                    // Recalculate and cache
+                    Func<int, int, bool> isBlocked = (gx, gy) =>
                     {
-                        if (!wall.BlocksMovement) continue;
+                        var cellCenter = new Point(gx + 0.5, gy + 0.5);
 
-                        // Simple check: is the cell center very close to the wall?
-                        if (wall.IsPointNear(cellCenter, 0.6))
-                            return true;
-                    }
-                    return false;
-                };
+                        foreach (var wall in _wallService.Walls)
+                        {
+                            if (!wall.BlocksMovement) continue;
+                            if (wall.IsPointNear(cellCenter, 0.6))
+                                return true;
+                        }
+                        return false;
+                    };
 
-                var reachable = MovementService.GetReachableSquares(
-                    startX, startY, maxSquares, _gridWidth, _gridHeight, isBlocked);
+                    reachable = MovementService.GetReachableSquares(
+                        startX, startY, maxSquares, _gridWidth, _gridHeight, isBlocked);
 
+                    // Update cache
+                    _cachedReachableSquares = reachable;
+                    _cachedReachableTokenId = SelectedToken.Id;
+                    _cachedReachableStartX = startX;
+                    _cachedReachableStartY = startY;
+                    _cachedReachableMaxSquares = maxSquares;
+                    _cachedReachableWallVersion = _wallVersion;
+                }
+
+                // Draw the reachable squares (always needed since visual position changes with pan/zoom)
                 var brush = new SolidColorBrush(Color.FromArgb(80, 30, 144, 255));
                 brush.Freeze();
 
@@ -3449,6 +3610,15 @@ namespace DnDBattle.Controls
                     dc.DrawRectangle(brush, borderPen, rect);
                 }
             }
+        }
+
+        /// <summary>
+        /// Invalidates the reachable squares cache, forcing recalculation on next draw.
+        /// Call this when token position, selection, or walls change.
+        /// </summary>
+        public void InvalidateReachableCache()
+        {
+            _cachedReachableSquares = null;
         }
         #endregion
 
@@ -4183,7 +4353,17 @@ namespace DnDBattle.Controls
         {
             if (_lastPreviewPath == null || _lastPreviewPath.Count == 0 || SelectedToken == null) return;
 
-            var tokenVis = RenderCanvas.Children.OfType<FrameworkElement>().FirstOrDefault(c => c.Tag is Token t && t.Id == SelectedToken.Id);
+            // Find token visual - direct iteration instead of LINQ
+            FrameworkElement tokenVis = null;
+            foreach (UIElement child in RenderCanvas.Children)
+            {
+                if (child is FrameworkElement fe && fe.Tag is Token t && t.Id == SelectedToken.Id)
+                {
+                    tokenVis = fe;
+                    break;
+                }
+            }
+
             if (tokenVis == null) return;
             if (_isDraggingToken) return;
 
