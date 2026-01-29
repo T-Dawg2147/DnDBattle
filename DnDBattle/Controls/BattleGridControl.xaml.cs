@@ -151,6 +151,12 @@ namespace DnDBattle.Controls
         private bool _isFogBrushActive = false;
         private FogShapeTool _currentFogShapeTool = FogShapeTool.None;
         private Point? _fogShapeStartPoint;
+
+        // Cached Image field
+        private static ImageSource _cachedDefaultTokenImage;
+        private static readonly object _defaultImageLock = new object();
+        private static readonly Dictionary<string, ImageSource> _tokenImageCache = new Dictionary<string, ImageSource>();
+        private static readonly object _tokenImageLock = new object();
         #endregion
 
         public BattleGridControl()
@@ -1126,7 +1132,7 @@ namespace DnDBattle.Controls
                         container.Children.Add(glowBorder);
                     }
 
-                    ImageSource imageSource = token.DisplayImage ?? token.Image ?? LoadDefaultTokenImage();
+                    ImageSource imageSource = token.DisplayImage ?? token.Image ?? GetOrCreateTokenImage(token);
 
                     var img = new Image
                     {
@@ -1539,34 +1545,31 @@ namespace DnDBattle.Controls
 
         private ImageSource LoadDefaultTokenImage()
         {
-            try
-            {
-                // Try to load the default token image from resources
-                var uri = new Uri("pack://application:,,,/Resources/Entities/Tokens/default-token.png", UriKind.Absolute);
-                var bitmap = new BitmapImage();
-                bitmap.BeginInit();
-                bitmap.UriSource = uri;
-                bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                bitmap.EndInit();
-                bitmap.Freeze();
-                return bitmap;
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Could not load default token image: {ex.Message}");
+            // Return cached image if we already have it
+            if (_cachedDefaultTokenImage != null)
+                return _cachedDefaultTokenImage;
 
-                // Create a simple colored circle as fallback
-                return CreateFallbackTokenImage();
+            // Thread-safe initialization
+            lock (_defaultImageLock)
+            {
+                // Double-check after acquiring lock
+                if (_cachedDefaultTokenImage != null)
+                    return _cachedDefaultTokenImage;
+
+                _cachedDefaultTokenImage = CreateFallbackTokenImage();
+                System.Diagnostics.Debug.WriteLine("Generated default token image (cached)");
+
+                return _cachedDefaultTokenImage;
             }
         }
 
-        private ImageSource CreateFallbackTokenImage()
+        private static ImageSource CreateFallbackTokenImage()
         {
-            // Create a simple circle as a fallback token image
+            // Create a simple circle as the default token image
             var visual = new DrawingVisual();
             using (var dc = visual.RenderOpen())
             {
-                // Draw a circle with gradient
+                // Draw a circle with gradient - nice blue theme
                 var gradientBrush = new RadialGradientBrush(
                     Color.FromRgb(100, 149, 237),  // Cornflower blue center
                     Color.FromRgb(65, 105, 225));   // Royal blue edge
@@ -1577,7 +1580,7 @@ namespace DnDBattle.Controls
 
                 dc.DrawEllipse(gradientBrush, pen, new Point(24, 24), 22, 22);
 
-                // Add a question mark or initial
+                // Add a question mark
                 var text = new FormattedText(
                     "?",
                     System.Globalization.CultureInfo.CurrentCulture,
@@ -1592,7 +1595,112 @@ namespace DnDBattle.Controls
             var rtb = new RenderTargetBitmap(48, 48, 96, 96, PixelFormats.Pbgra32);
             rtb.Render(visual);
             rtb.Freeze();
+
             return rtb;
+        }
+
+        private static ImageSource GetOrCreateTokenImage(Token token)
+        {
+            // Determine cache key based on creature type (or use "default" if none)
+            string cacheKey = string.IsNullOrEmpty(token?.Type) ? "default" : token.Type.ToLowerInvariant().Trim();
+
+            // Check cache first
+            lock (_tokenImageLock)
+            {
+                if (_tokenImageCache.TryGetValue(cacheKey, out var cached))
+                    return cached;
+            }
+
+            // Generate new image for this type
+            var image = CreateTokenImage(token);
+
+            // Cache it
+            lock (_tokenImageLock)
+            {
+                _tokenImageCache[cacheKey] = image;
+            }
+
+            System.Diagnostics.Debug.WriteLine($"Generated token image for type: {cacheKey}");
+            return image;
+        }
+
+        private static ImageSource CreateTokenImage(Token token)
+        {
+            // Get colors based on creature type
+            var (centerColor, edgeColor, textColor) = GetCreatureTypeColors(token?.Type);
+
+            // Get display character (first letter of name, or ? if none)
+            string displayChar = "?";
+            if (!string.IsNullOrEmpty(token?.Name))
+            {
+                displayChar = token.Name.Substring(0, 1).ToUpperInvariant();
+            }
+
+            var visual = new DrawingVisual();
+            using (var dc = visual.RenderOpen())
+            {
+                // Draw circle with type-based gradient
+                var gradientBrush = new RadialGradientBrush(centerColor, edgeColor);
+                gradientBrush.Freeze();
+
+                var pen = new Pen(new SolidColorBrush(Color.FromRgb(255, 255, 255)), 2);
+                pen.Freeze();
+
+                dc.DrawEllipse(gradientBrush, pen, new Point(24, 24), 22, 22);
+
+                // Draw initial/character
+                var textBrush = new SolidColorBrush(textColor);
+                textBrush.Freeze();
+
+                var text = new FormattedText(
+                    displayChar,
+                    System.Globalization.CultureInfo.CurrentCulture,
+                    FlowDirection.LeftToRight,
+                    new Typeface(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.Bold, FontStretches.Normal),
+                    18,
+                    textBrush,
+                    1.0);
+                dc.DrawText(text, new Point(24 - text.Width / 2, 24 - text.Height / 2));
+            }
+
+            var rtb = new RenderTargetBitmap(48, 48, 96, 96, PixelFormats.Pbgra32);
+            rtb.Render(visual);
+            rtb.Freeze();
+
+            return rtb;
+        }
+
+        private static (Color center, Color edge, Color text) GetCreatureTypeColors(string creatureType)
+        {
+            if (string.IsNullOrEmpty(creatureType))
+                return (Color.FromRgb(100, 149, 237), Color.FromRgb(65, 105, 225), Colors.White); // Default blue
+
+            // Normalize the type string
+            string type = creatureType.ToLowerInvariant().Trim();
+
+            // Return colors based on D&D creature types
+            return type switch
+            {
+                // Classic monster types with thematic colors
+                "aberration" => (Color.FromRgb(138, 43, 226), Color.FromRgb(75, 0, 130), Colors.White),      // Purple (eldritch)
+                "beast" => (Color.FromRgb(139, 90, 43), Color.FromRgb(101, 67, 33), Colors.White),           // Brown (natural)
+                "celestial" => (Color.FromRgb(255, 215, 0), Color.FromRgb(218, 165, 32), Colors.Black),      // Gold (divine)
+                "construct" => (Color.FromRgb(169, 169, 169), Color.FromRgb(105, 105, 105), Colors.White),   // Gray (metal)
+                "dragon" => (Color.FromRgb(220, 20, 60), Color.FromRgb(139, 0, 0), Colors.White),            // Red (fire)
+                "elemental" => (Color.FromRgb(255, 140, 0), Color.FromRgb(255, 69, 0), Colors.White),        // Orange (energy)
+                "fey" => (Color.FromRgb(50, 205, 50), Color.FromRgb(34, 139, 34), Colors.White),             // Green (nature magic)
+                "fiend" => (Color.FromRgb(178, 34, 34), Color.FromRgb(85, 0, 0), Colors.White),              // Dark red (infernal)
+                "giant" => (Color.FromRgb(160, 82, 45), Color.FromRgb(101, 55, 27), Colors.White),           // Sienna (earth)
+                "humanoid" => (Color.FromRgb(100, 149, 237), Color.FromRgb(65, 105, 225), Colors.White),     // Blue (default)
+                "monstrosity" => (Color.FromRgb(128, 0, 0), Color.FromRgb(64, 0, 0), Colors.White),          // Maroon (dangerous)
+                "ooze" => (Color.FromRgb(124, 252, 0), Color.FromRgb(50, 205, 50), Colors.Black),            // Lime green (acidic)
+                "plant" => (Color.FromRgb(34, 139, 34), Color.FromRgb(0, 100, 0), Colors.White),             // Forest green
+                "undead" => (Color.FromRgb(72, 61, 139), Color.FromRgb(25, 25, 112), Colors.LightGray),      // Dark slate (death)
+                "swarm" => (Color.FromRgb(85, 85, 85), Color.FromRgb(45, 45, 45), Colors.White),             // Dark gray (many)
+
+                // Default for unknown types
+                _ => (Color.FromRgb(100, 149, 237), Color.FromRgb(65, 105, 225), Colors.White)              // Blue
+            };
         }
 
         private void LayoutTokens()
