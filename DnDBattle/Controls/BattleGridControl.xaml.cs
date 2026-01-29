@@ -111,6 +111,11 @@ namespace DnDBattle.Controls
         private bool _roomDrawMode = false;
         private List<Point> _roomVertices = new List<Point>();
 
+        // Lighting dirty flag system
+        private bool _lightingDirty = true;
+        private int _lightingWallVersion = -1;
+        private int _lightingLightCount = -1;
+
         // Measurement Tool State
         private bool _measureMode = false;
         private Point? _measureStart = null;
@@ -188,8 +193,9 @@ namespace DnDBattle.Controls
 
             _wallService.WallsChanged += () =>
             {
-                RedrawWalls();
                 _wallVersion++;
+                _lightingDirty = true;    // Mark lighting as needing recalculation
+                RedrawWalls();
             };
 
             Loaded += BattleGridControl_Loaded;
@@ -430,6 +436,7 @@ namespace DnDBattle.Controls
             var ctrl = (BattleGridControl)d;
             ctrl.UpdateGridVisual();
             ctrl.LayoutTokens();
+            ctrl.MarkLightingDirty();
             ctrl.RedrawLighting();
             ctrl.RedrawMovementOverlay();
             ctrl.RedrawPathVisual();
@@ -1051,7 +1058,6 @@ namespace DnDBattle.Controls
         {
             UpdateGridVisual();
             LayoutTokens();
-            RedrawLighting();
             RedrawMovementOverlay();
             RedrawPathVisual();
             RedrawWalls();
@@ -1757,6 +1763,7 @@ namespace DnDBattle.Controls
             _gridHeight = Math.Max(1, maxHeight);
             UpdateGridVisual();
             RedrawMovementOverlay();
+            MarkLightingDirty();
             RedrawLighting();
         }
 
@@ -1781,7 +1788,6 @@ namespace DnDBattle.Controls
                 _middlePanLast = pt;
 
                 UpdateGridVisual();
-                RedrawLighting();
                 RedrawMovementOverlay();
                 RedrawPathVisual();
 
@@ -3120,6 +3126,7 @@ namespace DnDBattle.Controls
                     wall.WallType = (WallType)((MenuItem)s).Tag;
                     AddToActionLog("Wall", $"Changed wall to {wall.WallType}");
                     RedrawWalls();
+                    MarkLightingDirty();  // Wall type affects light blocking
                     RedrawLighting();
                 };
                 typeMenu.Items.Add(typeItem);
@@ -3800,80 +3807,148 @@ namespace DnDBattle.Controls
 
         #endregion
 
-        #region Lighting (unchanged aside from obstacle positions)
+        #region Lighting (with dirty flag optimization)
+
+        // Lighting dirty flag system (add to States region if not already there)
+        // private bool _lightingDirty = true;
+        // private int _lightingWallVersion = -1;  
+        // private int _lightingLightCount = -1;
+
         public void AddLight(LightSource light)
         {
             _lights.Add(light);
             _spatialIndex.IndexLight(light);
+            MarkLightingDirty();
+            RedrawLighting();
+        }
+
+        public void RemoveLightPublic(LightSource light)
+        {
+            if (light == null) return;
+            _lights.Remove(light);
+            MarkLightingDirty();
+            RedrawLighting();
+        }
+
+        /// <summary>
+        /// Call this when something changes that affects lighting calculations
+        /// (lights moved, walls changed, doors opened/closed)
+        /// </summary>
+        public void MarkLightingDirty()
+        {
+            _lightingDirty = true;
+            System.Diagnostics.Debug.WriteLine("Lighting marked dirty");
+        }
+
+        /// <summary>
+        /// Force a full lighting recalculation (useful after major changes)
+        /// </summary>
+        public void InvalidateLighting()
+        {
+            _lightingDirty = true;
+            _lightingWallVersion = -1;
+            _lightingLightCount = -1;
             RedrawLighting();
         }
 
         private void RedrawLighting()
         {
+            // Early exit if no lights
+            if (_lights == null || _lights.Count == 0)
+            {
+                // Clear the lighting visual if there are no lights
+                using (var dc = _lightingVisual.RenderOpen()) { }
+                return;
+            }
+
+            // Check if we actually need to recalculate
+            bool needsRecalculation = _lightingDirty ||
+                                      _lightingWallVersion != _wallVersion ||
+                                      _lightingLightCount != _lights.Count;
+
+            if (!needsRecalculation)
+            {
+                // Lighting hasn't changed - the visual is already correct
+                // The RenderTransform will handle pan/zoom automatically
+                System.Diagnostics.Debug.WriteLine("Lighting cache HIT - skipping recalculation");
+                return;
+            }
+
+            System.Diagnostics.Debug.WriteLine($"Lighting cache MISS - recalculating {_lights.Count} lights");
+
+            // Perform the expensive lighting calculations
             using (var dc = _lightingVisual.RenderOpen())
             {
-                if (_lights == null || _lights.Count == 0)
-                {
-                    return;
-                }
-
                 foreach (var light in _lights)
                 {
-                    var centerGrid = light.CenterGrid;
-                    var centerPixel = new Point(
-                        centerGrid.X * GridCellSize + GridCellSize / 2.0,
-                        centerGrid.Y * GridCellSize + GridCellSize / 2.0);
-                    double radiusPx = Math.Max(GridCellSize, light.RadiusSquares * GridCellSize);
-
-                    // Compute lit polygon using wall service
-                    var litPolygonGrid = _wallService.ComputeLitPolygon(centerGrid, light.RadiusSquares, 180);
-
-                    if (litPolygonGrid.Count < 3)
-                    {
-                        // No walls blocking - draw full circle
-                        var rg = CreateLightGradient(light.Intensity);
-                        dc.DrawEllipse(rg, null, centerPixel, radiusPx, radiusPx);
-                    }
-                    else
-                    {
-                        // Create polygon geometry from lit area
-                        var litGeometry = new PathGeometry();
-                        var figure = new PathFigure
-                        {
-                            StartPoint = new Point(
-                                litPolygonGrid[0].X * GridCellSize + GridCellSize / 2,
-                                litPolygonGrid[0].Y * GridCellSize + GridCellSize / 2),
-                            IsClosed = true,
-                            IsFilled = true
-                        };
-
-                        for (int i = 1; i < litPolygonGrid.Count; i++)
-                        {
-                            figure.Segments.Add(new LineSegment(
-                                new Point(
-                                    litPolygonGrid[i].X * GridCellSize + GridCellSize / 2,
-                                    litPolygonGrid[i].Y * GridCellSize + GridCellSize / 2),
-                                true));
-                        }
-
-                        litGeometry.Figures.Add(figure);
-
-                        // Draw with radial gradient clipped to lit area
-                        var rg = CreateLightGradient(light.Intensity);
-
-                        dc.PushClip(litGeometry);
-                        dc.PushTransform(new TranslateTransform(centerPixel.X - radiusPx, centerPixel.Y - radiusPx));
-                        dc.DrawRectangle(rg, null, new Rect(0, 0, radiusPx * 2, radiusPx * 2));
-                        dc.Pop();
-                        dc.Pop();
-                    }
-
-                    // Draw light source indicator
-                    var centerBrush = new SolidColorBrush(Color.FromArgb(255, 255, 255, 150));
-                    centerBrush.Freeze();
-                    dc.DrawEllipse(centerBrush, new Pen(Brushes.Orange, 2), centerPixel, 8, 8);
+                    DrawLight(dc, light);
                 }
             }
+
+            // Update cache state
+            _lightingDirty = false;
+            _lightingWallVersion = _wallVersion;
+            _lightingLightCount = _lights.Count;
+        }
+
+        /// <summary>
+        /// Draws a single light source with shadow casting
+        /// </summary>
+        private void DrawLight(DrawingContext dc, LightSource light)
+        {
+            var centerGrid = light.CenterGrid;
+            var centerPixel = new Point(
+                centerGrid.X * GridCellSize + GridCellSize / 2.0,
+                centerGrid.Y * GridCellSize + GridCellSize / 2.0);
+            double radiusPx = Math.Max(GridCellSize, light.RadiusSquares * GridCellSize);
+
+            // Compute lit polygon using wall service (this is the expensive part!)
+            var litPolygonGrid = _wallService.ComputeLitPolygon(centerGrid, light.RadiusSquares, 180);
+
+            if (litPolygonGrid.Count < 3)
+            {
+                // No walls blocking - draw full circle
+                var rg = CreateLightGradient(light.Intensity);
+                dc.DrawEllipse(rg, null, centerPixel, radiusPx, radiusPx);
+            }
+            else
+            {
+                // Create polygon geometry from lit area
+                var litGeometry = new PathGeometry();
+                var figure = new PathFigure
+                {
+                    StartPoint = new Point(
+                        litPolygonGrid[0].X * GridCellSize + GridCellSize / 2,
+                        litPolygonGrid[0].Y * GridCellSize + GridCellSize / 2),
+                    IsClosed = true,
+                    IsFilled = true
+                };
+
+                for (int i = 1; i < litPolygonGrid.Count; i++)
+                {
+                    figure.Segments.Add(new LineSegment(
+                        new Point(
+                            litPolygonGrid[i].X * GridCellSize + GridCellSize / 2,
+                            litPolygonGrid[i].Y * GridCellSize + GridCellSize / 2),
+                        true));
+                }
+
+                litGeometry.Figures.Add(figure);
+
+                // Draw with radial gradient clipped to lit area
+                var rg = CreateLightGradient(light.Intensity);
+
+                dc.PushClip(litGeometry);
+                dc.PushTransform(new TranslateTransform(centerPixel.X - radiusPx, centerPixel.Y - radiusPx));
+                dc.DrawRectangle(rg, null, new Rect(0, 0, radiusPx * 2, radiusPx * 2));
+                dc.Pop();
+                dc.Pop();
+            }
+
+            // Draw light source indicator
+            var centerBrush = new SolidColorBrush(Color.FromArgb(255, 255, 255, 150));
+            centerBrush.Freeze();
+            dc.DrawEllipse(centerBrush, new Pen(Brushes.Orange, 2), centerPixel, 8, 8);
         }
 
         private RadialGradientBrush CreateLightGradient(double intensity)
@@ -3892,18 +3967,8 @@ namespace DnDBattle.Controls
             rg.Freeze();
 
             return rg;
-
         }
 
-        #endregion
-
-        #region Undo / Redo API for obstacles
-        public void RemoveLightPublic(LightSource light)
-        {
-            if (light == null) return;
-            _lights.Remove(light);
-            RedrawLighting();
-        }
         #endregion
 
         #region Public API: commit previewed path with animation
