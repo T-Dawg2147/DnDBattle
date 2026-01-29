@@ -1,5 +1,6 @@
 ﻿using DnDBattle.Models;
 using DnDBattle.Services;
+using DnDBattle.Utils;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -49,7 +50,7 @@ namespace DnDBattle.Views
                 {
                     File.Move(oldFilePath, newFilePath, true);
 
-                    token.Image = new BitmapImage(new Uri(newFilePath));
+                    token.Image = ImageHelper.LoadFrozenBitmap(newFilePath);
                     token.IconPath = newFilePath;
 
                     using (var db = new CreatureDatabaseService())

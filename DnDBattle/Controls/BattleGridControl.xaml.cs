@@ -125,9 +125,17 @@ namespace DnDBattle.Controls
         private FrameworkElement _draggingVisual;
         private Point _dragOrigin;
 
-        // path preview state
+        // Path preview state
         private List<(int x, int y)> _lastPreviewPath = null;
         private HashSet<int> _lastAooIndices = null;
+        private DateTime _lastPathCalculation = DateTime.MinValue;
+        private readonly TimeSpan _pathCalculationDebounce = TimeSpan.FromMilliseconds(50);
+
+        // Path caching for performance
+        private (int x, int y)? _cachedPathStart = null;
+        private (int x, int y)? _cachedPathGoal = null;
+        private int _cachedPathWallVersion = -1;
+        private int _wallVersion = 0;  // Incremented when walls change
 
         // visuals sizing
         private int _gridWidth = 200, _gridHeight = 200;
@@ -178,7 +186,11 @@ namespace DnDBattle.Controls
             AddVisualOverlay(_measureVisual, 80);
             AddVisualOverlay(_areaEffectVisual, 85);
 
-            _wallService.WallsChanged += () => RedrawWalls();
+            _wallService.WallsChanged += () =>
+            {
+                RedrawWalls();
+                _wallVersion++;
+            };
 
             Loaded += BattleGridControl_Loaded;
             KeyDown += BattleGridControl_KeyDown;
@@ -449,8 +461,9 @@ namespace DnDBattle.Controls
         private static void OnSelectedTokenChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var ctrl = (BattleGridControl)d;
-            ctrl.RedrawMovementOverlay();
+            ctrl.InvalidatePathCache();
             ctrl.ClearPathVisual();
+            ctrl.RedrawMovementOverlay();
         }
         #endregion
 
@@ -3365,15 +3378,37 @@ namespace DnDBattle.Controls
         {
             if (SelectedToken == null) return;
 
+            if (DateTime.Now - _lastPathCalculation < _pathCalculationDebounce)
+                return;
+            _lastPathCalculation = DateTime.Now;
+
             var start = (SelectedToken.GridX, SelectedToken.GridY);
             var goal = targetCell;
+
+            // === CACHE CHECK ===
+            // If start, goal, and wall configuration haven't changed, reuse the cached path
+            if (_cachedPathStart == start &&
+                _cachedPathGoal == goal &&
+                _cachedPathWallVersion == _wallVersion &&
+                _lastPreviewPath != null)
+            {
+                // Path is already calculated and displayed - nothing to do!
+                System.Diagnostics.Debug.WriteLine($"Path cache HIT: ({start.GridX},{start.GridY}) -> ({goal.x},{goal.y})");
+                return;
+            }
+
+            System.Diagnostics.Debug.WriteLine($"Path cache MISS: calculating ({start.GridX},{start.GridY}) -> ({goal.x},{goal.y})");
+
+            // Cache the walkability function to avoid recreating it
+            // Also cache the wall list reference to avoid repeated property access
+            var walls = _wallService.Walls;
 
             Func<int, int, bool> isWalkable = (gx, gy) =>
             {
                 var cellCenter = new Point(gx + 0.5, gy + 0.5);
 
-                // Check walls
-                foreach (var wall in _wallService.Walls)
+                // Check walls - use cached reference
+                foreach (var wall in walls)
                 {
                     if (!wall.BlocksMovement) continue;
                     if (wall.IsPointNear(cellCenter, 0.6))
@@ -3383,8 +3418,14 @@ namespace DnDBattle.Controls
             };
 
             var path = MovementService.FindPathAStar(start, goal, _gridWidth, _gridHeight, isWalkable);
-            _lastPreviewPath = path;
 
+            // === UPDATE CACHE ===
+            _lastPreviewPath = path;
+            _cachedPathStart = start;
+            _cachedPathGoal = goal;
+            _cachedPathWallVersion = _wallVersion;
+
+            // Calculate AOO indices
             var enemies = new List<(int x, int y)>();
             if (Tokens != null)
             {
@@ -3560,12 +3601,32 @@ namespace DnDBattle.Controls
             }
         }
 
+        /// <summary>
+        /// Clears the path visual and invalidates the cache
+        /// </summary>
         private void ClearPathVisual()
         {
             _lastPreviewPath = null;
             _lastAooIndices = null;
+
+            // Clear the cache as well
+            _cachedPathStart = null;
+            _cachedPathGoal = null;
+
             using (var dc = _pathVisual.RenderOpen()) { }
         }
+
+        /// <summary>
+        /// Call this when something changes that should invalidate cached paths
+        /// (e.g., token moved, walls changed, etc.)
+        /// </summary>
+        public void InvalidatePathCache()
+        {
+            _cachedPathStart = null;
+            _cachedPathGoal = null;
+            _cachedPathWallVersion = -1;
+        }
+
         #endregion
 
         #region Area Effect Methods

@@ -37,45 +37,96 @@ namespace DnDBattle.Services
             return visited;
         }
 
-        public static List<(int x, int y)> FindPathAStar((int x, int y) start, (int x, int y) goal, int gridWidth, int gridHeight, Func<int, int, bool> isWalkable)
+        /// <summary>
+        /// Finds the shortest path using A* algorithm with a node limit to prevent freezes.
+        /// </summary>
+        /// <param name="start">Starting position</param>
+        /// <param name="goal">Target position</param>
+        /// <param name="gridWidth">Grid width in cells</param>
+        /// <param name="gridHeight">Grid height in cells</param>
+        /// <param name="isWalkable">Function to check if a cell is walkable</param>
+        /// <returns>List of positions forming the path, or empty list if no path found or limit exceeded</returns>
+        public static List<(int x, int y)> FindPathAStar(
+            (int x, int y) start,
+            (int x, int y) goal,
+            int gridWidth,
+            int gridHeight,
+            Func<int, int, bool> isWalkable)
         {
+            int distance = Heuristic(start, goal);
+            int dynamicLimit = Math.Min(Options.MaxAStarNodes, distance * distance * 4);
+
+            // Early exit: if start equals goal, return single-point path
+            if (start == goal)
+                return new List<(int x, int y)> { start };
+
+            // Early exit: if goal is out of bounds, no path possible
+            if (goal.x < 0 || goal.y < 0 || goal.x >= gridWidth || goal.y >= gridHeight)
+                return new List<(int, int)>();
+
             var open = new PriorityQueue<(int x, int y), double>();
             var gScore = new Dictionary<(int x, int y), int>();
             var cameFrom = new Dictionary<(int x, int y), (int x, int y)>();
+            var closedSet = new HashSet<(int x, int y)>();  // Track processed nodes
 
             (int x, int y)[] neighbors = { (1, 0), (-1, 0), (0, 1), (0, -1) };
 
             gScore[start] = 0;
             open.Enqueue(start, Heuristic(start, goal));
 
+            int nodesProcessed = 0;
+            int maxNodes = Options.MaxAStarNodes;  // Use the configured limit!
+
             while (open.Count > 0)
             {
-                var current = open.Dequeue();
-                if (current == goal)
+                // SAFETY CHECK: Enforce node limit to prevent UI freezes
+                nodesProcessed++;
+                if (nodesProcessed > maxNodes)
                 {
-                    var path = new List<(int x, int y)>();
-                    var cur = current;
-                    path.Add(cur);
-                    while (cameFrom.ContainsKey(cur))
-                    {
-                        cur = cameFrom[cur];
-                        path.Add(cur);
-                    }
-                    path.Reverse();
-                    return path;
+                    System.Diagnostics.Debug.WriteLine(
+                        $"A* pathfinding hit node limit ({maxNodes}) - path from ({start.x},{start.y}) to ({goal.x},{goal.y}) aborted");
+
+                    // Return partial path to the closest point we found, or empty if none
+                    return GetBestPartialPath(cameFrom, gScore, goal);
                 }
 
-                int currentG = gScore.ContainsKey(current) ? gScore[current] : int.MaxValue;
+                var current = open.Dequeue();
+
+                // Skip if we've already processed this node (can happen with priority queue)
+                if (closedSet.Contains(current))
+                    continue;
+
+                closedSet.Add(current);
+
+                // SUCCESS: Found the goal!
+                if (current == goal)
+                {
+                    return ReconstructPath(cameFrom, current);
+                }
+
+                int currentG = gScore.TryGetValue(current, out var g) ? g : int.MaxValue;
+
                 foreach (var d in neighbors)
                 {
                     var nx = current.x + d.x;
                     var ny = current.y + d.y;
                     var neighbor = (nx, ny);
-                    if (nx < 0 || ny < 0 || nx >= gridWidth || ny >= gridHeight) continue;
-                    if (!isWalkable(nx, ny) && neighbor != goal) continue;
+
+                    // Bounds check
+                    if (nx < 0 || ny < 0 || nx >= gridWidth || ny >= gridHeight)
+                        continue;
+
+                    // Skip already processed nodes
+                    if (closedSet.Contains(neighbor))
+                        continue;
+
+                    // Walkability check (goal is always considered walkable for pathing purposes)
+                    if (!isWalkable(nx, ny) && neighbor != goal)
+                        continue;
 
                     int tentativeG = currentG + 1;
-                    if (!gScore.ContainsKey(neighbor) || tentativeG < gScore[neighbor])
+
+                    if (!gScore.TryGetValue(neighbor, out var neighborG) || tentativeG < neighborG)
                     {
                         cameFrom[neighbor] = current;
                         gScore[neighbor] = tentativeG;
@@ -84,7 +135,51 @@ namespace DnDBattle.Services
                     }
                 }
             }
+
+            // No path found
             return new List<(int, int)>();
+        }
+
+        /// <summary>
+        /// Reconstructs the path from the cameFrom dictionary
+        /// </summary>
+        private static List<(int x, int y)> ReconstructPath(
+            Dictionary<(int x, int y), (int x, int y)> cameFrom,
+            (int x, int y) current)
+        {
+            var path = new List<(int x, int y)> { current };
+
+            while (cameFrom.ContainsKey(current))
+            {
+                current = cameFrom[current];
+                path.Add(current);
+            }
+
+            path.Reverse();
+            return path;
+        }
+
+        /// <summary>
+        /// When we hit the node limit, return the best partial path we found
+        /// (path to the node closest to the goal)
+        /// </summary>
+        private static List<(int x, int y)> GetBestPartialPath(
+            Dictionary<(int x, int y), (int x, int y)> cameFrom,
+            Dictionary<(int x, int y), int> gScore,
+            (int x, int y) goal)
+        {
+            if (cameFrom.Count == 0)
+                return new List<(int, int)>();
+
+            // Find the explored node closest to the goal
+            var closestNode = cameFrom.Keys
+                .OrderBy(node => Heuristic(node, goal))
+                .FirstOrDefault();
+
+            if (closestNode == default)
+                return new List<(int, int)>();
+
+            return ReconstructPath(cameFrom, closestNode);
         }
 
         private static int Heuristic((int x, int y) a, (int x, int y) b) =>
@@ -98,12 +193,14 @@ namespace DnDBattle.Services
             var enemyAdjacency = new Dictionary<(int x, int y), HashSet<(int x, int y)>>();
             foreach (var e in enemyPositions)
             {
-                var adj = new HashSet<(int x, int y)>();
-                adj.Add(e);
-                adj.Add((e.x + 1, e.y));
-                adj.Add((e.x - 1, e.y));
-                adj.Add((e.x, e.y + 1));
-                adj.Add((e.x, e.y - 1));
+                var adj = new HashSet<(int x, int y)>
+                {
+                    e,
+                    (e.x + 1, e.y),
+                    (e.x - 1, e.y),
+                    (e.x, e.y + 1),
+                    (e.x, e.y - 1)
+                };
                 enemyAdjacency[e] = adj;
             }
 
@@ -111,16 +208,20 @@ namespace DnDBattle.Services
             {
                 var prev = path[i - 1];
                 var cur = path[i];
-                foreach (var kv in enemyAdjacency)
+
+                foreach (var kvp in enemyAdjacency)
                 {
-                    var enemy = kv.Key;
-                    var adj = kv.Value;
-                    bool prevAdj = adj.Contains(prev);
-                    bool curAdj = adj.Contains(cur);
-                    if (prevAdj && !curAdj)
+                    var enemy = kvp.Key;
+                    var adj = kvp.Value;
+
+                    // AOO triggers when leaving an enemy's reach
+                    if (adj.Contains(prev) && !adj.Contains(cur))
+                    {
                         aooIndices.Add(i);
+                    }
                 }
             }
+
             return aooIndices;
         }
     }

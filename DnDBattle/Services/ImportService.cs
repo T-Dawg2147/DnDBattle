@@ -1,4 +1,5 @@
 ﻿using DnDBattle.Models;
+using DnDBattle.Utils;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -90,7 +91,7 @@ namespace DnDBattle.Services
                                 if (File.Exists(candidate))
                                 {
                                     t.IconPath = candidate;
-                                    t.Image = new BitmapImage(new Uri(candidate));
+                                    t.Image = ImageHelper.LoadFrozenBitmap(candidate);
                                 }
                                 else
                                 {

@@ -281,7 +281,7 @@ namespace DnDBattle.ViewModels
             dlg.Filter = "Image files|*.png;*.jpg;*.jpeg;*.bmp";
             if (dlg.ShowDialog() == true)
             {
-                MapImageSource = new BitmapImage(new System.Uri(dlg.FileName));
+                MapImageSource = ImageHelper.LoadFrozenBitmap(dlg.FileName);
                 Log("System", $"Loaded map {dlg.SafeFileName}");
             }
         }
