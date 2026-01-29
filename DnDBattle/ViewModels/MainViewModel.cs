@@ -20,6 +20,20 @@ namespace DnDBattle.ViewModels
     {
         public event System.Action RequestTokenVisualsRefresh;
 
+        private bool _dirty = false;
+        public bool IsDirty
+        {
+            get => _dirty;
+            set
+            {
+                if (_dirty != value)
+                {
+                    _dirty = value;
+                    OnPropertyChanged(nameof(IsDirty));
+                }
+            }
+        }
+
         public ObservableCollection<Token> Tokens { get; } = new ObservableCollection<Token>();
         public ObservableCollection<Token> CreatureBank { get; } = new ObservableCollection<Token>();
         public ObservableCollection<LightSource> Lights { get; } = new ObservableCollection<LightSource>();

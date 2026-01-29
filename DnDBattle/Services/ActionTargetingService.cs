@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace DnDBattle.Services
@@ -40,6 +41,8 @@ namespace DnDBattle.Services
 
     public class ActionTargetingService
     {
+        private static readonly Regex RangeNumberRegex = new Regex(@"\d+", RegexOptions.Compiled);
+
         public TargetingState CurrentState { get; private set; } = new TargetingState();
 
         public event System.Action<TargetingState> TargetingStarted;
@@ -279,7 +282,7 @@ namespace DnDBattle.Services
             range = range.ToLower();
 
             // Parse "X ft" or "X/Y ft" format
-            var numbers = System.Text.RegularExpressions.Regex.Matches(range, @"\d+");
+            var numbers = RangeNumberRegex.Matches(range);
             if (numbers.Count > 0)
             {
                 if (int.TryParse(numbers[0].Value, out int feet))
@@ -307,7 +310,7 @@ namespace DnDBattle.Services
             range = range.ToLower();
             return range.Contains("range") ||
                    range.Contains("ranged") ||
-                   (int.TryParse(System.Text.RegularExpressions.Regex.Match(range, @"\d+").Value, out int feet) && feet > 10);
+                   (int.TryParse(RangeNumberRegex.Match(range).Value, out int feet));
         }
 
         private bool IsMelee(string range)

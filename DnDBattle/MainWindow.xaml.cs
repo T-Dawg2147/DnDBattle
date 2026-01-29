@@ -36,7 +36,11 @@ namespace DnDBattle
             UndoManager.Limit = Options.UndoStackLimit;
             UndoManager.StateChanged += UndoManager_StateChanged;
 
-            vm.Tokens.CollectionChanged += (s, e) => AutosaveNow();
+            vm.Tokens.CollectionChanged += (s, e) =>
+            {
+                vm.IsDirty = true;
+                AutosaveNow();
+            };
 
             _autosaveTimer = new DispatcherTimer();
             _autosaveTimer.Interval = TimeSpan.FromSeconds(Options.AutosaveIntervalSeconds);
@@ -1057,7 +1061,12 @@ namespace DnDBattle
             try
             {
                 if (DataContext is MainViewModel vm)
+                {
+                    if (!vm.IsDirty)
+                        return;
                     AutosaveService.SaveEncounter(vm, BattleGrid);
+                    vm.IsDirty = false; // Reset dirty flag after save
+                }
             }
             catch { }
         }

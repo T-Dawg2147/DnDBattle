@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -12,6 +13,9 @@ namespace DnDBattle.Services
     /// </summary>
     public class FogOfWarService
     {
+        private static readonly Regex DarkvisionRegex = new Regex(
+            @"darkvision\s*(\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
         // Fog state - true = revealed, false = hidden
         private bool[,] _fogGrid;
         private int _gridWidth;
@@ -294,10 +298,7 @@ namespace DnDBattle.Services
             // Parse darkvision distance if present
             if (hasDarkvision)
             {
-                var match = System.Text.RegularExpressions.Regex.Match(
-                    token.Senses ?? "",
-                    @"darkvision\s*(\d+)",
-                    System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                var match = DarkvisionRegex.Match(token.Senses ?? "");
 
                 if (match.Success && int.TryParse(match.Groups[1].Value, out int feet))
                 {
