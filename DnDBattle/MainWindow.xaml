@@ -109,6 +109,13 @@
                 <MenuItem Header="Undo" Click="Undo_Click" InputGestureText="Ctrl+Z"/>
                 <MenuItem Header="Redo" Click="Redo_Click" InputGestureText="Ctrl+Y"/>
             </MenuItem>
+            <Separator/>
+            <MenuItem Header="Tile Map Builder" Click="OpenTileMapBuilder_Click">
+                <MenuItem.Icon>
+                    <TextBlock Text="🗺️" FontSize="14"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <Separator />
             <MenuItem Header="_Encounter" Foreground="White">
                 <Button Content="📋 Encounter Builder" 
                         Click="BtnEncounterBuilder_Click" />

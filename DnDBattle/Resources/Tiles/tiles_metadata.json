@@ -1,0 +1,31 @@
+{
+    "tiles": [
+        {
+            "fileName": "stone_floor_1",
+            "displayName": "Stone Floor (Gray)",
+            "category": "Floor",
+            "widthInSquares": 1,
+            "heightInSquares": 1,
+            "blocksMovement": false,
+            "blocksLineOfSight": false
+        },
+        {
+            "fileName": "wooden_door",
+            "displayName": "Wooden Door",
+            "category": "Door",
+            "widthInSquares": 1,
+            "heightInSquares": 1,
+            "blocksMovement": true,
+            "blocksLineOfSight": true
+        },
+        {
+            "fileName": "stone_wall_north",
+            "displayName": "Stone Wall (North)",
+            "category": "Wall",
+            "widthInSquares": 1,
+            "heightInSquares": 1,
+            "blocksMovement": true,
+            "blocksLineOfSight": true
+        }
+    ]
+}

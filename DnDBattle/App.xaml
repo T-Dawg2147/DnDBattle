@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:DnDBattle"
              xmlns:converter="clr-namespace:DnDBattle.Converters"
+             xmlns:controls="clr-namespace:DnDBattle.Controls.TileMapBuilder"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <converter:BoolToBrushConverter x:Key="BoolToBrushConverter" TrueBrush="#FF333333" FalseBrush="Transparent"/>
@@ -13,7 +14,10 @@
         <converter:FavoriteColorConverter x:Key="FavoriteColorConverter"/>
         <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <converter:StringToVisibilityConverter x:Key="StringToVisibilityConverter" xmlns:views="clr-namespace:DnDBattle.Views"/>
-        
+        <converters:EnumToBoolConverter x:Key="EnumToBoolConverter"/>
+        <controls:GreaterThanOneToVisibilityConverter x:Key="GreaterThanOneToVisibility"/>
+        <controls:IntToVisibilityInverseConverter x:Key="IntToVisibilityInverse"/>
+
         <SolidColorBrush x:Key="AppDarkBg" Color="#FF2D2D30" />
         <SolidColorBrush x:Key="AppPanelBg" Color="#FF1E1E1E" />
 

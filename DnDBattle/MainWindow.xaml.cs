@@ -365,6 +365,36 @@ namespace DnDBattle
             UpdateStatus();
         }
 
+        private void OpenTileMapBuilder_Click(object sender, RoutedEventArgs e)
+        {
+            var builderWindow = new Views.TileMapBuilderWindow
+            {
+                Owner = this
+            };
+
+            // Show as a dialog, or use Show() for non-modal
+            var result = builderWindow.ShowDialog();
+
+            // Optionally, use the created map as the battle grid background
+            if (result == true)
+            {
+                var tileMap = builderWindow.GetCurrentMap();
+                if (tileMap != null)
+                {
+                    // TODO: Render tile map to ImageSource and set as MapImageSource
+                    // This would be a future enhancement
+                    LoadTileMapAsBackground(tileMap);
+                }
+            }
+        }
+
+        private void LoadTileMapAsBackground(Models.Tiles.TileMap tileMap)
+        {
+            // Future enhancement: Render the tile map to a bitmap and use as background
+            // For now, just log that we have a map
+            System.Diagnostics.Debug.WriteLine($"Loaded tile map: {tileMap.Name} with {tileMap.Tiles.Count} tiles");
+        }
+
         private void UpdateStatus()
         {
             Status_Undo.Text = $"Undo: {(UndoManager.CanUndo ? "Yes" : "No")} Redo: {(UndoManager.CanRedo ? "Yes" : "No")}";
