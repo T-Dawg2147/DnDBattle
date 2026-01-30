@@ -6,20 +6,16 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
-using System.Windows.Media;
 
-namespace DnDBattle.Utils
+namespace DnDBattle.Converters
 {
-    public class InverseBoolToVisibilityConverter : IValueConverter
+    class NullToVisibilityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is int length)
-                return length == 0 ? Visibility.Visible : Visibility.Collapsed;
-            if (value is bool b)
-                return b ? Visibility.Collapsed : Visibility.Visible;
-
-            return Visibility.Collapsed;
+            if (value == null) return Visibility.Collapsed;
+            if (value is string str && string.IsNullOrWhiteSpace(str)) return Visibility.Collapsed;
+            return Visibility.Visible;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>

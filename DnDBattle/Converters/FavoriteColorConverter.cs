@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Windows.Data;
 using System.Windows.Media;
 
-namespace DnDBattle.Utils
+namespace DnDBattle.Converters
 {
     public class FavoriteColorConverter : IValueConverter
     {
