@@ -171,7 +171,7 @@ namespace DnDBattle.Views.TileMap
 
         private void CreateNewMap(int width, int height)
         {
-            _currentMap = new TileMap
+            _currentMap = new Models.Tiles.TileMap
             {
                 Name = "New Map",
                 Width = width,

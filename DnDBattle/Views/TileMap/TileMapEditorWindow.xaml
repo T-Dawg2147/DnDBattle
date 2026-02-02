@@ -2,12 +2,9 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:DnDBattle.Controls"
-        xmlns:views="clr-namespace:DnDBattle.Views"
+        xmlns:views="clr-namespace:DnDBattle.Views.TileMap"
         Title="Tile Map Builder" Height="700" Width="1200"
         Background="#FF1E1E1E">
-    <Window.Resources>
-        <views:TileImageConverter x:Key="TileImageConverter"/>
-    </Window.Resources>
 
     <Grid>
         <Grid.ColumnDefinitions>

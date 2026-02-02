@@ -52,23 +52,5 @@ namespace DnDBattle.Views.TileMap
         }
     }
 
-    /// <summary>
-    /// Converter to load tile images via cache
-    /// </summary>
-    public class TileImageConverter : IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            if (value is string imagePath)
-            {
-                return TileImageCacheService.Instance.GetOrLoadImage(imagePath);
-            }
-            return null;
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
-    }
+    
 }
