@@ -12,11 +12,11 @@
         <converter:HPBarWidthConverter x:Key="HPBarWidthConverter"/>
         <converter:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
         <converter:FavoriteColorConverter x:Key="FavoriteColorConverter"/>
-        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <converter:StringToVisibilityConverter x:Key="StringToVisibilityConverter" xmlns:views="clr-namespace:DnDBattle.Views"/>
-        <converters:EnumToBoolConverter x:Key="EnumToBoolConverter"/>
+        <converter:EnumToBoolConverter x:Key="EnumToBoolConverter"/>
         <controls:GreaterThanOneToVisibilityConverter x:Key="GreaterThanOneToVisibility"/>
         <controls:IntToVisibilityInverseConverter x:Key="IntToVisibilityInverse"/>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
 
         <SolidColorBrush x:Key="AppDarkBg" Color="#FF2D2D30" />
         <SolidColorBrush x:Key="AppPanelBg" Color="#FF1E1E1E" />
