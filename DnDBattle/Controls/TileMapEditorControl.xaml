@@ -1,0 +1,52 @@
+﻿<UserControl x:Class="DnDBattle.Controls.TileMapEditorControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:DnDBattle.Controls"
+             Background="#FF1A1A1A"
+             Focusable="True">
+    <Grid>
+        <!-- Main canvas for tile rendering -->
+        <Border x:Name="MapBorder" 
+                ClipToBounds="True" 
+                Background="{Binding BackgroundBrush}">
+            <Canvas x:Name="MapCanvas"
+                    Background="Transparent"
+                    MouseLeftButtonDown="MapCanvas_MouseLeftButtonDown"
+                    MouseLeftButtonUp="MapCanvas_MouseLeftButtonUp"
+                    MouseMove="MapCanvas_MouseMove"
+                    MouseWheel="MapCanvas_MouseWheel"
+                    MouseRightButtonDown="MapCanvas_MouseRightButtonDown">
+                <Canvas.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform x:Name="ZoomTransform" ScaleX="1" ScaleY="1" />
+                        <TranslateTransform x:Name="PanTransform" X="0" Y="0" />
+                    </TransformGroup>
+                </Canvas.RenderTransform>
+
+                <!-- Grid lines layer -->
+                <Canvas x:Name="GridLayer" />
+
+                <!-- Tiles layer -->
+                <Canvas x:Name="TilesLayer" />
+
+                <!-- Preview layer -->
+                <Canvas x:Name="PreviewLayer" />
+            </Canvas>
+        </Border>
+
+        <!-- Toolbar overlay -->
+        <StackPanel HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10"
+                    Orientation="Vertical" Background="#DD000000">
+            <TextBlock Text="Tile Map Editor" Foreground="White" FontSize="14" FontWeight="Bold" Margin="5"/>
+            <Separator/>
+
+            <StackPanel Orientation="Horizontal" Margin="5">
+                <Button Content="🖌️ Paint" Width="80" Margin="2" Click="PaintMode_Click" x:Name="BtnPaintMode"/>
+                <Button Content="🧹 Erase" Width="80" Margin="2" Click="EraseMode_Click" x:Name="BtnEraseMode"/>
+            </StackPanel>
+
+            <Separator/>
+            <TextBlock Text="{Binding StatusText}" Foreground="#FFAAAAAA" Margin="5" FontSize="11"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

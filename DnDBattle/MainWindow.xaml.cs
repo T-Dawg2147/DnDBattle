@@ -466,6 +466,11 @@ namespace DnDBattle
             }   
         }
 
+        private void OpenTileMapBuilder_Click(object sender, RoutedEventArgs e)
+        {
+            var editor = new Views.TileMap.TileMapEditorWindow();
+            editor.Show();
+        }
         private void ToggleLeftSidebar_Click(object seder, RoutedEventArgs e)
         {
             if (LeftSidebarColumn.Width.Value > 0)

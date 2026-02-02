@@ -1,0 +1,56 @@
+﻿<Window x:Class="DnDBattle.Views.TileMap.TileMapEditorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:DnDBattle.Controls"
+        xmlns:views="clr-namespace:DnDBattle.Views"
+        Title="Tile Map Builder" Height="700" Width="1200"
+        Background="#FF1E1E1E">
+    <Window.Resources>
+        <views:TileImageConverter x:Key="TileImageConverter"/>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="250"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Left: Palette -->
+        <views:TilePalettePanel x:Name="PalettePanel" Grid.Column="0" TileSelected="PalettePanel_TileSelected"/>
+
+        <!-- Right: Editor -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Top Menu -->
+            <Menu Grid.Row="0" Background="#FF2D2D30" Foreground="White">
+                <MenuItem Header="File">
+                    <MenuItem Header="New Map..." Click="NewMap_Click"/>
+                    <MenuItem Header="Open Map..." Click="OpenMap_Click"/>
+                    <MenuItem Header="Save Map" Click="SaveMap_Click"/>
+                    <MenuItem Header="Save Map As..." Click="SaveMapAs_Click"/>
+                    <Separator/>
+                    <MenuItem Header="Export as Image..." Click="ExportImage_Click"/>
+                    <Separator/>
+                    <MenuItem Header="Close" Click="Close_Click"/>
+                </MenuItem>
+                <MenuItem Header="Edit">
+                    <MenuItem Header="Clear All Tiles" Click="ClearAllTiles_Click"/>
+                    <MenuItem Header="Resize Map..." Click="ResizeMap_Click"/>
+                </MenuItem>
+                <MenuItem Header="View">
+                    <MenuItem Header="Toggle Grid" Click="ToggleGrid_Click" IsCheckable="True" IsChecked="True" x:Name="MenuShowGrid"/>
+                    <MenuItem Header="Zoom In" Click="ZoomIn_Click"/>
+                    <MenuItem Header="Zoom Out" Click="ZoomOut_Click"/>
+                    <MenuItem Header="Reset View" Click="ResetView_Click"/>
+                </MenuItem>
+            </Menu>
+
+            <!-- Editor Control -->
+            <controls:TileMapEditorControl x:Name="EditorControl" Grid.Row="1"/>
+        </Grid>
+    </Grid>
+</Window>

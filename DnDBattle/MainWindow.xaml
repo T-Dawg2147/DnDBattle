@@ -141,6 +141,10 @@
                 <Separator/>
                 <MenuItem Header="Clear All Walls" Click="ClearAllWalls_Click"/>
             </MenuItem>
+
+            <MenuItem Header="Tools" Foreground="White">
+                <MenuItem Header="Tile Map Builder" Click="OpenTileMapBuilder_Click"/>
+            </MenuItem>
         </Menu>
         
 
