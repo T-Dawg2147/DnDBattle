@@ -58,20 +58,41 @@ namespace DnDBattle.Models
         private int _str = 10;
         public int Str { get => _str; set => SetProperty(ref _str, value); }
 
+        private int _strMod = 0;
+        public int StrMod { get => _strMod; set => SetProperty(ref _strMod, value); }
+
         private int _dex;
         public int Dex { get => _dex; set => SetProperty(ref _dex, value); }
+
+        private int _dexMod = 0;
+        public int DexMod { get => _dexMod; set => SetProperty(ref _dexMod, value); }
 
         private int _con;
         public int Con { get => _con; set => SetProperty(ref _con, value); }
 
+        private int _conMod = 0;
+        public int ConMod { get => _conMod; set => SetProperty(ref _conMod, value); }
+
         private int _int;
         public int Int { get => _int; set => SetProperty(ref _int, value); }
+
+        private int _intMod = 0;
+        public int IntMod { get => _intMod; set => SetProperty(ref _intMod, value); }
 
         private int _wis;
         public int Wis { get => _wis; set => SetProperty(ref _wis, value); }
 
+        private int _wisMod = 0;
+        public int WisMod { get => _wisMod; set => SetProperty(ref _wisMod, value); }
+
         private int _cha;
         public int Cha { get => _cha; set => SetProperty(ref _cha, value); }
+
+        private int _chaMod = 0;
+        public int ChaMod { get => _chaMod; set => SetProperty(ref _chaMod, value); }
+
+        private int _passivePerception;
+        public int PassivePerception { get => _passivePerception; set => SetProperty(ref _passivePerception, value); }
 
         #region Monement Tracking
 

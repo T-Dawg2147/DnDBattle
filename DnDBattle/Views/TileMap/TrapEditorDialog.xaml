@@ -1,0 +1,163 @@
+﻿<Window x:Class="DnDBattle.Views.TileMap.TrapEditorDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Trap Configuration" Height="700" Width="600"
+        KeyDown="Window_KeyDown">
+
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,10">
+            <TextBlock Text="⚠️ Configure Trap" FontSize="18" FontWeight="Bold"/>
+            <Separator/>
+        </StackPanel>
+
+        <!-- Scrollable Content -->
+        <ScrollViewer Grid.Row="1">
+            <StackPanel>
+
+                <!-- Basic Info -->
+                <TextBlock Text="Basic Information" Style="{StaticResource SectionHeader}"/>
+
+                <TextBlock Text="Trap Name:"/>
+                <TextBox x:Name="TxtName"/>
+
+                <TextBlock Text="Trigger Type:"/>
+                <ComboBox x:Name="CmbTriggerType" SelectedIndex="0">
+                    <ComboBoxItem Content="Pressure Plate"/>
+                    <ComboBoxItem Content="Tripwire"/>
+                    <ComboBoxItem Content="Proximity"/>
+                    <ComboBoxItem Content="Manual (DM-triggered)"/>
+                    <ComboBoxItem Content="Timed"/>
+                    <ComboBoxItem Content="Interactive"/>
+                </ComboBox>
+
+                <Separator/>
+
+                <!-- Roll Mode Settings -->
+                <TextBlock Text="🎲 Roll Mode Settings" Style="{StaticResource SectionHeader}"/>
+                <TextBlock Text="Choose whether the app auto-rolls or you input player rolls:" 
+                           Style="{StaticResource HintText}" TextWrapping="Wrap"/>
+
+                <CheckBox x:Name="ChkAutoRollDetection" Content="Auto-roll Detection checks" IsChecked="True"/>
+                <CheckBox x:Name="ChkAutoRollDisarm" Content="Auto-roll Disarm checks" IsChecked="True"/>
+                <CheckBox x:Name="ChkAutoRollSave" Content="Auto-roll Saving Throws" IsChecked="True"/>
+                <CheckBox x:Name="ChkAutoRollDamage" Content="Auto-roll Damage" IsChecked="True"/>
+
+                <Separator/>
+
+                <!-- Detection -->
+                <TextBlock Text="🔍 Detection" Style="{StaticResource SectionHeader}"/>
+
+                <TextBlock Text="Detection DC (Perception):"/>
+                <TextBox x:Name="TxtDetectionDC" Text="15"/>
+
+                <TextBlock Text="Detection Description:"/>
+                <TextBox x:Name="TxtDetectionDesc" Text="You notice something unusual about this area." 
+                         TextWrapping="Wrap" Height="50" AcceptsReturn="True"/>
+
+                <Separator/>
+
+                <!-- Disarm -->
+                <TextBlock Text="🔧 Disarming" Style="{StaticResource SectionHeader}"/>
+
+                <CheckBox x:Name="ChkCanBeDisarmed" Content="Trap can be disarmed" IsChecked="True"/>
+
+                <TextBlock Text="Disarm Skill:"/>
+                <ComboBox x:Name="CmbDisarmSkill" SelectedIndex="0">
+                    <ComboBoxItem Content="Thieves' Tools"/>
+                    <ComboBoxItem Content="Sleight of Hand"/>
+                    <ComboBoxItem Content="Arcana"/>
+                    <ComboBoxItem Content="Investigation"/>
+                </ComboBox>
+
+                <TextBlock Text="Disarm DC:"/>
+                <TextBox x:Name="TxtDisarmDC" Text="15"/>
+
+                <CheckBox x:Name="ChkFailTriggers" Content="Failed disarm triggers trap" IsChecked="True"/>
+
+                <Separator/>
+
+                <!-- Saving Throw -->
+                <TextBlock Text="🛡️ Saving Throw" Style="{StaticResource SectionHeader}"/>
+
+                <TextBlock Text="Save Ability:"/>
+                <ComboBox x:Name="CmbSaveAbility" SelectedIndex="1">
+                    <ComboBoxItem Content="STR"/>
+                    <ComboBoxItem Content="DEX"/>
+                    <ComboBoxItem Content="CON"/>
+                    <ComboBoxItem Content="INT"/>
+                    <ComboBoxItem Content="WIS"/>
+                    <ComboBoxItem Content="CHA"/>
+                </ComboBox>
+
+                <TextBlock Text="Save DC:"/>
+                <TextBox x:Name="TxtSaveDC" Text="13"/>
+
+                <Separator/>
+
+                <!-- Damage -->
+                <TextBlock Text="💥 Damage" Style="{StaticResource SectionHeader}"/>
+
+                <TextBlock Text="Damage Dice (e.g., 2d6, 4d10+5):"/>
+                <TextBox x:Name="TxtDamageDice" Text="2d6"/>
+
+                <TextBlock Text="Damage Type:"/>
+                <ComboBox x:Name="CmbDamageType" SelectedIndex="1">
+                    <ComboBoxItem Content="🔨 Bludgeoning"/>
+                    <ComboBoxItem Content="🗡️ Piercing"/>
+                    <ComboBoxItem Content="⚔️ Slashing"/>
+                    <ComboBoxItem Content="🔥 Fire"/>
+                    <ComboBoxItem Content="❄️ Cold"/>
+                    <ComboBoxItem Content="⚡ Lightning"/>
+                    <ComboBoxItem Content="💥 Thunder"/>
+                    <ComboBoxItem Content="🧪 Acid"/>
+                    <ComboBoxItem Content="☠️ Poison"/>
+                    <ComboBoxItem Content="💀 Necrotic"/>
+                    <ComboBoxItem Content="✨ Radiant"/>
+                    <ComboBoxItem Content="💫 Force"/>
+                    <ComboBoxItem Content="🧠 Psychic"/>
+                </ComboBox>
+
+                <CheckBox x:Name="ChkHalfDamageOnSave" Content="Half damage on successful save" IsChecked="True"/>
+
+                <Separator/>
+
+                <!-- Flavor -->
+                <TextBlock Text="✨ Flavor Text" Style="{StaticResource SectionHeader}"/>
+
+                <TextBlock Text="Trigger Description:"/>
+                <TextBox x:Name="TxtTriggerDesc" Text="The trap is sprung!" 
+                         TextWrapping="Wrap" Height="50" AcceptsReturn="True"/>
+
+                <TextBlock Text="Effect Description:"/>
+                <TextBox x:Name="TxtEffectDesc" Text="Darts shoot from the walls!" 
+                         TextWrapping="Wrap" Height="50" AcceptsReturn="True"/>
+
+                <Separator/>
+
+                <!-- Reusability -->
+                <TextBlock Text="♻️ Reusability" Style="{StaticResource SectionHeader}"/>
+
+                <CheckBox x:Name="ChkReusable" Content="Trap is reusable"/>
+
+                <TextBlock Text="Max Triggers (0 = unlimited):"/>
+                <TextBox x:Name="TxtMaxTriggers" Text="1"/>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button Content="💾 Save" Width="100" Height="35" Margin="5" 
+                    Click="Save_Click" IsDefault="True" Style="{StaticResource AccentButton}"/>
+            <Button Content="❌ Cancel" Width="100" Height="35" Margin="5" 
+                    Click="Cancel_Click" IsCancel="True"/>
+        </StackPanel>
+    </Grid>
+</Window>

@@ -3,8 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:DnDBattle.Controls"
         xmlns:views="clr-namespace:DnDBattle.Views.TileMap"
-        Title="Tile Map Builder" Height="700" Width="1200"
-        Background="#FF1E1E1E">
+        Title="Tile Map Builder" Height="700" Width="1200">
 
     <Grid>
         <Grid.ColumnDefinitions>
@@ -13,7 +12,8 @@
         </Grid.ColumnDefinitions>
 
         <!-- Left: Palette -->
-        <views:TilePalettePanel x:Name="PalettePanel" Grid.Column="0" TileSelected="PalettePanel_TileSelected"/>
+        <views:TilePalettePanel x:Name="PalettePanel" Grid.Column="0" 
+                                TileSelected="PalettePanel_TileSelected"/>
 
         <!-- Right: Editor -->
         <Grid Grid.Column="1">
@@ -23,8 +23,8 @@
             </Grid.RowDefinitions>
 
             <!-- Top Menu -->
-            <Menu Grid.Row="0" Background="#FF2D2D30" Foreground="White">
-                <MenuItem Header="File">
+            <Menu Grid.Row="0" Background="{StaticResource Brush_Background_Control}">
+                <MenuItem Header="File" Foreground="{StaticResource Brush_Text_Primary}">
                     <MenuItem Header="New Map..." Click="NewMap_Click"/>
                     <MenuItem Header="Open Map..." Click="OpenMap_Click"/>
                     <MenuItem Header="Save Map" Click="SaveMap_Click"/>
@@ -34,12 +34,13 @@
                     <Separator/>
                     <MenuItem Header="Close" Click="Close_Click"/>
                 </MenuItem>
-                <MenuItem Header="Edit">
+                <MenuItem Header="Edit" Foreground="{StaticResource Brush_Text_Primary}">
                     <MenuItem Header="Clear All Tiles" Click="ClearAllTiles_Click"/>
                     <MenuItem Header="Resize Map..." Click="ResizeMap_Click"/>
                 </MenuItem>
-                <MenuItem Header="View">
-                    <MenuItem Header="Toggle Grid" Click="ToggleGrid_Click" IsCheckable="True" IsChecked="True" x:Name="MenuShowGrid"/>
+                <MenuItem Header="View" Foreground="{StaticResource Brush_Text_Primary}">
+                    <MenuItem Header="Toggle Grid" Click="ToggleGrid_Click" 
+                              IsCheckable="True" IsChecked="True" x:Name="MenuShowGrid"/>
                     <MenuItem Header="Zoom In" Click="ZoomIn_Click"/>
                     <MenuItem Header="Zoom Out" Click="ZoomOut_Click"/>
                     <MenuItem Header="Reset View" Click="ResetView_Click"/>

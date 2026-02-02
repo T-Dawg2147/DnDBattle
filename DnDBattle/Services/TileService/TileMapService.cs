@@ -25,7 +25,7 @@ namespace DnDBattle.Services.TileService
             };
         }
 
-        public async Task<bool> SaveMapAsync(TileMap map, string filePath)
+        public async Task<bool> SaveMapAsync(Models.Tiles.TileMap map, string filePath)
         {
             try
             {
@@ -43,7 +43,7 @@ namespace DnDBattle.Services.TileService
             }
         }
 
-        public async Task<TileMap> LoadMapAsync(string filePath)
+        public async Task<Models.Tiles.TileMap> LoadMapAsync(string filePath)
         {
             try
             {
@@ -61,7 +61,7 @@ namespace DnDBattle.Services.TileService
             }
         }
 
-        private TileMapDto MapToDto(TileMap map)
+        private TileMapDto MapToDto(Models.Tiles.TileMap map)
         {
             return new TileMapDto
             {
@@ -89,9 +89,9 @@ namespace DnDBattle.Services.TileService
             };
         }
 
-        private TileMap DtoToMap(TileMapDto dto)
+        private Models.Tiles.TileMap DtoToMap(TileMapDto dto)
         {
-            var map = new TileMap
+            var map = new Models.Tiles.TileMap
             {
                 Id = dto.Id,
                 Name = dto.Name,

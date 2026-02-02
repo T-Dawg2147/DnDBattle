@@ -1,0 +1,99 @@
+﻿<UserControl x:Class="DnDBattle.Views.TileMap.TilePropertiesPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             MinWidth="300">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="{StaticResource Brush_Background_Control}" Padding="10">
+            <StackPanel>
+                <TextBlock Text="⚙️ Tile Properties" FontSize="14" FontWeight="Bold"/>
+                <TextBlock x:Name="TxtTileInfo" Text="No tile selected" 
+                           Style="{StaticResource HintText}" Margin="0,2,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Content -->
+        <ScrollViewer Grid.Row="1" Margin="10">
+            <StackPanel x:Name="ContentPanel">
+
+                <!-- No Selection Message -->
+                <TextBlock x:Name="TxtNoSelection" Text="Select a tile to view properties" 
+                           Style="{StaticResource HintText}"
+                           VerticalAlignment="Center" HorizontalAlignment="Center"
+                           Margin="0,50,0,0"/>
+
+                <!-- Properties Container (hidden until tile selected) -->
+                <StackPanel x:Name="PropertiesContainer" Visibility="Collapsed">
+
+                    <TextBlock Text="Metadata" Style="{StaticResource SectionHeader}"/>
+
+                    <!-- Metadata List -->
+                    <ItemsControl x:Name="MetadataList" Margin="0,5">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource CardBorder}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock Grid.Column="0" 
+                                                   Text="{Binding Type, Converter={StaticResource MetadataIconConverter}}" 
+                                                   FontSize="20" VerticalAlignment="Center" Margin="0,0,10,0"/>
+
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding Type, Converter={StaticResource MetadataTypeNameConverter}}" 
+                                                       Style="{StaticResource HintText}"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                            <Button Content="✏️" Width="30" Height="30" 
+                                                    Style="{StaticResource IconButton}"
+                                                    Click="EditMetadata_Click" Tag="{Binding}"
+                                                    ToolTip="Edit"/>
+                                            <Button Content="🗑️" Width="30" Height="30" Margin="5,0,0,0"
+                                                    Style="{StaticResource IconButton}"
+                                                    Click="DeleteMetadata_Click" Tag="{Binding}"
+                                                    ToolTip="Delete"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- Add Metadata Buttons -->
+                    <TextBlock Text="Add Metadata:" Margin="0,10,0,5"/>
+                    <WrapPanel>
+                        <Button Content="⚠️ Trap" Margin="2" Padding="8,4" Click="AddTrap_Click"/>
+                        <Button Content="🔍 Secret" Margin="2" Padding="8,4" Click="AddSecret_Click"/>
+                        <Button Content="⚙️ Interactive" Margin="2" Padding="8,4" Click="AddInteractive_Click"/>
+                        <Button Content="⚡ Trigger" Margin="2" Padding="8,4" Click="AddTrigger_Click"/>
+                        <Button Content="👹 Spawn" Margin="2" Padding="8,4" Click="AddSpawn_Click"/>
+                    </WrapPanel>
+
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Footer Actions -->
+        <Border Grid.Row="2" Background="{StaticResource Brush_Background_Control}" Padding="10"
+                BorderBrush="{StaticResource Brush_Border_Normal}" BorderThickness="0,1,0,0">
+            <StackPanel>
+                <Button Content="💾 Save Changes" Height="35" 
+                        Style="{StaticResource AccentButton}"
+                        Click="SaveChanges_Click"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>
