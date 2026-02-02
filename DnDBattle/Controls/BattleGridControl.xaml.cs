@@ -1,5 +1,8 @@
 ﻿using DnDBattle.Models;
+using DnDBattle.Models.Tiles;
 using DnDBattle.Services;
+using DnDBattle.Services.TileMap;
+using DnDBattle.Services.TileService;
 using DnDBattle.ViewModels;
 using DnDBattle.Views;
 using SQLitePCL;
@@ -84,6 +87,14 @@ namespace DnDBattle.Controls
         private bool _isPanning = false;
         private Point _lastPanPoint;
 
+        #region Tile Map Integration
+
+        private TileMap _loadedTileMap;
+        private readonly TrapTriggerService _trapService = new TrapTriggerService();
+        private readonly DrawingVisual _tileMapVisual = new DrawingVisual();
+
+        #endregion
+
         // Grid State
         private int _gridMinX = 0;
         private int _gridMinY = 0;
@@ -165,6 +176,9 @@ namespace DnDBattle.Controls
             _transformGroup.Children.Add(_pan);
             RenderCanvas.RenderTransform = _transformGroup;
 
+            // Add tile map layer BEFORE other overlays
+            AddVisualOverlay(_tileMapVisual, 5); // Z-index 5, below everything else
+
             AddVisualOverlay(_lightingVisual, 50, makeBlur: true);
             AddVisualOverlay(_movementVisual, 60);
             AddVisualOverlay(_pathVisual, 65);
@@ -174,17 +188,13 @@ namespace DnDBattle.Controls
 
             _wallService.WallsChanged += () => RedrawWalls();
 
+            // Wire up trap service events
+            SetupTrapService();
+
             Loaded += BattleGridControl_Loaded;
             KeyDown += BattleGridControl_KeyDown;
 
             MouseDown += (s, e) => Focus();
-
-            SizeChanged += (s, e) =>
-            {
-                RefreshAllVisuals();
-            };
-
-            RenderCanvas.AllowDrop = true;
         }
 
         private void BattleGridControl_Loaded(object sender, RoutedEventArgs e)
@@ -249,6 +259,46 @@ namespace DnDBattle.Controls
             var duplicateItem = new MenuItem { Header = "📋 Duplicate" };
             duplicateItem.Click += (s, e) => RequestDuplicateToken?.Invoke(token);
             menu.Items.Add(duplicateItem);
+
+            menu.Items.Add(new Separator());
+
+            // ===== NEW: Trap/Tile Interaction Menu =====
+            var tileMenu = new MenuItem { Header = "🗺️ Tile Actions" };
+
+            var searchItem = new MenuItem { Header = "🔍 Search for Traps" };
+            searchItem.Click += (s, e) => TriggerTrapDetection(token);
+            tileMenu.Items.Add(searchItem);
+
+            var disarmItem = new MenuItem { Header = "🔧 Disarm Trap" };
+            disarmItem.Click += (s, e) => AttemptDisarmTrap(token);
+            tileMenu.Items.Add(disarmItem);
+
+            // Check if there are traps at this location
+            var tile = GetTileAt(token.GridX, token.GridY);
+            if (tile != null && tile.HasMetadataType(TileMetadataType.Trap))
+            {
+                var traps = tile.GetMetadata(TileMetadataType.Trap).OfType<TrapMetadata>().ToList();
+                if (traps.Any(t => t.IsDetected && !t.IsDisarmed))
+                {
+                    disarmItem.IsEnabled = true;
+                }
+                else if (traps.Any(t => t.IsDisarmed))
+                {
+                    disarmItem.Header = "✅ Trap Already Disarmed";
+                    disarmItem.IsEnabled = false;
+                }
+                else
+                {
+                    disarmItem.IsEnabled = false;
+                }
+            }
+            else
+            {
+                searchItem.IsEnabled = false;
+                disarmItem.IsEnabled = false;
+            }
+
+            menu.Items.Add(tileMenu);
 
             menu.Items.Add(new Separator());
 
@@ -576,6 +626,13 @@ namespace DnDBattle.Controls
                     token.GridX = newGridX;
                     token.GridY = newGridY;
 
+                    // ===== NEW: CHECK FOR TRAPS AT NEW POSITION =====
+                    if (newGridX != oldX || newGridY != oldY)
+                    {
+                        CheckForTrapsAtPosition(token, newGridX, newGridY);
+                    }
+                    // ================================================
+
                     // Record undo action if position changed
                     if (newGridX != oldX || newGridY != oldY)
                     {
@@ -644,6 +701,23 @@ namespace DnDBattle.Controls
                 case Key.Subtract:
                 case Key.OemMinus:
                     ZoomAtCenter(1.0 / 1.2);
+                    break;
+                case Key.F: // F = Find/Search for traps
+                    if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
+                    {
+                        TriggerTrapDetection(SelectedToken);
+                        e.Handled = true;
+                        return;
+                    }
+                    break;
+
+                case Key.T: // T = Trap disarm
+                    if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
+                    {
+                        AttemptDisarmTrap(SelectedToken);
+                        e.Handled = true;
+                        return;
+                    }
                     break;
                 case Key.Delete:
                     // Delete selected token
@@ -1833,6 +1907,268 @@ namespace DnDBattle.Controls
             RedrawMovementOverlay();
             RedrawPathVisual();
         }
+        #endregion
+
+        #region Tile Map
+
+        private void SetupTrapService()
+        {
+            _trapService.LogMessage += (message) =>
+            {
+                AddToActionLog("Trap", message);
+            };
+
+            _trapService.TrapDetected += (token, trap) =>
+            {
+                System.Windows.MessageBox.Show(
+                    $"{token.Name} detected a trap!\n\n{trap.DetectionDescription}",
+                    "🔍 Trap Detected",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Warning);
+            };
+
+            _trapService.TrapTriggered += (token, trap) =>
+            {
+                ShowTrapTriggerEffect(token.GridX, token.GridY);
+                RebuildTokenVisuals(); // Update HP display
+            };
+
+            _trapService.TrapDisarmed += (token, trap) =>
+            {
+                System.Windows.MessageBox.Show(
+                    $"{token.Name} successfully disarmed the trap!",
+                    "✅ Trap Disarmed",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Information);
+            };
+
+            // Manual roll prompt handler
+            _trapService.RequestManualRoll += (token, trap, skillName, dc) =>
+            {
+                var dialog = new Views.TileMap.ManualRollDialog(
+                    token.Name,
+                    skillName,
+                    GetSkillModifier(token, skillName),
+                    dc);
+
+                if (dialog.ShowDialog() == true)
+                {
+                    return (true, dialog.Roll);
+                }
+                return (false, 0);
+            };
+        }
+
+        /// <summary>
+        /// Load a tile map as the battle grid background
+        /// </summary>
+        public void LoadTileMap(TileMap tileMap)
+        {
+            _loadedTileMap = tileMap;
+
+            if (tileMap != null)
+            {
+                // Adjust grid size to match tile map
+                SetGridMaxSize(tileMap.Width, tileMap.Height);
+
+                // Render tile map to visual
+                RenderTileMapToVisual();
+
+                AddToActionLog("Map", $"Loaded tile map: {tileMap.Name} ({tileMap.Width}×{tileMap.Height})");
+            }
+            else
+            {
+                // Clear tile map visual
+                using (var dc = _tileMapVisual.RenderOpen())
+                {
+                    // Empty - clears the visual
+                }
+            }
+        }
+
+        /// <summary>
+        /// Render the tile map to the background visual layer
+        /// </summary>
+        private void RenderTileMapToVisual()
+        {
+            if (_loadedTileMap == null) return;
+
+            using (var dc = _tileMapVisual.RenderOpen())
+            {
+                // Draw background color
+                var bgColor = (Color)ColorConverter.ConvertFromString(_loadedTileMap.BackgroundColor ?? "#FF1A1A1A");
+                var bgBrush = new SolidColorBrush(bgColor);
+                dc.DrawRectangle(
+                    bgBrush,
+                    null,
+                    new Rect(0, 0, _loadedTileMap.Width * GridCellSize, _loadedTileMap.Height * GridCellSize));
+
+                // Draw all tiles
+                foreach (var tile in _loadedTileMap.PlacedTiles.OrderBy(t => t.ZIndex ?? 0))
+                {
+                    DrawTileToVisual(dc, tile);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Draw a single tile to the drawing context
+        /// </summary>
+        private void DrawTileToVisual(DrawingContext dc, Tile tile)
+        {
+            var tileDef = TileLibraryService.Instance.GetTileById(tile.TileDefinitionId);
+            if (tileDef == null) return;
+
+            var image = TileImageCacheService.Instance.GetOrLoadImage(tileDef.ImagePath);
+            if (image == null) return;
+
+            double x = tile.GridX * GridCellSize;
+            double y = tile.GridY * GridCellSize;
+            double size = GridCellSize;
+
+            var rect = new Rect(x, y, size, size);
+
+            // Apply transformations if needed
+            if (tile.Rotation != 0 || tile.FlipHorizontal || tile.FlipVertical)
+            {
+                dc.PushTransform(new TranslateTransform(x + size / 2, y + size / 2));
+
+                if (tile.Rotation != 0)
+                {
+                    dc.PushTransform(new RotateTransform(tile.Rotation));
+                }
+
+                if (tile.FlipHorizontal || tile.FlipVertical)
+                {
+                    dc.PushTransform(new ScaleTransform(
+                        tile.FlipHorizontal ? -1 : 1,
+                        tile.FlipVertical ? -1 : 1));
+                }
+
+                dc.DrawImage(image, new Rect(-size / 2, -size / 2, size, size));
+
+                if (tile.FlipHorizontal || tile.FlipVertical)
+                    dc.Pop();
+                if (tile.Rotation != 0)
+                    dc.Pop();
+                dc.Pop();
+            }
+            else
+            {
+                dc.DrawImage(image, rect);
+            }
+        }
+
+        /// <summary>
+        /// Get the tile at a specific grid position
+        /// </summary>
+        public Tile GetTileAt(int gridX, int gridY)
+        {
+            if (_loadedTileMap == null) return null;
+            return _loadedTileMap.GetTilesAt(gridX, gridY).OrderByDescending(t => t.ZIndex ?? 0).FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Check for traps when a token moves to a new position
+        /// </summary>
+        private void CheckForTrapsAtPosition(Token token, int gridX, int gridY)
+        {
+            if (_loadedTileMap == null || token == null) return;
+
+            var tile = GetTileAt(gridX, gridY);
+            if (tile != null && tile.HasMetadata)
+            {
+                _trapService.CheckForTraps(token, tile);
+            }
+        }
+
+        /// <summary>
+        /// Manually trigger trap detection for a token at current position
+        /// </summary>
+        public void TriggerTrapDetection(Token token)
+        {
+            if (token == null) return;
+
+            var tile = GetTileAt(token.GridX, token.GridY);
+            if (tile != null && tile.HasMetadataType(TileMetadataType.Trap))
+            {
+                var traps = tile.GetMetadata(TileMetadataType.Trap).OfType<TrapMetadata>().ToList();
+
+                if (traps.Count == 0) return;
+
+                // Show detection prompt
+                var trap = traps.First(); // Handle first trap for now
+
+                if (trap.IsDetected || trap.IsDisarmed)
+                {
+                    AddToActionLog("Trap", $"This trap has already been {(trap.IsDetected ? "detected" : "disarmed")}.");
+                    return;
+                }
+
+                var result = System.Windows.MessageBox.Show(
+                    $"{token.Name} wants to search for traps.\n\nRoll Perception (DC {trap.DetectionDC})?",
+                    "🔍 Search for Traps",
+                    System.Windows.MessageBoxButton.YesNo,
+                    System.Windows.MessageBoxImage.Question);
+
+                if (result == System.Windows.MessageBoxResult.Yes)
+                {
+                    _trapService.AttemptDetection(token, trap);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Manually attempt to disarm a trap
+        /// </summary>
+        public void AttemptDisarmTrap(Token token)
+        {
+            if (token == null) return;
+
+            var tile = GetTileAt(token.GridX, token.GridY);
+            if (tile != null && tile.HasMetadataType(TileMetadataType.Trap))
+            {
+                var traps = tile.GetMetadata(TileMetadataType.Trap).OfType<TrapMetadata>().ToList();
+                var trap = traps.FirstOrDefault(t => t.IsDetected && !t.IsDisarmed);
+
+                if (trap == null)
+                {
+                    AddToActionLog("Trap", "No detected traps here to disarm.");
+                    return;
+                }
+
+                var result = System.Windows.MessageBox.Show(
+                    $"{token.Name} attempts to disarm the trap.\n\nRoll {trap.DisarmSkill} (DC {trap.DisarmDC})?",
+                    "🔧 Disarm Trap",
+                    System.Windows.MessageBoxButton.YesNo,
+                    System.Windows.MessageBoxImage.Question);
+
+                if (result == System.Windows.MessageBoxResult.Yes)
+                {
+                    _trapService.AttemptDisarm(token, trap);
+                }
+            }
+        }
+
+        private int GetSkillModifier(Token token, string skill)
+        {
+            return skill.ToUpper() switch
+            {
+                "PERCEPTION" => token.WisMod,
+                "INVESTIGATION" => token.IntMod,
+                "THIEVES' TOOLS" => token.DexMod,
+                "SLEIGHT OF HAND" => token.DexMod,
+                "ARCANA" => token.IntMod,
+                "STR" => token.StrMod,
+                "DEX" => token.DexMod,
+                "CON" => token.ConMod,
+                "INT" => token.IntMod,
+                "WIS" => token.WisMod,
+                "CHA" => token.ChaMod,
+                _ => 0
+            };
+        }
+
         #endregion
 
         #region Battle Targeting
@@ -4105,7 +4441,7 @@ namespace DnDBattle.Controls
         
         #endregion
 
-        #region Utilities
+        #region Utilities/Helpers
         private Point ScreenToWorld(Point screenPt)
         {
             var inv = _transformGroup.Inverse;
@@ -4218,6 +4554,41 @@ namespace DnDBattle.Controls
             };
 
             RedrawAreaEffects();
+        }
+
+        private void ShowTrapTriggerEffect(int gridX, int gridY)
+        {
+            // Create a pulsing red overlay at the trap location
+            var overlay = new System.Windows.Shapes.Rectangle
+            {
+                Width = GridCellSize,
+                Height = GridCellSize,
+                Fill = new SolidColorBrush(Color.FromArgb(150, 244, 67, 54)),
+                Stroke = new SolidColorBrush(Colors.Red),
+                StrokeThickness = 3
+            };
+
+            Canvas.SetLeft(overlay, gridX * GridCellSize);
+            Canvas.SetTop(overlay, gridY * GridCellSize);
+            Canvas.SetZIndex(overlay, 999);
+
+            RenderCanvas.Children.Add(overlay);
+
+            // Animate and remove
+            var animation = new System.Windows.Media.Animation.DoubleAnimation
+            {
+                From = 1.0,
+                To = 0.0,
+                Duration = TimeSpan.FromSeconds(1.5),
+                AutoReverse = false
+            };
+
+            animation.Completed += (s, e) =>
+            {
+                RenderCanvas.Children.Remove(overlay);
+            };
+
+            overlay.BeginAnimation(UIElement.OpacityProperty, animation);
         }
 
         /// <summary>

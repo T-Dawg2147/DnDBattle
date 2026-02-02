@@ -1,6 +1,5 @@
-﻿using DnDBattle.Models;
-using DnDBattle.Models.Tiles;
-using DnDBattle.Services;
+﻿using DnDBattle.Models.Tiles;
+using DnDBattle.Services.TileMap;
 using DnDBattle.Services.TileService;
 using Microsoft.Win32;
 using System;
@@ -14,14 +13,58 @@ namespace DnDBattle.Views.TileMap
         private Models.Tiles.TileMap _currentMap;
         private string _currentFilePath;
         private readonly TileMapService _mapService;
+        private TilePropertiesPanel _propertiesPanel;
 
         public TileMapEditorWindow()
         {
             InitializeComponent();
             _mapService = new TileMapService();
 
+            // Wire up properties panel
+            SetupPropertiesPanel();
+
             // Create default map
             CreateNewMap(50, 50);
+        }
+
+        private void SetupPropertiesPanel()
+        {
+            // Create properties panel and add to right sidebar
+            _propertiesPanel = new TilePropertiesPanel();
+
+            // Wire up events
+            EditorControl.TileRightClicked += OnTileRightClicked;
+            _propertiesPanel.TilePropertiesChanged += OnTilePropertiesChanged;
+        }
+
+        private void OnTileRightClicked(Tile tile)
+        {
+            // Show properties panel in a popup or side panel
+            var window = new Window
+            {
+                Title = "Tile Properties",
+                Content = new TilePropertiesPanel(),
+                Width = 350,
+                Height = 600,
+                Owner = this,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            };
+
+            var panel = window.Content as TilePropertiesPanel;
+            panel.SetTile(tile);
+            panel.TilePropertiesChanged += (t) =>
+            {
+                EditorControl.TileMap = _currentMap; // Force refresh
+                window.Close();
+            };
+
+            window.ShowDialog();
+        }
+
+        private void OnTilePropertiesChanged(Tile tile)
+        {
+            // Refresh the map view
+            EditorControl.TileMap = _currentMap;
         }
 
         private void PalettePanel_TileSelected(TileDefinition tileDef)
@@ -152,17 +195,25 @@ namespace DnDBattle.Views.TileMap
 
         private void ZoomIn_Click(object sender, RoutedEventArgs e)
         {
-            // TODO: Implement zoom
+            // Access zoom transform from editor control
+            var zoom = EditorControl.ZoomTransform;
+            zoom.ScaleX = Math.Min(4.0, zoom.ScaleX * 1.2);
+            zoom.ScaleY = Math.Min(4.0, zoom.ScaleY * 1.2);
         }
 
         private void ZoomOut_Click(object sender, RoutedEventArgs e)
         {
-            // TODO: Implement zoom
+            var zoom = EditorControl.ZoomTransform;
+            zoom.ScaleX = Math.Max(0.25, zoom.ScaleX / 1.2);
+            zoom.ScaleY = Math.Max(0.25, zoom.ScaleY / 1.2);
         }
 
         private void ResetView_Click(object sender, RoutedEventArgs e)
         {
-            // TODO: Reset pan/zoom
+            EditorControl.ZoomTransform.ScaleX = 1.0;
+            EditorControl.ZoomTransform.ScaleY = 1.0;
+            EditorControl.PanTransform.X = 0;
+            EditorControl.PanTransform.Y = 0;
         }
 
         #endregion

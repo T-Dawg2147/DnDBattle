@@ -1,6 +1,5 @@
-﻿using DnDBattle.Models;
-using DnDBattle.Models.Tiles;
-using DnDBattle.Services;
+﻿using DnDBattle.Models.Tiles;
+using DnDBattle.Services.TileMap;
 using DnDBattle.Services.TileService;
 using System;
 using System.Collections.Generic;
@@ -39,12 +38,18 @@ namespace DnDBattle.Controls
         }
 
         // Editor state
-        private enum EditMode { Paint, Erase }
+        private enum EditMode { Paint, Erase, Properties }
         private EditMode _currentMode = EditMode.Paint;
 
         private bool _isPanning = false;
         private Point _lastPanPoint;
         private bool _isPainting = false;
+        private bool _showDMView = true; // DM view on by default
+        public ScaleTransform ZoomTransformation => ZoomTransform;
+        public TranslateTransform PanTransformation => PanTransform;
+
+        // Events
+        public event Action<Tile> TileRightClicked;
 
         public TileMapEditorControl()
         {
@@ -77,6 +82,7 @@ namespace DnDBattle.Controls
 
             TilesLayer.Children.Clear();
             GridLayer.Children.Clear();
+            MetadataLayer.Children.Clear();
 
             // Set canvas size
             MapCanvas.Width = TileMap.Width * TileMap.CellSize;
@@ -92,6 +98,12 @@ namespace DnDBattle.Controls
             foreach (var tile in TileMap.PlacedTiles.OrderBy(t => t.ZIndex ?? 0))
             {
                 DrawTile(tile);
+            }
+
+            // Draw metadata overlays (DM view)
+            if (_showDMView)
+            {
+                DrawMetadataOverlays();
             }
         }
 
@@ -179,6 +191,247 @@ namespace DnDBattle.Controls
             TilesLayer.Children.Add(tileImage);
         }
 
+        /// <summary>
+        /// Draw DM-only metadata overlays on tiles
+        /// </summary>
+        private void DrawMetadataOverlays()
+        {
+            if (TileMap == null) return;
+
+            foreach (var tile in TileMap.PlacedTiles.Where(t => t.HasMetadata))
+            {
+                DrawMetadataIndicator(tile);
+            }
+        }
+
+        /// <summary>
+        /// Draw a visual indicator for a tile with metadata
+        /// </summary>
+        private void DrawMetadataIndicator(Tile tile)
+        {
+            double cellSize = TileMap.CellSize;
+            double x = tile.GridX * cellSize;
+            double y = tile.GridY * cellSize;
+
+            // Create overlay border
+            var border = new Border
+            {
+                Width = cellSize,
+                Height = cellSize,
+                BorderThickness = new Thickness(3),
+                CornerRadius = new CornerRadius(4),
+                IsHitTestVisible = false // Don't interfere with mouse events
+            };
+
+            // Determine color based on metadata type
+            var metadataTypes = tile.Metadata.Select(m => m.Type).ToList();
+            border.BorderBrush = GetMetadataBorderBrush(metadataTypes);
+
+            Canvas.SetLeft(border, x);
+            Canvas.SetTop(border, y);
+            Canvas.SetZIndex(border, 1000); // Always on top
+
+            MetadataLayer.Children.Add(border);
+
+            // Add icon indicators
+            var iconPanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Right,
+                VerticalAlignment = VerticalAlignment.Top,
+                Background = new SolidColorBrush(Color.FromArgb(180, 0, 0, 0)),
+                IsHitTestVisible = false
+            };
+
+            // Add up to 3 icons
+            int iconCount = 0;
+            foreach (var metadata in tile.Metadata.Take(3))
+            {
+                var icon = new TextBlock
+                {
+                    Text = metadata.Type.GetIcon(),
+                    FontSize = cellSize * 0.25,
+                    Margin = new Thickness(2),
+                    Foreground = Brushes.White
+                };
+                iconPanel.Children.Add(icon);
+                iconCount++;
+            }
+
+            // Show "+X" if more than 3
+            if (tile.Metadata.Count > 3)
+            {
+                var moreText = new TextBlock
+                {
+                    Text = $"+{tile.Metadata.Count - 3}",
+                    FontSize = cellSize * 0.2,
+                    Margin = new Thickness(2),
+                    Foreground = Brushes.Yellow,
+                    FontWeight = FontWeights.Bold
+                };
+                iconPanel.Children.Add(moreText);
+            }
+
+            Canvas.SetLeft(iconPanel, x);
+            Canvas.SetTop(iconPanel, y);
+            Canvas.SetZIndex(iconPanel, 1001);
+
+            MetadataLayer.Children.Add(iconPanel);
+
+            // Add tooltip with metadata details
+            var tooltip = CreateMetadataTooltip(tile);
+            border.ToolTip = tooltip;
+            iconPanel.ToolTip = tooltip;
+        }
+
+        /// <summary>
+        /// Get border brush based on metadata types
+        /// </summary>
+        private Brush GetMetadataBorderBrush(List<TileMetadataType> types)
+        {
+            // Priority: Trap > Hazard > Secret > Interactive > Others
+            if (types.Contains(TileMetadataType.Trap))
+                return new SolidColorBrush(Color.FromArgb(200, 244, 67, 54)); // Red
+
+            if (types.Contains(TileMetadataType.Hazard))
+                return new SolidColorBrush(Color.FromArgb(200, 255, 152, 0)); // Orange
+
+            if (types.Contains(TileMetadataType.Secret))
+                return new SolidColorBrush(Color.FromArgb(200, 255, 235, 59)); // Yellow
+
+            if (types.Contains(TileMetadataType.Interactive))
+                return new SolidColorBrush(Color.FromArgb(200, 33, 150, 243)); // Blue
+
+            if (types.Contains(TileMetadataType.Trigger))
+                return new SolidColorBrush(Color.FromArgb(200, 156, 39, 176)); // Purple
+
+            if (types.Contains(TileMetadataType.Spawn))
+                return new SolidColorBrush(Color.FromArgb(200, 244, 67, 54)); // Red
+
+            if (types.Contains(TileMetadataType.Teleporter))
+                return new SolidColorBrush(Color.FromArgb(200, 0, 188, 212)); // Cyan
+
+            if (types.Contains(TileMetadataType.Healing))
+                return new SolidColorBrush(Color.FromArgb(200, 76, 175, 80)); // Green
+
+            return new SolidColorBrush(Color.FromArgb(200, 158, 158, 158)); // Gray
+        }
+
+        /// <summary>
+        /// Create tooltip showing metadata details
+        /// </summary>
+        private ToolTip CreateMetadataTooltip(Tile tile)
+        {
+            var tooltip = new ToolTip
+            {
+                Background = (Brush)Application.Current.Resources["Brush_Background_Control"],
+                BorderBrush = (Brush)Application.Current.Resources["Brush_Border_Normal"],
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(10)
+            };
+
+            var panel = new StackPanel();
+
+            // Header
+            var header = new TextBlock
+            {
+                Text = $"📍 Tile ({tile.GridX}, {tile.GridY})",
+                FontWeight = FontWeights.Bold,
+                FontSize = 13,
+                Foreground = (Brush)Application.Current.Resources["Brush_Text_Primary"],
+                Margin = new Thickness(0, 0, 0, 8)
+            };
+            panel.Children.Add(header);
+
+            // Metadata list
+            foreach (var metadata in tile.Metadata)
+            {
+                var metaPanel = new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    Margin = new Thickness(0, 3, 0, 3)
+                };
+
+                var icon = new TextBlock
+                {
+                    Text = metadata.Type.GetIcon(),
+                    FontSize = 16,
+                    Margin = new Thickness(0, 0, 8, 0),
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+                metaPanel.Children.Add(icon);
+
+                var info = new StackPanel();
+
+                var nameText = new TextBlock
+                {
+                    Text = metadata.Name ?? metadata.Type.GetDisplayName(),
+                    FontWeight = FontWeights.SemiBold,
+                    Foreground = (Brush)Application.Current.Resources["Brush_Text_Primary"]
+                };
+                info.Children.Add(nameText);
+
+                var typeText = new TextBlock
+                {
+                    Text = metadata.Type.GetDisplayName(),
+                    FontSize = 10,
+                    Foreground = (Brush)Application.Current.Resources["Brush_Text_Hint"]
+                };
+                info.Children.Add(typeText);
+
+                // Add trap-specific info
+                if (metadata is TrapMetadata trap)
+                {
+                    var trapInfo = new TextBlock
+                    {
+                        Text = $"DC {trap.DetectionDC} Perception | {trap.DamageDice} {trap.DamageType.GetDisplayName()}",
+                        FontSize = 10,
+                        Foreground = (Brush)Application.Current.Resources["Brush_Warning"]
+                    };
+                    info.Children.Add(trapInfo);
+
+                    if (trap.IsDetected)
+                    {
+                        var detected = new TextBlock
+                        {
+                            Text = "🔍 Detected",
+                            FontSize = 10,
+                            Foreground = (Brush)Application.Current.Resources["Brush_Success"]
+                        };
+                        info.Children.Add(detected);
+                    }
+
+                    if (trap.IsDisarmed)
+                    {
+                        var disarmed = new TextBlock
+                        {
+                            Text = "✅ Disarmed",
+                            FontSize = 10,
+                            Foreground = (Brush)Application.Current.Resources["Brush_Success"]
+                        };
+                        info.Children.Add(disarmed);
+                    }
+                }
+
+                metaPanel.Children.Add(info);
+                panel.Children.Add(metaPanel);
+            }
+
+            // Footer hint
+            var footer = new TextBlock
+            {
+                Text = "Right-click to edit properties",
+                FontSize = 10,
+                FontStyle = FontStyles.Italic,
+                Foreground = (Brush)Application.Current.Resources["Brush_Text_Hint"],
+                Margin = new Thickness(0, 8, 0, 0)
+            };
+            panel.Children.Add(footer);
+
+            tooltip.Content = panel;
+            return tooltip;
+        }
+
         #region Mouse Event Handlers
 
         private void MapCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -189,6 +442,18 @@ namespace DnDBattle.Controls
                 _isPanning = true;
                 _lastPanPoint = e.GetPosition(MapBorder);
                 MapCanvas.CaptureMouse();
+            }
+            else if (_currentMode == EditMode.Properties)
+            {
+                // Properties mode - select tile
+                var pos = e.GetPosition(MapCanvas);
+                var gridPos = ScreenToGrid(pos);
+                var tile = GetTileAt(gridPos.X, gridPos.Y);
+
+                if (tile != null)
+                {
+                    TileRightClicked?.Invoke(tile);
+                }
             }
             else
             {
@@ -224,10 +489,20 @@ namespace DnDBattle.Controls
 
         private void MapCanvas_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
-            // Quick erase on right-click
+            // Right-click - open properties for tile
             var pos = e.GetPosition(MapCanvas);
             var gridPos = ScreenToGrid(pos);
-            RemoveTileAt(gridPos.X, gridPos.Y);
+            var tile = GetTileAt(gridPos.X, gridPos.Y);
+
+            if (tile != null)
+            {
+                TileRightClicked?.Invoke(tile);
+            }
+            else
+            {
+                // Quick erase on empty space
+                RemoveTileAt(gridPos.X, gridPos.Y);
+            }
         }
 
         private void MapCanvas_MouseWheel(object sender, MouseWheelEventArgs e)
@@ -306,6 +581,21 @@ namespace DnDBattle.Controls
                     TilesLayer.Children.Remove(visual);
                 }
             }
+
+            // Redraw metadata overlays
+            if (_showDMView)
+            {
+                MetadataLayer.Children.Clear();
+                DrawMetadataOverlays();
+            }
+        }
+
+        /// <summary>
+        /// Get tile at grid position (returns topmost if multiple)
+        /// </summary>
+        private Tile GetTileAt(int gridX, int gridY)
+        {
+            return TileMap?.GetTilesAt(gridX, gridY).OrderByDescending(t => t.ZIndex ?? 0).FirstOrDefault();
         }
 
         /// <summary>
@@ -330,6 +620,7 @@ namespace DnDBattle.Controls
             _currentMode = EditMode.Paint;
             BtnPaintMode.FontWeight = FontWeights.Bold;
             BtnEraseMode.FontWeight = FontWeights.Normal;
+            BtnPropertiesMode.FontWeight = FontWeights.Normal;
         }
 
         private void EraseMode_Click(object sender, RoutedEventArgs e)
@@ -337,11 +628,37 @@ namespace DnDBattle.Controls
             _currentMode = EditMode.Erase;
             BtnEraseMode.FontWeight = FontWeights.Bold;
             BtnPaintMode.FontWeight = FontWeights.Normal;
+            BtnPropertiesMode.FontWeight = FontWeights.Normal;
+        }
+
+        private void PropertiesMode_Click(object sender, RoutedEventArgs e)
+        {
+            _currentMode = EditMode.Properties;
+            BtnPropertiesMode.FontWeight = FontWeights.Bold;
+            BtnPaintMode.FontWeight = FontWeights.Normal;
+            BtnEraseMode.FontWeight = FontWeights.Normal;
+        }
+
+        private void ToggleDMView_Click(object sender, RoutedEventArgs e)
+        {
+            _showDMView = !_showDMView;
+
+            if (_showDMView)
+            {
+                MetadataLayer.Children.Clear();
+                DrawMetadataOverlays();
+                BtnDMView.FontWeight = FontWeights.Bold;
+            }
+            else
+            {
+                MetadataLayer.Children.Clear();
+                BtnDMView.FontWeight = FontWeights.Normal;
+            }
         }
 
         #endregion
 
         public Brush BackgroundBrush => new SolidColorBrush((Color)ColorConverter.ConvertFromString(TileMap?.BackgroundColor ?? "#FF1A1A1A"));
-        public string StatusText => $"Mode: {_currentMode} | Tiles: {TileMap?.PlacedTiles.Count ?? 0}";
+        public string StatusText => $"Mode: {_currentMode} | Tiles: {TileMap?.PlacedTiles.Count ?? 0} | DM View: {(_showDMView ? "ON" : "OFF")}";
     }
 }

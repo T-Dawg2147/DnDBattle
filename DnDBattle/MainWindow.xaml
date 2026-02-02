@@ -109,6 +109,12 @@
                 <MenuItem Header="Undo" Click="Undo_Click" InputGestureText="Ctrl+Z"/>
                 <MenuItem Header="Redo" Click="Redo_Click" InputGestureText="Ctrl+Y"/>
             </MenuItem>
+            <MenuItem Header="_Map">
+                <MenuItem Header="Load Tile Map..." Click="LoadTileMap_Click"/>
+                <MenuItem Header="Clear Tile Map" Click="ClearTileMap_Click"/>
+                <Separator/>
+                <MenuItem Header="Open Tile Map Editor..." Click="OpenTileMapEditor_Click"/>
+            </MenuItem>
             <MenuItem Header="_Encounter" Foreground="White">
                 <Button Content="📋 Encounter Builder" 
                         Click="BtnEncounterBuilder_Click" />
