@@ -34,6 +34,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Controls\BattleGridControl\" />
     <Folder Include="Resources\Tiles\Door\" />
     <Folder Include="Resources\Tiles\Wall\" />
   </ItemGroup>
