@@ -25,6 +25,8 @@ namespace DnDBattle.Models.Tiles
 
         public string Description { get; set; }
 
+        public TileLayer Layer { get; set; } = TileLayer.Floor;
+
         public bool BlocksMovement { get; set; } = false;
 
         public bool BlocksSight { get; set; } = false;

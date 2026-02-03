@@ -48,7 +48,17 @@
             </Menu>
 
             <!-- Editor Control -->
-            <controls:TileMapEditorControl x:Name="EditorControl" Grid.Row="1"/>
+            <Grid Grid.Row="1">
+                <!-- Editor Control (existing) -->
+                <controls:TileMapEditorControl x:Name="EditorControl"/>
+
+                <!-- NEW: Minimap Overlay -->
+                <views:MinimapControl x:Name="Minimap" 
+                              HorizontalAlignment="Right" 
+                              VerticalAlignment="Bottom"
+                              Margin="20"
+                              Width="200" Height="200"/>
+            </Grid>
         </Grid>
     </Grid>
 </Window>

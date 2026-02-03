@@ -61,5 +61,13 @@ namespace DnDBattle.Models.Tiles
             }
             return result;
         }
+
+        public int GetEffectiveZIndex(TileDefinition tileDef)
+        {
+            if (ZIndex.HasValue)
+                return ZIndex.Value;
+
+            return tileDef?.Layer.GetDefaultZIndex() ?? 0;
+        }
     }
 }

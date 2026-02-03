@@ -47,7 +47,52 @@
                 <TextBlock Text="Tile Map Editor" FontSize="14" FontWeight="Bold" Margin="0,0,0,5"/>
                 <Separator Margin="0,5"/>
 
-                <!-- Edit Mode Buttons -->
+                <!-- NEW: Layer Selection -->
+                <TextBlock Text="Active Layer:" Margin="0,5,0,2"/>
+                <ComboBox x:Name="CmbActiveLayer" Width="160" Margin="0,0,0,5"
+                  SelectionChanged="ActiveLayer_Changed">
+                    <ComboBoxItem Content="🟫 Floor" Tag="Floor"/>
+                    <ComboBoxItem Content="🏔️ Terrain" Tag="Terrain"/>
+                    <ComboBoxItem Content="🧱 Walls" Tag="Wall"/>
+                    <ComboBoxItem Content="🚪 Doors" Tag="Door"/>
+                    <ComboBoxItem Content="🪑 Furniture" Tag="Furniture"/>
+                    <ComboBoxItem Content="📦 Props" Tag="Props"/>
+                    <ComboBoxItem Content="✨ Effects" Tag="Effects"/>
+                    <ComboBoxItem Content="🏠 Roof" Tag="Roof"/>
+                </ComboBox>
+
+                <!-- NEW: Layer Visibility Toggles -->
+                <TextBlock Text="Visible Layers:" Margin="0,10,0,2" FontSize="11"/>
+                <WrapPanel Margin="0,0,0,5">
+                    <CheckBox Content="🟫" IsChecked="True" Tag="Floor" Margin="2" 
+                      Checked="LayerVisibility_Changed" Unchecked="LayerVisibility_Changed" 
+                      ToolTip="Floor" FontSize="14"/>
+                    <CheckBox Content="🏔️" IsChecked="True" Tag="Terrain" Margin="2"
+                      Checked="LayerVisibility_Changed" Unchecked="LayerVisibility_Changed"
+                      ToolTip="Terrain" FontSize="14"/>
+                    <CheckBox Content="🧱" IsChecked="True" Tag="Wall" Margin="2"
+                      Checked="LayerVisibility_Changed" Unchecked="LayerVisibility_Changed"
+                      ToolTip="Walls" FontSize="14"/>
+                    <CheckBox Content="🚪" IsChecked="True" Tag="Door" Margin="2"
+                      Checked="LayerVisibility_Changed" Unchecked="LayerVisibility_Changed"
+                      ToolTip="Doors" FontSize="14"/>
+                    <CheckBox Content="🪑" IsChecked="True" Tag="Furniture" Margin="2"
+                      Checked="LayerVisibility_Changed" Unchecked="LayerVisibility_Changed"
+                      ToolTip="Furniture" FontSize="14"/>
+                    <CheckBox Content="📦" IsChecked="True" Tag="Props" Margin="2"
+                      Checked="LayerVisibility_Changed" Unchecked="LayerVisibility_Changed"
+                      ToolTip="Props" FontSize="14"/>
+                    <CheckBox Content="✨" IsChecked="True" Tag="Effects" Margin="2"
+                      Checked="LayerVisibility_Changed" Unchecked="LayerVisibility_Changed"
+                      ToolTip="Effects" FontSize="14"/>
+                    <CheckBox Content="🏠" IsChecked="True" Tag="Roof" Margin="2"
+                      Checked="LayerVisibility_Changed" Unchecked="LayerVisibility_Changed"
+                      ToolTip="Roof" FontSize="14"/>
+                </WrapPanel>
+
+                <Separator Margin="0,5"/>
+
+                <!-- Existing mode buttons -->
                 <StackPanel Orientation="Horizontal" Margin="0,5">
                     <Button Content="🖌️ Paint" Width="80" Margin="2" 
                     Click="PaintMode_Click" x:Name="BtnPaintMode"
@@ -55,6 +100,28 @@
                     <Button Content="🧹 Erase" Width="80" Margin="2" 
                     Click="EraseMode_Click" x:Name="BtnEraseMode"
                     Style="{StaticResource ToolbarButton}"/>
+                </StackPanel>
+
+                <Separator Margin="0,5"/>
+
+                <TextBlock Text="Transform:" Margin="0,5,0,2" FontSize="11"/>
+                <StackPanel Orientation="Horizontal" Margin="0,5">
+                    <Button Content="↶" Width="32" Height="32" Margin="2" 
+                            Click="RotateLeft_Click" x:Name="BtnRotateLeft"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Rotate Left (Q)"/>
+                    <Button Content="↷" Width="32" Height="32" Margin="2" 
+                            Click="RotateRight_Click" x:Name="BtnRotateRight"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Rotate Right (E)"/>
+                    <Button Content="⟷" Width="32" Height="32" Margin="2" 
+                            Click="FlipHorizontal_Click" x:Name="BtnFlipH"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Flip Horizontal (H)"/>
+                    <Button Content="⇅" Width="32" Height="32" Margin="2" 
+                            Click="FlipVertical_Click" x:Name="BtnFlipV"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Flip Vertical (V)"/>
                 </StackPanel>
 
                 <Separator Margin="0,5"/>
