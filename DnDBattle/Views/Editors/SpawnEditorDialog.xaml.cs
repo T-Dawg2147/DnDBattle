@@ -27,6 +27,7 @@ namespace DnDBattle.Views.Editors
             if (existing != null)
             {
                 LoadData();
+                ChkSpawnOnLoad.IsChecked = existing.SpawnOnMapLoad;
             }
         }
 
@@ -68,6 +69,7 @@ namespace DnDBattle.Views.Editors
             Spawn.TriggerDistance = int.TryParse(TxtTriggerDistance.Text, out int distance) ? distance : 5;
             Spawn.SpawnDelay = int.TryParse(TxtSpawnDelay.Text, out int delay) ? delay : 0;
             Spawn.IsReusable = ChkIsReusable.IsChecked ?? false;
+            Spawn.SpawnOnMapLoad = ChkSpawnOnLoad.IsChecked == true;
 
             DialogResult = true;
             Close();

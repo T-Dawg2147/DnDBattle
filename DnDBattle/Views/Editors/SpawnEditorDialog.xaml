@@ -49,6 +49,11 @@
                 <TextBlock Text="⚡ Trigger Conditions" Style="{StaticResource SectionHeader}"/>
 
                 <TextBlock Text="Spawn Trigger:"/>
+                <CheckBox x:Name="ChkSpawnOnLoad" 
+                          Content="🗺️ Spawn when map loads"
+                          Margin="0,5,0,5"
+                          ToolTip="Token(s) will appear immediately when the map is loaded into BattleGrid"/>   
+
                 <ComboBox x:Name="CmbTrigger" SelectedIndex="0">
                     <ComboBoxItem Content="Manual (DM clicks to spawn)"/>
                     <ComboBoxItem Content="Combat Start"/>

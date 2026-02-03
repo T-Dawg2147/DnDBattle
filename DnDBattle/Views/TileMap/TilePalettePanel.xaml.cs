@@ -1,4 +1,5 @@
 ﻿using DnDBattle.Models.Tiles;
+using DnDBattle.Services;
 using DnDBattle.Services.TileService;
 using Microsoft.Win32;
 using System;
@@ -29,30 +30,54 @@ namespace DnDBattle.Views.TileMap
 
         private void LoadTiles()
         {
-            TileLibraryService.Instance.LoadTileLibrary();
-            var grouped = TileLibraryService.Instance.GetTilesByCategory();
-            TileList.ItemsSource = grouped;
+            try
+            {
+                // Load tile library
+                TileLibraryService.Instance.LoadTileLibrary();
 
-            int totalTiles = TileLibraryService.Instance.AvailableTiles.Count;
-            StatusText.Text = $"{totalTiles} tiles available";
+                // Apply filter and display
+                ApplyFilter();
+
+                int totalTiles = TileLibraryService.Instance.AvailableTiles.Count;
+                StatusText.Text = $"{totalTiles} tiles available";
+
+                // Debug output
+                System.Diagnostics.Debug.WriteLine($"[TilePalette] Loaded {totalTiles} tiles");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[TilePalette] Error loading tiles: {ex.Message}");
+                StatusText.Text = $"Error: {ex.Message}";
+            }
         }
 
         private void ApplyFilter()
         {
             var allTiles = TileLibraryService.Instance.AvailableTiles;
 
+            if (allTiles == null || allTiles.Count == 0)
+            {
+                System.Diagnostics.Debug.WriteLine("[TilePalette] No tiles available!");
+                TileList.ItemsSource = null;
+                return;
+            }
+
             // Apply search filter
             var filtered = string.IsNullOrWhiteSpace(_searchFilter)
                 ? allTiles
                 : allTiles.Where(t =>
-                    t.DisplayName.Contains(_searchFilter, StringComparison.OrdinalIgnoreCase) ||
-                    t.Category.Contains(_searchFilter, StringComparison.OrdinalIgnoreCase));
+                    (t.DisplayName ?? t.Id).Contains(_searchFilter, StringComparison.OrdinalIgnoreCase) ||
+                    (t.Category ?? "").Contains(_searchFilter, StringComparison.OrdinalIgnoreCase));
 
             // Group by category
             var grouped = filtered
                 .GroupBy(t => t.Category ?? "General")
-                .ToDictionary(g => g.Key, g => g.ToList());
+                .OrderBy(g => g.Key)
+                .ToList();
 
+            System.Diagnostics.Debug.WriteLine($"[TilePalette] Grouped into {grouped.Count} categories");
+
+            // Set ItemsSource
             TileList.ItemsSource = grouped;
 
             // Update status
@@ -81,40 +106,58 @@ namespace DnDBattle.Views.TileMap
 
         private async void ImportTiles_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new OpenFileDialog
+            try
             {
-                Title = "Import Tile Images",
-                Filter = "Image Files (*.png;*.jpg;*.jpeg)|*.png;*.jpg;*.jpeg|All Files (*.*)|*.*",
-                Multiselect = true
-            };
-
-            if (dialog.ShowDialog() == true)
-            {
-                var importService = new TileImportService();
-
-                // Ask for category
-                var categoryDialog = new TileCategoryDialog(importService.GetAvailableCategories());
-                if (categoryDialog.ShowDialog() == true)
+                var dialog = new OpenFileDialog
                 {
-                    string category = categoryDialog.SelectedCategory;
+                    Filter = "Image Files (*.png;*.jpg;*.jpeg)|*.png;*.jpg;*.jpeg",
+                    Multiselect = true,
+                    Title = "Import Tile Images"
+                };
 
-                    StatusText.Text = "Importing...";
+                if (dialog.ShowDialog() == true)
+                {
+                    var importService = new TileImportService();
+                    // Show category selection dialog
+                    var categoryDialog = new TileCategoryDialog(importService.GetAvailableCategories());
+                    if (categoryDialog.ShowDialog() == true)
+                    {
+                        string category = categoryDialog.SelectedCategory;
 
-                    var imported = await importService.ImportMultipleTilesAsync(dialog.FileNames, category);
+                        // Import tiles
+                        
+                        int imported = importService.ImportMultipleTilesAsync(dialog.FileNames, category).Result.Count;
 
-                    LoadTiles();
-                    StatusText.Text = $"Imported {imported.Count} tiles into '{category}'";
+                        MessageBox.Show(
+                            $"Successfully imported {imported} tiles to category '{category}'",
+                            "Import Complete",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Information);
+
+                        // Reload library
+                        LoadTiles();
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Error importing tiles:\n\n{ex.Message}",
+                    "Import Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
         }
 
-        private void TileButton_Click(object sender, MouseButtonEventArgs e)
+        private void TileItem_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Border border && border.Tag is TileDefinition tileDef)
+            if (sender is Button button && button.Tag is TileDefinition tile)
             {
-                _selectedTile = tileDef;
-                StatusText.Text = $"Selected: {tileDef.DisplayName}";
-                TileSelected?.Invoke(tileDef);
+                _selectedTile = tile;
+                TileSelected?.Invoke(tile);
+
+                StatusText.Text = $"Selected: {tile.DisplayName ?? tile.Id}";
+                System.Diagnostics.Debug.WriteLine($"[TilePalette] Selected tile: {tile.DisplayName}");
             }
         }
     }

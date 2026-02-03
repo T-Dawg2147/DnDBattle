@@ -114,7 +114,7 @@ namespace DnDBattle.Views.TileMap
                 return;
             }
 
-            bool success = await _mapService.SaveMapAsync(_currentMap, _currentFilePath);
+            bool success = (await _mapService.SaveMapAsync(_currentMap, _currentFilePath)) != null;
             if (success)
             {
                 MessageBox.Show("Map saved successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -137,7 +137,7 @@ namespace DnDBattle.Views.TileMap
             if (dialog.ShowDialog() == true)
             {
                 _currentFilePath = dialog.FileName;
-                bool success = await _mapService.SaveMapAsync(_currentMap, _currentFilePath);
+                bool success = (await _mapService.SaveMapAsync(_currentMap, _currentFilePath)) != null;
 
                 if (success)
                 {

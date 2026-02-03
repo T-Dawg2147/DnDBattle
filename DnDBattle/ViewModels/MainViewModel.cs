@@ -720,6 +720,20 @@ namespace DnDBattle.ViewModels
             Log("Map", $"➕ Added {newToken.Name} to the battle map");
         }
 
+        /// <summary>
+        /// Gets the token that had the turn before the current token
+        /// </summary>
+        private Token GetPreviousToken()
+        {
+            if (InitiativeOrderList == null || InitiativeOrderList.Count == 0)
+                return null;
+
+            if (CurrentTurnIndex <= 0)
+                return null;
+
+            return InitiativeOrderList[CurrentTurnIndex - 1];
+        }
+
         #endregion
     }
 }

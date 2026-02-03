@@ -751,16 +751,59 @@ namespace DnDBattle
 
         private void MenuLoadEncounter_Click(object sender, RoutedEventArgs e)
         {
-            var dlg = new Microsoft.Win32.OpenFileDialog { Filter = "Encounter JSON|*.json" };
-            if (dlg.ShowDialog() != true) return;
-            try
+            var dialog = new Microsoft.Win32.OpenFileDialog
             {
-                var dto = EncounterService.LoadEncounterFromFile(dlg.FileName);
-                BattleGrid.LoadEncounterDto(dto);
-            }
-            catch (Exception ex)
+                Filter = "Encounter Files (*.encounter)|*.encounter|Tile Map Files (*.json)|*.json|All Files (*.*)|*.*",
+                Title = "Load Encounter or Tile Map"
+            };
+
+            if (dialog.ShowDialog() == true)
             {
-                System.Windows.MessageBox.Show($"Failed to load: {ex.Message}", "Load Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                try
+                {
+                    string extension = System.IO.Path.GetExtension(dialog.FileName).ToLower();
+
+                    if (extension == ".json")
+                    {
+                        // Load as tile map
+                        var mapService = new Services.TileService.TileMapService();
+                        var tileMap = mapService.LoadMapAsync(dialog.FileName).Result;
+
+                        if (tileMap != null)
+                        {
+                            BattleGrid.LoadTileMap(tileMap);
+                            MessageBox.Show(
+                                $"Loaded tile map: {tileMap.Name}\nSize: {tileMap.Width}×{tileMap.Height}",
+                                "Tile Map Loaded",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Information);
+                        }
+                    }
+                    else if (extension == ".encounter")
+                    {
+                        // Load as encounter (old format)
+                        string json = System.IO.File.ReadAllText(dialog.FileName);
+                        var dto = System.Text.Json.JsonSerializer.Deserialize<EncounterDto>(json);
+
+                        if (dto != null)
+                        {
+                            BattleGrid.LoadEncounterDto(dto);
+                            MessageBox.Show(
+                                $"Encounter loaded successfully!\n\nTokens: {dto.Tokens.Count}\nWalls: {dto.Walls.Count}",
+                                "Encounter Loaded",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Information);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(
+                        $"Error loading file:\n\n{ex.Message}",
+                        "Load Error",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
             }
         }
 
@@ -866,6 +909,101 @@ namespace DnDBattle
 
             var light = new LightSource { CenterGrid = new System.Windows.Point(cx, cy), RadiusSquares = 8, Intensity = 1.0 };
             BattleGrid.AddLight(light);
+        }
+
+        // Add these methods to your MainWindow class
+
+        /// <summary>
+        /// Opens the tile map editor window
+        /// </summary>
+        private void OpenTileMapEditor_Click(object sender, RoutedEventArgs e)
+        {
+            var editorWindow = new Views.TileMap.TileMapEditorWindow();
+            editorWindow.Owner = this;
+            editorWindow.Show();
+        }
+
+        /// <summary>
+        /// Load a tile map into the battle grid
+        /// </summary>
+        private async void LoadTileMap_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "Tile Map Files (*.json)|*.json|All Files (*.*)|*.*",
+                Title = "Load Tile Map",
+                InitialDirectory = System.IO.Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                    "DnDBattle", "Maps")
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                try
+                {
+                    // Show loading indicator
+                    /*BusyIndicator.Visibility = Visibility.Visible; // Add this to your XAML
+                    BusyIndicator.BusyContent = "Loading tile map...";*/
+
+                    // Load on background thread
+                    var mapService = new Services.TileService.TileMapService();
+                    var tileMap = await mapService.LoadMapAsync(dialog.FileName);
+
+                    if (tileMap != null)
+                    {
+                        // Back on UI thread - now load into grid
+                        BattleGrid.LoadTileMap(tileMap);
+
+                        MessageBox.Show(
+                            $"Loaded tile map: {tileMap.Name}\nSize: {tileMap.Width}×{tileMap.Height}\nTiles: {tileMap.PlacedTiles.Count}",
+                            "Tile Map Loaded",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Information);
+                    }
+                    else
+                    {
+                        MessageBox.Show(
+                            "Failed to load tile map.",
+                            "Load Error",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Error);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(
+                        $"Error loading tile map:\n\n{ex.Message}",
+                        "Load Error",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
+                finally
+                {
+                    //BusyIndicator.Visibility = Visibility.Collapsed;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Clear the currently loaded tile map
+        /// </summary>
+        private void ClearTileMap_Click(object sender, RoutedEventArgs e)
+        {
+            var result = MessageBox.Show(
+                "Clear the current tile map?",
+                "Clear Tile Map",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                BattleGrid.LoadTileMap(null);
+                MessageBox.Show(
+                    "Tile map cleared.",
+                    "Cleared",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
         }
 
         private async Task ReloadCreatureBankFromDatabase()

@@ -16,6 +16,8 @@ namespace DnDBattle.Models.Tiles
 
         public string CreatureName { get; set; } = "Goblin";
 
+        public bool SpawnOnMapLoad { get; set; } = false;
+
         public int SpawnCount { get; set; } = 1;
 
         public int SpawnRadius { get; set; } = 0;

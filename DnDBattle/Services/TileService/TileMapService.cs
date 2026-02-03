@@ -44,21 +44,71 @@ namespace DnDBattle.Services.TileService
             }
         }
 
-        public async Task<Models.Tiles.TileMap> LoadMapAsync(string filePath)
+        public async Task<TileMap> LoadMapAsync(string filePath)
         {
             try
             {
-                var json = await File.ReadAllTextAsync(filePath);
-                var dto = JsonSerializer.Deserialize<TileMapDto>(json, _jsonOptions);
+                System.Diagnostics.Debug.WriteLine($"[TileMapService] Loading map from: {filePath}");
 
-                var map = DtoToMap(dto);
-                Debug.WriteLine($"[TileMapService] Loaded map from {filePath}");
-                return map;
+                // Check file exists
+                if (!File.Exists(filePath))
+                {
+                    throw new FileNotFoundException($"Tile map file not found: {filePath}");
+                }
+
+                // Read JSON
+                System.Diagnostics.Debug.WriteLine($"[TileMapService] Reading file...");
+                string json = await File.ReadAllTextAsync(filePath);
+                System.Diagnostics.Debug.WriteLine($"[TileMapService] File size: {json.Length} characters");
+
+                // Try to deserialize
+                System.Diagnostics.Debug.WriteLine($"[TileMapService] Deserializing JSON...");
+
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true, // ← Ignore case differences
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                };
+
+                TileMapDto dto;
+                try
+                {
+                    dto = JsonSerializer.Deserialize<TileMapDto>(json, options);
+                }
+                catch (JsonException jsonEx)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[TileMapService] JSON Deserialization failed!");
+                    System.Diagnostics.Debug.WriteLine($"[TileMapService] Error: {jsonEx.Message}");
+                    System.Diagnostics.Debug.WriteLine($"[TileMapService] Line: {jsonEx.LineNumber}, Position: {jsonEx.BytePositionInLine}");
+
+                    // Show first 500 chars of JSON for debugging
+                    System.Diagnostics.Debug.WriteLine($"[TileMapService] JSON preview: {json.Substring(0, Math.Min(500, json.Length))}");
+
+                    throw new Exception($"Invalid tile map file format.\n\nJSON Error at line {jsonEx.LineNumber}: {jsonEx.Message}", jsonEx);
+                }
+
+                if (dto == null)
+                {
+                    throw new Exception("Deserialized tile map is null");
+                }
+
+                System.Diagnostics.Debug.WriteLine($"[TileMapService] Deserialization successful!");
+                System.Diagnostics.Debug.WriteLine($"[TileMapService] Map: {dto.Name}");
+                System.Diagnostics.Debug.WriteLine($"[TileMapService] Size: {dto.Width}×{dto.Height}");
+                System.Diagnostics.Debug.WriteLine($"[TileMapService] Tiles: {dto.Tiles?.Count ?? 0}");
+
+                // Convert DTO to TileMap
+                System.Diagnostics.Debug.WriteLine($"[TileMapService] Converting DTO to TileMap...");
+                var tileMap = DtoToMap(dto);
+
+                System.Diagnostics.Debug.WriteLine($"[TileMapService] Load complete!");
+                return tileMap;
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[TileMapService] Load failed: {ex.Message}");
-                return null;
+                System.Diagnostics.Debug.WriteLine($"[TileMapService] LOAD FAILED: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[TileMapService] Stack trace: {ex.StackTrace}");
+                throw;
             }
         }
 
