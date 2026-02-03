@@ -132,6 +132,17 @@
                 <MenuItem Header="Toggle Right Sidebar" Click="ToggleRightSidebar_Click" InputGestureText="F10"/>
                 <Separator/>
                 <MenuItem Header="Grid Settings..." Click="MenuGridSettings_Click"/>
+                <Separator/>
+                <MenuItem Header="Fog of War">
+                    <MenuItem Header="Enable Fog of War" Click="EnableFog_Click" x:Name="MenuFogEnabled" IsCheckable="True"/>
+                    <MenuItem Header="Fog Mode">
+                        <MenuItem Header="Exploration (stays revealed)" Click="FogExploration_Click" x:Name="MenuFogExploration" IsCheckable="True" IsChecked="True"/>
+                        <MenuItem Header="Dynamic (reverts to fog)" Click="FogDynamic_Click" x:Name="MenuFogDynamic" IsCheckable="True"/>
+                    </MenuItem>
+                    <Separator/>
+                    <MenuItem Header="Reveal All (DM)" Click="RevealAllFog_Click"/>
+                    <MenuItem Header="Reset Fog" Click="ResetFog_Click"/>
+                </MenuItem>
             </MenuItem>
 
             <MenuItem Header="🧱 Walls" Foreground="White">
@@ -256,6 +267,12 @@
                       HorizontalAlignment="Stretch"
                       Background="#333"
                       Cursor="SizeNS"/>
+
+                    <StackPanel Orientation="Horizontal" Margin="10,0" Grid.Row="1">
+                        <TextBlock Text="⏳ Pending Spawns:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                        <TextBlock x:Name="TxtPendingSpawns" Text="0" FontWeight="Bold" 
+                                   VerticalAlignment="Center" Foreground="{StaticResource Brush_Warning}"/>
+                    </StackPanel>
 
                     <!-- Action Log at Bottom -->
                     <Border Grid.Row="2" Background="#1E1E1E" Padding="10,5">

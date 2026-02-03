@@ -44,7 +44,7 @@ namespace DnDBattle.Models.Tiles
 
         #region Ongoing Effects
 
-        public bool DamageEachTurn { get; set; } = false;
+        public bool DamagesEachTurn { get; set; } = false;
 
         public string PerTurnDamage { get; set; } = "1d10";
 

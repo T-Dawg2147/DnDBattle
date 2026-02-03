@@ -1,6 +1,7 @@
 ﻿using DnDBattle.Models;
 using DnDBattle.Models.Tiles;
 using DnDBattle.Services;
+using DnDBattle.Services.FogOfWar;
 using DnDBattle.Services.TileService;
 using DnDBattle.ViewModels;
 using DnDBattle.Views;
@@ -86,6 +87,13 @@ namespace DnDBattle.Controls
         private bool _isPanning = false;
         private Point _lastPanPoint;
 
+        #region Services
+
+        private readonly SpawnPointService _spawnService = new SpawnPointService();
+        private readonly HazardTrackingService _hazardTracking = new HazardTrackingService();
+
+        #endregion
+
         #region Tile Map Integration
 
         private readonly MetadataInteractionService _metadataService = new MetadataInteractionService();
@@ -157,7 +165,8 @@ namespace DnDBattle.Controls
 
         // Fog of war fields
         private FogOfWarService _fogService;
-        private DrawingVisual _fogVisual;
+        private FogOfWarState _fogOfWar = new FogOfWarState();
+        private DrawingVisual _fogVisual = new DrawingVisual();
         private Canvas _fogCanvas;
         private bool _isFogBrushActive = false;
         private FogShapeTool _currentFogShapeTool = FogShapeTool.None;
@@ -185,11 +194,12 @@ namespace DnDBattle.Controls
             AddVisualOverlay(_wallVisual, 70);
             AddVisualOverlay(_measureVisual, 80);
             AddVisualOverlay(_areaEffectVisual, 85);
+            AddVisualOverlay(_fogVisual, 2500);     // Places this above everything except UI.
 
             _wallService.WallsChanged += () => RedrawWalls();
 
             // Wire up trap service events
-            SetupTrapService();
+            SetupMetadataServices(); // Was SetupTrapService()
 
             Loaded += BattleGridControl_Loaded;
             KeyDown += BattleGridControl_KeyDown;
@@ -378,7 +388,33 @@ namespace DnDBattle.Controls
             menu.Items.Add(tileMenu);
             // ==========================================
 
-            menu.Items.Add(new Separator());
+            tileMenu.Items.Add(new Separator());
+
+            // View Tile Info
+            var infoItem = new MenuItem { Header = "ℹ️ View Tile Info" };
+            infoItem.Click += (s, e) =>
+            {
+                if (tile != null)
+                {
+                    string info = $"Tile at ({tile.GridX}, {tile.GridY})\n\n";
+                    if (tile.HasMetadata)
+                    {
+                        info += $"Metadata ({tile.Metadata.Count}):\n";
+                        foreach (var meta in tile.Metadata)
+                        {
+                            info += $"  • {meta.Type.GetIcon()} {meta.Name ?? meta.Type.GetDisplayName()}\n";
+                        }
+                    }
+                    else
+                    {
+                        info += "No metadata";
+                    }
+
+                    MessageBox.Show(info, "Tile Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            };
+            infoItem.IsEnabled = tile != null;
+            tileMenu.Items.Add(infoItem);
 
             // === CONDITIONS SUBMENU ===
             var conditionsMenu = new MenuItem { Header = "🏷️ Conditions" };
@@ -689,6 +725,12 @@ namespace DnDBattle.Controls
                         // Use the movement
                         token.MovementUsedThisTurn += distanceMoved;
 
+                        // Update fog when player tokens move
+                        if (token.IsPlayer && _fogOfWar.IsEnabled)
+                        {
+                            UpdateFogVisibility();
+                        }
+
                         // Log the movement
                         AddToActionLog("Movement", $"{token.Name} moved {distanceMoved} squares ({token.MovementRemainingThisTurn} remaining)");
                     }
@@ -710,6 +752,17 @@ namespace DnDBattle.Controls
                         CheckForAllMetadataAtPosition(token, newGridX, newGridY);
                     }
                     // ================================================
+
+                    // Fog of war 
+                    if (_loadedTileMap != null && newGridX != oldX || newGridY != oldY)
+                    {
+                        // Reveal fog around player tokens
+                        if (token.IsPlayer)
+                        {
+                            // TODO: Implement fog reveal
+                            // RevealFogAroundToken(token, 12);
+                        }
+                    }
 
                     // Record undo action if position changed
                     if (newGridX != oldX || newGridY != oldY)
@@ -1802,6 +1855,16 @@ namespace DnDBattle.Controls
             DrawCoordinateRulers();
         }
 
+        public void OnTokenTurnStart(Token token)
+        {
+            _hazardTracking.ApplyStartOfTurnDamage(token, _metadataService);
+        }
+
+        public void OnTokenTurnEnd(Token token)
+        {
+            _hazardTracking.ApplyEndOfTurnDamage(token, _metadataService);
+        }
+
         #region Options getters
 
         public void SetGridMaxSize(int maxWidth, int maxHeight)
@@ -2011,54 +2074,6 @@ namespace DnDBattle.Controls
 
         #region Tile Map
 
-        private void SetupTrapService()
-        {
-            _trapService.LogMessage += (message) =>
-            {
-                AddToActionLog("Trap", message);
-            };
-
-            _trapService.TrapDetected += (token, trap) =>
-            {
-                System.Windows.MessageBox.Show(
-                    $"{token.Name} detected a trap!\n\n{trap.DetectionDescription}",
-                    "🔍 Trap Detected",
-                    System.Windows.MessageBoxButton.OK,
-                    System.Windows.MessageBoxImage.Warning);
-            };
-
-            _trapService.TrapTriggered += (token, trap) =>
-            {
-                ShowTrapTriggerEffect(token.GridX, token.GridY);
-                RebuildTokenVisuals(); // Update HP display
-            };
-
-            _trapService.TrapDisarmed += (token, trap) =>
-            {
-                System.Windows.MessageBox.Show(
-                    $"{token.Name} successfully disarmed the trap!",
-                    "✅ Trap Disarmed",
-                    System.Windows.MessageBoxButton.OK,
-                    System.Windows.MessageBoxImage.Information);
-            };
-
-            // Manual roll prompt handler
-            _trapService.RequestManualRoll += (token, trap, skillName, dc) =>
-            {
-                var dialog = new Views.TileMap.ManualRollDialog(
-                    token.Name,
-                    skillName,
-                    GetSkillModifier(token, skillName),
-                    dc);
-
-                if (dialog.ShowDialog() == true)
-                {
-                    return (true, dialog.Roll);
-                }
-                return (false, 0);
-            };
-        }
-
         /// <summary>
         /// Load a tile map as the battle grid background
         /// </summary>
@@ -2168,19 +2183,7 @@ namespace DnDBattle.Controls
             return _loadedTileMap.GetTilesAt(gridX, gridY).OrderByDescending(t => t.ZIndex ?? 0).FirstOrDefault();
         }
 
-        /// <summary>
-        /// Check for traps when a token moves to a new position
-        /// </summary>
-        private void CheckForTrapsAtPosition(Token token, int gridX, int gridY)
-        {
-            if (_loadedTileMap == null || token == null) return;
-
-            var tile = GetTileAt(gridX, gridY);
-            if (tile != null && tile.HasMetadata)
-            {
-                _trapService.CheckForTraps(token, tile);
-            }
-        }
+        
 
         #region Tile Interactions
 
@@ -2233,6 +2236,27 @@ namespace DnDBattle.Controls
                 ShowHazardEffect(token.GridX, token.GridY, hazard.DamageType);
                 RebuildTokenVisuals(); // Update HP display
             };
+            _hazardTracking.LogMessage += (message) => AddToActionLog("Hazard", message);
+            _hazardTracking.HazardDamageApplied += (token, hazard, damage) =>
+            {
+                ShowHazardEffect(token.GridX, token.GridY, hazard.DamageType);
+                RebuildTokenVisuals();
+            };
+
+
+            _spawnService.LogMessage += (message) => AddToActionLog("Spawn", message);
+            _spawnService.CreaturesSpawned += (spawn, tokens) =>
+            {
+                // Add tokens to the battle
+                if (Application.Current?.MainWindow?.DataContext is MainViewModel vm)
+                {
+                    foreach (var token in tokens)
+                    {
+                        vm.Tokens.Add(token);
+                    }
+                }
+                RebuildTokenVisuals();
+            };
 
             _metadataService.TokenTeleported += (token, delay) =>
             {
@@ -2247,6 +2271,22 @@ namespace DnDBattle.Controls
             };
 
             _metadataService.RequestManualRoll += OnRequestManualRoll;
+        }
+
+        #region Traps
+
+        /// <summary>
+        /// Check for traps when a token moves to a new position
+        /// </summary>
+        private void CheckForTrapsAtPosition(Token token, int gridX, int gridY)
+        {
+            if (_loadedTileMap == null || token == null) return;
+
+            var tile = GetTileAt(gridX, gridY);
+            if (tile != null && tile.HasMetadata)
+            {
+                _trapService.CheckForTraps(token, tile);
+            }
         }
 
         /// <summary>
@@ -2317,6 +2357,8 @@ namespace DnDBattle.Controls
             }
         }
 
+        #endregion
+
         private (bool proceed, int roll) OnRequestManualRoll(Token token, TileMetadata metadata, string skillName, int dc)
         {
             var dialog = new Views.TileMap.ManualRollDialog(
@@ -2349,11 +2391,7 @@ namespace DnDBattle.Controls
             // Check for hazards (auto-trigger)
             if (tile.HasMetadataType(TileMetadataType.Hazard))
             {
-                var hazards = tile.GetMetadata(TileMetadataType.Hazard).OfType<HazardMetadata>().ToList();
-                foreach (var hazard in hazards.Where(h => h.DamageTrigger == HazardTrigger.OnEnter))
-                {
-                    _metadataService.TriggerHazard(token, hazard);
-                }
+                _hazardTracking.UpdateTokenPosition(token, _loadedTileMap);
             }
 
             // Check for teleporters (prompt)
@@ -2374,6 +2412,12 @@ namespace DnDBattle.Controls
                 {
                     _metadataService.TriggerHealingZone(token, healingZone);
                 }
+            }
+
+            // Check for proximity-triggered spawns (across entire map)
+            if (token.IsPlayer)
+            {
+                CheckSpawnTriggers();
             }
         }
 
@@ -2485,6 +2529,54 @@ namespace DnDBattle.Controls
             overlay.BeginAnimation(UIElement.OpacityProperty, animation);
         }
 
+        public void ActivateSpawnPoint(SpawnMetadata spawn)
+        {
+            if (_loadedTileMap == null)
+            {
+                AddToActionLog("Spawn", "No tile map loaded.");
+                return;
+            }
+
+            if (Application.Current?.MainWindow?.DataContext is MainViewModel vm)
+            {
+                var spawnedTokens = _spawnService.ActivateSpawnPoint(spawn, vm.CreatureBank, _loadedTileMap, GridCellSize);
+
+                if (spawnedTokens.Count > 0)
+                {
+                    AddToActionLog("Spawn", $"✅ Spawned {spawnedTokens.Count} creatures!");
+                }
+            }
+        }
+
+        // Add method to check automatic spawn triggers
+        private void CheckSpawnTriggers(bool combatJustStarted = false)
+        {
+            if (_loadedTileMap == null) return;
+
+            if (Application.Current?.MainWindow?.DataContext is MainViewModel vm)
+            {
+                var triggeredSpawns = _spawnService.CheckSpawnTriggers(
+                    _loadedTileMap,
+                    vm.Tokens,
+                    vm.CurrentRound,
+                    combatJustStarted);
+
+                foreach (var spawn in triggeredSpawns)
+                {
+                    // Apply delay if configured
+                    if (spawn.SpawnDelay > 0)
+                    {
+                        AddToActionLog("Spawn", $"⏳ {spawn.Name} will spawn in {spawn.SpawnDelay} rounds...");
+                        // TODO: Implement delayed spawning queue
+                    }
+                    else
+                    {
+                        ActivateSpawnPoint(spawn);
+                    }
+                }
+            }
+        }
+
         #endregion
 
         private int GetSkillModifier(Token token, string skill)
@@ -2509,6 +2601,60 @@ namespace DnDBattle.Controls
         #endregion
 
         #region Battle Targeting
+
+        public void OnCombatStarted()
+        {
+            CheckSpawnTriggers(combatJustStarted: true);
+        }
+
+        public void OnRoundChanged(int newRound)
+        {
+            CheckSpawnTriggers();
+        }
+
+        private ContextMenu CreateTileContextMenu(int gridX, int gridY)
+        {
+            var menu = new ContextMenu();
+            var tile = GetTileAt(gridX, gridY);
+
+            if (tile != null && tile.HasMetadataType(TileMetadataType.Spawn))
+            {
+                var spawns = tile.GetMetadata(TileMetadataType.Spawn).OfType<SpawnMetadata>().ToList();
+
+                var spawnMenu = new MenuItem { Header = "👹 Spawn Points" };
+
+                foreach (var spawn in spawns)
+                {
+                    var spawnItem = new MenuItem();
+
+                    if (spawn.HasSpawned && !spawn.IsReusable)
+                    {
+                        spawnItem.Header = $"✅ {spawn.Name} (already spawned)";
+                        spawnItem.IsEnabled = false;
+                    }
+                    else
+                    {
+                        spawnItem.Header = $"👹 Activate: {spawn.Name} ({spawn.SpawnCount}× {spawn.CreatureName})";
+                        spawnItem.Click += (s, e) => ActivateSpawnPoint(spawn);
+                    }
+
+                    spawnMenu.Items.Add(spawnItem);
+                }
+
+                menu.Items.Add(spawnMenu);
+            }
+            else
+            {
+                var noSpawnItem = new MenuItem
+                {
+                    Header = "No spawn points here",
+                    IsEnabled = false
+                };
+                menu.Items.Add(noSpawnItem);
+            }
+
+            return menu;
+        }
 
         /// <summary>
         /// Enters targeting mode - highlights valid targets
@@ -2819,6 +2965,12 @@ namespace DnDBattle.Controls
 
         #region Fog Of War
 
+        public void ToggleFogOfWar(bool enabled)
+        {
+            // TODO: Add fog rendering directly to BattleGridControl or use editor control
+            AddToActionLog("Fog", enabled ? "🌫️ Fog of War enabled" : "☀️ Fog of War disabled");
+        }
+
         private void OnFogChanged()
         {
             RedrawFog();
@@ -2893,6 +3045,110 @@ namespace DnDBattle.Controls
                     }
                 }
             }
+        }
+
+        private void RenderFogOfWar()
+        {
+            using (var dc = _fogVisual.RenderOpen())
+            {
+                if (!_fogOfWar.IsEnabled || _loadedTileMap == null)
+                {
+                    // Clear fog
+                    return;
+                }
+
+                double cellSize = GridCellSize;
+
+                for (int x = 0; x < _loadedTileMap.Width; x++)
+                {
+                    for (int y = 0; y < _loadedTileMap.Height; y++)
+                    {
+                        bool isRevealed = _fogOfWar.IsTileRevealed(x, y);
+                        bool isVisible = _fogOfWar.IsTileVisible(x, y);
+
+                        Brush fogBrush = null;
+
+                        if (!isRevealed)
+                        {
+                            // Completely hidden - black fog
+                            fogBrush = new SolidColorBrush(Color.FromArgb(220, 0, 0, 0));
+                        }
+                        else if (_fogOfWar.Mode == FogMode.Dynamic && !isVisible)
+                        {
+                            // Revealed but not currently visible - gray fog
+                            fogBrush = new SolidColorBrush(Color.FromArgb(120, 30, 30, 30));
+                        }
+
+                        if (fogBrush != null)
+                        {
+                            fogBrush.Freeze();
+                            var rect = new Rect(x * cellSize, y * cellSize, cellSize, cellSize);
+                            dc.DrawRectangle(fogBrush, null, rect);
+                        }
+                    }
+                }
+            }
+        }
+
+        private void UpdateFogVisibility()
+        {
+            if (!_fogOfWar.IsEnabled || _loadedTileMap == null) return;
+
+            _fogOfWar.ClearVisibility();
+
+            if (Application.Current?.MainWindow?.DataContext is MainViewModel vm)
+            {
+                // Reveal areas around player tokens
+                foreach (var token in vm.Tokens.Where(t => t.IsPlayer))
+                {
+                    _fogOfWar.RevealArea(token.GridX, token.GridY, _fogOfWar.VisionRange);
+                }
+            }
+
+            RenderFogOfWar();
+        }
+
+        // Add method to toggle fog
+        public void SetFogOfWar(bool enabled, FogMode mode = FogMode.Exploration)
+        {
+            _fogOfWar.IsEnabled = enabled;
+            _fogOfWar.Mode = mode;
+
+            if (enabled)
+            {
+                UpdateFogVisibility();
+            }
+            else
+            {
+                RenderFogOfWar(); // Clear
+            }
+
+            AddToActionLog("Fog", enabled ? "🌫️ Fog of War enabled" : "☀️ Fog of War disabled");
+        }
+
+        public void RevealAllFog()
+        {
+            if (_loadedTileMap == null) return;
+
+            for (int x = 0; x < _loadedTileMap.Width; x++)
+            {
+                for (int y = 0; y < _loadedTileMap.Height; y++)
+                {
+                    _fogOfWar.RevealTile(x, y);
+                    _fogOfWar.AddVisibleTile(x, y);
+                }
+            }
+
+            RenderFogOfWar();
+            AddToActionLog("Fog", "☀️ All fog revealed");
+        }
+
+        // Add method to reset fog
+        public void ResetFog()
+        {
+            _fogOfWar.Reset();
+            RenderFogOfWar();
+            AddToActionLog("Fog", "🌫️ Fog reset");
         }
 
         private void RemoveFogLayer()

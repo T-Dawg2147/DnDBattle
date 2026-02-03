@@ -1,4 +1,5 @@
 ﻿using DnDBattle.Models.Tiles;
+using DnDBattle.Views.Editors;
 using System;
 using System.Linq;
 using System.Windows;
@@ -98,6 +99,39 @@ namespace DnDBattle.Views.TileMap
             if (dialog.ShowDialog() == true)
             {
                 _currentTile.Metadata.Add(dialog.Spawn);
+                RefreshMetadataList();
+                TilePropertiesChanged?.Invoke(_currentTile);
+            }
+        }
+
+        private void AddHazard_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new HazardEditorDialog();
+            if (dialog.ShowDialog() == true)
+            {
+                _currentTile.Metadata.Add(dialog.Hazard);
+                RefreshMetadataList();
+                TilePropertiesChanged?.Invoke(_currentTile);
+            }
+        }
+
+        private void AddTeleporter_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new TeleporterEditorDialog();
+            if (dialog.ShowDialog() == true)
+            {
+                _currentTile.Metadata.Add(dialog.Teleporter);
+                RefreshMetadataList();
+                TilePropertiesChanged?.Invoke(_currentTile);
+            }
+        }
+
+        private void AddHealing_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new HealingZoneEditorDialog();
+            if (dialog.ShowDialog() == true)
+            {
+                _currentTile.Metadata.Add(dialog.HealingZone);
                 RefreshMetadataList();
                 TilePropertiesChanged?.Invoke(_currentTile);
             }

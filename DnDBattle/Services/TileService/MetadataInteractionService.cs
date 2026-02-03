@@ -52,7 +52,7 @@ namespace DnDBattle.Services.TileService
             if (success)
             {
                 secret.IsDiscovered = true;
-                secret.IsVisibleToPlayer = true;
+                secret.IsVisibleToPlayers = true;
                 LogMessage?.Invoke($"🔍 {token.Name} discovered a secret! ({roll}+{modifier}={total} vs DC {secret.InvestigationDC})");
                 LogMessage?.Invoke($"✨ {secret.DiscoveryDescription}");
                 SecretDiscovered?.Invoke(secret);
@@ -232,6 +232,9 @@ namespace DnDBattle.Services.TileService
 
         #region Healing Zone Handling
 
+        /// <summary>
+        /// Trigger a healing zone and apply effects with condition removal
+        /// </summary>
         public void TriggerHealingZone(Token token, HealingZoneMetadata healingZone)
         {
             if (!healingZone.CanHeal(token.Id))
@@ -250,7 +253,7 @@ namespace DnDBattle.Services.TileService
             LogMessage?.Invoke($"💚 {token.Name} is bathed in healing light!");
 
             // Roll healing
-            var healRoll = DiceRoller.RollExpression(healingZone.HealingDice);
+            var healRoll = Utils.DiceRoller.RollExpression(healingZone.HealingDice);
             int healing = healRoll.Total;
 
             int oldHP = token.HP;
@@ -269,12 +272,26 @@ namespace DnDBattle.Services.TileService
             if (healingZone.HasCharges)
             {
                 healingZone.ChargesRemaining--;
+                if (healingZone.ChargesRemaining > 0)
+                {
+                    LogMessage?.Invoke($"💚 {healingZone.ChargesRemaining} charges remaining.");
+                }
+                else
+                {
+                    LogMessage?.Invoke($"💚 Healing source depleted!");
+                }
             }
 
-            // Remove conditions if applicable
-            if (healingZone.RemovesConditions)
+            // NEW: Remove conditions if applicable
+            if (healingZone.RemovesConditions && !string.IsNullOrWhiteSpace(healingZone.ConditionsRemoved))
             {
-                LogMessage?.Invoke($"✨ {healingZone.ConditionsRemoved} removed from {token.Name}!");
+                var conditionsBefore = token.Conditions;
+                token.RemoveConditionsByName(healingZone.ConditionsRemoved);
+
+                if (conditionsBefore != token.Conditions)
+                {
+                    LogMessage?.Invoke($"✨ Conditions removed: {healingZone.ConditionsRemoved}");
+                }
             }
 
             healingZone.IsTriggered = true;

@@ -456,6 +456,19 @@ namespace DnDBattle.ViewModels
                 }
             }
 
+            if (CurrentTurnToken != null)
+            {
+                // Trigger end-of-turn effects for previous token
+                var previousToken = GetPreviousToken();
+                if (previousToken != null)
+                {
+                    OnTokenTurnEnd(previousToken);
+                }
+
+                // Trigger start-of-turn effects for current token
+                OnTokenTurnStart(CurrentTurnToken);
+            }
+
             // Set new current turn
             if (CurrentTurnIndex >= 0 && CurrentTurnIndex < InitiativeOrderList.Count)
             {
@@ -467,8 +480,32 @@ namespace DnDBattle.ViewModels
                 Log("Turn", $"🎯 {token.Name}'s turn ({token.SpeedSquares} squares of movement)");
             }
 
+            CheckSpawnTriggersForCurrentRound();
             OnPropertyChanged(nameof(InitiativeOrderList));
             RequestTokenVisualsRefresh?.Invoke();
+        }
+
+        private void OnTokenTurnStart(Token token)
+        {
+            // Notify BattleGrid
+            var mainWindow = Application.Current.MainWindow as MainWindow;
+            mainWindow?.BattleGrid.OnTokenTurnStart(token);
+        }
+
+        private void OnTokenTurnEnd(Token token)
+        {
+            // Reset movement
+            token.MovementUsedThisTurn = 0;
+
+            // Notify BattleGrid
+            var mainWindow = Application.Current.MainWindow as MainWindow;
+            mainWindow?.BattleGrid.OnTokenTurnEnd(token);
+        }
+
+        private void CheckSpawnTriggersForCurrentRound()
+        {
+            var mainWindow = Application.Current.MainWindow as MainWindow;
+            mainWindow?.BattleGrid.OnRoundChanged(CurrentRound);
         }
 
         private void PreviousTurn()

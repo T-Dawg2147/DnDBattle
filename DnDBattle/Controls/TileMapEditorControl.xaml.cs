@@ -1,5 +1,8 @@
-﻿using DnDBattle.Models.Tiles;
-using DnDBattle.Services.TileMap;
+﻿using DnDBattle.Models;
+using DnDBattle.Models.Actions;
+using DnDBattle.Models.Tiles;
+using DnDBattle.Services;
+using DnDBattle.Services.FogOfWar;
 using DnDBattle.Services.TileService;
 using System;
 using System.Collections.Generic;
@@ -38,6 +41,10 @@ namespace DnDBattle.Controls
         }
 
         // Editor state
+        private FogOfWarState _fogOfWar = new FogOfWarState();
+
+        private bool _recordingUndo = true;
+
         private enum EditMode { Paint, Erase, Properties }
         private EditMode _currentMode = EditMode.Paint;
 
@@ -84,26 +91,28 @@ namespace DnDBattle.Controls
             GridLayer.Children.Clear();
             MetadataLayer.Children.Clear();
 
-            // Set canvas size
             MapCanvas.Width = TileMap.Width * TileMap.CellSize;
             MapCanvas.Height = TileMap.Height * TileMap.CellSize;
 
-            // Draw grid
             if (TileMap.ShowGrid)
             {
                 DrawGrid();
             }
 
-            // Draw all tiles
             foreach (var tile in TileMap.PlacedTiles.OrderBy(t => t.ZIndex ?? 0))
             {
                 DrawTile(tile);
             }
 
-            // Draw metadata overlays (DM view)
             if (_showDMView)
             {
                 DrawMetadataOverlays();
+            }
+
+            // NEW: Render fog of war
+            if (_fogOfWar.IsEnabled)
+            {
+                RenderFogOfWar();
             }
         }
 
@@ -220,16 +229,15 @@ namespace DnDBattle.Controls
                 Height = cellSize,
                 BorderThickness = new Thickness(3),
                 CornerRadius = new CornerRadius(4),
-                IsHitTestVisible = false // Don't interfere with mouse events
+                IsHitTestVisible = false
             };
 
-            // Determine color based on metadata type
             var metadataTypes = tile.Metadata.Select(m => m.Type).ToList();
             border.BorderBrush = GetMetadataBorderBrush(metadataTypes);
 
             Canvas.SetLeft(border, x);
             Canvas.SetTop(border, y);
-            Canvas.SetZIndex(border, 1000); // Always on top
+            Canvas.SetZIndex(border, 1000);
 
             MetadataLayer.Children.Add(border);
 
@@ -243,7 +251,6 @@ namespace DnDBattle.Controls
                 IsHitTestVisible = false
             };
 
-            // Add up to 3 icons
             int iconCount = 0;
             foreach (var metadata in tile.Metadata.Take(3))
             {
@@ -258,7 +265,6 @@ namespace DnDBattle.Controls
                 iconCount++;
             }
 
-            // Show "+X" if more than 3
             if (tile.Metadata.Count > 3)
             {
                 var moreText = new TextBlock
@@ -278,7 +284,14 @@ namespace DnDBattle.Controls
 
             MetadataLayer.Children.Add(iconPanel);
 
-            // Add tooltip with metadata details
+            // NEW: Add spawn point preview
+            var spawns = tile.Metadata.OfType<SpawnMetadata>().ToList();
+            if (spawns.Any())
+            {
+                DrawSpawnPreview(tile, spawns.First());
+            }
+
+            // Add tooltip
             var tooltip = CreateMetadataTooltip(tile);
             border.ToolTip = tooltip;
             iconPanel.ToolTip = tooltip;
@@ -432,6 +445,121 @@ namespace DnDBattle.Controls
             return tooltip;
         }
 
+        /// <summary>
+        /// Draw spawn point radius preview
+        /// </summary>
+        private void DrawSpawnPreview(Tile tile, SpawnMetadata spawn)
+        {
+            if (spawn.SpawnRadius == 0) return;
+
+            double cellSize = TileMap.CellSize;
+            double centerX = (tile.GridX + 0.5) * cellSize;
+            double centerY = (tile.GridY + 0.5) * cellSize;
+            double radius = spawn.SpawnRadius * cellSize;
+
+            // Draw spawn radius circle
+            var circle = new System.Windows.Shapes.Ellipse
+            {
+                Width = radius * 2,
+                Height = radius * 2,
+                Stroke = new SolidColorBrush(Color.FromArgb(150, 244, 67, 54)),
+                StrokeThickness = 2,
+                StrokeDashArray = new DoubleCollection { 4, 2 },
+                Fill = new SolidColorBrush(Color.FromArgb(30, 244, 67, 54)),
+                IsHitTestVisible = false
+            };
+
+            Canvas.SetLeft(circle, centerX - radius);
+            Canvas.SetTop(circle, centerY - radius);
+            Canvas.SetZIndex(circle, 999);
+
+            MetadataLayer.Children.Add(circle);
+
+            // Add spawn count label
+            var label = new TextBlock
+            {
+                Text = $"{spawn.SpawnCount}× {spawn.CreatureName}",
+                FontSize = cellSize * 0.2,
+                Foreground = Brushes.White,
+                Background = new SolidColorBrush(Color.FromArgb(180, 244, 67, 54)),
+                Padding = new Thickness(0, 4, 0, 2),
+                IsHitTestVisible = false
+            };
+
+            Canvas.SetLeft(label, centerX - (label.ActualWidth / 2));
+            Canvas.SetTop(label, centerY + cellSize * 0.3);
+            Canvas.SetZIndex(label, 1002);
+
+            MetadataLayer.Children.Add(label);
+        }
+
+        #region For Of War
+
+        private void RenderFogOfWar()
+        {
+            if (TileMap == null || !_fogOfWar.IsEnabled) return;
+
+            double cellSize = TileMap.CellSize;
+
+            for (int x = 0; x < TileMap.Width; x++)
+            {
+                for (int y = 0; y < TileMap.Height; y++)
+                {
+                    bool isRevealed = _fogOfWar.IsTileRevealed(x, y);
+                    bool isVisible = _fogOfWar.IsTileVisible(x, y);
+
+                    System.Windows.Shapes.Rectangle fogTile = null;
+
+                    if (!isRevealed)
+                    {
+                        // Completely hidden - black fog
+                        fogTile = new System.Windows.Shapes.Rectangle
+                        {
+                            Width = cellSize,
+                            Height = cellSize,
+                            Fill = new SolidColorBrush(Color.FromArgb(220, 0, 0, 0)),
+                            IsHitTestVisible = false
+                        };
+                    }
+                    else if (_fogOfWar.Mode == FogMode.Dynamic && !isVisible)
+                    {
+                        // Revealed but not currently visible - gray fog
+                        fogTile = new System.Windows.Shapes.Rectangle
+                        {
+                            Width = cellSize,
+                            Height = cellSize,
+                            Fill = new SolidColorBrush(Color.FromArgb(120, 0, 0, 0)),
+                            IsHitTestVisible = false
+                        };
+                    }
+
+                    if (fogTile != null)
+                    {
+                        Canvas.SetLeft(fogTile, x * cellSize);
+                        Canvas.SetTop(fogTile, y * cellSize);
+                        Canvas.SetZIndex(fogTile, 2000); // Above everything
+                        MetadataLayer.Children.Add(fogTile);
+                    }
+                }
+            }
+        }
+
+        // Add method to toggle fog of war
+        public void ToggleFogOfWar(bool enabled)
+        {
+            _fogOfWar.IsEnabled = enabled;
+            RenderMap();
+        }
+
+        // Add method to reveal area (when players move)
+        public void RevealFogAroundToken(Token token, int visionRange)
+        {
+            _fogOfWar.RevealArea(token.GridX, token.GridY, visionRange);
+            RenderMap();
+        }
+
+        #endregion
+
         #region Mouse Event Handlers
 
         private void MapCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -550,7 +678,7 @@ namespace DnDBattle.Controls
             if (SelectedTileDefinition == null) return;
 
             // Remove existing tiles at this position (replace mode)
-            RemoveTileAt(gridX, gridY);
+            var tilesToRemove = TileMap.GetTilesAt(gridX, gridY).ToList();
 
             var newTile = new Tile
             {
@@ -559,16 +687,59 @@ namespace DnDBattle.Controls
                 GridY = gridY
             };
 
+            // Record undo action
+            if (_recordingUndo && tilesToRemove.Any())
+            {
+                var batchAction = new TileBatchAction(
+                    TileMap,
+                    new List<Tile> { newTile },
+                    tilesToRemove,
+                    "Replace Tile"
+                );
+                UndoManager.Record(batchAction);
+            }
+            else if (_recordingUndo)
+            {
+                var action = new TilePlaceAction(TileMap, newTile);
+                UndoManager.Record(action);
+            }
+
+            // Perform the action
+            foreach (var tile in tilesToRemove)
+            {
+                TileMap.RemoveTile(tile);
+                var visual = TilesLayer.Children.OfType<Image>().FirstOrDefault(img => img.Tag == tile);
+                if (visual != null)
+                {
+                    TilesLayer.Children.Remove(visual);
+                }
+            }
+
             TileMap.AddTile(newTile);
             DrawTile(newTile);
         }
 
-        /// <summary>
-        /// Remove tile(s) at grid coordinates
-        /// </summary>
+        // Update RemoveTileAt method to record undo:
         private void RemoveTileAt(int gridX, int gridY)
         {
             var tilesToRemove = TileMap.GetTilesAt(gridX, gridY).ToList();
+
+            if (tilesToRemove.Count == 0) return;
+
+            // Record undo action
+            if (_recordingUndo)
+            {
+                if (tilesToRemove.Count == 1)
+                {
+                    var action = new TileRemoveAction(TileMap, tilesToRemove[0]);
+                    UndoManager.Record(action);
+                }
+                else
+                {
+                    var batchAction = new TileBatchAction(TileMap, new List<Tile>(), tilesToRemove, "Remove Tiles");
+                    UndoManager.Record(batchAction);
+                }
+            }
 
             foreach (var tile in tilesToRemove)
             {
@@ -655,6 +826,66 @@ namespace DnDBattle.Controls
                 BtnDMView.FontWeight = FontWeights.Normal;
             }
         }
+
+        private void Undo_Click(object sender, RoutedEventArgs e)
+        {
+            Undo();
+        }
+
+        private void Redo_Click(object sender, RoutedEventArgs e)
+        {
+            Redo();
+        }
+
+        // Keyboard shortcuts
+        protected override void OnPreviewKeyDown(KeyEventArgs e)
+        {
+            base.OnPreviewKeyDown(e);
+
+            if (Keyboard.Modifiers == ModifierKeys.Control)
+            {
+                switch (e.Key)
+                {
+                    case Key.Z:
+                        if (CanUndo)
+                        {
+                            Undo();
+                            e.Handled = true;
+                        }
+                        break;
+                    case Key.Y:
+                        if (CanRedo)
+                        {
+                            Redo();
+                            e.Handled = true;
+                        }
+                        break;
+                }
+            }
+        }
+
+        #endregion
+
+        #region Undo/Redo
+
+        public void Undo()
+        {
+            _recordingUndo = false;
+            UndoManager.Undo();
+            RenderMap(); // Full re-render
+            _recordingUndo = true;
+        }
+
+        public void Redo()
+        {
+            _recordingUndo = false;
+            UndoManager.Redo();
+            RenderMap(); // Full re-render
+            _recordingUndo = true;
+        }
+
+        public bool CanUndo => UndoManager.CanUndo;
+        public bool CanRedo => UndoManager.CanRedo;
 
         #endregion
 

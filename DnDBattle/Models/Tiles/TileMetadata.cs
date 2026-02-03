@@ -19,7 +19,7 @@ namespace DnDBattle.Models.Tiles
 
         public string Name { get; set; }
 
-        public bool IsVisibleToPlayer { get; set; } = false;
+        public bool IsVisibleToPlayers { get; set; } = false;
 
         public bool IsTriggered { get; set; } = false;
 

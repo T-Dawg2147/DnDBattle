@@ -38,39 +38,55 @@
 
         <!-- Toolbar overlay -->
         <Border HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10"
-                Background="{StaticResource Brush_Background_Control}"
-                BorderBrush="{StaticResource Brush_Border_Normal}"
-                BorderThickness="1"
-                CornerRadius="4"
-                Padding="10">
+        Background="{StaticResource Brush_Background_Control}"
+        BorderBrush="{StaticResource Brush_Border_Normal}"
+        BorderThickness="1"
+        CornerRadius="4"
+        Padding="10">
             <StackPanel Orientation="Vertical">
                 <TextBlock Text="Tile Map Editor" FontSize="14" FontWeight="Bold" Margin="0,0,0,5"/>
                 <Separator Margin="0,5"/>
 
+                <!-- Edit Mode Buttons -->
                 <StackPanel Orientation="Horizontal" Margin="0,5">
                     <Button Content="🖌️ Paint" Width="80" Margin="2" 
-                            Click="PaintMode_Click" x:Name="BtnPaintMode"
-                            Style="{StaticResource ToolbarButton}"/>
+                    Click="PaintMode_Click" x:Name="BtnPaintMode"
+                    Style="{StaticResource ToolbarButton}"/>
                     <Button Content="🧹 Erase" Width="80" Margin="2" 
-                            Click="EraseMode_Click" x:Name="BtnEraseMode"
-                            Style="{StaticResource ToolbarButton}"/>
+                    Click="EraseMode_Click" x:Name="BtnEraseMode"
+                    Style="{StaticResource ToolbarButton}"/>
                 </StackPanel>
 
                 <Separator Margin="0,5"/>
 
+                <!-- View Buttons -->
                 <StackPanel Orientation="Horizontal" Margin="0,5">
                     <Button Content="⚙️ Properties" Width="80" Margin="2" 
-                            Click="PropertiesMode_Click" x:Name="BtnPropertiesMode"
-                            Style="{StaticResource ToolbarButton}"/>
+                    Click="PropertiesMode_Click" x:Name="BtnPropertiesMode"
+                    Style="{StaticResource ToolbarButton}"/>
                     <Button Content="👁️ DM View" Width="80" Margin="2" 
-                            Click="ToggleDMView_Click" x:Name="BtnDMView"
-                            Style="{StaticResource ToolbarButton}"/>
+                    Click="ToggleDMView_Click" x:Name="BtnDMView"
+                    Style="{StaticResource ToolbarButton}"/>
+                </StackPanel>
+
+                <Separator Margin="0,5"/>
+
+                <!-- NEW: Undo/Redo Buttons -->
+                <StackPanel Orientation="Horizontal" Margin="0,5">
+                    <Button Content="↶ Undo" Width="80" Margin="2" 
+                    Click="Undo_Click" x:Name="BtnUndo"
+                    Style="{StaticResource ToolbarButton}"
+                    ToolTip="Undo (Ctrl+Z)"/>
+                    <Button Content="↷ Redo" Width="80" Margin="2" 
+                    Click="Redo_Click" x:Name="BtnRedo"
+                    Style="{StaticResource ToolbarButton}"
+                    ToolTip="Redo (Ctrl+Y)"/>
                 </StackPanel>
 
                 <Separator Margin="0,5"/>
                 <TextBlock x:Name="TxtStatus" Text="{Binding StatusText}" 
-                           Style="{StaticResource HintText}" 
-                           Margin="0,5" FontSize="11"/>
+                   Style="{StaticResource HintText}" 
+                   Margin="0,5" FontSize="11"/>
             </StackPanel>
         </Border>
     </Grid>

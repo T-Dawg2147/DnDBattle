@@ -79,6 +79,9 @@
                         <Button Content="🔍 Secret" Margin="2" Padding="8,4" Click="AddSecret_Click"/>
                         <Button Content="⚙️ Interactive" Margin="2" Padding="8,4" Click="AddInteractive_Click"/>
                         <Button Content="⚡ Trigger" Margin="2" Padding="8,4" Click="AddTrigger_Click"/>
+                        <Button Content="☠️ Hazard" Margin="2" Padding="8,4" Click="AddHazard_Click"/>
+                        <Button Content="🌀 Teleporter" Margin="2" Padding="8,4" Click="AddTeleporter_Click"/>
+                        <Button Content="💚 Healing" Margin="2" Padding="8,4" Click="AddHealing_Click"/>
                         <Button Content="👹 Spawn" Margin="2" Padding="8,4" Click="AddSpawn_Click"/>
                     </WrapPanel>
 

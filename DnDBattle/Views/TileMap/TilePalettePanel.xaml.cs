@@ -14,6 +14,7 @@ namespace DnDBattle.Views.TileMap
         public event Action<TileDefinition> TileSelected;
 
         private TileDefinition _selectedTile;
+        private string _searchFilter = "";
 
         public TilePalettePanel()
         {
@@ -34,6 +35,42 @@ namespace DnDBattle.Views.TileMap
 
             int totalTiles = TileLibraryService.Instance.AvailableTiles.Count;
             StatusText.Text = $"{totalTiles} tiles available";
+        }
+
+        private void ApplyFilter()
+        {
+            var allTiles = TileLibraryService.Instance.AvailableTiles;
+
+            // Apply search filter
+            var filtered = string.IsNullOrWhiteSpace(_searchFilter)
+                ? allTiles
+                : allTiles.Where(t =>
+                    t.DisplayName.Contains(_searchFilter, StringComparison.OrdinalIgnoreCase) ||
+                    t.Category.Contains(_searchFilter, StringComparison.OrdinalIgnoreCase));
+
+            // Group by category
+            var grouped = filtered
+                .GroupBy(t => t.Category ?? "General")
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            TileList.ItemsSource = grouped;
+
+            // Update status
+            int filteredCount = filtered.Count();
+            if (!string.IsNullOrWhiteSpace(_searchFilter))
+            {
+                StatusText.Text = $"{filteredCount} tiles match '{_searchFilter}'";
+            }
+            else
+            {
+                StatusText.Text = $"{filteredCount} tiles available";
+            }
+        }
+
+        private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            _searchFilter = TxtSearch.Text;
+            ApplyFilter();
         }
 
         private void RefreshLibrary_Click(object sender, RoutedEventArgs e)

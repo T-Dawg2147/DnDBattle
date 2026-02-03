@@ -1,10 +1,11 @@
 ﻿using DnDBattle.Models.Tiles;
-using DnDBattle.Services.TileMap;
 using DnDBattle.Services.TileService;
 using Microsoft.Win32;
 using System;
 using System.IO;
 using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace DnDBattle.Views.TileMap
 {
@@ -151,8 +152,72 @@ namespace DnDBattle.Views.TileMap
 
         private void ExportImage_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Image export not yet implemented.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
-            // TODO: Implement PNG/JPG export
+            var dialog = new SaveFileDialog()
+            {
+                Filter = "PNG Image (*.png)|*.png|JPEG Image (*.jpg)|*.jpg",
+                Title = "Export Map as Image",
+                FileName = _currentMap.Name + ".png"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                try
+                {
+                    var canvas = EditorControl.MapCanvas;
+
+                    double scale = 2.0;
+                    int width = (int)(canvas.ActualWidth * scale);
+                    int height = (int)(canvas.ActualHeight * scale);
+
+                    var renderBitmap = new RenderTargetBitmap(
+                        width,
+                        height,
+                        96 * scale,
+                        96 * scale,
+                        PixelFormats.Pbgra32);
+
+                    var visual = new DrawingVisual();
+                    using (var context = visual.RenderOpen())
+                    {
+                        var brush = new VisualBrush(canvas);
+                        context.PushTransform(new ScaleTransform(scale, scale));
+                        context.DrawRectangle(brush, null, new Rect(0, 0, canvas.ActualWidth, canvas.ActualHeight));
+                    }
+
+                    renderBitmap.Render(visual);
+
+                    BitmapEncoder encoder;
+                    if (dialog.FileName.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase))
+                    {
+                        encoder = new JpegBitmapEncoder { QualityLevel = 95 };
+                    }
+                    else
+                    {
+                        encoder = new PngBitmapEncoder();
+                    }
+
+                    encoder.Frames.Add(BitmapFrame.Create(renderBitmap));
+
+                    using (var stream = File.Create(dialog.FileName))
+                    {
+                        encoder.Save(stream);
+                    }
+
+                    MessageBox.Show(
+                        $"Map exported successfully!\n\nResolution: {width}x{height}\nFile: {dialog.FileName}",
+                        "Export Complete",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(
+                        $"Failed to export image:\n\n{ex.Message}",
+                        "Export Error",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
+            }
         }
 
         private void Close_Click(object sender, RoutedEventArgs e)
@@ -176,8 +241,38 @@ namespace DnDBattle.Views.TileMap
 
         private void ResizeMap_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Map resizing not yet implemented.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
-            // TODO: Show dialog to resize map
+            var dialog = new MapResizeDialog(_currentMap);
+            if (dialog.ShowDialog() == true)
+            {
+                int oldWidth = _currentMap.Width;
+                int oldHeight = _currentMap.Height;
+
+                // Remove tiles outside new bounds
+                var tilesToRemove = _currentMap.PlacedTiles
+                    .Where(t => t.GridX >= dialog.NewWidth || t.GridY >= dialog.NewHeight)
+                    .ToList();
+
+                foreach (var tile in tilesToRemove)
+                {
+                    _currentMap.PlacedTiles.Remove(tile);
+                }
+
+                // Update map size
+                _currentMap.Width = dialog.NewWidth;
+                _currentMap.Height = dialog.NewHeight;
+                _currentMap.ModifiedDate = DateTime.Now;
+
+                // Refresh editor
+                EditorControl.TileMap = null;
+                EditorControl.TileMap = _currentMap;
+
+                MessageBox.Show(
+                    $"Map resized from {oldWidth}×{oldHeight} to {dialog.NewWidth}×{dialog.NewHeight}\n\n" +
+                    $"Tiles removed: {tilesToRemove.Count}",
+                    "Map Resized",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
         }
 
         #endregion

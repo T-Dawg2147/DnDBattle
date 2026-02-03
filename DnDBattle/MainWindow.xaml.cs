@@ -1,5 +1,6 @@
 ﻿using DnDBattle.Models;
 using DnDBattle.Services;
+using DnDBattle.Services.FogOfWar;
 using DnDBattle.ViewModels;
 using DnDBattle.Views;
 using Microsoft.Win32;
@@ -917,6 +918,72 @@ namespace DnDBattle
 
             host.Show();
         }
+
+        public void UpdatePendingSpawnsDisplay(int count)
+        {
+            TxtPendingSpawns.Text = count.ToString();
+
+            if (count > 0)
+            {
+                TxtPendingSpawns.Foreground = (Brush)Application.Current.Resources["Brush_Warning"];
+            }
+            else
+            {
+                TxtPendingSpawns.Foreground = (Brush)Application.Current.Resources["Brush_Text_Secondary"];
+            }
+        }
+
+        #region Fog of war handlers
+
+        private void EnableFog_Click(object sender, RoutedEventArgs e)
+        {
+            bool enabled = MenuFogEnabled.IsChecked;
+            var mode = MenuFogExploration.IsChecked ? FogMode.Exploration : FogMode.Dynamic;
+            BattleGrid.SetFogOfWar(enabled, mode);
+        }
+
+        private void FogExploration_Click(object sender, RoutedEventArgs e)
+        {
+            MenuFogExploration.IsChecked = true;
+            MenuFogDynamic.IsChecked = false;
+
+            if (MenuFogEnabled.IsChecked)
+            {
+                BattleGrid.SetFogOfWar(true, FogMode.Exploration);
+            }
+        }
+
+        private void FogDynamic_Click(object sender, RoutedEventArgs e)
+        {
+            MenuFogExploration.IsChecked = false;
+            MenuFogDynamic.IsChecked = true;
+
+            if (MenuFogEnabled.IsChecked)
+            {
+                BattleGrid.SetFogOfWar(true, FogMode.Dynamic);
+            }
+        }
+
+        private void RevealAllFog_Click(object sender, RoutedEventArgs e)
+        {
+            BattleGrid.RevealAllFog();
+        }
+
+        private void ResetFog_Click(object sender, RoutedEventArgs e)
+        {
+            var result = MessageBox.Show(
+                "Reset all fog of war? This will hide everything again.",
+                "Reset Fog",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                BattleGrid.ResetFog();
+            }
+        }
+
+        #endregion
 
         #region Encounter Builder
 

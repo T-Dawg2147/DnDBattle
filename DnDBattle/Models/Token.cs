@@ -637,12 +637,58 @@ namespace DnDBattle.Models
 
         public void RemoveCondition(Condition condition)
         {
-            Conditions &= ~condition;
+            if (Conditions.HasFlag(condition))
+            {
+                Conditions &= ~condition;
+                OnPropertyChanged(nameof(Conditions));
+            }
+        }
+
+        public void RemoveConditionsByName(string conditionNames)
+        {
+            if (string.IsNullOrWhiteSpace(conditionNames)) return;
+
+            var names = conditionNames.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(n => n.Trim().ToLower());
+
+            foreach (var name in names)
+            {
+                var condition = ParseConditionName(name);
+                if (condition.HasValue)
+                {
+                    RemoveCondition(condition.Value);
+                }
+            }
         }
 
         public void ResetMovementForTurn()
         {
-            
+            // TODO   
+        }
+
+        private Condition? ParseConditionName(string name)
+        {
+            return name.ToLower() switch
+            {
+                "blinded" => Condition.Blinded,
+                "charmed" => Condition.Charmed,
+                "deafened" => Condition.Deafened,
+                "frightened" => Condition.Frightened,
+                "grappled" => Condition.Grappled,
+                "incapacitated" => Condition.Incapacitated,
+                "invisible" => Condition.Invisible,
+                "paralyzed" => Condition.Paralyzed,
+                "petrified" => Condition.Petrified,
+                "poisoned" => Condition.Poisoned,
+                "prone" => Condition.Prone,
+                "restrained" => Condition.Restrained,
+                "stunned" => Condition.Stunned,
+                "unconscious" => Condition.Unconscious,
+                "exhaustion" => Condition.Exhaustion1,
+                "diseased" => Condition.Diseased,
+                "cursed" => Condition.Cursed,
+                _ => null
+            };
         }
 
     }

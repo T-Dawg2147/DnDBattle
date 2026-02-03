@@ -41,7 +41,8 @@ namespace DnDBattle.Models
         Flying = 1 << 27,
         Raging = 1 << 28,
         Marked = 1 << 29,
-        HuntersMark = 1 << 30
+        HuntersMark = 1 << 30,
+        Diseased = 1 << 31
     }
 
     /// <summary>
@@ -124,6 +125,7 @@ namespace DnDBattle.Models
                 Condition.Raging => "😤",
                 Condition.Marked => "🎯",
                 Condition.HuntersMark => "🏹",
+                Condition.Diseased => "🤮",
                 _ => "❓"
             };
         }
@@ -163,6 +165,7 @@ namespace DnDBattle.Models
                 Condition.Raging => System.Windows.Media.Color.FromRgb(220, 20, 60),
                 Condition.Marked => System.Windows.Media.Color.FromRgb(255, 69, 0),
                 Condition.HuntersMark => System.Windows.Media.Color.FromRgb(34, 139, 34),
+                Condition.Diseased => System.Windows.Media.Color.FromRgb(0, 128, 0),
                 _ => System.Windows.Media.Color.FromRgb(128, 128, 128)
             };
         }
@@ -205,6 +208,7 @@ namespace DnDBattle.Models
                 Condition.Raging => "Advantage on STR checks/saves, bonus damage, resistance to physical.",
                 Condition.Marked => "Marked by another creature.",
                 Condition.HuntersMark => "Extra 1d6 damage from marking creature.",
+                Condition.Diseased => "A contagious, magical, affliction has taken over. Any of the following can be applied: Exhaustion, reduced healing, and Ability Check disadvantages.",
                 _ => "Unknown condition."
             };
         }
