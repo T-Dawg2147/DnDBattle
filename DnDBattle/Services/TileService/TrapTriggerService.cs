@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-namespace DnDBattle.Services.TileMap
+namespace DnDBattle.Services.TileService
 {
     /// <summary>
     /// Result of a roll (for UI display)

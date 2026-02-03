@@ -5,6 +5,7 @@ namespace DnDBattle.Utils
     public class DiceResult
     {
         public int Total { get; set; }
+        public string Expression { get; set; }
         public List<int> Individual { get; set; } = new List<int>();
     }
 
@@ -12,35 +13,12 @@ namespace DnDBattle.Utils
     {
         static Random _rng = new Random();
 
-        public static DiceResult Old_RollExpression(string expr)
-        {
-            expr = expr.Replace(" ", "").ToLower();
-            var m = Regex.Match(expr, @"^(\d*)d(\d+)([+-]\d+)?$");
-            if (!m.Success)
-            {
-                if (int.TryParse(expr, out int val)) return new DiceResult { Total = val, Individual = new List<int> { val } };
-                return new DiceResult { Total = 1, Individual = new List<int> { 1 } };
-            }
-
-            int count = string.IsNullOrEmpty(m.Groups[1].Value) ? 1 : int.Parse(m.Groups[1].Value);
-            int sides = int.Parse(m.Groups[3].Value);
-            int mod = 0;
-            if (m.Groups[3].Success) mod = int.Parse(m.Groups[3].Value);
-
-            var res = new DiceResult();
-            for (int i = 0; i < count; i++)
-            {
-                int roll = _rng.Next(1, sides + 1);
-                res.Individual.Add(roll);
-            }
-            res.Total = res.Individual.Sum() + mod;
-            return res;
-        }
-
         public static DiceResult RollExpression(string expr)
         {
             var res = new DiceResult();
-            
+
+            res.Expression = expr;
+
             if (string.IsNullOrWhiteSpace(expr))
             {
                 res.Total = 1;
