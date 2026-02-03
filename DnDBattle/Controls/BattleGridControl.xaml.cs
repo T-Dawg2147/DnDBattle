@@ -1,7 +1,6 @@
 ﻿using DnDBattle.Models;
 using DnDBattle.Models.Tiles;
 using DnDBattle.Services;
-using DnDBattle.Services.TileMap;
 using DnDBattle.Services.TileService;
 using DnDBattle.ViewModels;
 using DnDBattle.Views;
@@ -89,6 +88,7 @@ namespace DnDBattle.Controls
 
         #region Tile Map Integration
 
+        private readonly MetadataInteractionService _metadataService = new MetadataInteractionService();
         private TileMap _loadedTileMap;
         private readonly TrapTriggerService _trapService = new TrapTriggerService();
         private readonly DrawingVisual _tileMapVisual = new DrawingVisual();
@@ -262,30 +262,44 @@ namespace DnDBattle.Controls
 
             menu.Items.Add(new Separator());
 
-            // ===== NEW: Trap/Tile Interaction Menu =====
+            // ===== TILE INTERACTION MENU =====
             var tileMenu = new MenuItem { Header = "🗺️ Tile Actions" };
 
-            var searchItem = new MenuItem { Header = "🔍 Search for Traps" };
-            searchItem.Click += (s, e) => TriggerTrapDetection(token);
-            tileMenu.Items.Add(searchItem);
-
-            var disarmItem = new MenuItem { Header = "🔧 Disarm Trap" };
-            disarmItem.Click += (s, e) => AttemptDisarmTrap(token);
-            tileMenu.Items.Add(disarmItem);
-
-            // Check if there are traps at this location
             var tile = GetTileAt(token.GridX, token.GridY);
+            bool hasTileActions = false;
+
+            // Search for Traps
+            var searchTrapsItem = new MenuItem { Header = "⚠️ Search for Traps (Shift+F)" };
+            searchTrapsItem.Click += (s, e) => TriggerTrapDetection(token);
+            if (tile != null && tile.HasMetadataType(TileMetadataType.Trap))
+            {
+                var traps = tile.GetMetadata(TileMetadataType.Trap).OfType<TrapMetadata>().ToList();
+                if (traps.Any(t => !t.IsDetected && !t.IsDisarmed))
+                {
+                    searchTrapsItem.IsEnabled = true;
+                    hasTileActions = true;
+                }
+                else
+                {
+                    searchTrapsItem.IsEnabled = false;
+                }
+            }
+            else
+            {
+                searchTrapsItem.IsEnabled = false;
+            }
+            tileMenu.Items.Add(searchTrapsItem);
+
+            // Disarm Trap
+            var disarmItem = new MenuItem { Header = "🔧 Disarm Trap (Shift+T)" };
+            disarmItem.Click += (s, e) => AttemptDisarmTrap(token);
             if (tile != null && tile.HasMetadataType(TileMetadataType.Trap))
             {
                 var traps = tile.GetMetadata(TileMetadataType.Trap).OfType<TrapMetadata>().ToList();
                 if (traps.Any(t => t.IsDetected && !t.IsDisarmed))
                 {
                     disarmItem.IsEnabled = true;
-                }
-                else if (traps.Any(t => t.IsDisarmed))
-                {
-                    disarmItem.Header = "✅ Trap Already Disarmed";
-                    disarmItem.IsEnabled = false;
+                    hasTileActions = true;
                 }
                 else
                 {
@@ -294,11 +308,75 @@ namespace DnDBattle.Controls
             }
             else
             {
-                searchItem.IsEnabled = false;
                 disarmItem.IsEnabled = false;
             }
+            tileMenu.Items.Add(disarmItem);
 
+            tileMenu.Items.Add(new Separator());
+
+            // Search for Secrets
+            var searchSecretsItem = new MenuItem { Header = "🔍 Search for Secrets (Shift+S)" };
+            searchSecretsItem.Click += (s, e) => SearchForSecrets(token);
+            if (tile != null && tile.HasMetadataType(TileMetadataType.Secret))
+            {
+                var secrets = tile.GetMetadata(TileMetadataType.Secret).OfType<SecretMetadata>().ToList();
+                if (secrets.Any(s => !s.IsDiscovered))
+                {
+                    searchSecretsItem.IsEnabled = true;
+                    hasTileActions = true;
+                }
+                else
+                {
+                    searchSecretsItem.Header = "✅ Secret Already Discovered";
+                    searchSecretsItem.IsEnabled = false;
+                }
+            }
+            else
+            {
+                searchSecretsItem.IsEnabled = false;
+            }
+            tileMenu.Items.Add(searchSecretsItem);
+
+            // Interact with Object
+            var interactItem = new MenuItem { Header = "⚙️ Interact (Shift+E)" };
+            interactItem.Click += (s, e) => InteractWithObject(token);
+            if (tile != null && tile.HasMetadataType(TileMetadataType.Interactive))
+            {
+                interactItem.IsEnabled = true;
+                hasTileActions = true;
+            }
+            else
+            {
+                interactItem.IsEnabled = false;
+            }
+            tileMenu.Items.Add(interactItem);
+
+            // Use Healing Zone
+            var healZone = new MenuItem { Header = "💚 Use Healing Source (Shift+H)" };
+            healZone.Click += (s, e) => ActivateHealingZone(token);
+            if (tile != null && tile.HasMetadataType(TileMetadataType.Healing))
+            {
+                var healingZone = tile.GetMetadata(TileMetadataType.Healing).OfType<HealingZoneMetadata>().FirstOrDefault();
+                if (healingZone != null && healingZone.CanHeal(token.Id))
+                {
+                    healZone.IsEnabled = true;
+                    hasTileActions = true;
+                }
+                else
+                {
+                    healZone.Header = "💚 Already Used Healing Source";
+                    healZone.IsEnabled = false;
+                }
+            }
+            else
+            {
+                healZone.IsEnabled = false;
+            }
+            tileMenu.Items.Add(healZone);
+
+            tileMenu.IsEnabled = hasTileActions;
             menu.Items.Add(tileMenu);
+            // ==========================================
 
             menu.Items.Add(new Separator());
 
@@ -307,11 +385,11 @@ namespace DnDBattle.Controls
 
             // Common conditions
             var commonConditions = new[] {
-        Models.Condition.Blinded, Models.Condition.Charmed, Models.Condition.Deafened, Models.Condition.Frightened,
-        Models.Condition.Grappled, Models.Condition.Incapacitated, Models.Condition.Invisible, Models.Condition.Paralyzed,
-        Models.Condition.Petrified, Models.Condition.Poisoned, Models.Condition.Prone, Models.Condition.Restrained,
-        Models.Condition.Stunned, Models.Condition.Unconscious
-    };
+                Models.Condition.Blinded, Models.Condition.Charmed, Models.Condition.Deafened, Models.Condition.Frightened,
+                Models.Condition.Grappled, Models.Condition.Incapacitated, Models.Condition.Invisible, Models.Condition.Paralyzed,
+                Models.Condition.Petrified, Models.Condition.Poisoned, Models.Condition.Prone, Models.Condition.Restrained,
+                Models.Condition.Stunned, Models.Condition.Unconscious
+            };
 
             foreach (var condition in commonConditions)
             {
@@ -629,7 +707,7 @@ namespace DnDBattle.Controls
                     // ===== NEW: CHECK FOR TRAPS AT NEW POSITION =====
                     if (newGridX != oldX || newGridY != oldY)
                     {
-                        CheckForTrapsAtPosition(token, newGridX, newGridY);
+                        CheckForAllMetadataAtPosition(token, newGridX, newGridY);
                     }
                     // ================================================
 
@@ -672,19 +750,15 @@ namespace DnDBattle.Controls
             switch (e.Key)
             {
                 case Key.Left:
-                case Key.A:
                     _pan.X += panAmount;
                     break;
                 case Key.Right:
-                case Key.D:
                     _pan.X -= panAmount;
                     break;
                 case Key.Up:
-                case Key.W:
                     _pan.Y += panAmount;
                     break;
                 case Key.Down:
-                case Key.S:
                     _pan.Y -= panAmount;
                     break;
                 case Key.Home:
@@ -701,6 +775,32 @@ namespace DnDBattle.Controls
                 case Key.Subtract:
                 case Key.OemMinus:
                     ZoomAtCenter(1.0 / 1.2);
+                    break;
+                case Key.S: // S = Search for secrets
+                    if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) && SelectedToken != null)
+                    {
+                        SearchForSecrets(SelectedToken);
+                        e.Handled = true;
+                        return;
+                    }
+                    break;
+
+                case Key.E: // E = Interact with object
+                    if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) && SelectedToken != null)
+                    {
+                        InteractWithObject(SelectedToken);
+                        e.Handled = true;
+                        return;
+                    }
+                    break;
+
+                case Key.H: // H = Use healing zone
+                    if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) && SelectedToken != null)
+                    {
+                        ActivateHealingZone(SelectedToken);
+                        e.Handled = true;
+                        return;
+                    }
                     break;
                 case Key.F: // F = Find/Search for traps
                     if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
@@ -2082,6 +2182,73 @@ namespace DnDBattle.Controls
             }
         }
 
+        #region Tile Interactions
+
+        private void SetupMetadataServices()
+        {
+            // Trap service (already exists)
+            _trapService.LogMessage += (message) => AddToActionLog("Trap", message);
+            _trapService.TrapDetected += (token, trap) =>
+            {
+                System.Windows.MessageBox.Show(
+                    $"{token.Name} detected a trap!\n\n{trap.DetectionDescription}",
+                    "🔍 Trap Detected",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Warning);
+            };
+            _trapService.TrapTriggered += (token, trap) =>
+            {
+                ShowTrapTriggerEffect(token.GridX, token.GridY);
+                RebuildTokenVisuals();
+            };
+            _trapService.TrapDisarmed += (token, trap) =>
+            {
+                System.Windows.MessageBox.Show(
+                    $"{token.Name} successfully disarmed the trap!",
+                    "✅ Trap Disarmed",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Information);
+            };
+            _trapService.RequestManualRoll += OnRequestManualRoll;
+
+            // Metadata interaction service (NEW)
+            _metadataService.LogMessage += (message) => AddToActionLog("Metadata", message);
+
+            _metadataService.SecretDiscovered += (secret) =>
+            {
+                System.Windows.MessageBox.Show(
+                    $"Secret Discovered!\n\n{secret.DiscoveryDescription}",
+                    "🔍 Secret Found",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Information);
+            };
+
+            _metadataService.ObjectActivated += (interactive) =>
+            {
+                RebuildTokenVisuals(); // Refresh in case state changed
+            };
+
+            _metadataService.HazardTriggered += (token, hazard) =>
+            {
+                ShowHazardEffect(token.GridX, token.GridY, hazard.DamageType);
+                RebuildTokenVisuals(); // Update HP display
+            };
+
+            _metadataService.TokenTeleported += (token, delay) =>
+            {
+                RebuildTokenVisuals(); // Refresh token position
+                RedrawMovementOverlay();
+            };
+
+            _metadataService.TokenHealed += (token, amount) =>
+            {
+                ShowHealingEffect(token.GridX, token.GridY);
+                RebuildTokenVisuals(); // Update HP display
+            };
+
+            _metadataService.RequestManualRoll += OnRequestManualRoll;
+        }
+
         /// <summary>
         /// Manually trigger trap detection for a token at current position
         /// </summary>
@@ -2149,6 +2316,176 @@ namespace DnDBattle.Controls
                 }
             }
         }
+
+        private (bool proceed, int roll) OnRequestManualRoll(Token token, TileMetadata metadata, string skillName, int dc)
+        {
+            var dialog = new Views.TileMap.ManualRollDialog(
+                token.Name,
+                skillName,
+                GetSkillModifier(token, skillName),
+                dc);
+
+            if (dialog.ShowDialog() == true)
+            {
+                return (true, dialog.Roll);
+            }
+            return (false, 0);
+        }
+
+        // Update CheckForTrapsAtPosition to check ALL metadata
+        private void CheckForAllMetadataAtPosition(Token token, int gridX, int gridY)
+        {
+            if (_loadedTileMap == null || token == null) return;
+
+            var tile = GetTileAt(gridX, gridY);
+            if (tile == null || !tile.HasMetadata) return;
+
+            // Check for traps (auto-trigger)
+            if (tile.HasMetadataType(TileMetadataType.Trap))
+            {
+                _trapService.CheckForTraps(token, tile);
+            }
+
+            // Check for hazards (auto-trigger)
+            if (tile.HasMetadataType(TileMetadataType.Hazard))
+            {
+                var hazards = tile.GetMetadata(TileMetadataType.Hazard).OfType<HazardMetadata>().ToList();
+                foreach (var hazard in hazards.Where(h => h.DamageTrigger == HazardTrigger.OnEnter))
+                {
+                    _metadataService.TriggerHazard(token, hazard);
+                }
+            }
+
+            // Check for teleporters (prompt)
+            if (tile.HasMetadataType(TileMetadataType.Teleporter))
+            {
+                var teleporter = tile.GetMetadata(TileMetadataType.Teleporter).OfType<TeleporterMetadata>().FirstOrDefault();
+                if (teleporter != null && teleporter.IsActive)
+                {
+                    _metadataService.TriggerTeleporter(token, teleporter);
+                }
+            }
+
+            // Check for healing zones
+            if (tile.HasMetadataType(TileMetadataType.Healing))
+            {
+                var healingZone = tile.GetMetadata(TileMetadataType.Healing).OfType<HealingZoneMetadata>().FirstOrDefault();
+                if (healingZone != null && healingZone.HealingTrigger == HealingTrigger.OnEnter)
+                {
+                    _metadataService.TriggerHealingZone(token, healingZone);
+                }
+            }
+        }
+
+        // Add these interaction methods
+        public void SearchForSecrets(Token token)
+        {
+            if (token == null) return;
+
+            var tile = GetTileAt(token.GridX, token.GridY);
+            if (tile != null && tile.HasMetadataType(TileMetadataType.Secret))
+            {
+                var secrets = tile.GetMetadata(TileMetadataType.Secret).OfType<SecretMetadata>().ToList();
+                var secret = secrets.FirstOrDefault(s => !s.IsDiscovered);
+
+                if (secret == null)
+                {
+                    AddToActionLog("Secret", "No undiscovered secrets here.");
+                    return;
+                }
+
+                _metadataService.AttemptSecretDiscovery(token, secret);
+            }
+            else
+            {
+                AddToActionLog("Secret", $"{token.Name} searches but finds nothing.");
+            }
+        }
+
+        public void InteractWithObject(Token token)
+        {
+            if (token == null) return;
+
+            var tile = GetTileAt(token.GridX, token.GridY);
+            if (tile != null && tile.HasMetadataType(TileMetadataType.Interactive))
+            {
+                var interactive = tile.GetMetadata(TileMetadataType.Interactive).OfType<InteractiveMetadata>().FirstOrDefault();
+                if (interactive != null)
+                {
+                    _metadataService.InteractWithObject(token, interactive);
+                }
+            }
+            else
+            {
+                AddToActionLog("Interact", "Nothing to interact with here.");
+            }
+        }
+
+        public void ActivateHealingZone(Token token)
+        {
+            if (token == null) return;
+
+            var tile = GetTileAt(token.GridX, token.GridY);
+            if (tile != null && tile.HasMetadataType(TileMetadataType.Healing))
+            {
+                var healingZone = tile.GetMetadata(TileMetadataType.Healing).OfType<HealingZoneMetadata>().FirstOrDefault();
+                if (healingZone != null)
+                {
+                    _metadataService.TriggerHealingZone(token, healingZone);
+                }
+            }
+        }
+
+        // Add visual effect methods
+        private void ShowHazardEffect(int gridX, int gridY, DamageType damageType)
+        {
+            var color = damageType switch
+            {
+                DamageType.Fire => Colors.OrangeRed,
+                DamageType.Cold => Colors.Cyan,
+                DamageType.Acid => Colors.LimeGreen,
+                DamageType.Lightning => Colors.Yellow,
+                DamageType.Poison => Colors.Purple,
+                _ => Colors.Red
+            };
+
+            ShowColoredEffect(gridX, gridY, color);
+        }
+
+        private void ShowHealingEffect(int gridX, int gridY)
+        {
+            ShowColoredEffect(gridX, gridY, Colors.LightGreen);
+        }
+
+        private void ShowColoredEffect(int gridX, int gridY, Color color)
+        {
+            var overlay = new System.Windows.Shapes.Rectangle
+            {
+                Width = GridCellSize,
+                Height = GridCellSize,
+                Fill = new SolidColorBrush(Color.FromArgb(150, color.R, color.G, color.B)),
+                Stroke = new SolidColorBrush(color),
+                StrokeThickness = 3
+            };
+
+            Canvas.SetLeft(overlay, gridX * GridCellSize);
+            Canvas.SetTop(overlay, gridY * GridCellSize);
+            Canvas.SetZIndex(overlay, 999);
+
+            RenderCanvas.Children.Add(overlay);
+
+            var animation = new System.Windows.Media.Animation.DoubleAnimation
+            {
+                From = 1.0,
+                To = 0.0,
+                Duration = TimeSpan.FromSeconds(1.5)
+            };
+
+            animation.Completed += (s, e) => RenderCanvas.Children.Remove(overlay);
+            overlay.BeginAnimation(UIElement.OpacityProperty, animation);
+        }
+
+        #endregion
 
         private int GetSkillModifier(Token token, string skill)
         {

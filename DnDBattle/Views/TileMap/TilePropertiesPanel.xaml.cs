@@ -58,15 +58,26 @@ namespace DnDBattle.Views.TileMap
 
         private void AddSecret_Click(object sender, RoutedEventArgs e)
         {
-            // TODO: Create SecretMetadata editor
-            MessageBox.Show("Secret editor coming soon!", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+            var dialog = new SecretEditorDialog();
+            if (dialog.ShowDialog() == true)
+            {
+                _currentTile.Metadata.Add(dialog.Secret);
+                RefreshMetadataList();
+                TilePropertiesChanged?.Invoke(_currentTile);
+            }
         }
 
         private void AddInteractive_Click(object sender, RoutedEventArgs e)
         {
-            // TODO: Create InteractiveMetadata editor
-            MessageBox.Show("Interactive editor coming soon!", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+            var dialog = new InteractiveEditorDialog();
+            if (dialog.ShowDialog() == true)
+            {
+                _currentTile.Metadata.Add(dialog.Interactive);
+                RefreshMetadataList();
+                TilePropertiesChanged?.Invoke(_currentTile);
+            }
         }
+
 
         private void AddTrigger_Click(object sender, RoutedEventArgs e)
         {
@@ -83,27 +94,54 @@ namespace DnDBattle.Views.TileMap
 
         private void AddSpawn_Click(object sender, RoutedEventArgs e)
         {
-            // TODO: Create SpawnMetadata
-            MessageBox.Show("Spawn point editor coming soon!", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+            var dialog = new SpawnEditorDialog();
+            if (dialog.ShowDialog() == true)
+            {
+                _currentTile.Metadata.Add(dialog.Spawn);
+                RefreshMetadataList();
+                TilePropertiesChanged?.Invoke(_currentTile);
+            }
         }
 
         private void EditMetadata_Click(object sender, RoutedEventArgs e)
         {
             if (sender is Button button && button.Tag is TileMetadata metadata)
             {
+                Window dialog = null;
+
                 if (metadata is TrapMetadata trap)
                 {
-                    var dialog = new TrapEditorDialog(trap);
-                    if (dialog.ShowDialog() == true)
-                    {
-                        RefreshMetadataList();
-                        TilePropertiesChanged?.Invoke(_currentTile);
-                    }
+                    dialog = new TrapEditorDialog(trap);
                 }
-                else
+                else if (metadata is SecretMetadata secret)
                 {
-                    MessageBox.Show($"Editor for {metadata.Type} not yet implemented.", "Info",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    dialog = new SecretEditorDialog(secret);
+                }
+                else if (metadata is InteractiveMetadata interactive)
+                {
+                    dialog = new InteractiveEditorDialog(interactive);
+                }
+                else if (metadata is SpawnMetadata spawn)
+                {
+                    dialog = new SpawnEditorDialog(spawn);
+                }
+                else if (metadata is HazardMetadata hazard)
+                {
+                    dialog = new HazardEditorDialog(hazard);
+                }
+                else if (metadata is TeleporterMetadata teleporter)
+                {
+                    dialog = new TeleporterEditorDialog(teleporter);
+                }
+                else if (metadata is HealingZoneMetadata healingZone)
+                {
+                    dialog = new HealingZoneEditorDialog(healingZone);
+                }
+
+                if (dialog != null && dialog.ShowDialog() == true)
+                {
+                    RefreshMetadataList();
+                    TilePropertiesChanged?.Invoke(_currentTile);
                 }
             }
         }

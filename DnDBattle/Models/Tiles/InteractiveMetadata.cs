@@ -20,7 +20,7 @@ namespace DnDBattle.Models.Tiles
 
         #region Interaction
 
-        public string ExamineDesctiption { get; set; } = "You see a level on the wall.";
+        public string ExamineDescription { get; set; } = "You see a level on the wall.";
 
         public string ActivationEffect { get; set; } = "You pull the lever. Your hear a distant rumbling.";
 

@@ -1,5 +1,4 @@
 ﻿using DnDBattle.Models.Tiles;
-using DnDBattle.Services.TileMap;
 using DnDBattle.Services.TileService;
 using Microsoft.Win32;
 using System;
