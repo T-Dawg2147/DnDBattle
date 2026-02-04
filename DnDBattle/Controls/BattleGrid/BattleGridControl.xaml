@@ -1,0 +1,50 @@
+﻿<UserControl x:Class="DnDBattle.Controls.BattleGrid.BattleGridControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{StaticResource Brush_Background_Dark}"
+             ClipToBounds="True"
+             Focusable="True">
+
+    <Grid>
+        <!-- Layer 1: Render Canvas (with transform) -->
+        <Canvas x:Name="RenderCanvas" 
+                Background="Transparent"
+                ClipToBounds="True"
+                MouseDown="RenderCanvas_MouseDown"
+                MouseMove="RenderCanvas_MouseMove"
+                MouseUp="RenderCanvas_MouseUp"
+                MouseWheel="RenderCanvas_MouseWheel"/>
+
+        <!-- Layer 2: Rulers (NO transform - fixed position) -->
+        <Canvas x:Name="RulerCanvas" 
+                IsHitTestVisible="False" 
+                ClipToBounds="False"
+                Background="Transparent"/>
+
+        <!-- Layer 3: Status Bar (Bottom-left corner) -->
+        <Border VerticalAlignment="Bottom"
+                HorizontalAlignment="Left"
+                Background="{StaticResource Brush_Background_Control}"
+                Padding="10,5"
+                Margin="10"
+                CornerRadius="4"
+                BorderBrush="{StaticResource Brush_Border_Normal}"
+                BorderThickness="1">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Cell: " 
+                           Foreground="{StaticResource Brush_Text_Secondary}"/>
+                <TextBlock x:Name="TxtCurrentCell" 
+                           Text="-" 
+                           FontWeight="SemiBold"
+                           Foreground="{StaticResource Brush_Text_Primary}"/>
+                <TextBlock Text=" | Zoom: " 
+                           Margin="15,0,0,0"
+                           Foreground="{StaticResource Brush_Text_Secondary}"/>
+                <TextBlock x:Name="TxtZoomLevel" 
+                           Text="100%" 
+                           FontWeight="SemiBold"
+                           Foreground="{StaticResource Brush_Text_Primary}"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

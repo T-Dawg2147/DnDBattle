@@ -23,7 +23,7 @@ using System.Windows.Media.Imaging;
 
 namespace DnDBattle.Controls
 {
-    public partial class BattleGridControl : UserControl
+    public partial class BattleGridControl_OLD : UserControl
     {
         public event Action<Token> TokenDoubleClicked;
         public event Action<Token> RequestDeleteToken;
@@ -35,26 +35,26 @@ namespace DnDBattle.Controls
 
         // Dependency properties (including LockToGrid)
         public static readonly DependencyProperty GridCellSizeProperty =
-            DependencyProperty.Register(nameof(GridCellSize), typeof(double), typeof(BattleGridControl), new PropertyMetadata(48.0, OnGridPropertyChanged));
+            DependencyProperty.Register(nameof(GridCellSize), typeof(double), typeof(BattleGridControl_OLD), new PropertyMetadata(48.0, OnGridPropertyChanged));
 
         public static readonly DependencyProperty TokensProperty =
-            DependencyProperty.Register(nameof(Tokens), typeof(System.Collections.ObjectModel.ObservableCollection<Token>), typeof(BattleGridControl), new PropertyMetadata(null, OnTokensChanged));
+            DependencyProperty.Register(nameof(Tokens), typeof(System.Collections.ObjectModel.ObservableCollection<Token>), typeof(BattleGridControl_OLD), new PropertyMetadata(null, OnTokensChanged));
 
         public static readonly DependencyProperty MapImageSourceProperty =
-            DependencyProperty.Register(nameof(MapImageSource), typeof(ImageSource), typeof(BattleGridControl), new PropertyMetadata(null, OnMapImageChanged));
+            DependencyProperty.Register(nameof(MapImageSource), typeof(ImageSource), typeof(BattleGridControl_OLD), new PropertyMetadata(null, OnMapImageChanged));
 
         public static readonly DependencyProperty SelectedTokenProperty =
-            DependencyProperty.Register(nameof(SelectedToken), typeof(Token), typeof(BattleGridControl), new PropertyMetadata(null, OnSelectedTokenChanged));
+            DependencyProperty.Register(nameof(SelectedToken), typeof(Token), typeof(BattleGridControl_OLD), new PropertyMetadata(null, OnSelectedTokenChanged));
 
         public static readonly DependencyProperty LockToGridProperty =
-            DependencyProperty.Register(nameof(LockToGrid), typeof(bool), typeof(BattleGridControl), new PropertyMetadata(Options.DefaultLockToGrid));
+            DependencyProperty.Register(nameof(LockToGrid), typeof(bool), typeof(BattleGridControl_OLD), new PropertyMetadata(Options.DefaultLockToGrid));
 
         public static readonly DependencyProperty ShowGridProperty =
-            DependencyProperty.Register(nameof(ShowGrid), typeof(bool), typeof(BattleGridControl),
+            DependencyProperty.Register(nameof(ShowGrid), typeof(bool), typeof(BattleGridControl_OLD),
                 new PropertyMetadata(true, OnGridVisualPropertyChanged));
 
         public static readonly DependencyProperty ShowCoordinatesProperty =
-            DependencyProperty.Register(nameof(ShowCoordinates), typeof(bool), typeof(BattleGridControl),
+            DependencyProperty.Register(nameof(ShowCoordinates), typeof(bool), typeof(BattleGridControl_OLD),
                 new PropertyMetadata(true, OnGridVisualPropertyChanged));
 
         public double GridCellSize { get => (double)GetValue(GridCellSizeProperty); set => SetValue(GridCellSizeProperty, value); }
@@ -173,7 +173,7 @@ namespace DnDBattle.Controls
         private Point? _fogShapeStartPoint;
         #endregion
 
-        public BattleGridControl()
+        public BattleGridControl_OLD()
         {
             InitializeComponent();
 
@@ -201,15 +201,15 @@ namespace DnDBattle.Controls
             // Wire up trap service events
             SetupMetadataServices(); // Was SetupTrapService()
 
-            Loaded += BattleGridControl_Loaded;
-            KeyDown += BattleGridControl_KeyDown;
+            Loaded += BattleGridControl_OLD_Loaded;
+            KeyDown += BattleGridControl_OLD_KeyDown;
 
             MouseDown += (s, e) => Focus();
         }
 
-        private void BattleGridControl_Loaded(object sender, RoutedEventArgs e)
+        private void BattleGridControl_OLD_Loaded(object sender, RoutedEventArgs e)
         {
-            System.Diagnostics.Debug.WriteLine("=== BattleGridControl_Loaded ===");
+            System.Diagnostics.Debug.WriteLine("=== BattleGridControl_OLD_Loaded ===");
             System.Diagnostics.Debug.WriteLine($"RenderCanvas: {(RenderCanvas == null ? "NULL" : "OK")}");
             System.Diagnostics.Debug.WriteLine($"Tokens: {(Tokens == null ? "NULL" : $"Count={Tokens.Count}")}");
             System.Diagnostics.Debug.WriteLine($"DataContext: {DataContext?.GetType().Name ?? "NULL"}");
@@ -229,7 +229,7 @@ namespace DnDBattle.Controls
             }
 
             Focusable = true;
-            KeyDown += BattleGridControl_KeyDown;
+            KeyDown += BattleGridControl_OLD_KeyDown;
             MouseDown += (s, e) => Focus();
             SizeChanged += (s, e) =>
             {
@@ -573,7 +573,7 @@ namespace DnDBattle.Controls
         #region Dependency callbacks
         private static void OnGridPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var ctrl = (BattleGridControl)d;
+            var ctrl = (BattleGridControl_OLD)d;
             ctrl.UpdateGridVisual();
             ctrl.LayoutTokens();
             ctrl.RedrawLighting();
@@ -584,13 +584,13 @@ namespace DnDBattle.Controls
 
         private static void OnGridVisualPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var ctrl = (BattleGridControl)d;
+            var ctrl = (BattleGridControl_OLD)d;
             ctrl.UpdateGridVisual();
         }
 
         private static void OnMapImageChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var ctrl = (BattleGridControl)d;
+            var ctrl = (BattleGridControl_OLD)d;
             ctrl.MapImage.Source = (ImageSource)e.NewValue;
             ctrl.MapImage.SetValue(Canvas.ZIndexProperty, -100);
             ctrl.UpdateGridVisual();
@@ -598,7 +598,7 @@ namespace DnDBattle.Controls
 
         private static void OnTokensChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var ctrl = (BattleGridControl)d;
+            var ctrl = (BattleGridControl_OLD)d;
             if (e.OldValue is INotifyCollectionChanged oldColl) oldColl.CollectionChanged -= ctrl.Tokens_CollectionChanged;
             if (e.NewValue is INotifyCollectionChanged newColl) newColl.CollectionChanged += ctrl.Tokens_CollectionChanged;
             ctrl.RebuildTokenVisuals();
@@ -606,7 +606,7 @@ namespace DnDBattle.Controls
 
         private static void OnSelectedTokenChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var ctrl = (BattleGridControl)d;
+            var ctrl = (BattleGridControl_OLD)d;
             ctrl.RedrawMovementOverlay();
             ctrl.ClearPathVisual();
         }
@@ -786,7 +786,7 @@ namespace DnDBattle.Controls
 
         private void Tokens_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e) => RebuildTokenVisuals();
 
-        private void BattleGridControl_KeyDown(object sender, KeyEventArgs e)
+        private void BattleGridControl_OLD_KeyDown(object sender, KeyEventArgs e)
         {
             // Calculate pan amount based on current zoom level
             double basePanAmount = GridCellSize * 2; // Pan by 2 grid cells
@@ -3120,7 +3120,7 @@ namespace DnDBattle.Controls
 
         public void ToggleFogOfWar(bool enabled)
         {
-            // TODO: Add fog rendering directly to BattleGridControl or use editor control
+            // TODO: Add fog rendering directly to BattleGridControl_OLD or use editor control
             AddToActionLog("Fog", enabled ? "🌫️ Fog of War enabled" : "☀️ Fog of War disabled");
         }
 

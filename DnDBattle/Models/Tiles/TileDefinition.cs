@@ -21,23 +21,38 @@ namespace DnDBattle.Models.Tiles
             set { _displayName = value; OnPropertyChanged(nameof(DisplayName)); }
         }
 
+        public string[] Tags { get; set; }
+
         public string Category { get; set; } = "General";
 
         public string Description { get; set; }
 
         public TileLayer Layer { get; set; } = TileLayer.Floor;
 
+
+        public bool IsWall { get; set; }
         public bool BlocksMovement { get; set; } = false;
 
         public bool BlocksSight { get; set; } = false;
 
         public bool BlocksLight { get; set; } = false;
 
+
         public Color? TintColor { get; set; } = null;
 
         public int ZIndex { get; set; } = 0;
 
         public bool IsEnabled { get; set; } = true;
+
+        public TileDefinition()
+        {
+            Id = Guid.NewGuid().ToString();
+            Tags = Array.Empty<string>();
+            IsWall = false;
+            BlocksMovement = false;
+            BlocksSight = false;
+            BlocksLight = false;
+        }
 
         public override string ToString() => DisplayName ?? ImagePath ?? "Unamed Tile";
     }

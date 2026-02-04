@@ -337,7 +337,7 @@ namespace DnDBattle.Views
 
             if (mw != null)
             {
-                var battleGrid = mw.FindName("BattleGrid") as Controls.BattleGridControl;
+                var battleGrid = mw.FindName("BattleGrid") as Controls.BattleGrid.BattleGridControl;
                 if (battleGrid != null)
                 {
                     var centerScreen = new Point(battleGrid.ActualWidth / 2.0, battleGrid.ActualHeight / 2.0);

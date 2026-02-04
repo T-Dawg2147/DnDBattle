@@ -11,7 +11,7 @@ namespace DnDBattle.Models.Tiles
     /// </summary>
     public class TileMapDto
     {
-        public Guid Id { get; set; }
+        public string Id { get; set; }
         public string Name { get; set; }
         public int Width { get; set; }
         public int Height { get; set; }
@@ -21,9 +21,6 @@ namespace DnDBattle.Models.Tiles
         public DateTime CreatedDate { get; set; }
         public DateTime ModifiedDate { get; set; }
 
-        /// <summary>
-        /// Serialized tile placements
-        /// </summary>
         public List<TileDto> Tiles { get; set; } = new List<TileDto>();
     }
 
@@ -32,7 +29,7 @@ namespace DnDBattle.Models.Tiles
     /// </summary>
     public class TileDto
     {
-        public Guid InstanceId { get; set; }
+        public string InstanceId { get; set; }
         public string TileDefinitionId { get; set; }
         public int GridX { get; set; }
         public int GridY { get; set; }
@@ -42,8 +39,7 @@ namespace DnDBattle.Models.Tiles
         public int? ZIndex { get; set; }
         public string Notes { get; set; }
 
-        // ===== METADATA SERIALIZATION =====
-        public List<TileMetadataDto> Metadata { get; set; } = new List<TileMetadataDto>();
+        public List<MetadataDto> Metadata { get; set; } = new List<MetadataDto>();
     }
 
     /// <summary>

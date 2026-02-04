@@ -33,6 +33,8 @@ namespace DnDBattle
             var vm = new MainViewModel();
             DataContext = vm;
 
+            InitializeServices();
+
             Services.OptionsService.LoadOptions();
             UndoManager.Limit = Options.UndoStackLimit;
             UndoManager.StateChanged += UndoManager_StateChanged;
@@ -64,6 +66,10 @@ namespace DnDBattle
                 }
             };
 
+            InitializeBattleGrid();
+
+            
+
             // Setup panels
             SetupInitiativeTracker();
 
@@ -93,9 +99,20 @@ namespace DnDBattle
             }
         }
 
+        private void InitializeBattleGrid()
+        {
+            BattleGrid.TokenDoubleClicked += OnTokenDoubleClicked;
+            BattleGrid.TokenSelected += OnTokenSelected;
+            BattleGrid.LogMessage += OnBattleGridLogMessage;
+        }
+
         #region Startup events
         private void InitializeServices()
         {
+            var tileLibrary = Services.TileService.TileLibraryService.Instance;
+            tileLibrary.LoadTileLibrary();
+            Debug.WriteLine($"[MainWindow] Tile library loaded: {tileLibrary.AvailableTiles.Count}");
+
             _combatStatsService = new CombatStatisticsService();
             _turnTimerService = new TurnTimerService();
             _soundService = new SoundEffectsService();
@@ -127,7 +144,7 @@ namespace DnDBattle
 
             AoeToolbar.PresetSelected += (preset) =>
             {
-                BattleGrid.StartAreaEffectPlacement(preset);
+                BattleGrid.StartAreaEffectPlacement(preset.Shape, preset.SizeInFeet, preset.Color);
             };
 
             AoeToolbar.CancelRequested += () =>
@@ -137,7 +154,8 @@ namespace DnDBattle
 
             AoeToolbar.ClearAllRequested += () =>
             {
-                BattleGrid.AreaEffectService.ClearAllEffects();
+                // TODO
+                // BattleGrid.AreaEffectService.ClearAllEffects();
             };
         }
 
@@ -336,12 +354,14 @@ namespace DnDBattle
 
             FogToolbar.RevealAllRequested += () =>
             {
-                BattleGrid.FogService.RevealAll();
+                // TODO
+                //BattleGrid.FogService.RevealAll();
             };
 
             FogToolbar.HideAllRequested += () =>
             {
-                BattleGrid.FogService.ClearAll();
+                // TODO
+                //BattleGrid.FogService.ClearAll();
             };
 
             FogToolbar.ShapeToolSelected += (tool) =>
@@ -359,6 +379,29 @@ namespace DnDBattle
                 WindowStartupLocation = WindowStartupLocation.CenterOwner
             };
             detailsWindow.Show();
+        }
+
+        private void OnTokenSelected(Token token)
+        {
+            // Update selected token in view model
+            if (DataContext is MainViewModel vm)
+            {
+                vm.SelectedToken = token;
+            }
+        }
+
+        private void OnBattleGridLogMessage(string category, string message)
+        {
+            // Add to action log
+            if (DataContext is MainViewModel vm)
+            {
+                vm.ActionLog.Insert(0, new Models.ActionLogEntry
+                {
+                    Source = category,
+                    Message = message,
+                    Timestamp = DateTime.Now
+                });
+            }
         }
 
         private void UndoManager_StateChanged(object sender, EventArgs e)
@@ -740,7 +783,7 @@ namespace DnDBattle
             var dto = BattleGrid.GetEncounterDto();
             try
             {
-                EncounterService.SaveEncounterToFile(dto, dlg.FileName);
+                // EncounterService.SaveEncounterToFile(dto, dlg.FileName);
                 System.Windows.MessageBox.Show("Saved encounter.", "Save", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
@@ -884,7 +927,8 @@ namespace DnDBattle
 
             if (result == MessageBoxResult.Yes)
             {
-                BattleGrid.WallService.Clear();
+                // TODO
+                //BattleGrid.WallService.Clear();
             }
         }
 
@@ -941,45 +985,43 @@ namespace DnDBattle
             {
                 try
                 {
-                    // Show loading indicator
-                    /*BusyIndicator.Visibility = Visibility.Visible; // Add this to your XAML
-                    BusyIndicator.BusyContent = "Loading tile map...";*/
+                    // Show loading message
+                    Mouse.OverrideCursor = Cursors.Wait;
 
-                    // Load on background thread
                     var mapService = new Services.TileService.TileMapService();
+
+                    System.Diagnostics.Debug.WriteLine($"[MainWindow] Loading tile map from: {dialog.FileName}");
+
                     var tileMap = await mapService.LoadMapAsync(dialog.FileName);
 
                     if (tileMap != null)
                     {
-                        // Back on UI thread - now load into grid
-                        BattleGrid.LoadTileMap(tileMap);
+                        System.Diagnostics.Debug.WriteLine($"[MainWindow] Tile map loaded, passing to BattleGrid...");
+
+                        await BattleGrid.LoadTileMapAsync(tileMap);
 
                         MessageBox.Show(
-                            $"Loaded tile map: {tileMap.Name}\nSize: {tileMap.Width}×{tileMap.Height}\nTiles: {tileMap.PlacedTiles.Count}",
+                            $"✅ Loaded tile map successfully!\n\n" +
+                            $"Name: {tileMap.Name}\n" +
+                            $"Size: {tileMap.Width}×{tileMap.Height}\n" +
+                            $"Tiles: {tileMap.PlacedTiles?.Count ?? 0}",
                             "Tile Map Loaded",
                             MessageBoxButton.OK,
                             MessageBoxImage.Information);
                     }
-                    else
-                    {
-                        MessageBox.Show(
-                            "Failed to load tile map.",
-                            "Load Error",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Error);
-                    }
                 }
                 catch (Exception ex)
                 {
+                    System.Diagnostics.Debug.WriteLine($"[MainWindow] Error: {ex.Message}");
                     MessageBox.Show(
-                        $"Error loading tile map:\n\n{ex.Message}",
+                        $"❌ Error loading tile map:\n\n{ex.Message}",
                         "Load Error",
                         MessageBoxButton.OK,
                         MessageBoxImage.Error);
                 }
                 finally
                 {
-                    //BusyIndicator.Visibility = Visibility.Collapsed;
+                    Mouse.OverrideCursor = null;
                 }
             }
         }

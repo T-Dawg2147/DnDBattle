@@ -1,4 +1,4 @@
-﻿using DnDBattle.Controls;
+﻿using DnDBattle.Controls.BattleGrid;
 using DnDBattle.Models;
 using System.Windows;
 using System.Windows.Controls;

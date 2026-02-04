@@ -35,13 +35,15 @@ namespace DnDBattle.Services.TileService
 
             if (!Directory.Exists(_tileDirectory))
             {
-                // Addition: Maybe add some way for the user to manually set the folder?
                 Debug.WriteLine($"[TileLibrary] Tiles directory not found: {_tileDirectory}");
                 return;
             }
 
-            // Addition: Maybe more file formats?
-            var imageFiles = Directory.GetFiles(_tileDirectory, "*.png", SearchOption.AllDirectories);
+            // Load all image files
+            var imageFiles = Directory.GetFiles(_tileDirectory, "*.png", SearchOption.AllDirectories)
+                .Concat(Directory.GetFiles(_tileDirectory, "*.jpg", SearchOption.AllDirectories))
+                .Concat(Directory.GetFiles(_tileDirectory, "*.jpeg", SearchOption.AllDirectories))
+                .ToArray();
 
             Debug.WriteLine($"[TileLibrary] Found {imageFiles.Length} tile images");
 
@@ -53,9 +55,10 @@ namespace DnDBattle.Services.TileService
                     var fileName = Path.GetFileNameWithoutExtension(filePath);
                     var category = GetCategoryFromPath(filePath);
 
+                    // CREATE DETERMINISTIC ID from relative path
                     var tileDef = new TileDefinition()
                     {
-                        Id = Guid.NewGuid().ToString(),
+                        Id = GenerateDeterministicId(relativePath), // ← CONSISTENT ID!
                         ImagePath = relativePath,
                         DisplayName = FormatDisplayName(fileName),
                         Category = category,
@@ -64,6 +67,9 @@ namespace DnDBattle.Services.TileService
 
                     AvailableTiles.Add(tileDef);
 
+                    Debug.WriteLine($"[TileLibrary] Loaded: {tileDef.Id} → {relativePath}");
+
+                    // Pre-load image into cache
                     TileImageCacheService.Instance.GetOrLoadImage(relativePath);
                 }
                 catch (Exception ex)
@@ -71,12 +77,36 @@ namespace DnDBattle.Services.TileService
                     Debug.WriteLine($"[TileLibrary] Error loading tile {filePath}: {ex.Message}");
                 }
             }
-            Debug.WriteLine($"[TileLibrary] Loaded {AvailableTiles.Count} tiles int library");
+
+            Debug.WriteLine($"[TileLibrary] Loaded {AvailableTiles.Count} tiles into library");
         }
 
         public void RefreshLibrary()
         {
             LoadTileLibrary();
+        }
+
+        #region Helpers
+
+        /// <summary>
+        /// Generates a deterministic GUID from a string (file path)
+        /// Same input always produces the same output
+        /// </summary>
+        private string GenerateDeterministicId(string input)
+        {
+            using (var md5 = System.Security.Cryptography.MD5.Create())
+            {
+                // Normalize path separators
+                var normalized = input.Replace("\\", "/").ToLowerInvariant();
+
+                // Generate hash
+                byte[] inputBytes = System.Text.Encoding.UTF8.GetBytes(normalized);
+                byte[] hashBytes = md5.ComputeHash(inputBytes);
+
+                // Convert to GUID format
+                var guid = new Guid(hashBytes);
+                return guid.ToString();
+            }
         }
 
         public Dictionary<string, List<TileDefinition>> GetTilesByCategory()
@@ -125,5 +155,7 @@ namespace DnDBattle.Services.TileService
                 .Replace("-", " ")
                 .Trim();
         }
+
+        #endregion
     }
 }

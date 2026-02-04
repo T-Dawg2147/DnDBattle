@@ -1,4 +1,4 @@
-﻿using DnDBattle.Controls;
+﻿using DnDBattle.Controls.BattleGrid;
 using DnDBattle.Services;
 using DnDBattle.ViewModels;
 using System;
@@ -117,7 +117,10 @@ namespace DnDBattle.Models
             _light = light; _grid = grid;
         }
         public void Do() => _grid.AddLight(_light);
-        public void Undo() => _grid.RemoveLightPublic(_light);
+        public void Undo()  
+        {
+            // _grid.RemoveLightPublic(_light);
+        }
     }
 
     public class LigthRemoveAction : IUndoabaleAction
@@ -130,7 +133,10 @@ namespace DnDBattle.Models
         {
             _light = light; _grid = grid;
         }
-        public void Do() => _grid.RemoveLightPublic(_light);
+        public void Do()
+        {
+            //_grid.RemoveLightPublic(_light);
+        }
         public void Undo() => _grid.AddLight(_light);
     }
 

@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:DnDBattle"
         xmlns:controls="clr-namespace:DnDBattle.Controls"
+        xmlns:battlegrid="clr-namespace:DnDBattle.Controls.BattleGrid"
         xmlns:views="clr-namespace:DnDBattle.Views"
         Title="DnD Battle Builder" 
         Height="950" Width="1720"
@@ -219,15 +220,9 @@
                         Click="ToggleMeasure_Click"
                         Style="{StaticResource ModernButton}" Width="36" Margin="0,0,4,0"/>
 
-                    <CheckBox Content="Grid" 
-                        IsChecked="{Binding ElementName=BattleGrid, Path=ShowGrid}" 
-                        Foreground="White" VerticalAlignment="Center" Margin="0,0,8,0"
-                        ToolTip="Show/Hide Grid Lines"/>
+                    <!--<CheckBox Content="Grid"  IsChecked="{Binding ElementName=BattleGrid, Path=ShowGrid}" Foreground="White" VerticalAlignment="Center" Margin="0,0,8,0" ToolTip="Show/Hide Grid Lines"/>
 
-                    <CheckBox Content="Coords" 
-                      IsChecked="{Binding ElementName=BattleGrid, Path=ShowCoordinates}" 
-                      Foreground="White" VerticalAlignment="Center" Margin="0,0,8,0"
-                      ToolTip="Show/Hide Coordinate Labels"/>
+                    <CheckBox Content="Coords" IsChecked="{Binding ElementName=BattleGrid, Path=ShowCoordinates}" Foreground="White" VerticalAlignment="Center" Margin="0,0,8,0" ToolTip="Show/Hide Coordinate Labels"/> -->
 
                     <Rectangle Width="1" Fill="#444" Margin="8,2"/>
                 </StackPanel>
@@ -361,14 +356,12 @@
                     
 
                     <!-- Battle Grid - NOTE: Grid.Row="1" is required! -->
-                    <controls:BattleGridControl x:Name="BattleGrid"
-                                    Grid.Row="1"
-                                    HorizontalAlignment="Stretch"
-                                    VerticalAlignment="Stretch"
-                                    GridCellSize="{Binding GridCellSize}"
-                                    Tokens="{Binding Tokens}"
-                                    MapImageSource="{Binding MapImageSource}"
-                                    SelectedToken="{Binding SelectedToken, Mode=TwoWay}"/>
+                    <battlegrid:BattleGridControl x:Name="BattleGrid"
+                                                Grid.Row="1"
+                                                GridCellSize="48"
+                                                LockToGrid="True"
+                                                Tokens="{Binding Tokens}"
+                                                SelectedToken="{Binding SelectedToken, Mode=TwoWay}"/>
                 </Grid>
             </Border>
 

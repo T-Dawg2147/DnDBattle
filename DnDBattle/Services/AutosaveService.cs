@@ -1,4 +1,4 @@
-﻿using DnDBattle.Controls;
+﻿using DnDBattle.Controls.BattleGrid;
 using DnDBattle.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -17,7 +17,7 @@ namespace DnDBattle.Services
         private static readonly string EncounterFolder = Path.Combine(AppFolder, "encounters");
         private static readonly string AutoFile = Path.Combine(EncounterFolder, "autosave.json");
 
-        public static void SaveEncounter(MainViewModel vm, Controls.BattleGridControl grid)
+        public static void SaveEncounter(MainViewModel vm, Controls.BattleGrid.BattleGridControl grid)
         {
             try
             {
