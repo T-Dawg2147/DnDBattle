@@ -1,4 +1,5 @@
 ﻿using DnDBattle.Models;
+using DnDBattle.Services;
 using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -251,8 +252,14 @@ namespace DnDBattle.Controls.BattleGrid.Managers
                     Background = Brushes.Transparent
                 };
 
-                // USE BACKUP IMAGE if no image provided
-                ImageSource imageSource = token.Image ?? CreateBackupTokenImage(token, size);
+                // USE CreatureImageService to generate placeholder!
+                ImageSource imageSource = token.Image ??
+                    CreatureImageService.GeneratePlaceholderToken(
+                        token.Name,
+                        token.Type ?? "Unknown",
+                        token.Size ?? "Medium",
+                        token.ChallengeRating?.ToString() ?? "0"
+                    );
 
                 var image = new Image
                 {

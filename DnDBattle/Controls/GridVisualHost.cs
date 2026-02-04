@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Media;
 
@@ -217,6 +218,75 @@ namespace DnDBattle.Controls
         }
 
         /// <summary>
+        /// Draws a tile map
+        /// </summary>
+        public void DrawTileMap(DnDBattle.Models.Tiles.TileMap tileMap, double cellSize)
+        {
+            using (var dc = _visual.RenderOpen())
+            {
+                if (tileMap == null) return;
+
+                // Draw background
+                var bgColor = (Color)ColorConverter.ConvertFromString(tileMap.BackgroundColor ?? "#FF1A1A1A");
+                var bgBrush = new SolidColorBrush(bgColor);
+                bgBrush.Freeze();
+
+                double mapWidth = tileMap.Width * cellSize;
+                double mapHeight = tileMap.Height * cellSize;
+                dc.DrawRectangle(bgBrush, null, new Rect(0, 0, mapWidth, mapHeight));
+
+                // Draw tiles
+                if (tileMap.PlacedTiles != null)
+                {
+                    int drawnCount = 0;
+                    foreach (var tile in tileMap.PlacedTiles.OrderBy(t => t.ZIndex ?? 0))
+                    {
+                        if (DrawTile(dc, tile, cellSize))
+                            drawnCount++;
+                    }
+                    Debug.WriteLine($"[GridVisualHost] Drew {drawnCount}/{tileMap.PlacedTiles.Count} tiles");
+                }
+            }
+        }
+
+        private bool DrawTile(DrawingContext dc, DnDBattle.Models.Tiles.Tile tile, double cellSize)
+        {
+            try
+            {
+                var tileDef = Services.TileService.TileLibraryService.Instance.GetTileById(tile.TileDefinitionId);
+                if (tileDef == null)
+                {
+                    Debug.WriteLine($"[GridVisualHost] Tile definition not found: {tile.TileDefinitionId}");
+                    return false;
+                }
+
+                var image = Services.TileService.TileImageCacheService.Instance.GetOrLoadImage(tileDef.ImagePath);
+                if (image == null)
+                {
+                    Debug.WriteLine($"[GridVisualHost] Image not loaded: {tileDef.ImagePath}");
+                    return false;
+                }
+
+                double x = tile.GridX * cellSize;
+                double y = tile.GridY * cellSize;
+
+                // Simple rendering (add transformations if needed)
+                dc.DrawImage(image, new Rect(x, y, cellSize, cellSize));
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[GridVisualHost] Error drawing tile: {ex.Message}");
+                return false;
+            }
+        }
+
+        #endregion
+
+        #region Helpers
+
+        /// <summary>
         /// Converts a column index to a letter label (0=A, 1=B, ..., 25=Z, 26=AA, etc.)
         /// </summary>
         private string GetColumnLabel(int columnIndex)
@@ -244,6 +314,15 @@ namespace DnDBattle.Controls
             }
             return $"{col}{gridY + 1}";
         }
+
+        public void Clear()
+        {
+            using (var dc = _visual.RenderOpen())
+            {
+                // Opening and immediately closing clears the visual
+            }
+        }
+
         #endregion
     }
 }
