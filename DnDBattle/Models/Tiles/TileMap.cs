@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Windows.Media;
 
 namespace DnDBattle.Models.Tiles
 {
@@ -45,6 +47,26 @@ namespace DnDBattle.Models.Tiles
             set { _cellSize = value; OnPropertyChanged(nameof(CellSize)); }
         }
 
+        private bool _showGrid = true;
+        /// <summary>
+        /// Whether to display the grid overlay
+        /// </summary>
+        public bool ShowGrid
+        {
+            get => _showGrid;
+            set { _showGrid = value; OnPropertyChanged(nameof(ShowGrid)); }
+        }
+
+        private Color _backgroundColor = Colors.DarkSlateGray;
+        /// <summary>
+        /// Background color of the map
+        /// </summary>
+        public Color BackgroundColor
+        {
+            get => _backgroundColor;
+            set { _backgroundColor = value; OnPropertyChanged(nameof(BackgroundColor)); }
+        }
+
         // All tile definitions available in this map
         public List<TileDefinition> TileDefinitions { get; set; } = new List<TileDefinition>();
 
@@ -56,6 +78,81 @@ namespace DnDBattle.Models.Tiles
         public DateTime ModifiedDate { get; set; } = DateTime.Now;
         public string Description { get; set; }
         public List<string> Tags { get; set; } = new List<string>();
+
+        #region Helper Methods - Tile Management
+
+        /// <summary>
+        /// Adds a tile to the map
+        /// </summary>
+        public void AddTile(PlacedTile tile)
+        {
+            if (tile != null && !PlacedTiles.Contains(tile))
+            {
+                PlacedTiles.Add(tile);
+                ModifiedDate = DateTime.UtcNow;
+            }
+        }
+
+        /// <summary>
+        /// Adds a tile to the map (overload for Tile type compatibility)
+        /// </summary>
+        public void AddTile(Tile tile)
+        {
+            if (tile != null)
+            {
+                var placedTile = ConvertToPlacedTile(tile);
+                AddTile(placedTile);
+            }
+        }
+
+        /// <summary>
+        /// Removes a tile from the map
+        /// </summary>
+        public void RemoveTile(PlacedTile tile)
+        {
+            if (tile != null)
+            {
+                PlacedTiles.Remove(tile);
+                ModifiedDate = DateTime.UtcNow;
+            }
+        }
+
+        /// <summary>
+        /// Removes a tile from the map (overload for Tile type compatibility)
+        /// </summary>
+        public void RemoveTile(Tile tile)
+        {
+            if (tile != null)
+            {
+                var toRemove = PlacedTiles.FirstOrDefault(t => t.Id == tile.InstanceId);
+                if (toRemove != null)
+                {
+                    RemoveTile(toRemove);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Converts a Tile to a PlacedTile
+        /// </summary>
+        private PlacedTile ConvertToPlacedTile(Tile tile)
+        {
+            return new PlacedTile
+            {
+                Id = tile.InstanceId,
+                TileDefinitionId = Guid.TryParse(tile.TileDefinitionId, out var guid) ? guid : Guid.Empty,
+                GridX = tile.GridX,
+                GridY = tile.GridY,
+                Rotation = tile.Rotation,
+                FlipHorizontal = tile.FlipHorizontal,
+                FlipVertical = tile.FlipVertical,
+                ZIndex = tile.ZIndex,
+                Notes = tile.Notes,
+                Metadata = tile.Metadata
+            };
+        }
+
+        #endregion
 
         #region Helper Methods - General
 

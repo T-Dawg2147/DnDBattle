@@ -2205,7 +2205,7 @@ namespace DnDBattle.Controls
                 if (_loadedTileMap.PlacedTiles == null)
                 {
                     System.Diagnostics.Debug.WriteLine("[BattleGrid] PlacedTiles is null!");
-                    _loadedTileMap.PlacedTiles = new System.Collections.ObjectModel.ObservableCollection<Models.Tiles.Tile>();
+                    _loadedTileMap.PlacedTiles = new List<PlacedTile>();
                     return;
                 }
 
@@ -2216,7 +2216,7 @@ namespace DnDBattle.Controls
                     System.Diagnostics.Debug.WriteLine($"[BattleGrid] Drawing context opened");
 
                     // Draw background color
-                    var bgColor = (Color)ColorConverter.ConvertFromString(_loadedTileMap.BackgroundColor ?? "#FF1A1A1A");
+                    var bgColor = _loadedTileMap.BackgroundColor;
                     var bgBrush = new SolidColorBrush(bgColor);
                     bgBrush.Freeze();
 
@@ -2266,11 +2266,11 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Draw a single tile to the drawing context
         /// </summary>
-        private void DrawTileToVisual(DrawingContext dc, Tile tile)
+        private void DrawTileToVisual(DrawingContext dc, PlacedTile tile)
         {
             try
             {
-                var tileDef = TileLibraryService.Instance.GetTileById(tile.TileDefinitionId);
+                var tileDef = TileLibraryService.Instance.GetTileById(tile.TileDefinitionId.ToString());
                 if (tileDef == null)
                 {
                     System.Diagnostics.Debug.WriteLine($"[BattleGrid] Tile definition not found: {tile.TileDefinitionId}");
@@ -2330,7 +2330,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Get the tile at a specific grid position
         /// </summary>
-        public Tile GetTileAt(int gridX, int gridY)
+        public PlacedTile GetTileAt(int gridX, int gridY)
         {
             if (_loadedTileMap == null) return null;
             return _loadedTileMap.GetTilesAt(gridX, gridY).OrderByDescending(t => t.ZIndex ?? 0).FirstOrDefault();

@@ -38,7 +38,7 @@ namespace DnDBattle.Views.TileMap
             _propertiesPanel.TilePropertiesChanged += OnTilePropertiesChanged;
         }
 
-        private void OnTileRightClicked(Tile tile)
+        private void OnTileRightClicked(PlacedTile tile)
         {
             // Show properties panel in a popup or side panel
             var window = new Window
@@ -62,7 +62,7 @@ namespace DnDBattle.Views.TileMap
             window.ShowDialog();
         }
 
-        private void OnTilePropertiesChanged(Tile tile)
+        private void OnTilePropertiesChanged(PlacedTile tile)
         {
             // Refresh the map view
             EditorControl.TileMap = _currentMap;

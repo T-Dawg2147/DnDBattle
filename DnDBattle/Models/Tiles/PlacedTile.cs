@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 
 namespace DnDBattle.Models.Tiles
 {
@@ -61,6 +64,65 @@ namespace DnDBattle.Models.Tiles
                 OnPropertyChanged(nameof(TileDefinition));
                 OnPropertyChanged(nameof(Layer));
             }
+        }
+
+        #endregion
+
+        #region Transform Properties
+
+        /// <summary>
+        /// Rotation in degrees (0, 90, 180, 270)
+        /// </summary>
+        public int Rotation { get; set; } = 0;
+
+        /// <summary>
+        /// Whether the tile is flipped horizontally
+        /// </summary>
+        public bool FlipHorizontal { get; set; } = false;
+
+        /// <summary>
+        /// Whether the tile is flipped vertically
+        /// </summary>
+        public bool FlipVertical { get; set; } = false;
+
+        /// <summary>
+        /// Z-Index for rendering order (null = use layer default)
+        /// </summary>
+        public int? ZIndex { get; set; } = null;
+
+        /// <summary>
+        /// Optional notes for this tile instance
+        /// </summary>
+        public string Notes { get; set; }
+
+        #endregion
+
+        #region Metadata
+
+        /// <summary>
+        /// Collection of metadata (traps, secrets, etc.) attached to this tile
+        /// </summary>
+        public ObservableCollection<TileMetadata> Metadata { get; set; } = new ObservableCollection<TileMetadata>();
+
+        /// <summary>
+        /// Whether this tile has any metadata attached
+        /// </summary>
+        public bool HasMetadata => Metadata != null && Metadata.Count > 0;
+
+        /// <summary>
+        /// Checks if this tile has metadata of the specified type
+        /// </summary>
+        public bool HasMetadataType(TileMetadataType type)
+        {
+            return Metadata?.Any(m => m.Type == type) ?? false;
+        }
+
+        /// <summary>
+        /// Gets all metadata of the specified type
+        /// </summary>
+        public List<TileMetadata> GetMetadata(TileMetadataType type)
+        {
+            return Metadata?.Where(m => m.Type == type).ToList() ?? new List<TileMetadata>();
         }
 
         #endregion
@@ -158,6 +220,17 @@ namespace DnDBattle.Models.Tiles
         public bool IsInteractive =>
             TileDefinition?.IsInteractive == true ||
             TileDefinition?.IsDoor == true;
+
+        /// <summary>
+        /// Gets the effective Z-index for rendering
+        /// </summary>
+        public int GetEffectiveZIndex(TileDefinition tileDef)
+        {
+            if (ZIndex.HasValue)
+                return ZIndex.Value;
+
+            return tileDef?.Layer.GetDefaultZIndex() ?? 0;
+        }
 
         #endregion
     }

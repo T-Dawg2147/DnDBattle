@@ -58,7 +58,7 @@ namespace DnDBattle.ViewModels
         private TileDefinition _selectedTileDefinition;
 
         [ObservableProperty]
-        private Tile _selectedTile;
+        private PlacedTile _selectedTile;
 
         [ObservableProperty]
         private TileLayer _activeLayer = TileLayer.Floor;
@@ -151,12 +151,12 @@ namespace DnDBattle.ViewModels
         /// <summary>
         /// Raised when a tile is placed
         /// </summary>
-        public event Action<Tile> TilePlaced;
+        public event Action<PlacedTile> TilePlaced;
 
         /// <summary>
         /// Raised when a tile is removed
         /// </summary>
-        public event Action<Tile> TileRemoved;
+        public event Action<PlacedTile> TileRemoved;
 
         #endregion
 
@@ -283,10 +283,10 @@ namespace DnDBattle.ViewModels
                 return;
 
             // Create new tile instance
-            var newTile = new Tile
+            var newTile = new PlacedTile
             {
-                InstanceId = Guid.NewGuid(),
-                TileDefinitionId = SelectedTileDefinition.Id,
+                Id = Guid.NewGuid(),
+                TileDefinitionId = Guid.Parse(SelectedTileDefinition.Id),
                 GridX = gridX,
                 GridY = gridY,
                 Rotation = CurrentRotation,
@@ -669,17 +669,18 @@ namespace DnDBattle.ViewModels
         /// <summary>
         /// Gets tiles at a specific grid position
         /// </summary>
-        public IEnumerable<Tile> GetTilesAt(int gridX, int gridY)
+        public IEnumerable<PlacedTile> GetTilesAt(int gridX, int gridY)
         {
-            return CurrentMap?.GetTilesAt(gridX, gridY) ?? Enumerable.Empty<Tile>();
+            return CurrentMap?.GetTilesAt(gridX, gridY) ?? Enumerable.Empty<PlacedTile>();
         }
 
         /// <summary>
         /// Gets the tile definition for a placed tile
         /// </summary>
-        public TileDefinition GetTileDefinition(Tile tile)
+        public TileDefinition GetTileDefinition(PlacedTile tile)
         {
-            return _libraryService.GetTileById(tile?.TileDefinitionId);
+            if (tile == null) return null;
+            return _libraryService.GetTileById(tile.TileDefinitionId);
         }
 
         /// <summary>

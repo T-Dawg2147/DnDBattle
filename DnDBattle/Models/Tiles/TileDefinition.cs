@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Windows.Media;
 
@@ -20,120 +20,74 @@ namespace DnDBattle.Models.Tiles
 
         #region Properties - Identity
 
+        /// <summary>
+        /// Unique identifier for this tile definition
+        /// </summary>
         public string Id { get; set; } = Guid.NewGuid().ToString();
 
         private string _name;
+        /// <summary>
+        /// Internal name of the tile
+        /// </summary>
         public string Name
         {
             get => _name;
             set { _name = value; OnPropertyChanged(nameof(Name)); }
         }
 
+        private string _displayName;
+        /// <summary>
+        /// Display name shown in the UI
+        /// </summary>
+        public string DisplayName
+        {
+            get => _displayName ?? _name;
+            set { _displayName = value; OnPropertyChanged(nameof(DisplayName)); }
+        }
+
+        private string _description;
+        /// <summary>
+        /// Description of the tile
+        /// </summary>
+        public string Description
+        {
+            get => _description;
+            set { _description = value; OnPropertyChanged(nameof(Description)); }
+        }
+
         private string _imagePath;
+        /// <summary>
+        /// Path to the tile image
+        /// </summary>
         public string ImagePath
         {
             get => _imagePath;
             set { _imagePath = value; OnPropertyChanged(nameof(ImagePath)); }
         }
 
-        // NEW: Layer determines rendering order and behavior ✨
+        /// <summary>
+        /// Tags for categorization and filtering
+        /// </summary>
+        public string[] Tags { get; set; } = Array.Empty<string>();
+
         private TileLayer _layer = TileLayer.Terrain;
+        /// <summary>
+        /// Layer determines rendering order and behavior
+        /// </summary>
         public TileLayer Layer
         {
             get => _layer;
             set { _layer = value; OnPropertyChanged(nameof(Layer)); }
         }
 
-        private TileCategory _category = TileCategory.Floor;
-        public TileCategory Category
+        private string _category = "General";
+        /// <summary>
+        /// Category for grouping tiles in the palette
+        /// </summary>
+        public string Category
         {
             get => _category;
             set { _category = value; OnPropertyChanged(nameof(Category)); }
-        }
-
-        #region Collision & Vision Properties
-
-        private bool _blocksMovement = false;
-        public bool BlocksMovement
-        {
-            get => _blocksMovement;
-            set { _blocksMovement = value; OnPropertyChanged(nameof(BlocksMovement)); }
-        }
-
-        private bool _blocksVision = false;
-        public bool BlocksVision
-        {
-            get => _blocksVision;
-            set { _blocksVision = value; OnPropertyChanged(nameof(BlocksVision)); }
-        }
-
-        #endregion
-
-        #region Door Properties (for Walls layer)
-
-        private bool _isDoor = false;
-        public bool IsDoor
-        {
-            get => _isDoor;
-            set { _isDoor = value; OnPropertyChanged(nameof(IsDoor)); }
-        }
-
-        private string _openImagePath;
-        /// <summary>
-        /// Alternative image when door is open (optional)
-        /// </summary>
-        public string OpenImagePath
-        {
-            get => _openImagePath;
-            set { _openImagePath = value; OnPropertyChanged(nameof(OpenImagePath)); }
-        }
-
-        #endregion
-
-        #region Interactive Properties (for Interactables layer)
-
-        private bool _isInteractive = false;
-        /// <summary>
-        /// Can be clicked/activated during gameplay
-        /// </summary>
-        public bool IsInteractive
-        {
-            get => _isInteractive;
-            set { _isInteractive = value; OnPropertyChanged(nameof(IsInteractive)); }
-        }
-
-        private string _interactionType;
-        /// <summary>
-        /// Type of interaction: "OpenClose", "Loot", "Lever", "Button", etc.
-        /// </summary>
-        public string InteractionType
-        {
-            get => _interactionType;
-            set { _interactionType = value; OnPropertyChanged(nameof(InteractionType)); }
-        }
-
-        private string _interactionData;
-        /// <summary>
-        /// JSON or string data for interaction (e.g., loot table ID, target door ID)
-        /// </summary>
-        public string InteractionData
-        {
-            get => _interactionData;
-            set { _interactionData = value; OnPropertyChanged(nameof(InteractionData)); }
-        }
-
-        #endregion
-
-        #region Furniture Properties
-
-        private bool _provideCover = false;
-        /// <summary>
-        /// Provides half/three-quarters cover in combat
-        /// </summary>
-        public bool ProvidesCover
-        {
-            get => _provideCover;
-            set { _provideCover = value; OnPropertyChanged(nameof(ProvidesCover)); }
         }
 
         #endregion
@@ -145,15 +99,44 @@ namespace DnDBattle.Models.Tiles
         /// </summary>
         public bool IsWall { get; set; }
 
+        private bool _blocksMovement = false;
         /// <summary>
         /// Whether this tile blocks creature movement
         /// </summary>
-        public bool BlocksMovement { get; set; } = false;
+        public bool BlocksMovement
+        {
+            get => _blocksMovement;
+            set { _blocksMovement = value; OnPropertyChanged(nameof(BlocksMovement)); }
+        }
+
+        private bool _blocksVision = false;
+        /// <summary>
+        /// Whether this tile blocks vision (alias for BlocksSight)
+        /// </summary>
+        public bool BlocksVision
+        {
+            get => _blocksVision;
+            set 
+            { 
+                _blocksVision = value; 
+                OnPropertyChanged(nameof(BlocksVision));
+                OnPropertyChanged(nameof(BlocksSight));
+            }
+        }
 
         /// <summary>
         /// Whether this tile blocks line of sight (for fog of war calculations)
         /// </summary>
-        public bool BlocksSight { get; set; } = false;
+        public bool BlocksSight
+        {
+            get => _blocksVision;
+            set 
+            { 
+                _blocksVision = value; 
+                OnPropertyChanged(nameof(BlocksSight));
+                OnPropertyChanged(nameof(BlocksVision));
+            }
+        }
 
         /// <summary>
         /// Whether this tile blocks light propagation (for lighting calculations)
@@ -164,15 +147,25 @@ namespace DnDBattle.Models.Tiles
 
         #region Properties - Door
 
+        private bool _isDoor = false;
         /// <summary>
         /// Indicates if this tile represents a door that can be opened/closed
         /// </summary>
-        public bool IsDoor { get; set; } = false;
+        public bool IsDoor
+        {
+            get => _isDoor;
+            set { _isDoor = value; OnPropertyChanged(nameof(IsDoor)); }
+        }
 
+        private string _openImagePath;
         /// <summary>
         /// Path to the image used when the door is open
         /// </summary>
-        public string OpenImagePath { get; set; }
+        public string OpenImagePath
+        {
+            get => _openImagePath;
+            set { _openImagePath = value; OnPropertyChanged(nameof(OpenImagePath)); }
+        }
 
         /// <summary>
         /// Whether the door is locked by default
@@ -193,29 +186,49 @@ namespace DnDBattle.Models.Tiles
 
         #region Properties - Interactive
 
+        private bool _isInteractive = false;
         /// <summary>
         /// Indicates if this tile can be interacted with (chests, levers, switches)
         /// </summary>
-        public bool IsInteractive { get; set; } = false;
+        public bool IsInteractive
+        {
+            get => _isInteractive;
+            set { _isInteractive = value; OnPropertyChanged(nameof(IsInteractive)); }
+        }
 
+        private string _interactionType;
         /// <summary>
         /// Type of interaction: "OpenClose", "Loot", "Lever", "Button", "Trap", "Custom"
         /// </summary>
-        public string InteractionType { get; set; }
+        public string InteractionType
+        {
+            get => _interactionType;
+            set { _interactionType = value; OnPropertyChanged(nameof(InteractionType)); }
+        }
 
+        private string _interactionData;
         /// <summary>
         /// JSON payload or description of what happens when interacted with
         /// </summary>
-        public string InteractionData { get; set; }
+        public string InteractionData
+        {
+            get => _interactionData;
+            set { _interactionData = value; OnPropertyChanged(nameof(InteractionData)); }
+        }
 
         #endregion
 
         #region Properties - Furniture & Cover
 
+        private bool _providesCover = false;
         /// <summary>
         /// Whether this tile provides cover in combat
         /// </summary>
-        public bool ProvidesCover { get; set; } = false;
+        public bool ProvidesCover
+        {
+            get => _providesCover;
+            set { _providesCover = value; OnPropertyChanged(nameof(ProvidesCover)); }
+        }
 
         /// <summary>
         /// Type of cover provided: None, Half, ThreeQuarters, Full
@@ -300,7 +313,7 @@ namespace DnDBattle.Models.Tiles
 
         #region Methods
 
-        public override string ToString() => DisplayName ?? ImagePath ?? "Unnamed Tile";
+        public override string ToString() => DisplayName ?? Name ?? ImagePath ?? "Unnamed Tile";
 
         /// <summary>
         /// Creates a deep copy of this tile definition
@@ -311,10 +324,11 @@ namespace DnDBattle.Models.Tiles
             {
                 Id = Guid.NewGuid().ToString(), // New ID for clone
                 ImagePath = this.ImagePath,
+                Name = this.Name,
                 DisplayName = this.DisplayName,
+                Description = this.Description,
                 Tags = (string[])this.Tags?.Clone() ?? Array.Empty<string>(),
                 Category = this.Category,
-                Description = this.Description,
                 Layer = this.Layer,
                 IsWall = this.IsWall,
                 BlocksMovement = this.BlocksMovement,
