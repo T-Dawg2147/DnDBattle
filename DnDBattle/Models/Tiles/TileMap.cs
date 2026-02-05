@@ -89,7 +89,7 @@ namespace DnDBattle.Models.Tiles
             if (tile != null && !PlacedTiles.Contains(tile))
             {
                 PlacedTiles.Add(tile);
-                ModifiedDate = DateTime.Now;
+                ModifiedDate = DateTime.UtcNow;
             }
         }
 
@@ -113,7 +113,7 @@ namespace DnDBattle.Models.Tiles
             if (tile != null)
             {
                 PlacedTiles.Remove(tile);
-                ModifiedDate = DateTime.Now;
+                ModifiedDate = DateTime.UtcNow;
             }
         }
 

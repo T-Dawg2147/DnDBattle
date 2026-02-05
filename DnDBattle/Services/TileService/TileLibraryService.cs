@@ -119,7 +119,7 @@ namespace DnDBattle.Services.TileService
         public TileDefinition GetTileById(string id)
         {
             if (string.IsNullOrEmpty(id)) return null;
-            return AvailableTiles.FirstOrDefault(t => t.Id.ToString() == id || t.Id == id);
+            return AvailableTiles.FirstOrDefault(t => t.Id == id);
         }
 
         public TileDefinition GetTileById(Guid id)

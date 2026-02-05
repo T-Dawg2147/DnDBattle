@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 
 namespace DnDBattle.Models.Tiles
 {
@@ -112,13 +114,7 @@ namespace DnDBattle.Models.Tiles
         /// </summary>
         public bool HasMetadataType(TileMetadataType type)
         {
-            if (Metadata == null) return false;
-            foreach (var meta in Metadata)
-            {
-                if (meta.Type == type)
-                    return true;
-            }
-            return false;
+            return Metadata?.Any(m => m.Type == type) ?? false;
         }
 
         /// <summary>
@@ -126,14 +122,7 @@ namespace DnDBattle.Models.Tiles
         /// </summary>
         public List<TileMetadata> GetMetadata(TileMetadataType type)
         {
-            var result = new List<TileMetadata>();
-            if (Metadata == null) return result;
-            foreach (var meta in Metadata)
-            {
-                if (meta.Type == type)
-                    result.Add(meta);
-            }
-            return result;
+            return Metadata?.Where(m => m.Type == type).ToList() ?? new List<TileMetadata>();
         }
 
         #endregion
