@@ -723,6 +723,12 @@ namespace DnDBattle
             }
         }
 
+        private void MenuDevSettings_Click(object sender, RoutedEventArgs e)
+        {
+            var win = new DevSettingsWindow { Owner = this };
+            win.ShowDialog();
+        }
+
         private void MenuGridSettings_Click(object sender, RoutedEventArgs e)
         {
             // Will make its own dialog eventually, for now sends all info and user to same window.
