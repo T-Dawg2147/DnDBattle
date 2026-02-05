@@ -3,6 +3,7 @@ using DnDBattle.Models;
 using DnDBattle.Models.Tiles;
 using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -63,6 +64,16 @@ namespace DnDBattle.Controls.BattleGrid
         #region Fields
 
         private DateTime _lastViewportUpdate = DateTime.MinValue;
+
+        private bool _isPanning = false;
+        private Point _panStartPoint;
+        private Point _panStartOffset;
+
+        private Token _draggedToken = null;
+        private FrameworkElement _draggedTokenVisual = null;
+        private Point _tokenDragStartPoint;
+        private int _tokenDragStartGridX;
+        private int _tokenDragStartGridY;
 
         #endregion
 
@@ -316,94 +327,180 @@ namespace DnDBattle.Controls.BattleGrid
         {
             Focus();
 
-            var position = e.GetPosition(RenderCanvas);
-            var transform = _renderManager.GetTransform();
+            var mousePos = e.GetPosition(RenderCanvas);
 
-            // LEFT MOUSE BUTTON
+            // LEFT BUTTON
             if (e.ChangedButton == MouseButton.Left)
             {
-                // FIRST: Check if we clicked on a token
-                var worldPos = transform.Inverse?.Transform(position) ?? position;
-                var clickedToken = FindTokenAtPosition(worldPos);
+                // Check if we clicked on a token
+                var clickedElement = FindVisualAtPoint(mousePos);
 
-                if (clickedToken != null)
+                if (clickedElement?.Tag is Token token)
                 {
-                    // Token clicked - let TokenManager handle it
-                    System.Diagnostics.Debug.WriteLine($"[BattleGrid] Token clicked: {clickedToken.Name}");
-                    _tokenManager.HandleMouseDown(position, transform, GridCellSize);
+                    // Start token drag
+                    _draggedToken = token;
+                    _draggedTokenVisual = clickedElement;
+                    _tokenDragStartPoint = mousePos;
+                    _tokenDragStartGridX = token.GridX;
+                    _tokenDragStartGridY = token.GridY;
+
+                    _draggedTokenVisual.CaptureMouse();
+                    Panel.SetZIndex(_draggedTokenVisual, 1000); // Bring to front
+
+                    SelectedToken = token;
+
+                    Debug.WriteLine($"[BattleGrid] Started dragging token: {token.Name}");
                     e.Handled = true;
-                    return; // DON'T start panning!
+                    return;
                 }
                 else
                 {
-                    // Empty space clicked - start panning
-                    System.Diagnostics.Debug.WriteLine($"[BattleGrid] Starting pan at {position}");
-                    _inputManager.HandleMouseDown(e, position, transform, GridCellSize);
-                    RenderCanvas.CaptureMouse(); // ← CAPTURE MOUSE!
+                    // Start panning
+                    _isPanning = true;
+                    _panStartPoint = mousePos;
+                    _panStartOffset = new Point(_renderManager.GetTransform().Children[1].Value.OffsetX,
+                                                _renderManager.GetTransform().Children[1].Value.OffsetY);
+                    RenderCanvas.CaptureMouse();
+                    Cursor = Cursors.SizeAll;
+
+                    Debug.WriteLine($"[BattleGrid] Started panning");
                 }
             }
-            // MIDDLE MOUSE BUTTON
+            // MIDDLE BUTTON - Always pan
             else if (e.ChangedButton == MouseButton.Middle)
             {
-                System.Diagnostics.Debug.WriteLine($"[BattleGrid] Starting middle-mouse pan");
-                _inputManager.HandleMouseDown(e, position, transform, GridCellSize);
-                RenderCanvas.CaptureMouse(); // ← CAPTURE MOUSE!
+                _isPanning = true;
+                _panStartPoint = mousePos;
+                _panStartOffset = new Point(_renderManager.GetTransform().Children[1].Value.OffsetX,
+                                            _renderManager.GetTransform().Children[1].Value.OffsetY);
+                RenderCanvas.CaptureMouse();
+                Cursor = Cursors.SizeAll;
             }
         }
 
         private void RenderCanvas_MouseMove(object sender, MouseEventArgs e)
         {
-            var position = e.GetPosition(RenderCanvas);
+            var mousePos = e.GetPosition(RenderCanvas);
             var transform = _renderManager.GetTransform();
 
-            // FIRST: Check if TokenManager is dragging
-            if (_tokenManager.IsDragging)
+            // Update cell position display (cheap)
+            UpdateCellPositionDisplay(mousePos, transform);
+
+            // Handle token dragging
+            if (_draggedToken != null && _draggedTokenVisual != null)
             {
-                _tokenManager.HandleMouseMove(position, transform, GridCellSize, LockToGrid);
+                var delta = mousePos - _tokenDragStartPoint;
+
+                var currentLeft = Canvas.GetLeft(_draggedTokenVisual);
+                var currentTop = Canvas.GetTop(_draggedTokenVisual);
+
+                Canvas.SetLeft(_draggedTokenVisual, currentLeft + delta.X);
+                Canvas.SetTop(_draggedTokenVisual, currentTop + delta.Y);
+
+                _tokenDragStartPoint = mousePos;
                 e.Handled = true;
                 return;
             }
 
-            // SECOND: ONLY handle panning if mouse is captured or button is pressed
-            if (RenderCanvas.IsMouseCaptured ||
-                e.LeftButton == MouseButtonState.Pressed ||
-                e.MiddleButton == MouseButtonState.Pressed)
+            // Handle panning
+            if (_isPanning)
             {
-                _inputManager.HandleMouseMove(e, position, transform, GridCellSize, ActualWidth, ActualHeight);
+                var delta = mousePos - _panStartPoint;
+
+                // ⚡ CRITICAL FIX: Normalize delta by zoom level!
+                // When zoomed out (e.g., 0.5x), we want SLOWER panning, not faster!
+                double currentZoom = _renderManager.GetZoomLevel();
+
+                // Apply zoom-normalized delta
+                double normalizedDeltaX = delta.X / currentZoom;
+                double normalizedDeltaY = delta.Y / currentZoom;
+
+                _renderManager.ApplyPanWithoutRedraw(normalizedDeltaX, normalizedDeltaY);
+
+                _panStartPoint = mousePos;
+                e.Handled = true;
+                return;
             }
-            else
+
+            // Show hand cursor over tokens
+            if (!_isPanning && _draggedToken == null)
             {
-                // Just update grid position display (no panning)
-                _inputManager.UpdateGridPosition(position, transform, GridCellSize);
+                var element = FindVisualAtPoint(mousePos);
+                Cursor = (element?.Tag is Token) ? Cursors.Hand : Cursors.Arrow;
             }
-        }
+        }    
 
         private void RenderCanvas_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            var position = e.GetPosition(RenderCanvas);
-            var transform = _renderManager.GetTransform();
+            var mousePos = e.GetPosition(RenderCanvas);
 
-            System.Diagnostics.Debug.WriteLine($"[BattleGrid] Mouse up: {e.ChangedButton}");
-
-            // Release mouse capture
-            RenderCanvas.ReleaseMouseCapture();
-
-            // FIRST: Check if TokenManager is finishing a drag
-            if (_tokenManager.IsDragging)
+            // Handle token drop
+            if (_draggedToken != null && _draggedTokenVisual != null)
             {
-                _tokenManager.HandleMouseUp(position, transform, GridCellSize, LockToGrid);
+                _draggedTokenVisual.ReleaseMouseCapture();
+                Panel.SetZIndex(_draggedTokenVisual, 100); // Reset Z-index
+
+                // Calculate final grid position
+                var left = Canvas.GetLeft(_draggedTokenVisual);
+                var top = Canvas.GetTop(_draggedTokenVisual);
+
+                int newGridX, newGridY;
+
+                if (LockToGrid)
+                {
+                    newGridX = (int)Math.Round(left / GridCellSize);
+                    newGridY = (int)Math.Round(top / GridCellSize);
+                }
+                else
+                {
+                    newGridX = (int)(left / GridCellSize);
+                    newGridY = (int)(top / GridCellSize);
+                }
+
+                // Snap to grid
+                Canvas.SetLeft(_draggedTokenVisual, newGridX * GridCellSize);
+                Canvas.SetTop(_draggedTokenVisual, newGridY * GridCellSize);
+
+                // Update model
+                int oldX = _tokenDragStartGridX;
+                int oldY = _tokenDragStartGridY;
+
+                _draggedToken.GridX = newGridX;
+                _draggedToken.GridY = newGridY;
+
+                if (newGridX != oldX || newGridY != oldY)
+                {
+                    Debug.WriteLine($"[BattleGrid] Token {_draggedToken.Name} moved from ({oldX},{oldY}) to ({newGridX},{newGridY})");
+                    LogMessage?.Invoke("Movement", $"{_draggedToken.Name} moved to {GetColumnLabel(newGridX)}{newGridY + 1}");
+                }
+
+                _draggedToken = null;
+                _draggedTokenVisual = null;
+                Cursor = Cursors.Arrow;
                 e.Handled = true;
                 return;
             }
 
-            // SECOND: Let input manager finish panning
-            _inputManager.HandleMouseUp(e, position);
+            // Handle pan end
+            if (_isPanning)
+            {
+                _isPanning = false;
+                _renderManager.FinishInteraction();
+                RenderCanvas.ReleaseMouseCapture();
+                Cursor = Cursors.Arrow;
+                Debug.WriteLine($"[BattleGrid] Panning stopped");
+            }
         }
 
         private void RenderCanvas_MouseWheel(object sender, MouseWheelEventArgs e)
         {
-            var position = e.GetPosition(RenderCanvas);
-            _inputManager.HandleMouseWheel(e, position, ActualWidth, ActualHeight);
+            var mousePos = e.GetPosition(RenderCanvas);
+            double zoomFactor = e.Delta > 0 ? 1.1 : 1.0 / 1.1;
+
+            _renderManager.ApplyZoom(zoomFactor, mousePos);
+
+            UpdateZoomDisplay();
+            e.Handled = true;
         }
 
         protected override void OnKeyDown(KeyEventArgs e)
@@ -453,7 +550,7 @@ namespace DnDBattle.Controls.BattleGrid
 
         private void OnPanChanged(double deltaX, double deltaY)
         {
-            _renderManager.ApplyPan(deltaX, deltaY);
+            _renderManager.ApplyPanWithoutRedraw(deltaX, deltaY);
             OnViewportChanged();
         }
 
@@ -486,6 +583,89 @@ namespace DnDBattle.Controls.BattleGrid
         private void OnTileMapLoaded(TileMap tileMap)
         {
             _renderManager.RenderTileMap(tileMap, GridCellSize);
+        }
+
+        #endregion
+
+        #region Private Methods - Visuals
+
+        /// <summary>
+        /// Finds a FrameworkElement (like a token) at the given screen point
+        /// </summary>
+        private FrameworkElement FindVisualAtPoint(Point point)
+        {
+            // Hit test against canvas children (tokens are added as FrameworkElements)
+            HitTestResult result = VisualTreeHelper.HitTest(RenderCanvas, point);
+
+            if (result != null)
+            {
+                // Walk up the tree to find a FrameworkElement with a Token tag
+                DependencyObject obj = result.VisualHit;
+
+                while (obj != null && obj != RenderCanvas)
+                {
+                    if (obj is FrameworkElement element && element.Tag is Token)
+                    {
+                        return element;
+                    }
+                    obj = VisualTreeHelper.GetParent(obj);
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Updates the cell position display (A1, B2, etc.)
+        /// </summary>
+        private void UpdateCellPositionDisplay(Point screenPoint, TransformGroup transform)
+        {
+            try
+            {
+                // Transform to world coordinates
+                var worldPoint = transform.Inverse?.Transform(screenPoint) ?? screenPoint;
+
+                // Convert to grid coordinates
+                int gridX = (int)Math.Floor(worldPoint.X / GridCellSize);
+                int gridY = (int)Math.Floor(worldPoint.Y / GridCellSize);
+
+                // Check bounds
+                if (gridX >= 0 && gridX < GridWidth && gridY >= 0 && gridY < GridHeight)
+                {
+                    string col = GetColumnLabel(gridX);
+                    TxtCurrentCell.Text = $"{col}{gridY + 1}";
+                }
+                else
+                {
+                    TxtCurrentCell.Text = "-";
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[BattleGrid] Error updating cell display: {ex.Message}");
+                TxtCurrentCell.Text = "-";
+            }
+        }
+
+        private Token FindTokenAtPosition(Point worldPosition)
+        {
+            if (Tokens == null) return null;
+
+            foreach (var token in Tokens.Reverse())
+            {
+                double tokenLeft = token.GridX * GridCellSize;
+                double tokenTop = token.GridY * GridCellSize;
+                double tokenSize = GridCellSize * token.SizeInSquares;
+
+                var tokenRect = new Rect(tokenLeft, tokenTop, tokenSize, tokenSize);
+
+                if (tokenRect.Contains(worldPosition))
+                {
+                    return token;
+                }
+            }
+
+            return null;
         }
 
         #endregion
@@ -528,28 +708,6 @@ namespace DnDBattle.Controls.BattleGrid
 
         #endregion
 
-        #region Helpers
-
-        private Token FindTokenAtPosition(Point worldPosition)
-        {
-            if (Tokens == null) return null;
-
-            foreach (var token in Tokens.Reverse())
-            {
-                double tokenLeft = token.GridX * GridCellSize;
-                double tokenTop = token.GridY * GridCellSize;
-                double tokenSize = GridCellSize * token.SizeInSquares;
-
-                var tokenRect = new Rect(tokenLeft, tokenTop, tokenSize, tokenSize);
-
-                if (tokenRect.Contains(worldPosition))
-                    return token;
-            }
-            return null;
-        }
-
-        #endregion
-
         #region Compatibility Methods (Temporary - TODO: Implement properly)
 
         /// <summary>
@@ -582,7 +740,7 @@ namespace DnDBattle.Controls.BattleGrid
         /// </summary>
         public void PanBy(double deltaX, double deltaY)
         {
-            _renderManager.ApplyPan(deltaX, deltaY);
+            _renderManager.ApplyPanWithoutRedraw(deltaX, deltaY);
         }
 
         /// <summary>
