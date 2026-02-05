@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="📐 Resize Map" Height="480" Width="480"
         WindowStartupLocation="CenterOwner"
-        Background="#1E1E1E"
+        Background="{StaticResource Brush_Background_Medium}"
         ResizeMode="NoResize"
         ShowInTaskbar="False">
 
@@ -16,27 +16,27 @@
 
         <!-- Header -->
         <StackPanel Grid.Row="0" Margin="0,0,0,15">
-            <TextBlock Text="📐 Resize Map" FontSize="18" FontWeight="Bold" Foreground="White"/>
-            <TextBlock Text="Change the dimensions of your tile map" Foreground="#888" FontSize="11" Margin="0,5,0,0"/>
+            <TextBlock Text="📐 Resize Map" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Brush_Text_Primary}"/>
+            <TextBlock Text="Change the dimensions of your tile map" Foreground="{StaticResource Brush_Text_Hint}" FontSize="11" Margin="0,5,0,0"/>
         </StackPanel>
 
         <!-- Content -->
         <StackPanel Grid.Row="1">
             <!-- Current Size -->
-            <Border Background="#252526" CornerRadius="6" Padding="15" Margin="0,0,0,15">
+            <Border Background="{StaticResource Brush_Background_Control}" CornerRadius="6" Padding="15" Margin="0,0,0,15">
                 <StackPanel>
-                    <TextBlock Text="CURRENT SIZE" Foreground="#4FC3F7" FontWeight="Bold" FontSize="11" Margin="0,0,0,10"/>
+                    <TextBlock Text="CURRENT SIZE" Foreground="{StaticResource Brush_Info}" FontWeight="Bold" FontSize="11" Margin="0,0,0,10"/>
                     <TextBlock x:Name="TxtCurrentSize" Text="50 × 50" FontSize="24" 
-                               Foreground="#007ACC" FontWeight="Bold"/>
+                               Foreground="{StaticResource Brush_Accent_Primary}" FontWeight="Bold"/>
                     <TextBlock x:Name="TxtTileCount" Text="Contains 0 tiles" 
-                               Foreground="#888" FontSize="11" Margin="0,5,0,0"/>
+                               Foreground="{StaticResource Brush_Text_Hint}" FontSize="11" Margin="0,5,0,0"/>
                 </StackPanel>
             </Border>
 
             <!-- New Size -->
-            <Border Background="#252526" CornerRadius="6" Padding="15" Margin="0,0,0,15">
+            <Border Background="{StaticResource Brush_Background_Control}" CornerRadius="6" Padding="15" Margin="0,0,0,15">
                 <StackPanel>
-                    <TextBlock Text="NEW SIZE" Foreground="#4FC3F7" FontWeight="Bold" FontSize="11" Margin="0,0,0,10"/>
+                    <TextBlock Text="NEW SIZE" Foreground="{StaticResource Brush_Info}" FontWeight="Bold" FontSize="11" Margin="0,0,0,10"/>
 
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -46,21 +46,19 @@
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Width" Foreground="#888" FontSize="11" Margin="0,0,0,5"/>
+                            <TextBlock Text="Width" Foreground="{StaticResource Brush_Text_Hint}" FontSize="11" Margin="0,0,0,5"/>
                             <TextBox x:Name="TxtWidth" Height="40" FontSize="16" 
-                                     Background="#1E1E1E" Foreground="White" BorderBrush="#444"
                                      VerticalContentAlignment="Center" HorizontalContentAlignment="Center"
                                      TextChanged="Size_TextChanged"/>
                         </StackPanel>
 
                         <TextBlock Grid.Column="1" Text="×" FontSize="24" 
-                                   Foreground="#666" VerticalAlignment="Center" HorizontalAlignment="Center"
+                                   Foreground="{StaticResource Brush_Text_Disabled}" VerticalAlignment="Center" HorizontalAlignment="Center"
                                    Margin="0,15,0,0"/>
 
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="Height" Foreground="#888" FontSize="11" Margin="0,0,0,5"/>
+                            <TextBlock Text="Height" Foreground="{StaticResource Brush_Text_Hint}" FontSize="11" Margin="0,0,0,5"/>
                             <TextBox x:Name="TxtHeight" Height="40" FontSize="16" 
-                                     Background="#1E1E1E" Foreground="White" BorderBrush="#444"
                                      VerticalContentAlignment="Center" HorizontalContentAlignment="Center"
                                      TextChanged="Size_TextChanged"/>
                         </StackPanel>
@@ -69,10 +67,10 @@
             </Border>
 
             <!-- Warning -->
-            <Border Background="#3D2B1C" CornerRadius="6" Padding="15" BorderBrush="#FF9800" BorderThickness="1">
+            <Border Background="#3D2B1C" CornerRadius="6" Padding="15" BorderBrush="{StaticResource Brush_Warning}" BorderThickness="1">
                 <StackPanel>
-                    <TextBlock Text="⚠️ Warning" FontWeight="Bold" Foreground="#FF9800" Margin="0,0,0,5"/>
-                    <TextBlock TextWrapping="Wrap" Foreground="#CCC" FontSize="12">
+                    <TextBlock Text="⚠️ Warning" FontWeight="Bold" Foreground="{StaticResource Brush_Warning}" Margin="0,0,0,5"/>
+                    <TextBlock TextWrapping="Wrap" Foreground="{StaticResource Brush_Text_Secondary}" FontSize="12">
                         Shrinking the map will remove tiles outside the new boundaries.
                         <LineBreak/>
                         This action cannot be undone!
@@ -82,17 +80,17 @@
 
             <!-- Preview -->
             <TextBlock x:Name="TxtPreview" Text="" Margin="0,10,0,0" 
-                       Foreground="#888" FontSize="11"/>
+                       Foreground="{StaticResource Brush_Text_Hint}" FontSize="11"/>
         </StackPanel>
 
         <!-- Buttons -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
             <Button Content="❌ Cancel" Padding="20,10" Margin="0,0,10,0" 
-                    Click="Cancel_Click"
-                    Background="#3E3E42" Foreground="White" BorderThickness="0"/>
+                    Click="Cancel_Click"/>
             <Button Content="✅ Resize" Padding="20,10" 
                     Click="Resize_Click"
-                    Background="#4CAF50" Foreground="White" BorderThickness="0" FontWeight="Bold"/>
+                    Style="{StaticResource SuccessButton}"
+                    FontWeight="Bold"/>
         </StackPanel>
     </Grid>
 </Window>
