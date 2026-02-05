@@ -57,12 +57,12 @@ namespace DnDBattle.Controls.BattleGrid.Managers
             bool handled = false;
 
             // BASE pan amount: 1 cell
-            double panAmount = cellSize * 1; // ← Changed from 2 to 1
+            double panAmount = cellSize * 1;
 
             // Faster panning with Shift: 3 cells
             if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
             {
-                panAmount = cellSize * 3; // ← Changed from 5 to 3
+                panAmount = cellSize * 3; 
             }
 
             switch (e.Key)

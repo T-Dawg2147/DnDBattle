@@ -89,10 +89,10 @@ namespace DnDBattle.Controls.BattleGrid
             set => SetValue(TokensProperty, value);
         }
 
-        public Token SelectedToken 
-        { 
-            get => (Token)GetValue(SelectedTokenProperty); 
-            set => SetValue(SelectedTokenProperty, value); 
+        public Token SelectedToken
+        {
+            get => (Token)GetValue(SelectedTokenProperty);
+            set => SetValue(SelectedTokenProperty, value);
         }
 
         #endregion
@@ -517,11 +517,7 @@ namespace DnDBattle.Controls.BattleGrid
 
         private static void OnSelectedTokenChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            // TODO
-
-            var ctrl = (BattleGridControl)d;
-            /*ctrl.RedrawMovementOverlay();
-            ctrl.ClearPathVisual();*/
+            // Handle selected token changed if needed
         }
 
         #endregion
