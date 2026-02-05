@@ -18,6 +18,7 @@ namespace DnDBattle.Controls
 {
     public partial class TileMapEditorControl : UserControl
     {
+        //
         // Dependency property for TileMap
         public static readonly DependencyProperty TileMapProperty =
             DependencyProperty.Register(nameof(TileMap), typeof(TileMap), typeof(TileMapEditorControl),
