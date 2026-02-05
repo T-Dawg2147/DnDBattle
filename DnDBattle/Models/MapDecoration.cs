@@ -10,6 +10,7 @@ namespace DnDBattle.Models
     /// </summary>
     public class MapDecoration
     {
+        //
         public Guid Id { get; set; } = Guid.NewGuid();
 
         /// <summary>
