@@ -1,9 +1,27 @@
 ﻿<Window x:Class="DnDBattle.Views.Editors.HazardEditorDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Hazard Configuration" Height="650" Width="550" Background="{StaticResource Brush_Background_Dark}">
+        Title="☠️ Hazard Configuration" Height="680" Width="550"
+        WindowStartupLocation="CenterOwner"
+        Background="#1E1E1E"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False">
 
-    <Grid Margin="15">
+    <Window.Resources>
+        <Style x:Key="SectionHeader" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="#4FC3F7"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+        </Style>
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#888"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Margin" Value="0,0,0,5"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -11,111 +29,144 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <StackPanel Grid.Row="0">
-            <TextBlock Text="☠️ Configure Hazard" FontSize="16" FontWeight="Bold"/>
-            <Separator/>
+        <StackPanel Grid.Row="0" Margin="0,0,0,15">
+            <TextBlock Text="☠️ Configure Hazard" FontSize="18" FontWeight="Bold" Foreground="White"/>
+            <TextBlock Text="Set up environmental dangers and damage zones" Foreground="#888" FontSize="11" Margin="0,5,0,0"/>
         </StackPanel>
 
         <!-- Content -->
-        <ScrollViewer Grid.Row="1">
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <StackPanel>
-
                 <!-- Basic Info -->
-                <TextBlock Text="Hazard Name:"/>
-                <TextBox x:Name="TxtName" Text="Pool of Lava"/>
+                <Border Background="#252526" CornerRadius="6" Padding="15" Margin="0,0,0,15">
+                    <StackPanel>
+                        <TextBlock Text="BASIC INFO" Style="{StaticResource SectionHeader}"/>
 
-                <TextBlock Text="Hazard Type:"/>
-                <ComboBox x:Name="CmbHazardType" SelectedIndex="1">
-                    <ComboBoxItem Content="🔥 Fire"/>
-                    <ComboBoxItem Content="🌋 Lava"/>
-                    <ComboBoxItem Content="🧪 Acid"/>
-                    <ComboBoxItem Content="☠️ Poison Gas"/>
-                    <ComboBoxItem Content="❄️ Ice"/>
-                    <ComboBoxItem Content="⚡ Lightning"/>
-                    <ComboBoxItem Content="🌿 Thorns"/>
-                    <ComboBoxItem Content="🏜️ Quicksand"/>
-                    <ComboBoxItem Content="🗡️ Spikes"/>
-                    <ComboBoxItem Content="✨ Magic Zone"/>
-                </ComboBox>
+                        <TextBlock Text="Hazard Name" Style="{StaticResource FieldLabel}"/>
+                        <TextBox x:Name="TxtName" Text="Pool of Lava" Background="#1E1E1E" Foreground="White" BorderBrush="#444" Padding="10,8" Margin="0,0,0,10"/>
 
-                <TextBlock Text="Description:"/>
-                <TextBox x:Name="TxtDescription" Text="A pool of molten lava." 
-                         TextWrapping="Wrap" Height="60" AcceptsReturn="True"/>
+                        <TextBlock Text="Hazard Type" Style="{StaticResource FieldLabel}"/>
+                        <ComboBox x:Name="CmbHazardType" SelectedIndex="1" Background="#1E1E1E" Margin="0,0,0,10">
+                            <ComboBoxItem Content="🔥 Fire"/>
+                            <ComboBoxItem Content="🌋 Lava"/>
+                            <ComboBoxItem Content="🧪 Acid"/>
+                            <ComboBoxItem Content="☠️ Poison Gas"/>
+                            <ComboBoxItem Content="❄️ Ice"/>
+                            <ComboBoxItem Content="⚡ Lightning"/>
+                            <ComboBoxItem Content="🌿 Thorns"/>
+                            <ComboBoxItem Content="🏜️ Quicksand"/>
+                            <ComboBoxItem Content="🗡️ Spikes"/>
+                            <ComboBoxItem Content="✨ Magic Zone"/>
+                        </ComboBox>
 
-                <Separator/>
+                        <TextBlock Text="Description" Style="{StaticResource FieldLabel}"/>
+                        <TextBox x:Name="TxtDescription" Text="A pool of molten lava." Background="#1E1E1E" Foreground="White" BorderBrush="#444"
+                                 TextWrapping="Wrap" Height="50" AcceptsReturn="True" Padding="10,8"/>
+                    </StackPanel>
+                </Border>
 
                 <!-- Damage -->
-                <TextBlock Text="💥 Damage" Style="{StaticResource SectionHeader}"/>
+                <Border Background="#252526" CornerRadius="6" Padding="15" Margin="0,0,0,15">
+                    <StackPanel>
+                        <TextBlock Text="💥 DAMAGE" Style="{StaticResource SectionHeader}"/>
 
-                <TextBlock Text="Damage Dice:"/>
-                <TextBox x:Name="TxtDamageDice" Text="2d10"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
 
-                <TextBlock Text="Damage Type:"/>
-                <ComboBox x:Name="CmbDamageType" SelectedIndex="3">
-                    <ComboBoxItem Content="🔨 Bludgeoning"/>
-                    <ComboBoxItem Content="🗡️ Piercing"/>
-                    <ComboBoxItem Content="⚔️ Slashing"/>
-                    <ComboBoxItem Content="🔥 Fire"/>
-                    <ComboBoxItem Content="❄️ Cold"/>
-                    <ComboBoxItem Content="⚡ Lightning"/>
-                    <ComboBoxItem Content="💥 Thunder"/>
-                    <ComboBoxItem Content="🧪 Acid"/>
-                    <ComboBoxItem Content="☠️ Poison"/>
-                    <ComboBoxItem Content="💀 Necrotic"/>
-                    <ComboBoxItem Content="✨ Radiant"/>
-                    <ComboBoxItem Content="💫 Force"/>
-                    <ComboBoxItem Content="🧠 Psychic"/>
-                </ComboBox>
+                            <StackPanel Margin="0,0,10,0">
+                                <TextBlock Text="Damage Dice" Style="{StaticResource FieldLabel}"/>
+                                <TextBox x:Name="TxtDamageDice" Text="2d10" Background="#1E1E1E" Foreground="#F44336" FontWeight="Bold" FontSize="14" BorderBrush="#444" Padding="10,8"/>
+                            </StackPanel>
 
-                <TextBlock Text="Damage Trigger:"/>
-                <ComboBox x:Name="CmbDamageTrigger" SelectedIndex="0">
-                    <ComboBoxItem Content="On Enter (when stepping in)"/>
-                    <ComboBoxItem Content="Start of Turn (if inside)"/>
-                    <ComboBoxItem Content="End of Turn (if inside)"/>
-                    <ComboBoxItem Content="Always (enter + every turn)"/>
-                </ComboBox>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="Damage Type" Style="{StaticResource FieldLabel}"/>
+                                <ComboBox x:Name="CmbDamageType" SelectedIndex="3" Background="#1E1E1E">
+                                    <ComboBoxItem Content="🔨 Bludgeoning"/>
+                                    <ComboBoxItem Content="🗡️ Piercing"/>
+                                    <ComboBoxItem Content="⚔️ Slashing"/>
+                                    <ComboBoxItem Content="🔥 Fire"/>
+                                    <ComboBoxItem Content="❄️ Cold"/>
+                                    <ComboBoxItem Content="⚡ Lightning"/>
+                                    <ComboBoxItem Content="💥 Thunder"/>
+                                    <ComboBoxItem Content="🧪 Acid"/>
+                                    <ComboBoxItem Content="☠️ Poison"/>
+                                    <ComboBoxItem Content="💀 Necrotic"/>
+                                    <ComboBoxItem Content="✨ Radiant"/>
+                                    <ComboBoxItem Content="💫 Force"/>
+                                    <ComboBoxItem Content="🧠 Psychic"/>
+                                </ComboBox>
+                            </StackPanel>
+                        </Grid>
 
-                <Separator/>
+                        <TextBlock Text="Damage Trigger" Style="{StaticResource FieldLabel}" Margin="0,10,0,5"/>
+                        <ComboBox x:Name="CmbDamageTrigger" SelectedIndex="0" Background="#1E1E1E">
+                            <ComboBoxItem Content="On Enter (when stepping in)"/>
+                            <ComboBoxItem Content="Start of Turn (if inside)"/>
+                            <ComboBoxItem Content="End of Turn (if inside)"/>
+                            <ComboBoxItem Content="Always (enter + every turn)"/>
+                        </ComboBox>
+                    </StackPanel>
+                </Border>
 
                 <!-- Saving Throw -->
-                <TextBlock Text="🛡️ Saving Throw" Style="{StaticResource SectionHeader}"/>
+                <Border Background="#252526" CornerRadius="6" Padding="15" Margin="0,0,0,15">
+                    <StackPanel>
+                        <TextBlock Text="🛡️ SAVING THROW" Style="{StaticResource SectionHeader}"/>
 
-                <CheckBox x:Name="ChkAllowsSave" Content="Allow saving throw" IsChecked="True"/>
+                        <CheckBox x:Name="ChkAllowsSave" Content="Allow saving throw" IsChecked="True" Foreground="#CCC" Margin="0,0,0,10"/>
 
-                <TextBlock Text="Save Ability:"/>
-                <ComboBox x:Name="CmbSaveAbility" SelectedIndex="1">
-                    <ComboBoxItem Content="STR"/>
-                    <ComboBoxItem Content="DEX"/>
-                    <ComboBoxItem Content="CON"/>
-                    <ComboBoxItem Content="INT"/>
-                    <ComboBoxItem Content="WIS"/>
-                    <ComboBoxItem Content="CHA"/>
-                </ComboBox>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="100"/>
+                            </Grid.ColumnDefinitions>
 
-                <TextBlock Text="Save DC:"/>
-                <TextBox x:Name="TxtSaveDC" Text="13"/>
+                            <StackPanel Margin="0,0,10,0">
+                                <TextBlock Text="Save Ability" Style="{StaticResource FieldLabel}"/>
+                                <ComboBox x:Name="CmbSaveAbility" SelectedIndex="1" Background="#1E1E1E">
+                                    <ComboBoxItem Content="STR"/>
+                                    <ComboBoxItem Content="DEX"/>
+                                    <ComboBoxItem Content="CON"/>
+                                    <ComboBoxItem Content="INT"/>
+                                    <ComboBoxItem Content="WIS"/>
+                                    <ComboBoxItem Content="CHA"/>
+                                </ComboBox>
+                            </StackPanel>
 
-                <CheckBox x:Name="ChkSaveNegates" Content="Successful save negates all damage"/>
-                <CheckBox x:Name="ChkSaveHalves" Content="Successful save halves damage" IsChecked="True"/>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="Save DC" Style="{StaticResource FieldLabel}"/>
+                                <TextBox x:Name="TxtSaveDC" Text="13" Background="#1E1E1E" Foreground="#FF9800" FontWeight="Bold" BorderBrush="#444" Padding="10,8" HorizontalContentAlignment="Center"/>
+                            </StackPanel>
+                        </Grid>
 
-                <Separator/>
+                        <CheckBox x:Name="ChkSaveNegates" Content="Successful save negates all damage" Foreground="#CCC" Margin="0,10,0,5"/>
+                        <CheckBox x:Name="ChkSaveHalves" Content="Successful save halves damage" IsChecked="True" Foreground="#CCC"/>
+                    </StackPanel>
+                </Border>
 
                 <!-- Ongoing Effects -->
-                <TextBlock Text="♻️ Ongoing Effects" Style="{StaticResource SectionHeader}"/>
+                <Border Background="#252526" CornerRadius="6" Padding="15">
+                    <StackPanel>
+                        <TextBlock Text="♻️ ONGOING EFFECTS" Style="{StaticResource SectionHeader}"/>
 
-                <CheckBox x:Name="ChkDamagesEachTurn" Content="Damages at start of each turn while inside"/>
+                        <CheckBox x:Name="ChkDamagesEachTurn" Content="Damages at start of each turn while inside" Foreground="#CCC" Margin="0,0,0,10"/>
 
-                <TextBlock Text="Per-Turn Damage (if ongoing):"/>
-                <TextBox x:Name="TxtPerTurnDamage" Text="1d10"/>
-
+                        <TextBlock Text="Per-Turn Damage (if ongoing)" Style="{StaticResource FieldLabel}"/>
+                        <TextBox x:Name="TxtPerTurnDamage" Text="1d10" Width="120" HorizontalAlignment="Left" Background="#1E1E1E" Foreground="#F44336" BorderBrush="#444" Padding="10,8"/>
+                    </StackPanel>
+                </Border>
             </StackPanel>
         </ScrollViewer>
 
         <!-- Buttons -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
-            <Button Content="💾 Save" Width="100" Height="35" Margin="5" 
-                    Click="Save_Click" Style="{StaticResource AccentButton}"/>
-            <Button Content="❌ Cancel" Width="100" Height="35" Margin="5" Click="Cancel_Click"/>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
+            <Button Content="❌ Cancel" Padding="20,10" Margin="0,0,10,0" Click="Cancel_Click"
+                    Background="#3E3E42" Foreground="White" BorderThickness="0"/>
+            <Button Content="💾 Save" Padding="20,10" Click="Save_Click"
+                    Background="#4CAF50" Foreground="White" BorderThickness="0" FontWeight="Bold"/>
         </StackPanel>
     </Grid>
 </Window>

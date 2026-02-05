@@ -163,6 +163,7 @@
             <MenuItem Header="Tools" Foreground="White">
                 <MenuItem Header="Tile Map Builder" Click="OpenTileMapBuilder_Click"/>
                 <Separator/>
+                <MenuItem Header="🎨 Application Theme..." Click="MenuTheme_Click"/>
                 <MenuItem Header="🛠️ Developer Settings..." Click="MenuDevSettings_Click"/>
             </MenuItem>
         </Menu>

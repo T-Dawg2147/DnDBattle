@@ -729,6 +729,12 @@ namespace DnDBattle
             win.ShowDialog();
         }
 
+        private void MenuTheme_Click(object sender, RoutedEventArgs e)
+        {
+            var win = new ThemeSelectorWindow { Owner = this };
+            win.ShowDialog();
+        }
+
         private void MenuGridSettings_Click(object sender, RoutedEventArgs e)
         {
             // Will make its own dialog eventually, for now sends all info and user to same window.
