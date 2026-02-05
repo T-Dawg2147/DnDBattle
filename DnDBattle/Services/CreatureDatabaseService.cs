@@ -1334,36 +1334,65 @@ namespace DnDBattle.Services
 
         private Token MapReaderToToken(SqliteDataReader reader)
         {
+            // Cache column ordinals once per call to avoid repeated lookups
+            int idOrd = reader.GetOrdinal("Id");
+            int nameOrd = reader.GetOrdinal("Name");
+            int sizeOrd = reader.GetOrdinal("Size");
+            int typeOrd = reader.GetOrdinal("Type");
+            int alignmentOrd = reader.GetOrdinal("Alignment");
+            int crOrd = reader.GetOrdinal("ChallengeRating");
+            int acOrd = reader.GetOrdinal("ArmorClass");
+            int maxHpOrd = reader.GetOrdinal("MaxHP");
+            int hitDiceOrd = reader.GetOrdinal("HitDice");
+            int initModOrd = reader.GetOrdinal("InitiativeModifier");
+            int speedOrd = reader.GetOrdinal("Speed");
+            int strOrd = reader.GetOrdinal("Str");
+            int dexOrd = reader.GetOrdinal("Dex");
+            int conOrd = reader.GetOrdinal("Con");
+            int intOrd = reader.GetOrdinal("Int");
+            int wisOrd = reader.GetOrdinal("Wis");
+            int chaOrd = reader.GetOrdinal("Cha");
+            int skillsOrd = reader.GetOrdinal("Skills");
+            int sensesOrd = reader.GetOrdinal("Senses");
+            int languagesOrd = reader.GetOrdinal("Languages");
+            int immunitiesOrd = reader.GetOrdinal("Immunities");
+            int resistancesOrd = reader.GetOrdinal("Resistances");
+            int vulnerabilitiesOrd = reader.GetOrdinal("Vulnerabilities");
+            int traitsOrd = reader.GetOrdinal("Traits");
+            int notesOrd = reader.GetOrdinal("Notes");
+            int iconPathOrd = reader.GetOrdinal("IconPath");
+            int sizeInSquaresOrd = reader.GetOrdinal("SizeInSquares");
+
             return new Token
             {
-                Id = Guid.Parse(reader.GetString(reader.GetOrdinal("Id"))),
-                Name = reader.GetString(reader.GetOrdinal("Name")),
-                Size = reader.IsDBNull(reader.GetOrdinal("Size")) ? "" : reader.GetString(reader.GetOrdinal("Size")),
-                Type = reader.IsDBNull(reader.GetOrdinal("Type")) ? "" : reader.GetString(reader.GetOrdinal("Type")),
-                Alignment = reader.IsDBNull(reader.GetOrdinal("Alignment")) ? "" : reader.GetString(reader.GetOrdinal("Alignment")),
-                ChallengeRating = reader.IsDBNull(reader.GetOrdinal("ChallengeRating")) ? "" : reader.GetString(reader.GetOrdinal("ChallengeRating")),
-                ArmorClass = reader.GetInt32(reader.GetOrdinal("ArmorClass")),
-                MaxHP = reader.GetInt32(reader.GetOrdinal("MaxHP")),
-                HP = reader.GetInt32(reader.GetOrdinal("MaxHP")),
-                HitDice = reader.IsDBNull(reader.GetOrdinal("HitDice")) ? "" : reader.GetString(reader.GetOrdinal("HitDice")),
-                InitiativeModifier = reader.GetInt32(reader.GetOrdinal("InitiativeModifier")),
-                Speed = reader.IsDBNull(reader.GetOrdinal("Speed")) ? "" : reader.GetString(reader.GetOrdinal("Speed")),
-                Str = reader.GetInt32(reader.GetOrdinal("Str")),
-                Dex = reader.GetInt32(reader.GetOrdinal("Dex")),
-                Con = reader.GetInt32(reader.GetOrdinal("Con")),
-                Int = reader.GetInt32(reader.GetOrdinal("Int")),
-                Wis = reader.GetInt32(reader.GetOrdinal("Wis")),
-                Cha = reader.GetInt32(reader.GetOrdinal("Cha")),
-                Skills = ParseSkillsList(reader.IsDBNull(reader.GetOrdinal("Skills")) ? "" : reader.GetString(reader.GetOrdinal("Skills"))),
-                Senses = reader.IsDBNull(reader.GetOrdinal("Senses")) ? "" : reader.GetString(reader.GetOrdinal("Senses")),
-                Languages = reader.IsDBNull(reader.GetOrdinal("Languages")) ? "" : reader.GetString(reader.GetOrdinal("Languages")),
-                Immunities = reader.IsDBNull(reader.GetOrdinal("Immunities")) ? "" : reader.GetString(reader.GetOrdinal("Immunities")),
-                Resistances = reader.IsDBNull(reader.GetOrdinal("Resistances")) ? "" : reader.GetString(reader.GetOrdinal("Resistances")),
-                Vulnerabilities = reader.IsDBNull(reader.GetOrdinal("Vulnerabilities")) ? "" : reader.GetString(reader.GetOrdinal("Vulnerabilities")),
-                Traits = reader.IsDBNull(reader.GetOrdinal("Traits")) ? "" : reader.GetString(reader.GetOrdinal("Traits")),
-                Notes = reader.IsDBNull(reader.GetOrdinal("Notes")) ? "" : reader.GetString(reader.GetOrdinal("Notes")),
-                IconPath = reader.IsDBNull(reader.GetOrdinal("IconPath")) ? "" : reader.GetString(reader.GetOrdinal("IconPath")),
-                SizeInSquares = reader.GetInt32(reader.GetOrdinal("SizeInSquares"))
+                Id = Guid.Parse(reader.GetString(idOrd)),
+                Name = reader.GetString(nameOrd),
+                Size = reader.IsDBNull(sizeOrd) ? "" : reader.GetString(sizeOrd),
+                Type = reader.IsDBNull(typeOrd) ? "" : reader.GetString(typeOrd),
+                Alignment = reader.IsDBNull(alignmentOrd) ? "" : reader.GetString(alignmentOrd),
+                ChallengeRating = reader.IsDBNull(crOrd) ? "" : reader.GetString(crOrd),
+                ArmorClass = reader.GetInt32(acOrd),
+                MaxHP = reader.GetInt32(maxHpOrd),
+                HP = reader.GetInt32(maxHpOrd),
+                HitDice = reader.IsDBNull(hitDiceOrd) ? "" : reader.GetString(hitDiceOrd),
+                InitiativeModifier = reader.GetInt32(initModOrd),
+                Speed = reader.IsDBNull(speedOrd) ? "" : reader.GetString(speedOrd),
+                Str = reader.GetInt32(strOrd),
+                Dex = reader.GetInt32(dexOrd),
+                Con = reader.GetInt32(conOrd),
+                Int = reader.GetInt32(intOrd),
+                Wis = reader.GetInt32(wisOrd),
+                Cha = reader.GetInt32(chaOrd),
+                Skills = ParseSkillsList(reader.IsDBNull(skillsOrd) ? "" : reader.GetString(skillsOrd)),
+                Senses = reader.IsDBNull(sensesOrd) ? "" : reader.GetString(sensesOrd),
+                Languages = reader.IsDBNull(languagesOrd) ? "" : reader.GetString(languagesOrd),
+                Immunities = reader.IsDBNull(immunitiesOrd) ? "" : reader.GetString(immunitiesOrd),
+                Resistances = reader.IsDBNull(resistancesOrd) ? "" : reader.GetString(resistancesOrd),
+                Vulnerabilities = reader.IsDBNull(vulnerabilitiesOrd) ? "" : reader.GetString(vulnerabilitiesOrd),
+                Traits = reader.IsDBNull(traitsOrd) ? "" : reader.GetString(traitsOrd),
+                Notes = reader.IsDBNull(notesOrd) ? "" : reader.GetString(notesOrd),
+                IconPath = reader.IsDBNull(iconPathOrd) ? "" : reader.GetString(iconPathOrd),
+                SizeInSquares = reader.GetInt32(sizeInSquaresOrd)
             };
         }
 

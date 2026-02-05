@@ -162,6 +162,7 @@ namespace DnDBattle.Services
         /// <summary>
         /// When we hit the node limit, return the best partial path we found
         /// (path to the node closest to the goal)
+        /// Optimized to avoid LINQ OrderBy allocation.
         /// </summary>
         private static List<(int x, int y)> GetBestPartialPath(
             Dictionary<(int x, int y), (int x, int y)> cameFrom,
@@ -171,10 +172,19 @@ namespace DnDBattle.Services
             if (cameFrom.Count == 0)
                 return new List<(int, int)>();
 
-            // Find the explored node closest to the goal
-            var closestNode = cameFrom.Keys
-                .OrderBy(node => Heuristic(node, goal))
-                .FirstOrDefault();
+            // Find the explored node closest to the goal - manual loop instead of LINQ OrderBy
+            (int x, int y) closestNode = default;
+            int minDist = int.MaxValue;
+            
+            foreach (var node in cameFrom.Keys)
+            {
+                int dist = Heuristic(node, goal);
+                if (dist < minDist)
+                {
+                    minDist = dist;
+                    closestNode = node;
+                }
+            }
 
             if (closestNode == default)
                 return new List<(int, int)>();
@@ -185,39 +195,50 @@ namespace DnDBattle.Services
         private static int Heuristic((int x, int y) a, (int x, int y) b) =>
             Math.Abs(a.x - b.x) + Math.Abs(a.y - b.y);
 
+        /// <summary>
+        /// Computes the indices of path steps where an Attack of Opportunity (AOO) would trigger.
+        /// Optimized to pre-compute adjacency only once per enemy and use efficient set lookups.
+        /// </summary>
         public static HashSet<int> ComputeAOOIndices(List<(int x, int y)> path, IEnumerable<(int x, int y)> enemyPositions)
         {
             var aooIndices = new HashSet<int>();
             if (path == null || path.Count < 2) return aooIndices;
 
-            var enemyAdjacency = new Dictionary<(int x, int y), HashSet<(int x, int y)>>();
-            foreach (var e in enemyPositions)
+            // Pre-compute adjacency sets for all enemies once
+            // This is O(enemies) instead of O(enemies * path_length)
+            var enemyList = enemyPositions as IList<(int x, int y)> ?? enemyPositions.ToList();
+            if (enemyList.Count == 0) return aooIndices;
+
+            var enemyAdjacency = new ((int x, int y) enemy, HashSet<(int x, int y)> adj)[enemyList.Count];
+            for (int i = 0; i < enemyList.Count; i++)
             {
-                var adj = new HashSet<(int x, int y)>
+                var e = enemyList[i];
+                enemyAdjacency[i] = (e, new HashSet<(int x, int y)>
                 {
                     e,
                     (e.x + 1, e.y),
                     (e.x - 1, e.y),
                     (e.x, e.y + 1),
                     (e.x, e.y - 1)
-                };
-                enemyAdjacency[e] = adj;
+                });
             }
 
+            // Check each path step
             for (int i = 1; i < path.Count; i++)
             {
                 var prev = path[i - 1];
                 var cur = path[i];
 
-                foreach (var kvp in enemyAdjacency)
+                // Use array iteration instead of dictionary foreach for better performance
+                for (int j = 0; j < enemyAdjacency.Length; j++)
                 {
-                    var enemy = kvp.Key;
-                    var adj = kvp.Value;
+                    var adj = enemyAdjacency[j].adj;
 
                     // AOO triggers when leaving an enemy's reach
                     if (adj.Contains(prev) && !adj.Contains(cur))
                     {
                         aooIndices.Add(i);
+                        break; // Only need to mark this index once
                     }
                 }
             }

@@ -46,7 +46,7 @@ namespace DnDBattle.Services
             {
                 try
                 {
-                    return LoadImageFromFile(existingIconPath);
+                    return await LoadImageFromFileAsync(existingIconPath);
                 }
                 catch { /* Fall through to other methods */ }
             }
@@ -64,7 +64,7 @@ namespace DnDBattle.Services
             {
                 try
                 {
-                    var image = LoadImageFromFile(diskCachePath);
+                    var image = await LoadImageFromFileAsync(diskCachePath);
                     _memoryCache[cacheKey] = image;
                     return image;
                 }
@@ -408,6 +408,20 @@ namespace DnDBattle.Services
         {
             name = name.Trim();
             return name.ToLower();
+        }
+
+        private static async Task<ImageSource> LoadImageFromFileAsync(string path)
+        {
+            // Load bytes asynchronously to avoid blocking the UI thread
+            byte[] imageBytes = await File.ReadAllBytesAsync(path);
+            
+            var bitmap = new BitmapImage();
+            bitmap.BeginInit();
+            bitmap.CacheOption = BitmapCacheOption.OnLoad;
+            bitmap.StreamSource = new MemoryStream(imageBytes);
+            bitmap.EndInit();
+            bitmap.Freeze();
+            return bitmap;
         }
 
         private static ImageSource LoadImageFromFile(string path)

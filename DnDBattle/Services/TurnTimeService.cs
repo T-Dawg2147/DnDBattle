@@ -9,6 +9,10 @@ namespace DnDBattle.Services
         private DateTime _turnStartTime;
         private TimeSpan _timeLimit;
         private bool _isRunning;
+        
+        // Cached values to avoid recalculating and reduce UI updates
+        private TimeSpan _cachedTimeRemaining;
+        private int _lastDisplayedSeconds = -1;
 
         public event Action<TimeSpan> TimerTick;
         public event Action TimerExpired;
@@ -30,7 +34,8 @@ namespace DnDBattle.Services
         {
             _timeLimit = TimeSpan.FromMinutes(2); // Default 2 minutes per turn
             _timer = new DispatcherTimer();
-            _timer.Interval = TimeSpan.FromMilliseconds(100);
+            // Increased interval from 100ms to 250ms - still smooth updates but fewer ticks
+            _timer.Interval = TimeSpan.FromMilliseconds(250);
             _timer.Tick += Timer_Tick;
         }
 
@@ -38,10 +43,18 @@ namespace DnDBattle.Services
         {
             if (!_isRunning) return;
 
-            var remaining = TimeRemaining;
-            TimerTick?.Invoke(remaining);
+            _cachedTimeRemaining = TimeRemaining;
+            
+            // Only fire TimerTick if the displayed seconds actually changed
+            // This reduces UI update frequency when remaining time is > 1 minute
+            int currentSeconds = (int)_cachedTimeRemaining.TotalSeconds;
+            if (currentSeconds != _lastDisplayedSeconds)
+            {
+                _lastDisplayedSeconds = currentSeconds;
+                TimerTick?.Invoke(_cachedTimeRemaining);
+            }
 
-            if (remaining <= TimeSpan.Zero)
+            if (_cachedTimeRemaining <= TimeSpan.Zero)
             {
                 TimerExpired?.Invoke();
                 Stop();
@@ -54,6 +67,7 @@ namespace DnDBattle.Services
 
             _turnStartTime = DateTime.Now;
             _isRunning = true;
+            _lastDisplayedSeconds = -1; // Reset to force first update
             _timer.Start();
         }
 
@@ -62,6 +76,7 @@ namespace DnDBattle.Services
             var elapsed = Elapsed;
             _timer.Stop();
             _isRunning = false;
+            _lastDisplayedSeconds = -1;
             TurnEnded?.Invoke(elapsed);
         }
 
@@ -69,6 +84,7 @@ namespace DnDBattle.Services
         {
             _turnStartTime = DateTime.Now;
             _isRunning = true;
+            _lastDisplayedSeconds = -1; // Reset to force update
         }
 
         public void Pause()

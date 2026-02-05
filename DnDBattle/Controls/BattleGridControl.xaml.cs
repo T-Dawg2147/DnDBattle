@@ -2667,12 +2667,17 @@ namespace DnDBattle.Controls
                 _fogCanvas = null;
             }
 
-            // Also remove any stray fog canvases
-            var fogCanvases = RenderCanvas.Children.OfType<Canvas>()
-                .Where(c => c.Tag as string == "FogLayer")
-                .ToList();
+            // Also remove any stray fog canvases - direct iteration to avoid LINQ allocations
+            var toRemove = new List<Canvas>();
+            foreach (UIElement child in RenderCanvas.Children)
+            {
+                if (child is Canvas c && c.Tag as string == "FogLayer")
+                {
+                    toRemove.Add(c);
+                }
+            }
 
-            foreach (var canvas in fogCanvases)
+            foreach (var canvas in toRemove)
             {
                 RenderCanvas.Children.Remove(canvas);
             }
@@ -2709,24 +2714,25 @@ namespace DnDBattle.Controls
 
         private void UpdateTokenVisibilityForPlayerView()
         {
-            // Hide tokens that are in fog
-            foreach (var child in RenderCanvas.Children.OfType<FrameworkElement>())
+            // Hide tokens that are in fog - direct iteration to avoid LINQ allocations
+            foreach (UIElement child in RenderCanvas.Children)
             {
-                if (child.Tag is Models.Token token && !token.IsPlayer)
+                if (child is FrameworkElement fe && fe.Tag is Models.Token token && !token.IsPlayer)
                 {
                     bool visible = _fogService.IsTokenVisible(token);
-                    child.Visibility = visible ? Visibility.Visible : Visibility.Hidden;
+                    fe.Visibility = visible ? Visibility.Visible : Visibility.Hidden;
                 }
             }
         }
 
         private void ShowAllTokens()
         {
-            foreach (var child in RenderCanvas.Children.OfType<FrameworkElement>())
+            // Direct iteration to avoid LINQ allocations
+            foreach (UIElement child in RenderCanvas.Children)
             {
-                if (child.Tag is Models.Token)
+                if (child is FrameworkElement fe && fe.Tag is Models.Token)
                 {
-                    child.Visibility = Visibility.Visible;
+                    fe.Visibility = Visibility.Visible;
                 }
             }
         }

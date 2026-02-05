@@ -44,6 +44,12 @@ namespace DnDBattle
                 AutosaveNow();
             };
 
+            // Mark dirty when lights change (Item 27: Dirty-flag autosave enhancement)
+            vm.Lights.CollectionChanged += (s, e) =>
+            {
+                vm.IsDirty = true;
+            };
+
             _autosaveTimer = new DispatcherTimer();
             _autosaveTimer.Interval = TimeSpan.FromSeconds(Options.AutosaveIntervalSeconds);
             _autosaveTimer.Tick += (s, e) => AutosaveNow();
@@ -143,6 +149,15 @@ namespace DnDBattle
             AoeToolbar.ClearAllRequested += () =>
             {
                 BattleGrid.AreaEffectService.ClearAllEffects();
+            };
+
+            // Mark dirty when area effects change (Item 27: Dirty-flag autosave enhancement)
+            BattleGrid.AreaEffectService.EffectsChanged += () =>
+            {
+                if (DataContext is MainViewModel vm)
+                {
+                    vm.IsDirty = true;
+                }
             };
         }
 

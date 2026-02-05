@@ -26,6 +26,9 @@ namespace DnDBattle.Controls
 
         #region Viewport Cache (skip redraw if unchanged)
         private double _lastCellSize;
+        private Rect _lastViewport;
+        private bool _lastShowCoordinates;
+        private bool _lastShowGrid;
         #endregion
 
         static GridVisualHost()
@@ -87,6 +90,21 @@ namespace DnDBattle.Controls
         public void DrawGridViewport(double cellSize, Rect viewWorldPixels, double extraPaddingPixels = 16,
             bool showCoordinates = true, bool showGrid = true)
         {
+            // Skip redraw if nothing changed (viewport caching)
+            if (Math.Abs(cellSize - _lastCellSize) < 0.01 && 
+                viewWorldPixels == _lastViewport && 
+                showCoordinates == _lastShowCoordinates && 
+                showGrid == _lastShowGrid)
+            {
+                return;
+            }
+
+            // Update cache
+            _lastCellSize = cellSize;
+            _lastViewport = viewWorldPixels;
+            _lastShowCoordinates = showCoordinates;
+            _lastShowGrid = showGrid;
+
             using (var dc = _visual.RenderOpen())
             {
                 if (cellSize <= 0) return;
@@ -165,6 +183,9 @@ namespace DnDBattle.Controls
         public void InvalidateGrid()
         {
             _lastCellSize = -1;
+            _lastViewport = Rect.Empty;
+            _lastShowCoordinates = false;
+            _lastShowGrid = false;
         }
 
         private void DrawCoordinateLabels(DrawingContext dc, double cellSize, int startCol, int endCol,
