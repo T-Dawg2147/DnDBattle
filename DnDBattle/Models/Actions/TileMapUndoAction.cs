@@ -11,11 +11,11 @@ namespace DnDBattle.Models.Actions
     public class TilePlaceAction : IUndoabaleAction
     {
         private readonly TileMap _map;
-        private readonly Tile _tile;
+        private readonly PlacedTile _tile;
 
         public string Description => $"Place Tile at ({_tile.GridX}, {_tile.GridY})";
 
-        public TilePlaceAction(TileMap map, Tile tile)
+        public TilePlaceAction(TileMap map, PlacedTile tile)
         {
             _map = map;
             _tile = tile;
@@ -36,11 +36,11 @@ namespace DnDBattle.Models.Actions
     public class TileRemoveAction : IUndoabaleAction
     {
         private readonly TileMap _map;
-        private readonly Tile _tile;
+        private readonly PlacedTile _tile;
 
         public string Description => $"Remove Tile at ({_tile.GridX}, {_tile.GridY})";
 
-        public TileRemoveAction(TileMap map, Tile tile)
+        public TileRemoveAction(TileMap map, PlacedTile tile)
         {
             _map = map;
             _tile = tile;
@@ -61,16 +61,16 @@ namespace DnDBattle.Models.Actions
     public class TileBatchAction : IUndoabaleAction
     {
         private readonly TileMap _map;
-        private readonly List<Tile> _tilesAdded;
-        private readonly List<Tile> _tilesRemoved;
+        private readonly List<PlacedTile> _tilesAdded;
+        private readonly List<PlacedTile> _tilesRemoved;
 
         public string Description { get; }
         
-        public TileBatchAction(TileMap map, List<Tile> tilesAdded, List<Tile> tilesRemoved, string description = "Batch Edit")
+        public TileBatchAction(TileMap map, List<PlacedTile> tilesAdded, List<PlacedTile> tilesRemoved, string description = "Batch Edit")
         {
             _map = map;
-            _tilesAdded = tilesAdded ?? new List<Tile>();
-            _tilesRemoved = tilesRemoved ?? new List<Tile>();
+            _tilesAdded = tilesAdded ?? new List<PlacedTile>();
+            _tilesRemoved = tilesRemoved ?? new List<PlacedTile>();
             Description = description;
         }
 
@@ -112,13 +112,13 @@ namespace DnDBattle.Models.Actions
     /// </summary>
     public class TileMetadataAction : IUndoabaleAction
     {
-        private readonly Tile _tile;
+        private readonly PlacedTile _tile;
         private readonly TileMetadata _metadata;
         private readonly bool _isAdd;
 
         public string Description => _isAdd ? $"Add {_metadata.Type}" : $"Remove {_metadata.Type}";
 
-        public TileMetadataAction(Tile tile, TileMetadata metadata, bool isAdd)
+        public TileMetadataAction(PlacedTile tile, TileMetadata metadata, bool isAdd)
         {
             _tile = tile;
             _metadata = metadata;

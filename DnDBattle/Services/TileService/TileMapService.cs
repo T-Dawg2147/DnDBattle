@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using System.Windows.Media;
 
 namespace DnDBattle.Services.TileService
 {
@@ -44,17 +45,17 @@ namespace DnDBattle.Services.TileService
                     Width = tileMap.Width,
                     Height = tileMap.Height,
                     CellSize = tileMap.CellSize,
-                    BackgroundColor = tileMap.BackgroundColor,
+                    BackgroundColor = ColorToHex(tileMap.BackgroundColor),
                     ShowGrid = tileMap.ShowGrid,
                     CreatedDate = tileMap.CreatedDate,
                     ModifiedDate = DateTime.UtcNow,
 
                     // Remove duplicates and convert tiles
                     Tiles = tileMap.PlacedTiles
-                        .Where(t => t != null && !string.IsNullOrEmpty(t.TileDefinitionId))
-                        .GroupBy(t => t.InstanceId)
+                        .Where(t => t != null)
+                        .GroupBy(t => t.Id)
                         .Select(g => g.First())
-                        .Select(t => TileToDto(t))
+                        .Select(t => PlacedTileToDto(t))
                         .ToList()
                 };
 
@@ -137,6 +138,30 @@ namespace DnDBattle.Services.TileService
 
         #endregion
 
+        #region Color Conversion
+
+        private string ColorToHex(Color color)
+        {
+            return $"#{color.A:X2}{color.R:X2}{color.G:X2}{color.B:X2}";
+        }
+
+        private Color HexToColor(string hex)
+        {
+            if (string.IsNullOrEmpty(hex))
+                return Colors.DarkSlateGray;
+            
+            try
+            {
+                return (Color)ColorConverter.ConvertFromString(hex);
+            }
+            catch
+            {
+                return Colors.DarkSlateGray;
+            }
+        }
+
+        #endregion
+
         #region TileMap Conversion
 
         /// <summary>
@@ -153,11 +178,11 @@ namespace DnDBattle.Services.TileService
                     Width = dto.Width,
                     Height = dto.Height,
                     CellSize = dto.CellSize,
-                    BackgroundColor = dto.BackgroundColor ?? "#FF1A1A1A",
+                    BackgroundColor = HexToColor(dto.BackgroundColor),
                     ShowGrid = dto.ShowGrid,
                     CreatedDate = dto.CreatedDate,
                     ModifiedDate = dto.ModifiedDate,
-                    PlacedTiles = new ObservableCollection<Tile>()
+                    PlacedTiles = new List<PlacedTile>()
                 };
 
                 // Convert tiles
@@ -165,7 +190,7 @@ namespace DnDBattle.Services.TileService
                 {
                     foreach (var tileDto in dto.Tiles)
                     {
-                        var tile = DtoToTile(tileDto);
+                        var tile = DtoToPlacedTile(tileDto);
                         tileMap.PlacedTiles.Add(tile);
                     }
                 }
@@ -180,14 +205,14 @@ namespace DnDBattle.Services.TileService
         #region Tile Conversion
 
         /// <summary>
-        /// Converts Tile model to TileDto
+        /// Converts PlacedTile model to TileDto
         /// </summary>
-        private TileDto TileToDto(Tile tile)
+        private TileDto PlacedTileToDto(PlacedTile tile)
         {
             return new TileDto
             {
-                InstanceId = tile.InstanceId.ToString(),
-                TileDefinitionId = tile.TileDefinitionId,
+                InstanceId = tile.Id.ToString(),
+                TileDefinitionId = tile.TileDefinitionId.ToString(),
                 GridX = tile.GridX,
                 GridY = tile.GridY,
                 Rotation = tile.Rotation,
@@ -203,14 +228,14 @@ namespace DnDBattle.Services.TileService
         }
 
         /// <summary>
-        /// Converts TileDto to Tile model
+        /// Converts TileDto to PlacedTile model
         /// </summary>
-        private Tile DtoToTile(TileDto dto)
+        private PlacedTile DtoToPlacedTile(TileDto dto)
         {
-            var tile = new Tile
+            var tile = new PlacedTile
             {
-                InstanceId = Guid.TryParse(dto.InstanceId, out var id) ? id : Guid.NewGuid(),
-                TileDefinitionId = dto.TileDefinitionId,
+                Id = Guid.TryParse(dto.InstanceId, out var id) ? id : Guid.NewGuid(),
+                TileDefinitionId = Guid.TryParse(dto.TileDefinitionId, out var defId) ? defId : Guid.Empty,
                 GridX = dto.GridX,
                 GridY = dto.GridY,
                 Rotation = dto.Rotation,
