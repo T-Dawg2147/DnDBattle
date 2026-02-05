@@ -1,4 +1,4 @@
-﻿using DnDBattle.Models;
+﻿using DnDBattle.Models.Tiles;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace DnDBattle.Services
+namespace DnDBattle.Services.TileService
 {
     public class WallService
     {

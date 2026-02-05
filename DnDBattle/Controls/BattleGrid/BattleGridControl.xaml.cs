@@ -3,6 +3,7 @@ using DnDBattle.Models;
 using DnDBattle.Models.Tiles;
 using DnDBattle.Services;
 using DnDBattle.Services.FogOfWar;
+using DnDBattle.Services.TileService;
 using System;
 using System.Diagnostics;
 using System.Linq;
@@ -124,6 +125,12 @@ namespace DnDBattle.Controls.BattleGrid
         private bool _isFogBrushActive = false;
         private Point _lastFogBrushPoint = new Point(-1, -1);
 
+        // Fog shape tools ← ADD THESE
+        private DnDBattle.Views.FogShapeTool? _activeFogShapeTool = null;
+        private Point? _fogShapeStartPoint = null;
+        private System.Windows.Shapes.Rectangle _fogShapePreview = null;
+        private System.Windows.Shapes.Ellipse _fogShapeCirclePreview = null;
+
         #endregion
 
         #region Constructor
@@ -219,7 +226,22 @@ namespace DnDBattle.Controls.BattleGrid
 
             if (e.ChangedButton == MouseButton.Left)
             {
-                // CHECK 1: Are we in fog brush mode?
+                // CHECK 1A: Are we in fog shape tool mode?
+                if (_activeFogShapeTool.HasValue && _activeFogShapeTool.Value != DnDBattle.Views.FogShapeTool.None)
+                {
+                    var worldPos = ScreenToWorld(mousePos);
+                    int gridX = (int)Math.Floor(worldPos.X / GridCellSize);
+                    int gridY = (int)Math.Floor(worldPos.Y / GridCellSize);
+
+                    _fogShapeStartPoint = new Point(gridX, gridY);
+                    RenderCanvas.CaptureMouse();
+
+                    Debug.WriteLine($"[BattleGrid] Fog shape started at ({gridX},{gridY})");
+                    e.Handled = true;
+                    return;
+                }
+
+                // CHECK 1B: Are we in fog brush mode?
                 if (_fogManager.IsEnabled && Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
                 {
                     // Ctrl+Click = Fog brush mode
@@ -288,6 +310,18 @@ namespace DnDBattle.Controls.BattleGrid
             // Always update cell position display
             UpdateCellPositionDisplay(mousePos, transform);
 
+            // PRIORITY 0: Preview fog shape tool
+            if (_fogShapeStartPoint.HasValue && _activeFogShapeTool.HasValue)
+            {
+                var worldPos = ScreenToWorld(mousePos);
+                int gridX = (int)Math.Floor(worldPos.X / GridCellSize);
+                int gridY = (int)Math.Floor(worldPos.Y / GridCellSize);
+
+                DrawFogShapePreview(_fogShapeStartPoint.Value, new Point(gridX, gridY));
+                e.Handled = true;
+                return;
+            }
+
             // PRIORITY 1: Handle fog brush painting
             if (_isFogBrushActive)
             {
@@ -350,6 +384,54 @@ namespace DnDBattle.Controls.BattleGrid
         private void RenderCanvas_MouseUp(object sender, MouseButtonEventArgs e)
         {
             var mousePos = e.GetPosition(RenderCanvas);
+
+            // Handle fog shape tool completion
+            if (_fogShapeStartPoint.HasValue && _activeFogShapeTool.HasValue)
+            {
+                var worldPos = ScreenToWorld(mousePos);
+                int endX = (int)Math.Floor(worldPos.X / GridCellSize);
+                int endY = (int)Math.Floor(worldPos.Y / GridCellSize);
+
+                int startX = (int)_fogShapeStartPoint.Value.X;
+                int startY = (int)_fogShapeStartPoint.Value.Y;
+
+                if (_activeFogShapeTool == DnDBattle.Views.FogShapeTool.Rectangle)
+                {
+                    _fogManager.RevealRectangle(startX, startY, endX, endY);
+                    LogMessage?.Invoke("Fog", $"Revealed rectangle ({startX},{startY}) to ({endX},{endY})");
+                }
+                else if (_activeFogShapeTool == DnDBattle.Views.FogShapeTool.Circle)
+                {
+                    double dx = endX - startX;
+                    double dy = endY - startY;
+                    int radius = (int)Math.Ceiling(Math.Sqrt(dx * dx + dy * dy));
+
+                    _fogManager.RevealCircle(startX, startY, radius);
+                    LogMessage?.Invoke("Fog", $"Revealed circle at ({startX},{startY}) radius {radius}");
+                }
+
+                // Clear shape tool
+                _fogShapeStartPoint = null;
+                _activeFogShapeTool = null;
+
+                // Remove preview
+                if (_fogShapePreview != null)
+                {
+                    RenderCanvas.Children.Remove(_fogShapePreview);
+                    _fogShapePreview = null;
+                }
+                if (_fogShapeCirclePreview != null)
+                {
+                    RenderCanvas.Children.Remove(_fogShapeCirclePreview);
+                    _fogShapeCirclePreview = null;
+                }
+
+                RenderCanvas.ReleaseMouseCapture();
+                Cursor = Cursors.Arrow;
+
+                e.Handled = true;
+                return;
+            }
 
             // Handle fog brush stop
             if (_isFogBrushActive)
@@ -675,8 +757,24 @@ namespace DnDBattle.Controls.BattleGrid
 
         public void StartFogShapeTool(DnDBattle.Views.FogShapeTool tool)
         {
+            _activeFogShapeTool = tool;
+            _fogShapeStartPoint = null;
+
+            // Clear any existing preview
+            if (_fogShapePreview != null)
+            {
+                RenderCanvas.Children.Remove(_fogShapePreview);
+                _fogShapePreview = null;
+            }
+            if (_fogShapeCirclePreview != null)
+            {
+                RenderCanvas.Children.Remove(_fogShapeCirclePreview);
+                _fogShapeCirclePreview = null;
+            }
+
+            Cursor = Cursors.Cross;
             Debug.WriteLine($"[BattleGrid] StartFogShapeTool: {tool}");
-            // Will implement shape tool UI in next step
+            LogMessage?.Invoke("Fog", $"Draw {tool} - click and drag on map");
         }
 
         public void SetFogOfWar(bool enabled, FogMode mode)
@@ -713,6 +811,80 @@ namespace DnDBattle.Controls.BattleGrid
         {
             _fogManager.HideAll();
             Debug.WriteLine($"[BattleGrid] ResetFog");
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private void DrawFogShapePreview(Point start, Point end)
+        {
+            // Remove old preview
+            if (_fogShapePreview != null)
+            {
+                RenderCanvas.Children.Remove(_fogShapePreview);
+                _fogShapePreview = null;
+            }
+            if (_fogShapeCirclePreview != null)
+            {
+                RenderCanvas.Children.Remove(_fogShapeCirclePreview);
+                _fogShapeCirclePreview = null;
+            }
+
+            var brush = new SolidColorBrush(Color.FromArgb(80, 255, 255, 0));
+            var stroke = new SolidColorBrush(Colors.Yellow);
+
+            if (_activeFogShapeTool == DnDBattle.Views.FogShapeTool.Rectangle)
+            {
+                double left = Math.Min(start.X, end.X) * GridCellSize;
+                double top = Math.Min(start.Y, end.Y) * GridCellSize;
+                double width = (Math.Abs(end.X - start.X) + 1) * GridCellSize;
+                double height = (Math.Abs(end.Y - start.Y) + 1) * GridCellSize;
+
+                _fogShapePreview = new System.Windows.Shapes.Rectangle
+                {
+                    Width = width,
+                    Height = height,
+                    Fill = brush,
+                    Stroke = stroke,
+                    StrokeThickness = 2,
+                    StrokeDashArray = new DoubleCollection { 4, 2 },
+                    IsHitTestVisible = false
+                };
+
+                Canvas.SetLeft(_fogShapePreview, left);
+                Canvas.SetTop(_fogShapePreview, top);
+                Canvas.SetZIndex(_fogShapePreview, 1000);
+
+                RenderCanvas.Children.Add(_fogShapePreview);
+            }
+            else if (_activeFogShapeTool == DnDBattle.Views.FogShapeTool.Circle)
+            {
+                double dx = end.X - start.X;
+                double dy = end.Y - start.Y;
+                double radius = Math.Sqrt(dx * dx + dy * dy);
+
+                double centerX = start.X * GridCellSize + GridCellSize / 2;
+                double centerY = start.Y * GridCellSize + GridCellSize / 2;
+                double radiusPx = radius * GridCellSize;
+
+                _fogShapeCirclePreview = new System.Windows.Shapes.Ellipse
+                {
+                    Width = radiusPx * 2,
+                    Height = radiusPx * 2,
+                    Fill = brush,
+                    Stroke = stroke,
+                    StrokeThickness = 2,
+                    StrokeDashArray = new DoubleCollection { 4, 2 },
+                    IsHitTestVisible = false
+                };
+
+                Canvas.SetLeft(_fogShapeCirclePreview, centerX - radiusPx);
+                Canvas.SetTop(_fogShapeCirclePreview, centerY - radiusPx);
+                Canvas.SetZIndex(_fogShapeCirclePreview, 1000);
+
+                RenderCanvas.Children.Add(_fogShapeCirclePreview);
+            }
         }
 
         #endregion
@@ -816,19 +988,19 @@ namespace DnDBattle.Controls.BattleGrid
         }
 
         // Walls & Rooms - Takes WallType enum as default parameter
-        public void SetWallDrawMode(bool enabled, DnDBattle.Models.WallType wallType = DnDBattle.Models.WallType.Solid)
+        public void SetWallDrawMode(bool enabled, WallType wallType = WallType.Solid)
         {
             Debug.WriteLine($"[BattleGrid] SetWallDrawMode: {enabled}, {wallType}");
         }
 
-        public void SetRoomDrawMode(bool enabled, DnDBattle.Models.WallType wallType = DnDBattle.Models.WallType.Solid)
+        public void SetRoomDrawMode(bool enabled, WallType wallType = WallType.Solid)
         {
             Debug.WriteLine($"[BattleGrid] SetRoomDrawMode: {enabled}, {wallType}");
         }
 
         public bool IsRoomDrawMode => false;
 
-        public DnDBattle.Services.WallService WallService => null; // Stub
+        public WallService WallService => null; // Stub
 
         // Pathfinding
         public async System.Threading.Tasks.Task CommitPreviewedPathAsync()

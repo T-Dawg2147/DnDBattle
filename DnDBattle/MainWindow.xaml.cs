@@ -1,4 +1,5 @@
 ﻿using DnDBattle.Models;
+using DnDBattle.Models.Tiles;
 using DnDBattle.Services;
 using DnDBattle.Services.FogOfWar;
 using DnDBattle.ViewModels;
@@ -26,6 +27,9 @@ namespace DnDBattle
         private TurnTimerService _turnTimerService;
         private SoundEffectsService _soundService;
         private DiceHistoryService _diceHistoryService;
+
+        private DnDBattle.Views.FogShapeTool? _activeFogShapeTool = null;
+        private Point? _fogShapeStart = null;
 
         public MainWindow()
         {
@@ -67,6 +71,8 @@ namespace DnDBattle
             };
 
             InitializeBattleGrid();
+
+            SetupFogOfWarToolbar();
 
             BattleGrid.InitializeFogOfWar();
 
@@ -302,29 +308,24 @@ namespace DnDBattle
             };
         }
 
-        private void SetupFogOfWar()
+        private void SetupFogOfWarToolbar()
         {
-            // Initialize fog service in battle grid
-            BattleGrid.InitializeFogOfWar(); // You may need to make this public or call in Loaded event
-
+            // Wire up all the fog toolbar events to BattleGrid
             FogToolbar.FogEnabledChanged += (enabled) =>
             {
                 BattleGrid.SetFogEnabled(enabled);
-
-                if (DataContext is MainViewModel vm)
-                {
-                    vm.ActionLog.Insert(0, new ActionLogEntry
-                    {
-                        Timestamp = DateTime.Now,
-                        Source = "Fog",
-                        Message = enabled ? "🌫️ Fog of War enabled" : "🌅 Fog of War disabled"
-                    });
-                }
+                Status_Mode.Text = enabled ? "Mode: Fog Enabled" : "Mode: Normal";
             };
 
             FogToolbar.BrushModeChanged += (mode) =>
             {
-                BattleGrid.SetFogBrushMode(mode);
+                // Convert from Views.FogBrushMode to Services.FogBrushMode
+                var fogMode = mode == DnDBattle.Services.FogBrushMode.Reveal
+                    ? DnDBattle.Services.FogBrushMode.Reveal
+                    : DnDBattle.Services.FogBrushMode.Hide;
+
+                BattleGrid.SetFogBrushMode(fogMode);
+                Status_Mode.Text = $"Mode: Fog Brush ({mode})";
             };
 
             FogToolbar.BrushSizeChanged += (size) =>
@@ -335,40 +336,33 @@ namespace DnDBattle
             FogToolbar.PlayerViewChanged += (isPlayerView) =>
             {
                 BattleGrid.SetPlayerView(isPlayerView);
+                Status_Mode.Text = isPlayerView ? "Mode: Player View" : "Mode: DM View";
             };
 
             FogToolbar.RevealPlayersRequested += () =>
             {
                 BattleGrid.RevealAroundPlayers();
-
-                if (DataContext is MainViewModel vm)
-                {
-                    vm.ActionLog.Insert(0, new ActionLogEntry
-                    {
-                        Timestamp = DateTime.Now,
-                        Source = "Fog",
-                        Message = "👥 Revealed area around player tokens"
-                    });
-                }
+                Status_Mode.Text = "Revealed around players";
             };
 
             FogToolbar.RevealAllRequested += () =>
             {
-                // TODO
-                //BattleGrid.FogService.RevealAll();
+                BattleGrid.RevealAllFog();
+                Status_Mode.Text = "All fog revealed";
             };
 
             FogToolbar.HideAllRequested += () =>
             {
-                // TODO
-                //BattleGrid.FogService.ClearAll();
+                BattleGrid.ResetFog();
+                Status_Mode.Text = "All fog hidden";
             };
 
             FogToolbar.ShapeToolSelected += (tool) =>
             {
-                BattleGrid.StartFogShapeTool(tool);
+                StartFogShapeTool(tool);
             };
         }
+
         #endregion
 
         private void OnTokenDoubleClicked(Token token)
@@ -1303,6 +1297,13 @@ namespace DnDBattle
         #endregion
 
         #region Helpers
+
+        private void StartFogShapeTool(DnDBattle.Views.FogShapeTool tool)
+        {
+            _activeFogShapeTool = tool;
+            _fogShapeStart = null;
+            Status_Mode.Text = $"Mode: Draw {tool} (click-drag on map)";
+        }
 
         private void AutosaveNow()
         {

@@ -746,7 +746,7 @@ namespace DnDBattle.Controls
             var tilesToRemove = TileMap.GetTilesAt(gridX, gridY)
                 .Where(t =>
                 {
-                    var def = TileLibraryService.Instance.GetTileById(t.TileDefinitionId);
+                    var def = TileLibraryService.Instance.GetTileById(t.TileDefinitionId.ToString());
                     return def?.Layer == _activeLayer;
                 })
                 .ToList();
@@ -1065,7 +1065,7 @@ namespace DnDBattle.Controls
                 // Clone the tile
                 _clipboard.Add(new Tile
                 {
-                    TileDefinitionId = tile.TileDefinitionId,
+                    TileDefinitionId = tile.TileDefinitionId.ToString(),
                     GridX = tile.GridX,
                     GridY = tile.GridY,
                     Rotation = tile.Rotation,

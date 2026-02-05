@@ -60,7 +60,7 @@ namespace DnDBattle.Services.TileService
                     {
                         Id = GenerateDeterministicId(relativePath), // ← CONSISTENT ID!
                         ImagePath = relativePath,
-                        DisplayName = FormatDisplayName(fileName),
+                        Name = FormatDisplayName(fileName),
                         Category = category,
                         IsEnabled = true
                     };
@@ -118,7 +118,7 @@ namespace DnDBattle.Services.TileService
 
         public TileDefinition GetTileById(string id)
         {
-            return AvailableTiles.FirstOrDefault(t => t.Id == id);
+            return AvailableTiles.FirstOrDefault(t => t.Id.ToString() == id);
         }
 
         private string GetRelativePath(string absolutePath)
