@@ -4,6 +4,7 @@ using System.Windows.Media;
 
 namespace DnDBattle.Controls
 {
+    //
     /// <summary>
     /// Lightweight FrameworkElement that hosts a single DrawingVisual and lets callers draw viewport-aware grid lines.
     /// This is pure code (no XAML) to avoid designer/runtime conflicts with visuals.
