@@ -324,27 +324,47 @@ namespace DnDBattle.ViewModels
             int gridX = (int)gridPosition.X;
             int gridY = (int)gridPosition.Y;
 
-            // Remove tiles at this position on the active layer
+            // Get all tiles at this position
             var tilesToRemove = CurrentMap.PlacedTiles
                 .Where(t => t.GridX == gridX && t.GridY == gridY)
                 .ToList();
 
+            bool removedAny = false;
             foreach (var tile in tilesToRemove)
             {
                 var tileDef = _libraryService.GetTileById(tile.TileDefinitionId);
-                if (tileDef?.Layer == ActiveLayer || ActiveLayer == TileLayer.Floor)
+                
+                // Only erase tiles on the currently active layer
+                // This ensures users don't accidentally erase tiles from other layers
+                if (ShouldEraseTileOnLayer(tileDef?.Layer))
                 {
                     CurrentMap.PlacedTiles.Remove(tile);
                     TileRemoved?.Invoke(tile);
+                    removedAny = true;
                 }
             }
 
-            if (tilesToRemove.Any())
+            if (removedAny)
             {
                 HasUnsavedChanges = true;
             }
 
             Debug.WriteLine($"[TileEditorVM] Erased tiles at ({gridX}, {gridY})");
+        }
+
+        /// <summary>
+        /// Determines if a tile on the given layer should be erased based on the active layer.
+        /// Tiles are only erased if they match the currently active layer.
+        /// </summary>
+        /// <param name="tileLayer">The layer of the tile to check</param>
+        /// <returns>True if the tile should be erased</returns>
+        private bool ShouldEraseTileOnLayer(TileLayer? tileLayer)
+        {
+            // If we couldn't determine the tile's layer, don't erase it
+            if (!tileLayer.HasValue) return false;
+
+            // Only erase tiles that match the active layer
+            return tileLayer.Value == ActiveLayer;
         }
 
         [RelayCommand]

@@ -271,6 +271,21 @@ namespace DnDBattle.Views.TileMap
 
         private void TileDefProperty_Changed(object sender, RoutedEventArgs e)
         {
+            UpdateTileDefinitionFromUI();
+        }
+
+        private void TileDefProperty_Changed(object sender, TextChangedEventArgs e)
+        {
+            // Call the common handler - TextChangedEventArgs is a RoutedEventArgs subclass indirectly
+            // but we just need to trigger the update logic
+            UpdateTileDefinitionFromUI();
+        }
+
+        /// <summary>
+        /// Updates the tile definition from the current UI state
+        /// </summary>
+        private void UpdateTileDefinitionFromUI()
+        {
             if (_isLoadingProperties || _currentTileDefinition == null) return;
 
             // Update collision/vision
@@ -294,11 +309,6 @@ namespace DnDBattle.Views.TileMap
 
             TileDefinitionChanged?.Invoke(_currentTileDefinition);
             System.Diagnostics.Debug.WriteLine($"[TileProperties] Updated tile definition: {_currentTileDefinition.DisplayName}");
-        }
-
-        private void TileDefProperty_Changed(object sender, TextChangedEventArgs e)
-        {
-            TileDefProperty_Changed(sender, (RoutedEventArgs)e);
         }
 
         private void IsDoor_Changed(object sender, RoutedEventArgs e)
