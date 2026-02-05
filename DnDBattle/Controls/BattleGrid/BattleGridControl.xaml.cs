@@ -1,8 +1,11 @@
 ﻿using DnDBattle.Controls.BattleGrid.Managers;
 using DnDBattle.Models;
 using DnDBattle.Models.Tiles;
+using DnDBattle.Services;
+using DnDBattle.Services.FogOfWar;
 using System;
-using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -10,29 +13,57 @@ using System.Windows.Media;
 
 namespace DnDBattle.Controls.BattleGrid
 {
-    /// <summary>
-    /// BattleGridControl v2.0 - Clean, organized, maintainable
-    /// Core coordinator that manages specialized manager classes
-    /// </summary>
     public partial class BattleGridControl : UserControl
     {
+        #region Events
+
+        public event Action<Token> TokenClicked;
+        public event Action<Token> TokenDoubleClicked;
+        public event Action<Token, int, int, int, int> TokenMoved;
+        public event Action<string, string> LogMessage;
+
+        #endregion
+
         #region Dependency Properties
+
+        public static readonly DependencyProperty GridWidthProperty =
+            DependencyProperty.Register(nameof(GridWidth), typeof(int), typeof(BattleGridControl),
+                new PropertyMetadata(50, OnGridPropertyChanged));
+
+        public static readonly DependencyProperty GridHeightProperty =
+            DependencyProperty.Register(nameof(GridHeight), typeof(int), typeof(BattleGridControl),
+                new PropertyMetadata(50, OnGridPropertyChanged));
 
         public static readonly DependencyProperty GridCellSizeProperty =
             DependencyProperty.Register(nameof(GridCellSize), typeof(double), typeof(BattleGridControl),
-                new PropertyMetadata(48.0, OnGridCellSizeChanged));
+                new PropertyMetadata(48.0, OnGridPropertyChanged));
 
-        public static readonly DependencyProperty TokensProperty =
-            DependencyProperty.Register(nameof(Tokens), typeof(ObservableCollection<Token>), typeof(BattleGridControl),
-                new PropertyMetadata(null, OnTokensChanged));
-
-        public static readonly DependencyProperty SelectedTokenProperty =
-            DependencyProperty.Register(nameof(SelectedToken), typeof(Token), typeof(BattleGridControl),
-                new PropertyMetadata(null, OnSelectedTokenChanged));
+        public static readonly DependencyProperty ShowGridProperty =
+            DependencyProperty.Register(nameof(ShowGrid), typeof(bool), typeof(BattleGridControl),
+                new PropertyMetadata(true, OnGridPropertyChanged));
 
         public static readonly DependencyProperty LockToGridProperty =
             DependencyProperty.Register(nameof(LockToGrid), typeof(bool), typeof(BattleGridControl),
                 new PropertyMetadata(true));
+
+        public static readonly DependencyProperty TokensProperty =
+            DependencyProperty.Register(nameof(Tokens), typeof(System.Collections.ObjectModel.ObservableCollection<Token>),
+                typeof(BattleGridControl), new PropertyMetadata(null, OnTokensChanged));
+
+        public static readonly DependencyProperty SelectedTokenProperty =
+            DependencyProperty.Register(nameof(SelectedToken), typeof(Token), typeof(BattleGridControl), new PropertyMetadata(null, OnSelectedTokenChanged));
+
+        public int GridWidth
+        {
+            get => (int)GetValue(GridWidthProperty);
+            set => SetValue(GridWidthProperty, value);
+        }
+
+        public int GridHeight
+        {
+            get => (int)GetValue(GridHeightProperty);
+            set => SetValue(GridHeightProperty, value);
+        }
 
         public double GridCellSize
         {
@@ -40,16 +71,10 @@ namespace DnDBattle.Controls.BattleGrid
             set => SetValue(GridCellSizeProperty, value);
         }
 
-        public ObservableCollection<Token> Tokens
+        public bool ShowGrid
         {
-            get => (ObservableCollection<Token>)GetValue(TokensProperty);
-            set => SetValue(TokensProperty, value);
-        }
-
-        public Token SelectedToken
-        {
-            get => (Token)GetValue(SelectedTokenProperty);
-            set => SetValue(SelectedTokenProperty, value);
+            get => (bool)GetValue(ShowGridProperty);
+            set => SetValue(ShowGridProperty, value);
         }
 
         public bool LockToGrid
@@ -58,23 +83,21 @@ namespace DnDBattle.Controls.BattleGrid
             set => SetValue(LockToGridProperty, value);
         }
 
-        #endregion
+        public System.Collections.ObjectModel.ObservableCollection<Token> Tokens
+        {
+            get => (System.Collections.ObjectModel.ObservableCollection<Token>)GetValue(TokensProperty);
+            set => SetValue(TokensProperty, value);
+        }
 
-        #region Fields
-
-        private DateTime _lastViewportUpdate = DateTime.MinValue;
-
-        #endregion
-
-        #region Events
-
-        public event Action<Token> TokenDoubleClicked;
-        public event Action<Token> TokenSelected;
-        public event Action<string, string> LogMessage;
+        public Token SelectedToken 
+        { 
+            get => (Token)GetValue(SelectedTokenProperty); 
+            set => SetValue(SelectedTokenProperty, value); 
+        }
 
         #endregion
 
-        #region Managers
+        #region Fields - Managers
 
         private readonly BattleGridRenderManager _renderManager;
         private readonly BattleGridTokenManager _tokenManager;
@@ -83,12 +106,18 @@ namespace DnDBattle.Controls.BattleGrid
 
         #endregion
 
-        #region Properties
+        #region Fields - Mouse Interaction State
 
-        public bool ShowGrid { get; set; } = false;
-        public int GridWidth { get; private set; } = 100;
-        public int GridHeight { get; private set; } = 100;
-        public Point CurrentMouseGridPosition { get; private set; }
+        private bool _isPanning = false;
+        private Point _panStartPoint;
+
+        private Token _draggedToken = null;
+        private FrameworkElement _draggedTokenVisual = null;
+        private Point _tokenDragStartPoint;
+        private int _tokenDragStartGridX;
+        private int _tokenDragStartGridY;
+
+        private DateTime _lastViewportUpdate = DateTime.MinValue;
 
         #endregion
 
@@ -98,7 +127,7 @@ namespace DnDBattle.Controls.BattleGrid
         {
             InitializeComponent();
 
-            System.Diagnostics.Debug.WriteLine("[BattleGrid] Initializing BattleGridControl v2.0...");
+            Debug.WriteLine("[BattleGrid] Constructor START");
 
             // Initialize managers
             _renderManager = new BattleGridRenderManager(RenderCanvas, RulerCanvas);
@@ -106,19 +135,14 @@ namespace DnDBattle.Controls.BattleGrid
             _inputManager = new BattleGridInputManager();
             _tileMapManager = new BattleGridTileMapManager();
 
-            // Wire up manager events
+            // Setup events
             SetupManagerEvents();
 
-            // Set default grid size
-            SetGridSize(100, 100);
-
-            // Handle loaded event
+            // Wire up control events
             Loaded += BattleGridControl_Loaded;
+            SizeChanged += BattleGridControl_SizeChanged;
 
-            ShowGrid = true;
-            LockToGrid = true;
-
-            System.Diagnostics.Debug.WriteLine("[BattleGrid] Initialization complete!");
+            Debug.WriteLine("[BattleGrid] Constructor END");
         }
 
         #endregion
@@ -127,21 +151,15 @@ namespace DnDBattle.Controls.BattleGrid
 
         private void BattleGridControl_Loaded(object sender, RoutedEventArgs e)
         {
-            System.Diagnostics.Debug.WriteLine("[BattleGrid] Control loaded, rendering initial state...");
+            Debug.WriteLine("[BattleGrid] Control loaded");
 
-            // Set viewport size
             _renderManager.SetViewportSize(ActualWidth, ActualHeight);
             _renderManager.SetGridDimensions(GridWidth, GridHeight, GridCellSize);
-
-            // RESET VIEW TO (0, 0) - START AT A1!
             _renderManager.ResetView();
-            System.Diagnostics.Debug.WriteLine("[BattleGrid] View reset to A1");
 
-            // Initial render - FORCE grid to show
-            _renderManager.RenderGrid(GridWidth, GridHeight, GridCellSize, true);
+            _renderManager.RenderGrid(GridWidth, GridHeight, GridCellSize, ShowGrid);
             _renderManager.RenderRulers(GridWidth, GridHeight, GridCellSize, ActualWidth, ActualHeight);
 
-            // Wire up token manager with tokens collection
             if (Tokens != null)
             {
                 _tokenManager.SetTokens(Tokens);
@@ -152,259 +170,205 @@ namespace DnDBattle.Controls.BattleGrid
             Focus();
         }
 
+        private void BattleGridControl_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            Debug.WriteLine($"[BattleGrid] Size changed: {e.NewSize}");
+            _renderManager.SetViewportSize(e.NewSize.Width, e.NewSize.Height);
+            OnViewportChanged();
+        }
+
         private void SetupManagerEvents()
         {
-            // Render manager events
+            // Render manager
             _renderManager.ViewportChanged += OnViewportChanged;
 
-            // Token manager events
-            _tokenManager.TokenClicked += OnTokenClicked;
+            // Token manager
+            _tokenManager.TokenClicked += (token) => TokenClicked?.Invoke(token);
             _tokenManager.TokenDoubleClicked += (token) => TokenDoubleClicked?.Invoke(token);
-            _tokenManager.TokenMoved += OnTokenMoved;
-            _tokenManager.StopPanning += () => _inputManager.StopPanning();
+            _tokenManager.TokenMoved += (token, oldX, oldY, newX, newY) => TokenMoved?.Invoke(token, oldX, oldY, newX, newY);
             _tokenManager.LogMessage += (category, message) => LogMessage?.Invoke(category, message);
 
-            // Input manager events
-            _inputManager.PanChanged += OnPanChanged;
-            _inputManager.ZoomChanged += OnZoomChanged;
+            // Input manager
             _inputManager.GridPositionChanged += OnGridPositionChanged;
-            _inputManager.ResetViewRequested += OnResetViewRequested;
-            _inputManager.ZoomAtCenterRequested += OnZoomAtCenterRequested;
-
-            // Tile map manager events
-            _tileMapManager.TileMapLoaded += OnTileMapLoaded;
-            _tileMapManager.LogMessage += (category, message) => LogMessage?.Invoke(category, message);
         }
 
         #endregion
 
-        #region Public Methods
-
-        /// <summary>
-        /// Sets the grid dimensions
-        /// </summary>
-        public void SetGridSize(int width, int height)
-        {
-            GridWidth = Math.Max(10, width);
-            GridHeight = Math.Max(10, height);
-
-            System.Diagnostics.Debug.WriteLine($"[BattleGrid] Grid size set to {GridWidth}×{GridHeight}");
-
-            // Tell render manager about grid dimensions
-            _renderManager.SetGridDimensions(GridWidth, GridHeight, GridCellSize);
-
-            if (IsLoaded)
-            {
-                _renderManager.RenderGrid(GridWidth, GridHeight, GridCellSize, LockToGrid);
-            }
-        }
-
-
-        /// <summary>
-        /// Loads a tile map into the battle grid
-        /// </summary>
-        public async void LoadTileMap(TileMap tileMap)
-        {
-            await LoadTileMapAsync(tileMap);
-        }
-
-        /// <summary>
-        /// Loads a tile map into the battle grid asyncornously
-        /// </summary>
-        public async Task LoadTileMapAsync(TileMap tileMap)
-        {
-            try
-            {
-                System.Diagnostics.Debug.WriteLine($"[BattleGrid] ===== LoadTileMapAsync START =====");
-                System.Diagnostics.Debug.WriteLine($"[BattleGrid] Tile map: {tileMap?.Name ?? "NULL"}");
-
-                if (tileMap == null)
-                {
-                    _tileMapManager.ClearTileMap();
-                    _renderManager.RenderTileMap(null, GridCellSize);
-                    LogMessage?.Invoke("Map", "Tile map cleared");
-                    return;
-                }
-
-                System.Diagnostics.Debug.WriteLine($"[BattleGrid] Map size: {tileMap.Width}×{tileMap.Height}");
-                System.Diagnostics.Debug.WriteLine($"[BattleGrid] Tiles: {tileMap.PlacedTiles?.Count ?? 0}");
-
-                // Set grid to match tile map size
-                SetGridSize(tileMap.Width, tileMap.Height);
-
-                // RESET VIEW TO ORIGIN
-                _renderManager.ResetView();
-                System.Diagnostics.Debug.WriteLine($"[BattleGrid] View reset to origin");
-
-                // Load tile map (async in background)
-                System.Diagnostics.Debug.WriteLine($"[BattleGrid] Calling TileMapManager.LoadTileMapAsync...");
-                await _tileMapManager.LoadTileMapAsync(tileMap, GridCellSize);
-
-                System.Diagnostics.Debug.WriteLine($"[BattleGrid] Loaded tile map successfully");
-
-                // Render tile map on UI thread
-                System.Diagnostics.Debug.WriteLine($"[BattleGrid] Calling RenderManager.RenderTileMap...");
-                _renderManager.RenderTileMap(_tileMapManager.LoadedTileMap, GridCellSize);
-
-                System.Diagnostics.Debug.WriteLine($"[BattleGrid] Render complete");
-
-                // Force viewport update
-                OnViewportChanged();
-
-                LogMessage?.Invoke("Map", $"✅ Loaded: {tileMap.Name} ({tileMap.Width}×{tileMap.Height}, {tileMap.PlacedTiles?.Count ?? 0} tiles)");
-
-                System.Diagnostics.Debug.WriteLine($"[BattleGrid] ===== LoadTileMapAsync END =====");
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[BattleGrid] ❌ ERROR: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"[BattleGrid] Stack: {ex.StackTrace}");
-                LogMessage?.Invoke("Error", $"Failed to load tile map: {ex.Message}");
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// Rebuilds all token visuals
-        /// </summary>
-        public void RefreshTokens()
-        {
-            _tokenManager.RebuildAllTokenVisuals(GridCellSize);
-        }
-
-        #endregion
-
-        #region Dependency Property Callbacks
-
-        private static void OnGridCellSizeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            if (d is BattleGridControl control && control.IsLoaded)
-            {
-                control._renderManager.RenderGrid(control.GridWidth, control.GridHeight, control.GridCellSize, control.LockToGrid);
-                control._tokenManager.RebuildAllTokenVisuals(control.GridCellSize);
-            }
-        }
-
-        private static void OnTokensChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            if (d is BattleGridControl control)
-            {
-                var tokens = e.NewValue as ObservableCollection<Token>;
-                control._tokenManager.SetTokens(tokens);
-
-                if (control.IsLoaded)
-                {
-                    System.Diagnostics.Debug.WriteLine($"[BattleGrid] Tokens changed, rebuilding visuals for {tokens?.Count ?? 0} tokens");
-                    control._tokenManager.RebuildAllTokenVisuals(control.GridCellSize);
-                }
-            }
-        }
-
-        private static void OnSelectedTokenChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            if (d is BattleGridControl control && e.NewValue is Token token)
-            {
-                control._tokenManager.SelectToken(token);
-            }
-        }
-
-        #endregion
-
-        #region Event Handlers - Input
+        #region Mouse Handling
 
         private void RenderCanvas_MouseDown(object sender, MouseButtonEventArgs e)
         {
             Focus();
 
-            var position = e.GetPosition(RenderCanvas);
-            var transform = _renderManager.GetTransform();
+            var mousePos = e.GetPosition(RenderCanvas);
 
-            // LEFT MOUSE BUTTON
             if (e.ChangedButton == MouseButton.Left)
             {
-                // FIRST: Check if we clicked on a token
-                var worldPos = transform.Inverse?.Transform(position) ?? position;
-                var clickedToken = FindTokenAtPosition(worldPos);
+                // Check if we clicked on a token
+                var clickedElement = FindVisualAtPoint(mousePos);
 
-                if (clickedToken != null)
+                if (clickedElement?.Tag is Token token)
                 {
-                    // Token clicked - let TokenManager handle it
-                    System.Diagnostics.Debug.WriteLine($"[BattleGrid] Token clicked: {clickedToken.Name}");
-                    _tokenManager.HandleMouseDown(position, transform, GridCellSize);
+                    // Start token drag
+                    _draggedToken = token;
+                    _draggedTokenVisual = clickedElement;
+                    _tokenDragStartPoint = mousePos;
+                    _tokenDragStartGridX = token.GridX;
+                    _tokenDragStartGridY = token.GridY;
+
+                    _draggedTokenVisual.CaptureMouse();
+                    Panel.SetZIndex(_draggedTokenVisual, 1000);
+
+                    TokenClicked?.Invoke(token);
+
+                    Debug.WriteLine($"[BattleGrid] Started dragging token: {token.Name}");
                     e.Handled = true;
-                    return; // DON'T start panning!
+                    return;
                 }
                 else
                 {
-                    // Empty space clicked - start panning
-                    System.Diagnostics.Debug.WriteLine($"[BattleGrid] Starting pan at {position}");
-                    _inputManager.HandleMouseDown(e, position, transform, GridCellSize);
-                    RenderCanvas.CaptureMouse(); // ← CAPTURE MOUSE!
+                    // Start panning
+                    _isPanning = true;
+                    _panStartPoint = mousePos;
+                    RenderCanvas.CaptureMouse();
+                    Cursor = Cursors.SizeAll;
+
+                    Debug.WriteLine($"[BattleGrid] Started panning");
                 }
             }
-            // MIDDLE MOUSE BUTTON
             else if (e.ChangedButton == MouseButton.Middle)
             {
-                System.Diagnostics.Debug.WriteLine($"[BattleGrid] Starting middle-mouse pan");
-                _inputManager.HandleMouseDown(e, position, transform, GridCellSize);
-                RenderCanvas.CaptureMouse(); // ← CAPTURE MOUSE!
+                _isPanning = true;
+                _panStartPoint = mousePos;
+                RenderCanvas.CaptureMouse();
+                Cursor = Cursors.SizeAll;
             }
         }
 
         private void RenderCanvas_MouseMove(object sender, MouseEventArgs e)
         {
-            var position = e.GetPosition(RenderCanvas);
+            var mousePos = e.GetPosition(RenderCanvas);
             var transform = _renderManager.GetTransform();
 
-            // FIRST: Check if TokenManager is dragging
-            if (_tokenManager.IsDragging)
+            // Always update cell position display
+            UpdateCellPositionDisplay(mousePos, transform);
+
+            // Handle token dragging
+            if (_draggedToken != null && _draggedTokenVisual != null)
             {
-                _tokenManager.HandleMouseMove(position, transform, GridCellSize, LockToGrid);
+                var delta = mousePos - _tokenDragStartPoint;
+
+                var currentLeft = Canvas.GetLeft(_draggedTokenVisual);
+                var currentTop = Canvas.GetTop(_draggedTokenVisual);
+
+                Canvas.SetLeft(_draggedTokenVisual, currentLeft + delta.X);
+                Canvas.SetTop(_draggedTokenVisual, currentTop + delta.Y);
+
+                _tokenDragStartPoint = mousePos;
                 e.Handled = true;
                 return;
             }
 
-            // SECOND: ONLY handle panning if mouse is captured or button is pressed
-            if (RenderCanvas.IsMouseCaptured ||
-                e.LeftButton == MouseButtonState.Pressed ||
-                e.MiddleButton == MouseButtonState.Pressed)
+            // Handle panning
+            if (_isPanning)
             {
-                _inputManager.HandleMouseMove(e, position, transform, GridCellSize, ActualWidth, ActualHeight);
+                var delta = mousePos - _panStartPoint;
+
+                // Apply pan without any clamping or rendering
+                _renderManager.ApplyPanWithoutRedraw(delta.X, delta.Y);
+
+                _panStartPoint = mousePos;
+                e.Handled = true;
+                return;
             }
-            else
+
+            // Update cursor
+            if (!_isPanning && _draggedToken == null)
             {
-                // Just update grid position display (no panning)
-                _inputManager.UpdateGridPosition(position, transform, GridCellSize);
+                var element = FindVisualAtPoint(mousePos);
+                Cursor = (element?.Tag is Token) ? Cursors.Hand : Cursors.Arrow;
             }
         }
 
         private void RenderCanvas_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            var position = e.GetPosition(RenderCanvas);
-            var transform = _renderManager.GetTransform();
+            var mousePos = e.GetPosition(RenderCanvas);
 
-            System.Diagnostics.Debug.WriteLine($"[BattleGrid] Mouse up: {e.ChangedButton}");
-
-            // Release mouse capture
-            RenderCanvas.ReleaseMouseCapture();
-
-            // FIRST: Check if TokenManager is finishing a drag
-            if (_tokenManager.IsDragging)
+            // Handle token drop
+            if (_draggedToken != null && _draggedTokenVisual != null)
             {
-                _tokenManager.HandleMouseUp(position, transform, GridCellSize, LockToGrid);
+                _draggedTokenVisual.ReleaseMouseCapture();
+                Panel.SetZIndex(_draggedTokenVisual, 100);
+
+                var left = Canvas.GetLeft(_draggedTokenVisual);
+                var top = Canvas.GetTop(_draggedTokenVisual);
+
+                int newGridX, newGridY;
+
+                if (LockToGrid)
+                {
+                    newGridX = (int)Math.Round(left / GridCellSize);
+                    newGridY = (int)Math.Round(top / GridCellSize);
+                }
+                else
+                {
+                    newGridX = (int)(left / GridCellSize);
+                    newGridY = (int)(top / GridCellSize);
+                }
+
+                Canvas.SetLeft(_draggedTokenVisual, newGridX * GridCellSize);
+                Canvas.SetTop(_draggedTokenVisual, newGridY * GridCellSize);
+
+                int oldX = _tokenDragStartGridX;
+                int oldY = _tokenDragStartGridY;
+
+                _draggedToken.GridX = newGridX;
+                _draggedToken.GridY = newGridY;
+
+                if (newGridX != oldX || newGridY != oldY)
+                {
+                    Debug.WriteLine($"[BattleGrid] Token {_draggedToken.Name} moved from ({oldX},{oldY}) to ({newGridX},{newGridY})");
+                    TokenMoved?.Invoke(_draggedToken, oldX, oldY, newGridX, newGridY);
+                    LogMessage?.Invoke("Movement", $"{_draggedToken.Name} moved to {GetColumnLabel(newGridX)}{newGridY + 1}");
+                }
+
+                _draggedToken = null;
+                _draggedTokenVisual = null;
+                Cursor = Cursors.Arrow;
                 e.Handled = true;
                 return;
             }
 
-            // SECOND: Let input manager finish panning
-            _inputManager.HandleMouseUp(e, position);
+            // Handle pan end
+            if (_isPanning)
+            {
+                _isPanning = false;
+                RenderCanvas.ReleaseMouseCapture();
+                Cursor = Cursors.Arrow;
+
+                // NOW do clamping and full render
+                _renderManager.FinishInteraction();
+                OnViewportChanged();
+
+                Debug.WriteLine($"[BattleGrid] Panning stopped");
+            }
         }
 
         private void RenderCanvas_MouseWheel(object sender, MouseWheelEventArgs e)
         {
-            var position = e.GetPosition(RenderCanvas);
-            _inputManager.HandleMouseWheel(e, position, ActualWidth, ActualHeight);
+            var mousePos = e.GetPosition(RenderCanvas);
+            double zoomFactor = e.Delta > 0 ? 1.1 : 1.0 / 1.1;
+
+            _renderManager.ApplyZoom(zoomFactor, mousePos);
+
+            UpdateZoomDisplay();
+            OnViewportChanged();
+            e.Handled = true;
         }
+
+        #endregion
+
+        #region Keyboard Handling
 
         protected override void OnKeyDown(KeyEventArgs e)
         {
@@ -414,98 +378,64 @@ namespace DnDBattle.Controls.BattleGrid
 
         #endregion
 
-        #region Event Handlers - Managers
+        #region Helper Methods
 
-        protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
+        private FrameworkElement FindVisualAtPoint(Point point)
         {
-            base.OnRenderSizeChanged(sizeInfo);
+            HitTestResult result = VisualTreeHelper.HitTest(RenderCanvas, point);
 
-            if (sizeInfo.WidthChanged || sizeInfo.HeightChanged)
+            if (result != null)
             {
-                _renderManager.SetViewportSize(ActualWidth, ActualHeight);
-                OnViewportChanged();
+                DependencyObject obj = result.VisualHit;
+
+                while (obj != null && obj != RenderCanvas)
+                {
+                    if (obj is FrameworkElement element && element.Tag is Token)
+                    {
+                        return element;
+                    }
+                    obj = VisualTreeHelper.GetParent(obj);
+                }
             }
+
+            return null;
         }
 
-        private void OnResetViewRequested()
+        private void UpdateCellPositionDisplay(Point screenPoint, TransformGroup transform)
         {
-            _renderManager.ResetView();
-        }
-
-        private void OnZoomAtCenterRequested(double factor)
-        {
-            var center = new Point(ActualWidth / 2, ActualWidth / 2);
-            _renderManager.ApplyZoom(factor, center);
-        }
-
-        private void OnViewportChanged()
-        {
-            var now = DateTime.Now;
-            if ((now - _lastViewportUpdate).TotalMilliseconds < 50)
-                return;
-
-            _lastViewportUpdate = now;
-
-            _renderManager.RenderGrid(GridWidth, GridHeight, GridCellSize, ShowGrid);
-            _renderManager.RenderRulers(GridWidth, GridHeight, GridCellSize, ActualWidth, ActualHeight);
-            _tokenManager.UpdateTokenPositions(GridCellSize);
-        }
-
-        private void OnPanChanged(double deltaX, double deltaY)
-        {
-            _renderManager.ApplyPan(deltaX, deltaY);
-            OnViewportChanged();
-        }
-
-        private void OnZoomChanged(double zoomFactor, Point zoomCenter)
-        {
-            _renderManager.ApplyZoom(zoomFactor, zoomCenter);
-            OnViewportChanged();
-            UpdateZoomDisplay();
-        }
-
-        private void OnGridPositionChanged(Point gridPosition)
-        {
-            CurrentMouseGridPosition = gridPosition;
-            UpdateCurrentCellDisplay(gridPosition);
-        }
-
-        private void OnTokenClicked(Token token)
-        {
-            SelectedToken = token;
-            TokenSelected?.Invoke(token);
-        }
-
-        private void OnTokenMoved(Token token, int oldX, int oldY, int newX, int newY)
-        {
-            // TODO: Add undo/redo support
-            // TODO: Check for tile metadata interactions
-            System.Diagnostics.Debug.WriteLine($"[BattleGrid] Token {token.Name} moved from ({oldX},{oldY}) to ({newX},{newY})");
-        }
-
-        private void OnTileMapLoaded(TileMap tileMap)
-        {
-            _renderManager.RenderTileMap(tileMap, GridCellSize);
-        }
-
-        #endregion
-
-        #region UI Updates
-
-        private void UpdateCurrentCellDisplay(Point gridPosition)
-        {
-            int x = (int)Math.Floor(gridPosition.X);
-            int y = (int)Math.Floor(gridPosition.Y);
-
-            if (x >= 0 && x < GridWidth && y >= 0 && y < GridHeight)
+            try
             {
-                string column = GetColumnLabel(x);
-                TxtCurrentCell.Text = $"{column}{y + 1}";
+                var worldPoint = ScreenToWorld(screenPoint);
+
+                int gridX = (int)Math.Floor(worldPoint.X / GridCellSize);
+                int gridY = (int)Math.Floor(worldPoint.Y / GridCellSize);
+
+                if (gridX >= 0 && gridX < GridWidth && gridY >= 0 && gridY < GridHeight)
+                {
+                    string col = GetColumnLabel(gridX);
+                    TxtCurrentCell.Text = $"{col}{gridY + 1}";
+                }
+                else
+                {
+                    TxtCurrentCell.Text = "-";
+                }
             }
-            else
+            catch (Exception ex)
             {
+                Debug.WriteLine($"[BattleGrid] Error updating cell display: {ex.Message}");
                 TxtCurrentCell.Text = "-";
             }
+        }
+
+        private Point ScreenToWorld(Point screenPoint)
+        {
+            double zoom = _renderManager.GetZoomLevel();
+            var pan = _renderManager.GetTransform().Children[0].Value; // Pan is first
+
+            return new Point(
+                screenPoint.X / zoom - pan.OffsetX,
+                screenPoint.Y / zoom - pan.OffsetY
+            );
         }
 
         private void UpdateZoomDisplay()
@@ -528,232 +458,318 @@ namespace DnDBattle.Controls.BattleGrid
 
         #endregion
 
-        #region Helpers
+        #region Event Handlers
 
-        private Token FindTokenAtPosition(Point worldPosition)
+        private void OnViewportChanged()
         {
-            if (Tokens == null) return null;
-
-            foreach (var token in Tokens.Reverse())
+            // Don't update during interaction
+            if (_draggedToken != null)
             {
-                double tokenLeft = token.GridX * GridCellSize;
-                double tokenTop = token.GridY * GridCellSize;
-                double tokenSize = GridCellSize * token.SizeInSquares;
-
-                var tokenRect = new Rect(tokenLeft, tokenTop, tokenSize, tokenSize);
-
-                if (tokenRect.Contains(worldPosition))
-                    return token;
+                return;
             }
-            return null;
-        }
 
-        #endregion
-
-        #region Compatibility Methods (Temporary - TODO: Implement properly)
-
-        /// <summary>
-        /// Refreshes token visuals - compatibility method
-        /// </summary>
-        public void RebuildTokenVisuals()
-        {
-            RefreshTokens();
-        }
-
-        /// <summary>
-        /// Sets grid size - compatibility method
-        /// </summary>
-        public void SetGridMaxSize(int width, int height)
-        {
-            SetGridSize(width, height);
-        }
-
-        /// <summary>
-        /// Update shadow softness (not yet implemented)
-        /// </summary>
-        public void UpdateShadowSoftness()
-        {
-            // TODO: Implement shadow effects
-            System.Diagnostics.Debug.WriteLine("[BattleGrid] UpdateShadowSoftness - not yet implemented");
-        }
-
-        /// <summary>
-        /// Pan by specific amount (compatibility method)
-        /// </summary>
-        public void PanBy(double deltaX, double deltaY)
-        {
-            _renderManager.ApplyPan(deltaX, deltaY);
-        }
-
-        /// <summary>
-        /// Converts screen coordinates to world coordinates
-        /// </summary>
-        public Point ScreenToWorldPublic(Point screenPoint)
-        {
-            var transform = _renderManager.GetTransform();
-            return transform.Inverse?.Transform(screenPoint) ?? screenPoint;
-        }
-
-        /// <summary>
-        /// Handle key down from MainWindow
-        /// </summary>
-        public void HandleKeyDown(Key key)
-        {
-            var e = new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(this), 0, key)
+            var now = DateTime.Now;
+            if ((now - _lastViewportUpdate).TotalMilliseconds < 100)
             {
-                RoutedEvent = Keyboard.KeyDownEvent
-            };
-            _inputManager.HandleKeyDown(e, GridCellSize);
+                return;
+            }
+            _lastViewportUpdate = now;
+
+            double currentZoom = _renderManager.GetZoomLevel();
+
+            if (currentZoom >= 0.5)
+            {
+                _renderManager.RenderGrid(GridWidth, GridHeight, GridCellSize, ShowGrid);
+            }
+
+            _renderManager.RenderRulers(GridWidth, GridHeight, GridCellSize, ActualWidth, ActualHeight);
+            _tokenManager.UpdateTokenPositions(GridCellSize);
         }
 
-        public void OnTokenTurnStart(Token token)
+        private void OnGridPositionChanged(Point gridPosition)
         {
-
+            // Grid position updates handled by UpdateCellPositionDisplay
         }
 
-        public void OnTokenTurnEnd(Token token)
+        private static void OnGridPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-
+            if (d is BattleGridControl control && control.IsLoaded)
+            {
+                control._renderManager.SetGridDimensions(control.GridWidth, control.GridHeight, control.GridCellSize);
+                control._renderManager.RenderGrid(control.GridWidth, control.GridHeight, control.GridCellSize, control.ShowGrid);
+                control._renderManager.RenderRulers(control.GridWidth, control.GridHeight, control.GridCellSize, control.ActualWidth, control.ActualHeight);
+            }
         }
 
-        public void OnRoundChanged(int currentRound)
+        private static void OnTokensChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
+            if (d is BattleGridControl control)
+            {
+                var tokens = e.NewValue as System.Collections.ObjectModel.ObservableCollection<Token>;
+                control._tokenManager.SetTokens(tokens);
 
+                if (control.IsLoaded)
+                {
+                    control._tokenManager.RebuildAllTokenVisuals(control.GridCellSize);
+                }
+            }
+        }
+
+        private static void OnSelectedTokenChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            // TODO
+
+            var ctrl = (BattleGridControl)d;
+            /*ctrl.RedrawMovementOverlay();
+            ctrl.ClearPathVisual();*/
         }
 
         #endregion
 
-        #region Not Yet Implemented Features (Stubs)
+        #region Public Methods
 
-        // These features will be added back later in separate managers
+        public void SetGridSize(int width, int height)
+        {
+            GridWidth = width;
+            GridHeight = height;
+        }
 
+        public async System.Threading.Tasks.Task LoadTileMapAsync(TileMap tileMap)
+        {
+            try
+            {
+                Debug.WriteLine($"[BattleGrid] Loading tile map: {tileMap?.Name ?? "null"}");
+
+                if (tileMap == null)
+                {
+                    _tileMapManager.ClearTileMap();
+                    _renderManager.RenderTileMap(null, GridCellSize);
+                    LogMessage?.Invoke("Map", "Tile map cleared");
+                    return;
+                }
+
+                SetGridSize(tileMap.Width, tileMap.Height);
+                _renderManager.ResetView();
+
+                await _tileMapManager.LoadTileMapAsync(tileMap, GridCellSize);
+                _renderManager.RenderTileMap(_tileMapManager.LoadedTileMap, GridCellSize);
+
+                OnViewportChanged();
+
+                LogMessage?.Invoke("Map", $"✅ Loaded: {tileMap.Name} ({tileMap.Width}×{tileMap.Height}, {tileMap.PlacedTiles?.Count ?? 0} tiles)");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[BattleGrid] Error loading tile map: {ex.Message}");
+                LogMessage?.Invoke("Error", $"Failed to load tile map: {ex.Message}");
+                throw;
+            }
+        }
+
+        #endregion
+
+        #region Compatibility Methods (Matching OLD BattleGridControl Signatures)
+
+        // Events
+        public event Action<Token> TokenSelected;
         public event Action<Token> TokenAddedToMap;
-
-        public void StartAreaEffectPlacement(object shape, int size, Color color)
-        {
-            MessageBox.Show("Area effects coming soon in Phase 2!", "Not Implemented", MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-
-        public void UpdateAreaEffectSize(int size)
-        {
-            // TODO: Implement in AreaEffectManager
-        }
-
-        public void UpdateAreaEffectColor(Color color)
-        {
-            // TODO: Implement in AreaEffectManager
-        }
-
-        public void CancelAreaEffectPlacement()
-        {
-            // TODO: Implement in AreaEffectManager
-        }
-
-        public object AreaEffectService => null; // TODO: Implement
-
-        public void EnterTargetingMode(object state)
-        {
-            MessageBox.Show("Targeting mode coming soon in Phase 3!", "Not Implemented", MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-
-        public void ExitTargetingMode()
-        {
-            // TODO: Implement in CombatManager
-        }
-
         public event Action<Token> TargetSelected;
 
+        // Tile Map
+        public void LoadTileMap(TileMap tileMap)
+        {
+            _ = LoadTileMapAsync(tileMap);
+        }
+
+        // Token Visuals
+        public void RebuildTokenVisuals()
+        {
+            _tokenManager.RebuildAllTokenVisuals(GridCellSize);
+        }
+
+        // Coordinate Conversion
+        public Point ScreenToWorldPublic(Point screenPoint)
+        {
+            return ScreenToWorld(screenPoint);
+        }
+
+        // Panning
+        public void PanBy(double dx, double dy)
+        {
+            _renderManager.ApplyPanWithoutRedraw(dx, dy);
+            _renderManager.FinishInteraction();
+            OnViewportChanged();
+        }
+
+        // Keyboard - Takes Key enum
+        public void HandleKeyDown(Key key)
+        {
+            Debug.WriteLine($"[BattleGrid] HandleKeyDown: {key}");
+        }
+
+        // Measure Mode
+        private bool _isMeasureMode = false;
+        public bool IsMeasureMode => _isMeasureMode;
+
+        public void SetMeasureMode(bool enabled)
+        {
+            _isMeasureMode = enabled;
+            LogMessage?.Invoke("Measure", enabled ? "Measure mode enabled" : "Measure mode disabled");
+        }
+
+        // Grid Settings
+        public void SetGridMaxSize(int maxWidth, int maxHeight)
+        {
+            Debug.WriteLine($"[BattleGrid] SetGridMaxSize: {maxWidth}×{maxHeight}");
+        }
+
+        public void UpdateShadowSoftness()
+        {
+            Debug.WriteLine($"[BattleGrid] UpdateShadowSoftness stub");
+        }
+
+        // Fog of War
         public void InitializeFogOfWar()
         {
-            MessageBox.Show("Fog of War coming soon in Phase 2!", "Not Implemented", MessageBoxButton.OK, MessageBoxImage.Information);
+            Debug.WriteLine($"[BattleGrid] InitializeFogOfWar stub");
         }
 
         public void SetFogEnabled(bool enabled)
         {
-            // TODO: Implement in FogManager
+            Debug.WriteLine($"[BattleGrid] SetFogEnabled: {enabled}");
         }
 
-        public void SetFogBrushMode(object mode)
+        public void SetFogBrushMode(DnDBattle.Services.FogBrushMode mode)
         {
-            // TODO: Implement in FogManager
+            Debug.WriteLine($"[BattleGrid] SetFogBrushMode: {mode}");
         }
 
         public void SetFogBrushSize(int size)
         {
-            // TODO: Implement in FogManager
+            Debug.WriteLine($"[BattleGrid] SetFogBrushSize: {size}");
         }
 
         public void SetPlayerView(bool isPlayerView)
         {
-            // TODO: Implement in FogManager
+            Debug.WriteLine($"[BattleGrid] SetPlayerView: {isPlayerView}");
         }
 
         public void RevealAroundPlayers()
         {
-            // TODO: Implement in FogManager
+            Debug.WriteLine($"[BattleGrid] RevealAroundPlayers stub");
         }
 
-        public object FogService => null; // TODO: Implement
-
-        public void StartFogShapeTool(object tool)
+        public void StartFogShapeTool(DnDBattle.Views.FogShapeTool tool)
         {
-            // TODO: Implement in FogManager
+            Debug.WriteLine($"[BattleGrid] StartFogShapeTool: {tool}");
         }
 
-        public async Task CommitPreviewedPathAsync()
+        public void SetFogOfWar(byte[,] fogData)
         {
-            MessageBox.Show("Pathfinding coming soon in Phase 3!", "Not Implemented", MessageBoxButton.OK, MessageBoxImage.Information);
-            await Task.CompletedTask;
+            Debug.WriteLine($"[BattleGrid] SetFogOfWar stub");
         }
 
-        public object GetEncounterDto()
+        public void SetFogOfWar(bool isEnabled, FogMode mode)
         {
-            MessageBox.Show("Encounter save/load coming soon in Phase 4!", "Not Implemented", MessageBoxButton.OK, MessageBoxImage.Information);
-            return null;
-        }
-
-        public void LoadEncounterDto(object dto)
-        {
-            MessageBox.Show("Encounter save/load coming soon in Phase 4!", "Not Implemented", MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-
-        public bool IsMeasureMode => false; // TODO: Implement
-
-        public void SetMeasureMode(bool enabled)
-        {
-            MessageBox.Show("Measurement tool coming soon in Phase 2!", "Not Implemented", MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-
-        public void SetWallDrawMode(bool enabled, object wallType = null)
-        {
-            MessageBox.Show("Wall drawing coming soon in Phase 3!", "Not Implemented", MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-
-        public void SetRoomDrawMode(bool enabled, object wallType = null)
-        {
-            MessageBox.Show("Room drawing coming soon in Phase 3!", "Not Implemented", MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-
-        public object WallService => null; // TODO: Implement
-
-        public void AddLight(object light)
-        {
-            MessageBox.Show("Lighting coming soon in Phase 3!", "Not Implemented", MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-
-        public void SetFogOfWar(bool enabled, object mode = null)
-        {
-            // TODO: Implement in FogManager
+            Debug.WriteLine($"[BattleGrid] SetFogOfWar stub");
         }
 
         public void RevealAllFog()
         {
-            // TODO: Implement in FogManager
+            Debug.WriteLine($"[BattleGrid] RevealAllFog stub");
         }
 
         public void ResetFog()
         {
-            // TODO: Implement in FogManager
+            Debug.WriteLine($"[BattleGrid] ResetFog stub");
+        }
+
+        // Area Effects - Takes AreaEffectShape enum and int size
+        public void StartAreaEffectPlacement(DnDBattle.Models.AreaEffectShape shape, int sizeInFeet, System.Windows.Media.Color color)
+        {
+            Debug.WriteLine($"[BattleGrid] StartAreaEffectPlacement: {shape}, {sizeInFeet}ft");
+        }
+
+        public void UpdateAreaEffectSize(int sizeInFeet)
+        {
+            Debug.WriteLine($"[BattleGrid] UpdateAreaEffectSize: {sizeInFeet}ft");
+        }
+
+        public void UpdateAreaEffectColor(System.Windows.Media.Color color)
+        {
+            Debug.WriteLine($"[BattleGrid] UpdateAreaEffectColor stub");
+        }
+
+        public void CancelAreaEffectPlacement()
+        {
+            Debug.WriteLine($"[BattleGrid] CancelAreaEffectPlacement stub");
+        }
+
+        // Targeting - Takes TargetingState parameter
+        public void EnterTargetingMode(TargetingState state)
+        {
+            Debug.WriteLine($"[BattleGrid] EnterTargetingMode stub");
+        }
+
+        public void ExitTargetingMode()
+        {
+            Debug.WriteLine($"[BattleGrid] ExitTargetingMode stub");
+        }
+
+        // Lighting - Takes LightSource object
+        public void AddLight(DnDBattle.Models.LightSource light)
+        {
+            Debug.WriteLine($"[BattleGrid] AddLight: ({light.CenterGrid.X}, {light.CenterGrid.Y})");
+        }
+
+        // Walls & Rooms - Takes WallType enum as default parameter
+        public void SetWallDrawMode(bool enabled, DnDBattle.Models.WallType wallType = DnDBattle.Models.WallType.Solid)
+        {
+            Debug.WriteLine($"[BattleGrid] SetWallDrawMode: {enabled}, {wallType}");
+        }
+
+        public void SetRoomDrawMode(bool enabled, DnDBattle.Models.WallType wallType = DnDBattle.Models.WallType.Solid)
+        {
+            Debug.WriteLine($"[BattleGrid] SetRoomDrawMode: {enabled}, {wallType}");
+        }
+
+        public bool IsRoomDrawMode => false;
+
+        public DnDBattle.Services.WallService WallService => null; // Stub
+
+        // Pathfinding
+        public async System.Threading.Tasks.Task CommitPreviewedPathAsync()
+        {
+            Debug.WriteLine($"[BattleGrid] CommitPreviewedPathAsync stub");
+            await System.Threading.Tasks.Task.CompletedTask;
+        }
+
+        // Turn Management (these don't exist in old code - stubs for MainViewModel)
+        public void OnTokenTurnStart(Token token)
+        {
+            Debug.WriteLine($"[BattleGrid] OnTokenTurnStart stub: {token?.Name}");
+        }
+
+        public void OnTokenTurnEnd(Token token)
+        {
+            Debug.WriteLine($"[BattleGrid] OnTokenTurnEnd stub: {token?.Name}");
+        }
+
+        public void OnRoundChanged(int round)
+        {
+            Debug.WriteLine($"[BattleGrid] OnRoundChanged stub: round {round}");
+        }
+
+        // Encounter Serialization
+        public DnDBattle.Models.EncounterDto GetEncounterDto()
+        {
+            Debug.WriteLine($"[BattleGrid] GetEncounterDto stub - returning null");
+            return null;
+        }
+
+        public void LoadEncounterDto(DnDBattle.Models.EncounterDto dto)
+        {
+            Debug.WriteLine($"[BattleGrid] LoadEncounterDto stub");
         }
 
         #endregion

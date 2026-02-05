@@ -1,7 +1,7 @@
-﻿using DnDBattle.Controls; // For GridVisualHost
+﻿using DnDBattle.Controls;
 using DnDBattle.Models.Tiles;
-using DnDBattle.Services.TileService;
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -9,9 +9,6 @@ using System.Windows.Media;
 
 namespace DnDBattle.Controls.BattleGrid.Managers
 {
-    /// <summary>
-    /// Manages all rendering using GridVisualHost for proper visual integration
-    /// </summary>
     public class BattleGridRenderManager
     {
         #region Fields
@@ -19,26 +16,24 @@ namespace DnDBattle.Controls.BattleGrid.Managers
         private readonly Canvas _renderCanvas;
         private readonly Canvas _rulerCanvas;
 
-        // Visual hosts (properly integrated into visual tree)
         private readonly GridVisualHost _gridHost;
         private readonly GridVisualHost _tileMapHost;
 
-        // Transform for pan/zoom
         private readonly TransformGroup _transformGroup = new TransformGroup();
         private readonly ScaleTransform _zoomTransform = new ScaleTransform(1, 1);
         private readonly TranslateTransform _panTransform = new TranslateTransform(0, 0);
 
-        // Grid dimensions
         private int _gridWidth = 100;
         private int _gridHeight = 100;
         private double _cellSize = 48;
         private double _viewWidth;
         private double _viewHeight;
 
-        // Throttling
-        private DateTime _lastGridRender = DateTime.MinValue;
+        private bool _isInteracting = false;
+        private System.Windows.Threading.DispatcherTimer _deferredRenderTimer;
+
         private DateTime _lastRulerRender = DateTime.MinValue;
-        private const int RENDER_THROTTLE_MS = 16; // ~60 FPS
+        private const int RULER_THROTTLE_MS = 100;
 
         #endregion
 
@@ -55,23 +50,34 @@ namespace DnDBattle.Controls.BattleGrid.Managers
             _renderCanvas = renderCanvas ?? throw new ArgumentNullException(nameof(renderCanvas));
             _rulerCanvas = rulerCanvas ?? throw new ArgumentNullException(nameof(rulerCanvas));
 
-            // Create visual hosts
             _gridHost = new GridVisualHost();
             _tileMapHost = new GridVisualHost();
 
-            // Setup transform on render canvas
-            _transformGroup.Children.Add(_zoomTransform);
-            _transformGroup.Children.Add(_panTransform);
+            // CRITICAL: Transform order is Pan → Zoom
+            _transformGroup.Children.Add(_panTransform);   // Index 0
+            _transformGroup.Children.Add(_zoomTransform);  // Index 1
+
             _renderCanvas.RenderTransform = _transformGroup;
 
-            // Add hosts to canvas with proper Z-index
             _renderCanvas.Children.Add(_tileMapHost);
-            Canvas.SetZIndex(_tileMapHost, 0); // Tiles at bottom
+            Canvas.SetZIndex(_tileMapHost, 0);
 
             _renderCanvas.Children.Add(_gridHost);
-            Canvas.SetZIndex(_gridHost, 10); // Grid on top of tiles
+            Canvas.SetZIndex(_gridHost, 10);
 
-            System.Diagnostics.Debug.WriteLine("[RenderManager] Initialized with GridVisualHost");
+            // Setup deferred render timer
+            _deferredRenderTimer = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(150)
+            };
+            _deferredRenderTimer.Tick += (s, e) =>
+            {
+                _deferredRenderTimer.Stop();
+                _isInteracting = false;
+                RenderFullViewport();
+            };
+
+            Debug.WriteLine("[RenderManager] Initialized - Transform order: Pan → Zoom");
         }
 
         #endregion
@@ -95,18 +101,25 @@ namespace DnDBattle.Controls.BattleGrid.Managers
             _cellSize = cellSize;
         }
 
-        public void ApplyPan(double deltaX, double deltaY)
+        /// <summary>
+        /// OPTIMIZED: Pan without any rendering (instant response)
+        /// </summary>
+        public void ApplyPanWithoutRedraw(double deltaX, double deltaY)
         {
             _panTransform.X += deltaX;
             _panTransform.Y += deltaY;
-            ClampPan();
-            ViewportChanged?.Invoke();
+
+            _isInteracting = true;
+
+            // Don't start timer during pan - only FinishInteraction will render
         }
 
+        /// <summary>
+        /// OPTIMIZED: Zoom with correct transform order
+        /// </summary>
         public void ApplyZoom(double factor, Point center)
         {
-            double absX = center.X * _zoomTransform.ScaleX + _panTransform.X;
-            double absY = center.Y * _zoomTransform.ScaleY + _panTransform.Y;
+            var worldPoint = ScreenToWorld(center);
 
             _zoomTransform.ScaleX *= factor;
             _zoomTransform.ScaleY *= factor;
@@ -114,11 +127,28 @@ namespace DnDBattle.Controls.BattleGrid.Managers
             _zoomTransform.ScaleX = Math.Max(0.1, Math.Min(5.0, _zoomTransform.ScaleX));
             _zoomTransform.ScaleY = Math.Max(0.1, Math.Min(5.0, _zoomTransform.ScaleY));
 
-            _panTransform.X = absX - center.X * _zoomTransform.ScaleX;
-            _panTransform.Y = absY - center.Y * _zoomTransform.ScaleY;
+            double newZoom = _zoomTransform.ScaleX;
+
+            _panTransform.X = center.X / newZoom - worldPoint.X;
+            _panTransform.Y = center.Y / newZoom - worldPoint.Y;
+
+            _isInteracting = true;
+            _deferredRenderTimer.Stop();
+            _deferredRenderTimer.Start();
+        }
+
+        /// <summary>
+        /// Call when interaction finishes (mouse up)
+        /// </summary>
+        public void FinishInteraction()
+        {
+            _deferredRenderTimer.Stop();
+            _isInteracting = false;
 
             ClampPan();
-            ViewportChanged?.Invoke();
+            RenderFullViewport();
+
+            Debug.WriteLine("[RenderManager] Interaction finished");
         }
 
         public void ResetView()
@@ -127,8 +157,9 @@ namespace DnDBattle.Controls.BattleGrid.Managers
             _zoomTransform.ScaleY = 1.0;
             _panTransform.X = 0;
             _panTransform.Y = 0;
-            ViewportChanged?.Invoke();
-            System.Diagnostics.Debug.WriteLine("[RenderManager] View reset");
+
+            RenderFullViewport();
+            Debug.WriteLine("[RenderManager] View reset");
         }
 
         #endregion
@@ -136,104 +167,109 @@ namespace DnDBattle.Controls.BattleGrid.Managers
         #region Public Methods - Rendering
 
         /// <summary>
-        /// Renders the grid using GridVisualHost
+        /// Full viewport render
         /// </summary>
-        public void RenderGrid(int width, int height, double cellSize, bool showGrid)
+        private void RenderFullViewport()
         {
-            var now = DateTime.Now;
-            if ((now - _lastGridRender).TotalMilliseconds < RENDER_THROTTLE_MS)
-                return;
-            _lastGridRender = now;
+            var sw = Stopwatch.StartNew();
 
-            if (!showGrid)
-            {
-                _gridHost.Clear(); // Add a Clear method to GridVisualHost
-                return;
-            }
-
-            // Calculate viewport in world coordinates
+            double currentZoom = _zoomTransform.ScaleX;
             var viewport = GetViewportRect();
 
-            // Use your existing GridVisualHost.DrawGridViewport method!
-            _gridHost.DrawGridViewport(cellSize, viewport, 100, false, true);
+            RenderGridOptimized(viewport, currentZoom);
+            RenderRulersOptimized(currentZoom);
 
-            System.Diagnostics.Debug.WriteLine($"[RenderManager] Grid rendered");
+            sw.Stop();
+            Debug.WriteLine($"[RenderManager] Full render: {sw.ElapsedMilliseconds}ms at {currentZoom:P0} zoom");
+
+            ViewportChanged?.Invoke();
         }
 
-        /// <summary>
-        /// Renders the tile map
-        /// </summary>
-        public void RenderTileMap(TileMap tileMap, double cellSize)
+        private void RenderGridOptimized(Rect viewport, double zoom)
         {
-            if (tileMap == null)
+            if (zoom < 0.3)
             {
-                _tileMapHost.Clear();
+                _gridHost.Clear();
                 return;
             }
 
-            System.Diagnostics.Debug.WriteLine($"[RenderManager] Rendering {tileMap.PlacedTiles?.Count ?? 0} tiles");
+            int cellCountX = (int)Math.Ceiling(viewport.Width / _cellSize);
+            int cellCountY = (int)Math.Ceiling(viewport.Height / _cellSize);
+            int totalCells = cellCountX * cellCountY;
 
-            // Draw directly on the tile map host
-            _tileMapHost.DrawTileMap(tileMap, cellSize);
+            if (totalCells > 10000)
+            {
+                _gridHost.Clear();
+                return;
+            }
+
+            bool showCoords = totalCells < 5000;
+
+            _gridHost.DrawGridViewport(_cellSize, viewport, 50, showCoords, true);
         }
 
-        /// <summary>
-        /// Renders coordinate rulers
-        /// </summary>
-        public void RenderRulers(int gridWidth, int gridHeight, double cellSize, double viewWidth, double viewHeight)
+        private void RenderRulersOptimized(double zoom)
         {
             var now = DateTime.Now;
-            if ((now - _lastRulerRender).TotalMilliseconds < RENDER_THROTTLE_MS)
+            if ((now - _lastRulerRender).TotalMilliseconds < RULER_THROTTLE_MS)
                 return;
             _lastRulerRender = now;
 
             _rulerCanvas.Children.Clear();
 
+            if (zoom < 0.5)
+                return;
+
             const double rulerHeight = 30;
             const double rulerWidth = 35;
 
-            // Top ruler background
+            var bgBrush = new SolidColorBrush(Color.FromRgb(26, 26, 26));
+            bgBrush.Freeze();
+
             var topBg = new System.Windows.Shapes.Rectangle
             {
-                Width = viewWidth,
+                Width = _viewWidth,
                 Height = rulerHeight,
-                Fill = new SolidColorBrush(Color.FromRgb(26, 26, 26))
+                Fill = bgBrush
             };
             Canvas.SetLeft(topBg, 0);
             Canvas.SetTop(topBg, 0);
             _rulerCanvas.Children.Add(topBg);
 
-            // Left ruler background
             var leftBg = new System.Windows.Shapes.Rectangle
             {
                 Width = rulerWidth,
-                Height = viewHeight,
-                Fill = new SolidColorBrush(Color.FromRgb(26, 26, 26))
+                Height = _viewHeight,
+                Fill = bgBrush
             };
             Canvas.SetLeft(leftBg, 0);
             Canvas.SetTop(leftBg, 0);
             _rulerCanvas.Children.Add(leftBg);
 
-            // Calculate visible range
             var viewport = GetViewportRect();
-            int startCol = Math.Max(0, (int)Math.Floor(viewport.Left / cellSize));
-            int endCol = Math.Min(gridWidth, (int)Math.Ceiling(viewport.Right / cellSize));
-            int startRow = Math.Max(0, (int)Math.Floor(viewport.Top / cellSize));
-            int endRow = Math.Min(gridHeight, (int)Math.Ceiling(viewport.Bottom / cellSize));
+            int startCol = Math.Max(0, (int)Math.Floor(viewport.Left / _cellSize));
+            int endCol = Math.Min(_gridWidth, (int)Math.Ceiling(viewport.Right / _cellSize));
+            int startRow = Math.Max(0, (int)Math.Floor(viewport.Top / _cellSize));
+            int endRow = Math.Min(_gridHeight, (int)Math.Ceiling(viewport.Bottom / _cellSize));
 
-            // Draw column labels
-            for (int col = startCol; col <= endCol; col++)
+            int skipFactor = 1;
+            if (endCol - startCol > 30) skipFactor = 2;
+            if (endCol - startCol > 60) skipFactor = 5;
+
+            var textBrush = Brushes.LightGray;
+
+            for (int col = startCol; col <= endCol; col += skipFactor)
             {
-                var worldX = col * cellSize;
+                var worldX = col * _cellSize;
                 var screenX = WorldToScreen(new Point(worldX, 0)).X;
 
-                if (screenX < rulerWidth || screenX > viewWidth) continue;
+                if (screenX < rulerWidth || screenX > _viewWidth) continue;
 
                 var label = new TextBlock
                 {
                     Text = GetColumnLabel(col),
                     FontSize = 11,
-                    Foreground = Brushes.LightGray,
+                    Foreground = textBrush,
                     FontFamily = new System.Windows.Media.FontFamily("Segoe UI")
                 };
 
@@ -242,19 +278,18 @@ namespace DnDBattle.Controls.BattleGrid.Managers
                 _rulerCanvas.Children.Add(label);
             }
 
-            // Draw row labels
-            for (int row = startRow; row <= endRow; row++)
+            for (int row = startRow; row <= endRow; row += skipFactor)
             {
-                var worldY = row * cellSize;
+                var worldY = row * _cellSize;
                 var screenY = WorldToScreen(new Point(0, worldY)).Y;
 
-                if (screenY < rulerHeight || screenY > viewHeight) continue;
+                if (screenY < rulerHeight || screenY > _viewHeight) continue;
 
                 var label = new TextBlock
                 {
                     Text = (row + 1).ToString(),
                     FontSize = 11,
-                    Foreground = Brushes.LightGray,
+                    Foreground = textBrush,
                     FontFamily = new System.Windows.Media.FontFamily("Segoe UI")
                 };
 
@@ -264,34 +299,79 @@ namespace DnDBattle.Controls.BattleGrid.Managers
             }
         }
 
+        public void RenderGrid(int width, int height, double cellSize, bool showGrid)
+        {
+            if (!showGrid)
+            {
+                _gridHost.Clear();
+                return;
+            }
+
+            if (_isInteracting)
+                return;
+
+            var viewport = GetViewportRect();
+            RenderGridOptimized(viewport, _zoomTransform.ScaleX);
+        }
+
+        public void RenderRulers(int gridWidth, int gridHeight, double cellSize, double viewWidth, double viewHeight)
+        {
+            if (_isInteracting)
+                return;
+
+            RenderRulersOptimized(_zoomTransform.ScaleX);
+        }
+
+        public void RenderTileMap(TileMap tileMap, double cellSize)
+        {
+            var sw = Stopwatch.StartNew();
+
+            if (tileMap == null)
+            {
+                _tileMapHost.Clear();
+                return;
+            }
+
+            Debug.WriteLine($"[RenderManager] Rendering {tileMap.PlacedTiles?.Count ?? 0} tiles");
+
+            _tileMapHost.DrawTileMap(tileMap, cellSize);
+
+            sw.Stop();
+            Debug.WriteLine($"[RenderManager] Tile map render: {sw.ElapsedMilliseconds}ms");
+        }
+
         #endregion
 
         #region Private Methods
 
         private Rect GetViewportRect()
         {
-            // Transform viewport corners to world space
             var topLeft = ScreenToWorld(new Point(0, 0));
             var bottomRight = ScreenToWorld(new Point(_viewWidth, _viewHeight));
-
             return new Rect(topLeft, bottomRight);
         }
 
         private void ClampPan()
         {
+            if (_isInteracting)
+            {
+                Debug.WriteLine("⚠️ ClampPan blocked during interaction");
+                return;
+            }
+
             if (_viewWidth <= 0 || _viewHeight <= 0) return;
 
             double gridPixelWidth = _gridWidth * _cellSize;
             double gridPixelHeight = _gridHeight * _cellSize;
             double zoom = _zoomTransform.ScaleX;
 
-            double minPanX = _viewWidth - (gridPixelWidth * zoom);
-            double minPanY = _viewHeight - (gridPixelHeight * zoom);
             double maxPanX = 0;
             double maxPanY = 0;
+            double minPanX = (_viewWidth / zoom) - gridPixelWidth;
+            double minPanY = (_viewHeight / zoom) - gridPixelHeight;
 
-            double paddingX = _viewWidth * 0.25;
-            double paddingY = _viewHeight * 0.25;
+            double paddingX = (_viewWidth / zoom) * 0.5;
+            double paddingY = (_viewHeight / zoom) * 0.5;
 
             _panTransform.X = Math.Max(minPanX - paddingX, Math.Min(maxPanX + paddingX, _panTransform.X));
             _panTransform.Y = Math.Max(minPanY - paddingY, Math.Min(maxPanY + paddingY, _panTransform.Y));
@@ -299,12 +379,20 @@ namespace DnDBattle.Controls.BattleGrid.Managers
 
         private Point WorldToScreen(Point worldPoint)
         {
-            return _transformGroup.Transform(worldPoint);
+            double zoom = _zoomTransform.ScaleX;
+            return new Point(
+                (worldPoint.X + _panTransform.X) * zoom,
+                (worldPoint.Y + _panTransform.Y) * zoom
+            );
         }
 
         private Point ScreenToWorld(Point screenPoint)
         {
-            return _transformGroup.Inverse?.Transform(screenPoint) ?? screenPoint;
+            double zoom = _zoomTransform.ScaleX;
+            return new Point(
+                screenPoint.X / zoom - _panTransform.X,
+                screenPoint.Y / zoom - _panTransform.Y
+            );
         }
 
         private string GetColumnLabel(int index)
