@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Media;
 
@@ -10,7 +11,7 @@ namespace DnDBattle.Models
     public class AreaEffect
     {
         public Guid Id { get; set; } = Guid.NewGuid();
-        public string Name { get; set; }
+        public string Name { get; set; } = "";
         public AreaEffectShape Shape { get; set; }
 
         /// <summary>
@@ -57,6 +58,137 @@ namespace DnDBattle.Models
         /// Gets the width in grid squares
         /// </summary>
         public double WidthInSquares => WidthInFeet / 5.0;
+
+        #region Duration Tracking (Phase 6)
+
+        /// <summary>
+        /// Duration type for the effect
+        /// </summary>
+        public EffectDurationType DurationType { get; set; } = EffectDurationType.Instantaneous;
+
+        /// <summary>
+        /// Number of rounds remaining (for round-based duration)
+        /// </summary>
+        public int RoundsRemaining { get; set; } = 0;
+
+        /// <summary>
+        /// The round when this effect was created
+        /// </summary>
+        public int CreatedOnRound { get; set; } = 0;
+
+        /// <summary>
+        /// Whether this effect requires concentration
+        /// </summary>
+        public bool RequiresConcentration { get; set; } = false;
+
+        /// <summary>
+        /// The name of the concentrating token (if any)
+        /// </summary>
+        public string? ConcentratingTokenName { get; set; }
+
+        /// <summary>
+        /// Whether the effect is currently active
+        /// </summary>
+        public bool IsActive { get; set; } = true;
+
+        /// <summary>
+        /// Damage dealt when entering/starting turn in effect
+        /// </summary>
+        public string? DamageOnEnter { get; set; }
+
+        /// <summary>
+        /// Damage type for damage over time
+        /// </summary>
+        public DamageType DamageType { get; set; } = DamageType.None;
+
+        /// <summary>
+        /// Saving throw type for the effect
+        /// </summary>
+        public string? SavingThrowType { get; set; }
+
+        /// <summary>
+        /// Saving throw DC
+        /// </summary>
+        public int SavingThrowDC { get; set; } = 0;
+
+        /// <summary>
+        /// Description shown to players
+        /// </summary>
+        public string? Description { get; set; }
+
+        /// <summary>
+        /// Whether to show animated pulsing border
+        /// </summary>
+        public bool ShowPulsingBorder { get; set; } = false;
+
+        /// <summary>
+        /// Returns true if the effect has expired
+        /// </summary>
+        public bool HasExpired => DurationType == EffectDurationType.Rounds && RoundsRemaining <= 0;
+
+        /// <summary>
+        /// Decrements the round counter
+        /// </summary>
+        public void DecrementRound()
+        {
+            if (DurationType == EffectDurationType.Rounds && RoundsRemaining > 0)
+            {
+                RoundsRemaining--;
+            }
+        }
+
+        /// <summary>
+        /// Gets display text for duration
+        /// </summary>
+        public string DurationDisplay
+        {
+            get
+            {
+                return DurationType switch
+                {
+                    EffectDurationType.Instantaneous => "Instant",
+                    EffectDurationType.Rounds => $"{RoundsRemaining} round{(RoundsRemaining != 1 ? "s" : "")}",
+                    EffectDurationType.Minutes => "1 minute",
+                    EffectDurationType.Concentration => $"Conc. ({ConcentratingTokenName ?? "?"})",
+                    EffectDurationType.Permanent => "Permanent",
+                    _ => ""
+                };
+            }
+        }
+
+        #endregion
+
+        /// <summary>
+        /// Creates a deep copy of the effect
+        /// </summary>
+        public AreaEffect Clone()
+        {
+            return new AreaEffect
+            {
+                Id = Guid.NewGuid(),
+                Name = Name,
+                Shape = Shape,
+                SizeInFeet = SizeInFeet,
+                WidthInFeet = WidthInFeet,
+                Origin = Origin,
+                DirectionAngle = DirectionAngle,
+                Color = Color,
+                IsPreview = IsPreview,
+                SourceTokenId = SourceTokenId,
+                DurationType = DurationType,
+                RoundsRemaining = RoundsRemaining,
+                CreatedOnRound = CreatedOnRound,
+                RequiresConcentration = RequiresConcentration,
+                ConcentratingTokenName = ConcentratingTokenName,
+                IsActive = IsActive,
+                DamageOnEnter = DamageOnEnter,
+                DamageType = DamageType,
+                SavingThrowType = SavingThrowType,
+                SavingThrowDC = SavingThrowDC,
+                Description = Description,
+                ShowPulsingBorder = ShowPulsingBorder
+            };
+        }
     }
 
     public enum AreaEffectShape
@@ -66,7 +198,25 @@ namespace DnDBattle.Models
         Cone,        // Triangle emanating from a point
         Line,        // Rectangle from point in direction
         Cylinder,    // Same as sphere for 2D representation
-        Square       // Alias for cube (centered)
+        Square,      // Alias for cube (centered)
+        
+        // Advanced shapes (Phase 6)
+        Wall,        // Line with thickness (Wall of Fire, etc.)
+        Hemisphere,  // Dome effect (shown as circle with pattern)
+        Ring,        // Ring/donut shape
+        Custom       // Custom polygon shape
+    }
+
+    /// <summary>
+    /// Duration types for area effects
+    /// </summary>
+    public enum EffectDurationType
+    {
+        Instantaneous,  // One-time effect
+        Rounds,         // Lasts a number of rounds
+        Minutes,        // Lasts 1 minute (10 rounds)
+        Concentration,  // Lasts while caster concentrates
+        Permanent       // Lasts until dispelled
     }
 
     /// <summary>
@@ -163,7 +313,10 @@ namespace DnDBattle.Models
             Name = "Fog Cloud",
             Shape = AreaEffectShape.Sphere,
             SizeInFeet = 20,
-            Color = Color.FromArgb(100, 200, 200, 200)
+            Color = Color.FromArgb(100, 200, 200, 200),
+            DurationType = EffectDurationType.Concentration,
+            RequiresConcentration = true,
+            Description = "Heavily obscures the area"
         };
 
         public static AreaEffect Silence => new AreaEffect
@@ -171,7 +324,10 @@ namespace DnDBattle.Models
             Name = "Silence",
             Shape = AreaEffectShape.Sphere,
             SizeInFeet = 20,
-            Color = Color.FromArgb(80, 75, 0, 130)
+            Color = Color.FromArgb(80, 75, 0, 130),
+            DurationType = EffectDurationType.Concentration,
+            RequiresConcentration = true,
+            Description = "No sound can be created or pass through"
         };
 
         public static AreaEffect Entangle => new AreaEffect
@@ -179,7 +335,11 @@ namespace DnDBattle.Models
             Name = "Entangle",
             Shape = AreaEffectShape.Square,
             SizeInFeet = 20,
-            Color = Color.FromArgb(100, 34, 139, 34)
+            Color = Color.FromArgb(100, 34, 139, 34),
+            DurationType = EffectDurationType.Concentration,
+            RequiresConcentration = true,
+            SavingThrowType = "STR",
+            Description = "Difficult terrain, creatures may be restrained"
         };
 
         public static AreaEffect CloudOfDaggers => new AreaEffect
@@ -187,7 +347,13 @@ namespace DnDBattle.Models
             Name = "Cloud of Daggers",
             Shape = AreaEffectShape.Cube,
             SizeInFeet = 5,
-            Color = Color.FromArgb(120, 192, 192, 192)
+            Color = Color.FromArgb(120, 192, 192, 192),
+            DurationType = EffectDurationType.Concentration,
+            RequiresConcentration = true,
+            DamageOnEnter = "4d4",
+            DamageType = DamageType.Slashing,
+            ShowPulsingBorder = true,
+            Description = "4d4 slashing damage when entering or starting turn"
         };
 
         public static AreaEffect MoonBeam => new AreaEffect
@@ -195,7 +361,14 @@ namespace DnDBattle.Models
             Name = "Moonbeam",
             Shape = AreaEffectShape.Cylinder,
             SizeInFeet = 5,
-            Color = Color.FromArgb(100, 230, 230, 250)
+            Color = Color.FromArgb(100, 230, 230, 250),
+            DurationType = EffectDurationType.Concentration,
+            RequiresConcentration = true,
+            DamageOnEnter = "2d10",
+            DamageType = DamageType.Radiant,
+            SavingThrowType = "CON",
+            ShowPulsingBorder = true,
+            Description = "2d10 radiant damage, CON save for half"
         };
 
         // Breath Weapons
@@ -204,7 +377,9 @@ namespace DnDBattle.Models
             Name = "Dragon Breath (Cone)",
             Shape = AreaEffectShape.Cone,
             SizeInFeet = 30,
-            Color = Color.FromArgb(120, 255, 69, 0)
+            Color = Color.FromArgb(120, 255, 69, 0),
+            DurationType = EffectDurationType.Instantaneous,
+            SavingThrowType = "DEX"
         };
 
         public static AreaEffect DragonBreathLine => new AreaEffect
@@ -213,7 +388,102 @@ namespace DnDBattle.Models
             Shape = AreaEffectShape.Line,
             SizeInFeet = 60,
             WidthInFeet = 5,
-            Color = Color.FromArgb(120, 255, 69, 0)
+            Color = Color.FromArgb(120, 255, 69, 0),
+            DurationType = EffectDurationType.Instantaneous,
+            SavingThrowType = "DEX"
+        };
+
+        // Phase 6: Advanced spells with duration
+        public static AreaEffect WallOfFire => new AreaEffect
+        {
+            Name = "Wall of Fire",
+            Shape = AreaEffectShape.Wall,
+            SizeInFeet = 60, // Length
+            WidthInFeet = 1, // 1 ft thick
+            Color = Color.FromArgb(150, 255, 69, 0),
+            DurationType = EffectDurationType.Concentration,
+            RequiresConcentration = true,
+            DamageOnEnter = "5d8",
+            DamageType = DamageType.Fire,
+            SavingThrowType = "DEX",
+            ShowPulsingBorder = true,
+            Description = "5d8 fire damage when passing through or starting turn within 10ft"
+        };
+
+        public static AreaEffect SpikeGrowth => new AreaEffect
+        {
+            Name = "Spike Growth",
+            Shape = AreaEffectShape.Sphere,
+            SizeInFeet = 20,
+            Color = Color.FromArgb(100, 139, 90, 43),
+            DurationType = EffectDurationType.Concentration,
+            RequiresConcentration = true,
+            Description = "Difficult terrain, 2d4 piercing per 5ft moved"
+        };
+
+        public static AreaEffect Stinking​Cloud => new AreaEffect
+        {
+            Name = "Stinking Cloud",
+            Shape = AreaEffectShape.Sphere,
+            SizeInFeet = 20,
+            Color = Color.FromArgb(120, 154, 205, 50),
+            DurationType = EffectDurationType.Concentration,
+            RequiresConcentration = true,
+            SavingThrowType = "CON",
+            Description = "Heavily obscured, CON save or spend action retching"
+        };
+
+        public static AreaEffect Hypnotic​Pattern => new AreaEffect
+        {
+            Name = "Hypnotic Pattern",
+            Shape = AreaEffectShape.Cube,
+            SizeInFeet = 30,
+            Color = Color.FromArgb(100, 255, 20, 147),
+            DurationType = EffectDurationType.Concentration,
+            RequiresConcentration = true,
+            SavingThrowType = "WIS",
+            ShowPulsingBorder = true,
+            Description = "WIS save or charmed, incapacitated, speed 0"
+        };
+
+        public static AreaEffect Sleet​Storm => new AreaEffect
+        {
+            Name = "Sleet Storm",
+            Shape = AreaEffectShape.Cylinder,
+            SizeInFeet = 40,
+            Color = Color.FromArgb(100, 176, 224, 230),
+            DurationType = EffectDurationType.Concentration,
+            RequiresConcentration = true,
+            SavingThrowType = "DEX",
+            Description = "Difficult terrain, heavily obscured, DEX save or fall prone"
+        };
+
+        public static AreaEffect Antimagic​Field => new AreaEffect
+        {
+            Name = "Antimagic Field",
+            Shape = AreaEffectShape.Sphere,
+            SizeInFeet = 10,
+            Color = Color.FromArgb(100, 128, 128, 128),
+            DurationType = EffectDurationType.Concentration,
+            RequiresConcentration = true,
+            ShowPulsingBorder = true,
+            Description = "Magic is suppressed within the sphere"
+        };
+
+        public static AreaEffect Blade​Barrier => new AreaEffect
+        {
+            Name = "Blade Barrier",
+            Shape = AreaEffectShape.Wall,
+            SizeInFeet = 100,
+            WidthInFeet = 5,
+            Color = Color.FromArgb(150, 192, 192, 192),
+            DurationType = EffectDurationType.Concentration,
+            RequiresConcentration = true,
+            DamageOnEnter = "6d10",
+            DamageType = DamageType.Slashing,
+            SavingThrowType = "DEX",
+            ShowPulsingBorder = true,
+            Description = "6d10 slashing damage, DEX save for half"
         };
 
         /// <summary>
@@ -226,7 +496,25 @@ namespace DnDBattle.Models
                 Fireball, BurningHands, LightningBolt, ConeOfCold, Thunderwave, Shatter,
                 SpiritGuardians, Bless,
                 Web, Darkness, FogCloud, Silence, Entangle, CloudOfDaggers, MoonBeam,
-                DragonBreathCone, DragonBreathLine
+                DragonBreathCone, DragonBreathLine,
+                WallOfFire, SpikeGrowth, Stinking​Cloud, Hypnotic​Pattern, Sleet​Storm,
+                Antimagic​Field, Blade​Barrier
+            };
+        }
+
+        /// <summary>
+        /// Gets presets organized by category
+        /// </summary>
+        public static Dictionary<string, AreaEffect[]> GetPresetsByCategory()
+        {
+            return new Dictionary<string, AreaEffect[]>
+            {
+                ["Damage (Instantaneous)"] = new[] { Fireball, BurningHands, LightningBolt, ConeOfCold, Thunderwave, Shatter },
+                ["Damage (Concentration)"] = new[] { CloudOfDaggers, MoonBeam, WallOfFire, Blade​Barrier },
+                ["Control"] = new[] { Web, Entangle, SpikeGrowth, Hypnotic​Pattern, Sleet​Storm },
+                ["Buff/Utility"] = new[] { SpiritGuardians, Bless, Antimagic​Field },
+                ["Obscurement"] = new[] { Darkness, FogCloud, Silence, Stinking​Cloud },
+                ["Breath Weapons"] = new[] { DragonBreathCone, DragonBreathLine }
             };
         }
     }

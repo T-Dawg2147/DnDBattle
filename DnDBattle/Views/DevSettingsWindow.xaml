@@ -1,0 +1,497 @@
+<Window x:Class="DnDBattle.Views.DevSettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="🛠️ Developer Settings" 
+        Height="700" Width="900" 
+        WindowStartupLocation="CenterOwner"
+        Background="#FF1E1E1E">
+    
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        
+        <!-- Toggle Switch Style -->
+        <Style x:Key="ToggleSwitch" TargetType="CheckBox">
+            <Setter Property="Foreground" Value="#CCC"/>
+            <Setter Property="Margin" Value="0,4"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <StackPanel Orientation="Horizontal">
+                            <Border x:Name="SwitchBorder" 
+                                    Width="44" Height="22" 
+                                    CornerRadius="11" 
+                                    Background="#444" 
+                                    Margin="0,0,10,0"
+                                    Cursor="Hand">
+                                <Ellipse x:Name="SwitchKnob" 
+                                         Width="18" Height="18" 
+                                         Fill="#888" 
+                                         HorizontalAlignment="Left" 
+                                         Margin="2,0,0,0"/>
+                            </Border>
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="SwitchBorder" Property="Background" Value="#4CAF50"/>
+                                <Setter TargetName="SwitchKnob" Property="Fill" Value="White"/>
+                                <Setter TargetName="SwitchKnob" Property="HorizontalAlignment" Value="Right"/>
+                                <Setter TargetName="SwitchKnob" Property="Margin" Value="0,0,2,0"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="SwitchKnob" Property="Fill" Value="#AAA"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <!-- Section Header Style -->
+        <Style x:Key="SectionHeader" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="#4FC3F7"/>
+            <Setter Property="Margin" Value="0,15,0,8"/>
+        </Style>
+        
+        <!-- Category Header Style -->
+        <Style x:Key="CategoryHeader" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#888"/>
+            <Setter Property="Margin" Value="0,10,0,5"/>
+        </Style>
+        
+        <!-- Modern Button Style -->
+        <Style x:Key="ModernButton" TargetType="Button">
+            <Setter Property="Background" Value="#2D2D30"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="15,8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="4" 
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#3E3E42"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource ModernButton}">
+            <Setter Property="Background" Value="#0E639C"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#1177BB"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        
+        <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource ModernButton}">
+            <Setter Property="Background" Value="#C42B1C"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#E81123"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#252526" Padding="15,12">
+            <StackPanel>
+                <TextBlock Text="🛠️ Developer Settings" FontSize="18" FontWeight="Bold" Foreground="White"/>
+                <TextBlock Text="Configure experimental features and advanced options. Changes take effect immediately." 
+                           Foreground="#888" FontSize="11" Margin="0,4,0,0"/>
+            </StackPanel>
+        </Border>
+        
+        <!-- Main Content -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            
+            <!-- Navigation Sidebar -->
+            <Border Grid.Column="0" Background="#252526">
+                <ListBox x:Name="NavList" 
+                         Background="Transparent" 
+                         BorderThickness="0"
+                         SelectionChanged="NavList_SelectionChanged">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Foreground" Value="#CCC"/>
+                            <Setter Property="Padding" Value="15,10"/>
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border x:Name="Bd" Background="Transparent" Padding="{TemplateBinding Padding}">
+                                            <ContentPresenter/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="Bd" Property="Background" Value="#0E639C"/>
+                                            </Trigger>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Bd" Property="Background" Value="#3E3E42"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBoxItem Content="🔦 Lighting &amp; Vision" Tag="Lighting"/>
+                    <ListBoxItem Content="🎯 Token Features" Tag="Tokens"/>
+                    <ListBoxItem Content="🔥 Area Effects" Tag="Effects"/>
+                    <ListBoxItem Content="⚔️ Combat Automation" Tag="Combat"/>
+                    <ListBoxItem Content="🗺️ Map Features" Tag="Map"/>
+                    <ListBoxItem Content="⚡ Performance" Tag="Performance"/>
+                </ListBox>
+            </Border>
+            
+            <!-- Settings Panels -->
+            <ScrollViewer Grid.Column="1" 
+                          VerticalScrollBarVisibility="Auto"
+                          Padding="20">
+                <Grid>
+                <!-- Lighting & Vision Panel -->
+                <StackPanel x:Name="PanelLighting" Visibility="Visible">
+                    <TextBlock Text="🔦 Lighting &amp; Vision System" Style="{StaticResource SectionHeader}"/>
+                    <TextBlock Text="Configure light sources, shadows, and token vision capabilities." 
+                               Foreground="#888" FontSize="11" Margin="0,0,0,15"/>
+                    
+                    <TextBlock Text="💡 Light Sources" Style="{StaticResource CategoryHeader}"/>
+                    <CheckBox Content="Point Lights (torches, lanterns)" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnablePointLights}"/>
+                    <CheckBox Content="Directional Lights (windows, spotlights)" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableDirectionalLights}"/>
+                    <CheckBox Content="Colored Lights (magical effects)" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableColoredLights}"/>
+                    <CheckBox Content="Light Blending/Overlapping" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableLightBlending}"/>
+                    
+                    <TextBlock Text="🌑 Shadow Casting" Style="{StaticResource CategoryHeader}"/>
+                    <CheckBox Content="Real-time Shadows from Walls" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableShadowCasting}"/>
+                    <CheckBox Content="Soft Shadow Edges (blur)" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableSoftShadows}"/>
+                    <CheckBox Content="Viewport Culling (performance)" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableViewportCulling}"/>
+                    
+                    <StackPanel Orientation="Horizontal" Margin="0,8">
+                        <TextBlock Text="Shadow Opacity:" Foreground="#CCC" VerticalAlignment="Center" Width="120"/>
+                        <Slider x:Name="ShadowOpacitySlider" Minimum="0" Maximum="1" Width="150"
+                                Value="{Binding ShadowOpacity}" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding ElementName=ShadowOpacitySlider, Path=Value, StringFormat={}{0:P0}}" 
+                                   Foreground="#CCC" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                    </StackPanel>
+                    
+                    <TextBlock Text="👁️ Token Vision" Style="{StaticResource CategoryHeader}"/>
+                    <CheckBox Content="Token Vision System" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableTokenVision}"/>
+                    <CheckBox Content="Darkvision (grayscale, limited range)" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableDarkvision}"/>
+                    <CheckBox Content="Blindsight (no line-of-sight needed)" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableBlindsight}"/>
+                    <CheckBox Content="Truesight (see through illusions)" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableTruesight}"/>
+                    <CheckBox Content="Tremorsense (ground-based)" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableTremorsense}"/>
+                    <CheckBox Content="Devil's Sight (see in magical darkness)" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableDevilsSight}"/>
+                    
+                    <TextBlock Text="🔍 Line of Sight" Style="{StaticResource CategoryHeader}"/>
+                    <CheckBox Content="Line of Sight Calculations" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableLineOfSight}"/>
+                    <CheckBox Content="Auto Fog Reveal Based on Vision" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableAutoFogReveal}"/>
+                    <CheckBox Content="Wall Occlusion" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableWallOcclusion}"/>
+                </StackPanel>
+                
+                <!-- Token Features Panel -->
+                <StackPanel x:Name="PanelTokens" Visibility="Collapsed">
+                    <TextBlock Text="🎯 Advanced Token Features" Style="{StaticResource SectionHeader}"/>
+                    <TextBlock Text="Configure pathfinding, measurements, and visual enhancements for tokens." 
+                               Foreground="#888" FontSize="11" Margin="0,0,0,15"/>
+                    
+                    <TextBlock Text="🛤️ Pathfinding" Style="{StaticResource CategoryHeader}"/>
+                    <CheckBox Content="A* Pathfinding Around Obstacles" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnablePathfinding}"/>
+                    <CheckBox Content="Movement Cost Preview" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableMovementCostPreview}"/>
+                    <CheckBox Content="Path Animation (smooth walking)" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnablePathAnimation}"/>
+                    <CheckBox Content="Attack of Opportunity Warnings" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableAOOWarnings}"/>
+                    <CheckBox Content="Difficult Terrain Support" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableDifficultTerrain}"/>
+                    
+                    <TextBlock Text="📏 Token Measurements" Style="{StaticResource CategoryHeader}"/>
+                    <CheckBox Content="Range Indicators (spell/weapon range)" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableRangeIndicators}"/>
+                    <CheckBox Content="Area Templates (cone, sphere, line)" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableAreaTemplates}"/>
+                    <CheckBox Content="Movement Ruler (5ft increments)" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableMovementRuler}"/>
+                    
+                    <StackPanel Orientation="Horizontal" Margin="0,8">
+                        <TextBlock Text="Diagonal Movement:" Foreground="#CCC" VerticalAlignment="Center" Width="120"/>
+                        <ComboBox x:Name="DiagonalRuleCombo" Width="180"
+                                  SelectionChanged="DiagonalRuleCombo_SelectionChanged">
+                            <ComboBoxItem Content="5-10-5 (Standard D&amp;D)" Tag="Standard5105"/>
+                            <ComboBoxItem Content="Simple (5ft each)" Tag="Simple5"/>
+                            <ComboBoxItem Content="Euclidean" Tag="Euclidean"/>
+                            <ComboBoxItem Content="No Diagonals" Tag="Manhattan"/>
+                        </ComboBox>
+                    </StackPanel>
+                    
+                    <TextBlock Text="🎨 Visual Enhancements" Style="{StaticResource CategoryHeader}"/>
+                    <CheckBox Content="Token Status Rings" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableTokenStatusRings}"/>
+                    <CheckBox Content="Token HP Bars" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableTokenHPBars}"/>
+                    <CheckBox Content="Aura Visualization (Paladin auras, etc.)" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableAuraVisualization}"/>
+                    <CheckBox Content="Token Facing/Direction Arrow" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableTokenFacing}"/>
+                    <CheckBox Content="Token Elevation Display" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableTokenElevation}"/>
+                    
+                    <TextBlock Text="🔄 Token States" Style="{StaticResource CategoryHeader}"/>
+                    <CheckBox Content="Prone Visual (rotated)" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableProneVisual}"/>
+                    <CheckBox Content="Invisible Visual (translucent)" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableInvisibleVisual}"/>
+                    <CheckBox Content="Unconscious Visual (X overlay)" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableUnconsciousVisual}"/>
+                    <CheckBox Content="Dead Visual (grayscale + X)" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableDeadVisual}"/>
+                    <CheckBox Content="Concentration Indicator" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableConcentrationIndicator}"/>
+                </StackPanel>
+                
+                <!-- Area Effects Panel -->
+                <StackPanel x:Name="PanelEffects" Visibility="Collapsed">
+                    <TextBlock Text="🔥 Area Effects System" Style="{StaticResource SectionHeader}"/>
+                    <TextBlock Text="Configure spell templates, duration tracking, and effect animations." 
+                               Foreground="#888" FontSize="11" Margin="0,0,0,15"/>
+                    
+                    <TextBlock Text="📜 Spell Templates" Style="{StaticResource CategoryHeader}"/>
+                    <CheckBox Content="Spell Templates Library" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableSpellTemplatesLibrary}"/>
+                    <CheckBox Content="Custom Template Creation" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableCustomTemplates}"/>
+                    <CheckBox Content="Damage Type Visualization (fire=red, etc.)" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableDamageTypeVisualization}"/>
+                    
+                    <TextBlock Text="⏱️ Duration Tracking" Style="{StaticResource CategoryHeader}"/>
+                    <CheckBox Content="Effect Duration Tracking" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableEffectDurationTracking}"/>
+                    <CheckBox Content="Auto-Remove Expired Effects" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableAutoRemoveExpiredEffects}"/>
+                    <CheckBox Content="Damage Over Time Automation" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableDamageOverTime}"/>
+                    
+                    <TextBlock Text="🎭 Advanced Shapes" Style="{StaticResource CategoryHeader}"/>
+                    <CheckBox Content="Advanced Shapes" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableAdvancedShapes}"/>
+                    <CheckBox Content="Wall of Fire (line with thickness)" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableWallOfFireShape}"/>
+                    <CheckBox Content="Hemisphere (dome effects)" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableHemisphereShape}"/>
+                    <CheckBox Content="Custom Polygon Shapes" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableCustomPolygonShapes}"/>
+                    
+                    <TextBlock Text="💥 Effect Animations" Style="{StaticResource CategoryHeader}"/>
+                    <CheckBox Content="Effect Animations" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableEffectAnimations}"/>
+                    <CheckBox Content="Pulsing Borders" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnablePulsingBorders}"/>
+                    <CheckBox Content="Particle Effects (experimental)" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableParticleEffects}"/>
+                    <CheckBox Content="Fade In/Out Transitions" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableFadeTransitions}"/>
+                </StackPanel>
+                
+                <!-- Combat Automation Panel -->
+                <StackPanel x:Name="PanelCombat" Visibility="Collapsed">
+                    <TextBlock Text="⚔️ Combat Automation" Style="{StaticResource SectionHeader}"/>
+                    <TextBlock Text="Configure attack rolls, defense calculations, and combat helpers." 
+                               Foreground="#888" FontSize="11" Margin="0,0,0,15"/>
+                    
+                    <TextBlock Text="🎯 Attack Rolls" Style="{StaticResource CategoryHeader}"/>
+                    <CheckBox Content="Click Token to Target" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableClickToTarget}"/>
+                    <CheckBox Content="Auto-Roll Attack + Damage" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableAutoAttackRoll}"/>
+                    <CheckBox Content="Critical Hit/Fumble Effects" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableCriticalEffects}"/>
+                    <CheckBox Content="Auto-Apply Damage to Target" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableAutoDamageApplication}"/>
+                    
+                    <TextBlock Text="🛡️ Defense Automation" Style="{StaticResource CategoryHeader}"/>
+                    <CheckBox Content="Auto-Calculate AC with Cover" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableAutoCoverCalculation}"/>
+                    <CheckBox Content="Saving Throw Prompts" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableSavingThrowPrompts}"/>
+                    <CheckBox Content="Advantage/Disadvantage Tracking" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableAdvantageTracking}"/>
+                    <CheckBox Content="Resistance/Vulnerability Application" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableResistanceApplication}"/>
+                    
+                    <TextBlock Text="📜 Spell Management" Style="{StaticResource CategoryHeader}"/>
+                    <CheckBox Content="Spell Slot Tracking" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableSpellSlotTracking}"/>
+                    <CheckBox Content="Concentration Checks on Damage" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableConcentrationChecks}"/>
+                    <CheckBox Content="Area Effect Auto-Targeting" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableAreaAutoTargeting}"/>
+                    <CheckBox Content="Spell Save DC Calculations" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableSpellSaveDCCalculation}"/>
+                    
+                    <TextBlock Text="🎲 Combat Helpers" Style="{StaticResource CategoryHeader}"/>
+                    <CheckBox Content="Attack of Opportunity Detection" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableAOODetection}"/>
+                    <CheckBox Content="Flanking Bonus Indicators" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableFlankingIndicators}"/>
+                    <CheckBox Content="Sneak Attack Eligibility" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableSneakAttackEligibility}"/>
+                    <CheckBox Content="Reaction Prompts" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableReactionPrompts}"/>
+                </StackPanel>
+                
+                <!-- Map Features Panel -->
+                <StackPanel x:Name="PanelMap" Visibility="Collapsed">
+                    <TextBlock Text="🗺️ Map Features" Style="{StaticResource SectionHeader}"/>
+                    <TextBlock Text="Configure multi-map support, grid options, and map decorations." 
+                               Foreground="#888" FontSize="11" Margin="0,0,0,15"/>
+                    
+                    <TextBlock Text="📁 Multi-Map Support" Style="{StaticResource CategoryHeader}"/>
+                    <CheckBox Content="Multi-Map Support" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableMultiMapSupport}"/>
+                    <CheckBox Content="Map Linking (stairs, doors)" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableMapLinking}"/>
+                    <CheckBox Content="Recently Used Maps" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableRecentMaps}"/>
+                    
+                    <TextBlock Text="🖼️ Background Layers" Style="{StaticResource CategoryHeader}"/>
+                    <CheckBox Content="Background Layers" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableBackgroundLayers}"/>
+                    <CheckBox Content="Grid Alignment Tools" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableGridAlignment}"/>
+                    
+                    <TextBlock Text="📐 Grid Options" Style="{StaticResource CategoryHeader}"/>
+                    <CheckBox Content="Hexagonal Grid" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableHexGrid}"/>
+                    <CheckBox Content="Isometric Grid" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableIsometricGrid}"/>
+                    <CheckBox Content="Gridless Mode" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableGridlessMode}"/>
+                    
+                    <StackPanel Orientation="Horizontal" Margin="0,8">
+                        <TextBlock Text="Grid Size (feet):" Foreground="#CCC" VerticalAlignment="Center" Width="120"/>
+                        <ComboBox x:Name="GridSizeCombo" Width="100"
+                                  SelectionChanged="GridSizeCombo_SelectionChanged">
+                            <ComboBoxItem Content="5 ft" Tag="5"/>
+                            <ComboBoxItem Content="10 ft" Tag="10"/>
+                            <ComboBoxItem Content="15 ft" Tag="15"/>
+                            <ComboBoxItem Content="20 ft" Tag="20"/>
+                        </ComboBox>
+                    </StackPanel>
+                    
+                    <TextBlock Text="🎨 Map Decorations" Style="{StaticResource CategoryHeader}"/>
+                    <CheckBox Content="Text Labels/Notes" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableTextLabels}"/>
+                    <CheckBox Content="Measurement Lines" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableMeasurementLines}"/>
+                    <CheckBox Content="Area Markers" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableAreaMarkers}"/>
+                    <CheckBox Content="DM-Only Notes (hidden from players)" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnableDMOnlyNotes}"/>
+                </StackPanel>
+                
+                <!-- Performance Panel -->
+                <StackPanel x:Name="PanelPerformance" Visibility="Collapsed">
+                    <TextBlock Text="⚡ Performance Settings" Style="{StaticResource SectionHeader}"/>
+                    <TextBlock Text="Configure performance-related limits and optimizations." 
+                               Foreground="#888" FontSize="11" Margin="0,0,0,15"/>
+                    
+                    <CheckBox Content="Performance Mode (reduces visual quality)" Style="{StaticResource ToggleSwitch}"
+                              IsChecked="{Binding EnablePerformanceMode}"/>
+                    
+                    <TextBlock Text="🔢 Limits" Style="{StaticResource CategoryHeader}"/>
+                    
+                    <StackPanel Orientation="Horizontal" Margin="0,8">
+                        <TextBlock Text="Max Light Sources:" Foreground="#CCC" VerticalAlignment="Center" Width="140"/>
+                        <Slider x:Name="MaxLightsSlider" Minimum="1" Maximum="100" Width="150"
+                                Value="{Binding MaxLightSources}" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding ElementName=MaxLightsSlider, Path=Value, StringFormat={}{0:N0}}" 
+                                   Foreground="#CCC" VerticalAlignment="Center" Margin="10,0,0,0" Width="40"/>
+                    </StackPanel>
+                    
+                    <StackPanel Orientation="Horizontal" Margin="0,8">
+                        <TextBlock Text="Max Raycast Angles:" Foreground="#CCC" VerticalAlignment="Center" Width="140"/>
+                        <Slider x:Name="MaxRaycastSlider" Minimum="64" Maximum="2048" Width="150"
+                                Value="{Binding MaxRaycastAngles}" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding ElementName=MaxRaycastSlider, Path=Value, StringFormat={}{0:N0}}" 
+                                   Foreground="#CCC" VerticalAlignment="Center" Margin="10,0,0,0" Width="40"/>
+                    </StackPanel>
+                    
+                    <StackPanel Orientation="Horizontal" Margin="0,8">
+                        <TextBlock Text="Max Pathfinding Nodes:" Foreground="#CCC" VerticalAlignment="Center" Width="140"/>
+                        <Slider x:Name="MaxPathSlider" Minimum="1000" Maximum="50000" Width="150"
+                                Value="{Binding MaxPathfindingNodes}" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding ElementName=MaxPathSlider, Path=Value, StringFormat={}{0:N0}}" 
+                                   Foreground="#CCC" VerticalAlignment="Center" Margin="10,0,0,0" Width="50"/>
+                    </StackPanel>
+                    
+                    <Border Background="#333" CornerRadius="4" Padding="12" Margin="0,15,0,0">
+                        <StackPanel>
+                            <TextBlock Text="💡 Performance Tips" Foreground="#4FC3F7" FontWeight="SemiBold"/>
+                            <TextBlock TextWrapping="Wrap" Foreground="#888" Margin="0,8,0,0"
+                                       Text="• Reduce Max Light Sources for large maps&#x0a;• Lower Raycast Angles for faster shadow calculations&#x0a;• Enable Viewport Culling to only render visible elements&#x0a;• Disable Particle Effects for better performance"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+                </Grid>
+            </ScrollViewer>
+        </Grid>
+        
+        <!-- Footer -->
+        <Border Grid.Row="2" Background="#252526" Padding="15,10">
+            <Grid>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                    <Button Content="Reset to Defaults" Style="{StaticResource DangerButton}"
+                            Click="ResetDefaults_Click"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Cancel" Style="{StaticResource ModernButton}" 
+                            Click="Cancel_Click" Margin="0,0,10,0"/>
+                    <Button Content="Save &amp; Close" Style="{StaticResource PrimaryButton}"
+                            Click="SaveClose_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

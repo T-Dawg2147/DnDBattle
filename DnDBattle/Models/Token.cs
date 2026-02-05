@@ -624,6 +624,154 @@ namespace DnDBattle.Models
 
         #endregion
 
+        #region Vision & Elevation (Phase 4-5 Features)
+
+        private VisionType _visionType = VisionType.Normal;
+        public VisionType VisionType
+        {
+            get => _visionType;
+            set => SetProperty(ref _visionType, value);
+        }
+
+        private int _visionRangeFeet = 60;
+        public int VisionRangeFeet
+        {
+            get => _visionRangeFeet;
+            set
+            {
+                SetProperty(ref _visionRangeFeet, Math.Max(0, value));
+                OnPropertyChanged(nameof(VisionRangeSquares));
+            }
+        }
+
+        public int VisionRangeSquares => VisionRangeFeet / 5;
+
+        private int _darkvisionRangeFeet = 0;
+        public int DarkvisionRangeFeet
+        {
+            get => _darkvisionRangeFeet;
+            set
+            {
+                SetProperty(ref _darkvisionRangeFeet, Math.Max(0, value));
+                OnPropertyChanged(nameof(DarkvisionRangeSquares));
+                OnPropertyChanged(nameof(HasDarkvision));
+            }
+        }
+
+        public int DarkvisionRangeSquares => DarkvisionRangeFeet / 5;
+        public bool HasDarkvision => DarkvisionRangeFeet > 0;
+
+        private int _blindsightRangeFeet = 0;
+        public int BlindsightRangeFeet
+        {
+            get => _blindsightRangeFeet;
+            set
+            {
+                SetProperty(ref _blindsightRangeFeet, Math.Max(0, value));
+                OnPropertyChanged(nameof(BlindsightRangeSquares));
+                OnPropertyChanged(nameof(HasBlindsight));
+            }
+        }
+
+        public int BlindsightRangeSquares => BlindsightRangeFeet / 5;
+        public bool HasBlindsight => BlindsightRangeFeet > 0;
+
+        private int _truesightRangeFeet = 0;
+        public int TruesightRangeFeet
+        {
+            get => _truesightRangeFeet;
+            set
+            {
+                SetProperty(ref _truesightRangeFeet, Math.Max(0, value));
+                OnPropertyChanged(nameof(TruesightRangeSquares));
+                OnPropertyChanged(nameof(HasTruesight));
+            }
+        }
+
+        public int TruesightRangeSquares => TruesightRangeFeet / 5;
+        public bool HasTruesight => TruesightRangeFeet > 0;
+
+        private int _tremorsenseRangeFeet = 0;
+        public int TremorsenseRangeFeet
+        {
+            get => _tremorsenseRangeFeet;
+            set
+            {
+                SetProperty(ref _tremorsenseRangeFeet, Math.Max(0, value));
+                OnPropertyChanged(nameof(TremorsenseRangeSquares));
+                OnPropertyChanged(nameof(HasTremorsense));
+            }
+        }
+
+        public int TremorsenseRangeSquares => TremorsenseRangeFeet / 5;
+        public bool HasTremorsense => TremorsenseRangeFeet > 0;
+
+        private bool _hasDevilsSight = false;
+        public bool HasDevilsSight
+        {
+            get => _hasDevilsSight;
+            set => SetProperty(ref _hasDevilsSight, value);
+        }
+
+        // Elevation
+        private int _elevationFeet = 0;
+        public int ElevationFeet
+        {
+            get => _elevationFeet;
+            set
+            {
+                SetProperty(ref _elevationFeet, value);
+                OnPropertyChanged(nameof(ElevationDisplay));
+                OnPropertyChanged(nameof(IsElevated));
+            }
+        }
+
+        public string ElevationDisplay => ElevationFeet != 0 
+            ? (ElevationFeet > 0 ? $"↑{ElevationFeet}ft" : $"↓{Math.Abs(ElevationFeet)}ft") 
+            : "";
+
+        public bool IsElevated => ElevationFeet != 0;
+
+        // Token facing direction (in degrees, 0 = right/east)
+        private double _facingDirection = 270; // Default facing up/north
+        public double FacingDirection
+        {
+            get => _facingDirection;
+            set => SetProperty(ref _facingDirection, value % 360);
+        }
+
+        // Aura properties
+        private int _auraRadiusFeet = 0;
+        public int AuraRadiusFeet
+        {
+            get => _auraRadiusFeet;
+            set
+            {
+                SetProperty(ref _auraRadiusFeet, Math.Max(0, value));
+                OnPropertyChanged(nameof(AuraRadiusSquares));
+                OnPropertyChanged(nameof(HasAura));
+            }
+        }
+
+        public int AuraRadiusSquares => AuraRadiusFeet / 5;
+        public bool HasAura => AuraRadiusFeet > 0;
+
+        private System.Windows.Media.Color _auraColor = System.Windows.Media.Color.FromArgb(60, 255, 215, 0);
+        public System.Windows.Media.Color AuraColor
+        {
+            get => _auraColor;
+            set => SetProperty(ref _auraColor, value);
+        }
+
+        private string _auraName = "";
+        public string AuraName
+        {
+            get => _auraName;
+            set => SetProperty(ref _auraName, value);
+        }
+
+        #endregion
+
         // Helper Methods
         public bool HasTag(string tag) => Tags.Contains(tag, StringComparer.OrdinalIgnoreCase);
         public bool HasEncounterTag(string tag) => EncounterTags.Contains(tag, StringComparer.OrdinalIgnoreCase);
