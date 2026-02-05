@@ -945,6 +945,8 @@ namespace DnDBattle.Controls
         {
             base.OnPreviewKeyDown(e);
 
+            #region Ctrl+ Shortcuts
+
             if (Keyboard.Modifiers == ModifierKeys.Control)
             {
                 switch (e.Key)
@@ -978,15 +980,39 @@ namespace DnDBattle.Controls
                 }
             }
 
+            #endregion
+
+            #region No Modifier Shortcuts
+
             if (Keyboard.Modifiers == ModifierKeys.None)
             {
                 switch (e.Key)
                 {
+                    // Tool shortcuts
+                    case Key.B:
+                        PaintMode_Click(null, null);
+                        e.Handled = true;
+                        break;
+                    case Key.E:
+                        EraseMode_Click(null, null);
+                        e.Handled = true;
+                        break;
+                    case Key.P:
+                        PropertiesMode_Click(null, null);
+                        e.Handled = true;
+                        break;
+                    case Key.Delete:
+                        // Delete tile at current position
+                        DeleteTileAtCursor();
+                        e.Handled = true;
+                        break;
+
+                    // Transform shortcuts
                     case Key.Q:
                         RotateLeft_Click(null, null);
                         e.Handled = true;
                         break;
-                    case Key.E:
+                    case Key.W:
                         RotateRight_Click(null, null);
                         e.Handled = true;
                         break;
@@ -1006,7 +1032,49 @@ namespace DnDBattle.Controls
                         UpdateTransformPreview();
                         e.Handled = true;
                         break;
+
+                    // DM View toggle
+                    case Key.D:
+                        ToggleDMView_Click(null, null);
+                        e.Handled = true;
+                        break;
                 }
+            }
+
+            #endregion
+        }
+
+        /// <summary>
+        /// Deletes tile at the current cursor position
+        /// </summary>
+        private void DeleteTileAtCursor()
+        {
+            if (TileMap == null) return;
+
+            var mousePos = Mouse.GetPosition(MapCanvas);
+            var gridPos = ScreenToGrid(mousePos);
+            int gridX = gridPos.X;
+            int gridY = gridPos.Y;
+
+            if (gridX < 0 || gridX >= TileMap.Width || gridY < 0 || gridY >= TileMap.Height)
+                return;
+
+            // Find tiles at position on active layer
+            var tilesToRemove = TileMap.PlacedTiles
+                .Where(t => t.GridX == gridX && t.GridY == gridY)
+                .ToList();
+
+            if (tilesToRemove.Any())
+            {
+                foreach (var tile in tilesToRemove)
+                {
+                    var tileDef = TileLibraryService.Instance.GetTileById(tile.TileDefinitionId);
+                    if (tileDef?.Layer == _activeLayer)
+                    {
+                        TileMap.PlacedTiles.Remove(tile);
+                    }
+                }
+                RenderMap();
             }
         }
 
