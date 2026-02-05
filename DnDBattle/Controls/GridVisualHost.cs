@@ -13,9 +13,12 @@ namespace DnDBattle.Controls
     {
         private readonly DrawingVisual _visual;
 
+        public DrawingVisual Visual;
+
         public GridVisualHost()
         {
             _visual = new DrawingVisual();
+            Visual = _visual;
             // Register the visual child with the visual/logical tree
             AddVisualChild(_visual);
             AddLogicalChild(_visual);

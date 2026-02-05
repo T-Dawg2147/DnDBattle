@@ -18,6 +18,7 @@ namespace DnDBattle.Controls.BattleGrid.Managers
 
         private readonly GridVisualHost _gridHost;
         private readonly GridVisualHost _tileMapHost;
+        private readonly GridVisualHost _fogHost;
 
         private readonly TransformGroup _transformGroup = new TransformGroup();
         private readonly ScaleTransform _zoomTransform = new ScaleTransform(1, 1);
@@ -52,8 +53,8 @@ namespace DnDBattle.Controls.BattleGrid.Managers
 
             _gridHost = new GridVisualHost();
             _tileMapHost = new GridVisualHost();
+            _fogHost = new GridVisualHost();
 
-            // CRITICAL: Transform order is Pan → Zoom
             _transformGroup.Children.Add(_panTransform);   // Index 0
             _transformGroup.Children.Add(_zoomTransform);  // Index 1
 
@@ -64,6 +65,9 @@ namespace DnDBattle.Controls.BattleGrid.Managers
 
             _renderCanvas.Children.Add(_gridHost);
             Canvas.SetZIndex(_gridHost, 10);
+
+            _renderCanvas.Children.Add(_fogHost);
+            Canvas.SetZIndex(_fogHost, 50);
 
             // Setup deferred render timer
             _deferredRenderTimer = new System.Windows.Threading.DispatcherTimer
@@ -338,6 +342,54 @@ namespace DnDBattle.Controls.BattleGrid.Managers
 
             sw.Stop();
             Debug.WriteLine($"[RenderManager] Tile map render: {sw.ElapsedMilliseconds}ms");
+        }
+
+        /// <summary>
+        /// Renders fog of war overlay
+        /// </summary>
+        public void RenderFog(BattleGridFogOfWarManager fogManager, double cellSize)
+        {
+            if (fogManager == null || !fogManager.IsEnabled)
+            {
+                _fogHost.Clear();
+                return;
+            }
+
+            var sw = Stopwatch.StartNew();
+
+            using (var dc = _fogHost.Visual.RenderOpen())
+            {
+                // Determine fog opacity based on view mode
+                double opacity = fogManager.IsPlayerView ? 0.9 : 0.6;
+                var fogBrush = new SolidColorBrush(Color.FromArgb((byte)(opacity * 255), 0, 0, 0));
+                fogBrush.Freeze();
+
+                // Get visible viewport to optimize rendering
+                var viewport = GetViewportRect();
+                int startX = Math.Max(0, (int)Math.Floor(viewport.Left / cellSize));
+                int endX = Math.Min(fogManager.GridWidth - 1, (int)Math.Ceiling(viewport.Right / cellSize));
+                int startY = Math.Max(0, (int)Math.Floor(viewport.Top / cellSize));
+                int endY = Math.Min(fogManager.GridHeight - 1, (int)Math.Ceiling(viewport.Bottom / cellSize));
+
+                int renderedCells = 0;
+
+                // Only render fog for hidden cells in viewport
+                for (int x = startX; x <= endX; x++)
+                {
+                    for (int y = startY; y <= endY; y++)
+                    {
+                        if (!fogManager.IsCellRevealed(x, y))
+                        {
+                            var rect = new Rect(x * cellSize, y * cellSize, cellSize, cellSize);
+                            dc.DrawRectangle(fogBrush, null, rect);
+                            renderedCells++;
+                        }
+                    }
+                }
+
+                sw.Stop();
+                Debug.WriteLine($"[RenderManager] Fog render: {renderedCells} cells in {sw.ElapsedMilliseconds}ms");
+            }
         }
 
         #endregion

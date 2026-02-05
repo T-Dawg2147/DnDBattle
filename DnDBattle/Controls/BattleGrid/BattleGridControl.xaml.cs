@@ -103,6 +103,7 @@ namespace DnDBattle.Controls.BattleGrid
         private readonly BattleGridTokenManager _tokenManager;
         private readonly BattleGridInputManager _inputManager;
         private readonly BattleGridTileMapManager _tileMapManager;
+        private readonly BattleGridFogOfWarManager _fogManager;
 
         #endregion
 
@@ -119,6 +120,10 @@ namespace DnDBattle.Controls.BattleGrid
 
         private DateTime _lastViewportUpdate = DateTime.MinValue;
 
+        // Fog interaction
+        private bool _isFogBrushActive = false;
+        private Point _lastFogBrushPoint = new Point(-1, -1);
+
         #endregion
 
         #region Constructor
@@ -134,6 +139,7 @@ namespace DnDBattle.Controls.BattleGrid
             _tokenManager = new BattleGridTokenManager(RenderCanvas);
             _inputManager = new BattleGridInputManager();
             _tileMapManager = new BattleGridTileMapManager();
+            _fogManager = new BattleGridFogOfWarManager();
 
             // Setup events
             SetupManagerEvents();
@@ -190,6 +196,15 @@ namespace DnDBattle.Controls.BattleGrid
 
             // Input manager
             _inputManager.GridPositionChanged += OnGridPositionChanged;
+
+            // Fog manager ← ADD THIS BLOCK
+            _fogManager.FogChanged += OnFogChanged;
+        }
+
+        private void OnFogChanged()
+        {
+            Debug.WriteLine("[BattleGrid] Fog changed - requesting redraw");
+            _renderManager.RenderFog(_fogManager, GridCellSize);
         }
 
         #endregion
@@ -204,7 +219,27 @@ namespace DnDBattle.Controls.BattleGrid
 
             if (e.ChangedButton == MouseButton.Left)
             {
-                // Check if we clicked on a token
+                // CHECK 1: Are we in fog brush mode?
+                if (_fogManager.IsEnabled && Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+                {
+                    // Ctrl+Click = Fog brush mode
+                    _isFogBrushActive = true;
+                    var worldPos = ScreenToWorld(mousePos);
+                    int gridX = (int)Math.Floor(worldPos.X / GridCellSize);
+                    int gridY = (int)Math.Floor(worldPos.Y / GridCellSize);
+
+                    _fogManager.ApplyBrush(gridX, gridY);
+                    _lastFogBrushPoint = new Point(gridX, gridY);
+
+                    RenderCanvas.CaptureMouse();
+                    Cursor = Cursors.Cross;
+
+                    Debug.WriteLine($"[BattleGrid] Fog brush started at ({gridX},{gridY})");
+                    e.Handled = true;
+                    return;
+                }
+
+                // CHECK 2: Did we click on a token?
                 var clickedElement = FindVisualAtPoint(mousePos);
 
                 if (clickedElement?.Tag is Token token)
@@ -227,7 +262,7 @@ namespace DnDBattle.Controls.BattleGrid
                 }
                 else
                 {
-                    // Start panning
+                    // CHECK 3: Start panning
                     _isPanning = true;
                     _panStartPoint = mousePos;
                     RenderCanvas.CaptureMouse();
@@ -253,7 +288,25 @@ namespace DnDBattle.Controls.BattleGrid
             // Always update cell position display
             UpdateCellPositionDisplay(mousePos, transform);
 
-            // Handle token dragging
+            // PRIORITY 1: Handle fog brush painting
+            if (_isFogBrushActive)
+            {
+                var worldPos = ScreenToWorld(mousePos);
+                int gridX = (int)Math.Floor(worldPos.X / GridCellSize);
+                int gridY = (int)Math.Floor(worldPos.Y / GridCellSize);
+
+                // Only paint if we moved to a new cell (optimization)
+                if (gridX != (int)_lastFogBrushPoint.X || gridY != (int)_lastFogBrushPoint.Y)
+                {
+                    _fogManager.ApplyBrush(gridX, gridY);
+                    _lastFogBrushPoint = new Point(gridX, gridY);
+                }
+
+                e.Handled = true;
+                return;
+            }
+
+            // PRIORITY 2: Handle token dragging
             if (_draggedToken != null && _draggedTokenVisual != null)
             {
                 var delta = mousePos - _tokenDragStartPoint;
@@ -269,7 +322,7 @@ namespace DnDBattle.Controls.BattleGrid
                 return;
             }
 
-            // Handle panning
+            // PRIORITY 3: Handle panning
             if (_isPanning)
             {
                 var delta = mousePos - _panStartPoint;
@@ -282,8 +335,12 @@ namespace DnDBattle.Controls.BattleGrid
                 return;
             }
 
-            // Update cursor
-            if (!_isPanning && _draggedToken == null)
+            // Update cursor based on fog mode
+            if (_fogManager.IsEnabled && Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+            {
+                Cursor = Cursors.Cross; // Show we're in fog mode
+            }
+            else if (!_isPanning && _draggedToken == null)
             {
                 var element = FindVisualAtPoint(mousePos);
                 Cursor = (element?.Tag is Token) ? Cursors.Hand : Cursors.Arrow;
@@ -293,6 +350,19 @@ namespace DnDBattle.Controls.BattleGrid
         private void RenderCanvas_MouseUp(object sender, MouseButtonEventArgs e)
         {
             var mousePos = e.GetPosition(RenderCanvas);
+
+            // Handle fog brush stop
+            if (_isFogBrushActive)
+            {
+                _isFogBrushActive = false;
+                _lastFogBrushPoint = new Point(-1, -1);
+                RenderCanvas.ReleaseMouseCapture();
+                Cursor = Cursors.Arrow;
+
+                Debug.WriteLine($"[BattleGrid] Fog brush stopped");
+                e.Handled = true;
+                return;
+            }
 
             // Handle token drop
             if (_draggedToken != null && _draggedTokenVisual != null)
@@ -483,6 +553,7 @@ namespace DnDBattle.Controls.BattleGrid
             }
 
             _renderManager.RenderRulers(GridWidth, GridHeight, GridCellSize, ActualWidth, ActualHeight);
+            _renderManager.RenderFog(_fogManager, GridCellSize);
             _tokenManager.UpdateTokenPositions(GridCellSize);
         }
 
@@ -564,6 +635,88 @@ namespace DnDBattle.Controls.BattleGrid
 
         #endregion
 
+        #region Public Methods - Fog Of War
+
+        public void InitializeFogOfWar()
+        {
+            _fogManager.Initialize(GridWidth, GridHeight);
+            Debug.WriteLine($"[BattleGrid] InitializeFogOfWar: {GridWidth}×{GridHeight}");
+        }
+
+        public void SetFogEnabled(bool enabled)
+        {
+            _fogManager.SetEnabled(enabled);
+            Debug.WriteLine($"[BattleGrid] SetFogEnabled: {enabled}");
+        }
+
+        public void SetFogBrushMode(DnDBattle.Services.FogBrushMode mode)
+        {
+            _fogManager.SetBrushMode((FogBrushMode)mode);
+            Debug.WriteLine($"[BattleGrid] SetFogBrushMode: {mode}");
+        }
+
+        public void SetFogBrushSize(int size)
+        {
+            _fogManager.SetBrushSize(size);
+            Debug.WriteLine($"[BattleGrid] SetFogBrushSize: {size}");
+        }
+
+        public void SetPlayerView(bool isPlayerView)
+        {
+            _fogManager.SetPlayerView(isPlayerView);
+            Debug.WriteLine($"[BattleGrid] SetPlayerView: {isPlayerView}");
+        }
+
+        public void RevealAroundPlayers()
+        {
+            _fogManager.RevealAroundTokens(Tokens, visionRange: 6);
+            Debug.WriteLine($"[BattleGrid] RevealAroundPlayers");
+        }
+
+        public void StartFogShapeTool(DnDBattle.Views.FogShapeTool tool)
+        {
+            Debug.WriteLine($"[BattleGrid] StartFogShapeTool: {tool}");
+            // Will implement shape tool UI in next step
+        }
+
+        public void SetFogOfWar(bool enabled, FogMode mode)
+        {
+            Debug.WriteLine($"[BattleGrid] SetFogOfWar: enabled={enabled}, mode={mode}");
+
+            _fogManager.SetEnabled(enabled);
+
+            if (mode == FogMode.Exploration)
+            {
+                _fogManager.HideAll();
+                LogMessage?.Invoke("Fog", "Exploration mode - map hidden");
+            }
+            else if (mode == FogMode.Dynamic)
+            {
+                _fogManager.RevealAroundTokens(Tokens, visionRange: 6);
+                LogMessage?.Invoke("Fog", "Dynamic mode - revealing player vision");
+            }
+        }
+
+        public void SetFogOfWar(byte[,] fogData)
+        {
+            _fogManager.SetFogData(fogData);
+            Debug.WriteLine($"[BattleGrid] SetFogOfWar: loaded data");
+        }
+
+        public void RevealAllFog()
+        {
+            _fogManager.RevealAll();
+            Debug.WriteLine($"[BattleGrid] RevealAllFog");
+        }
+
+        public void ResetFog()
+        {
+            _fogManager.HideAll();
+            Debug.WriteLine($"[BattleGrid] ResetFog");
+        }
+
+        #endregion
+
         #region Compatibility Methods (Matching OLD BattleGridControl Signatures)
 
         // Events
@@ -622,62 +775,6 @@ namespace DnDBattle.Controls.BattleGrid
         public void UpdateShadowSoftness()
         {
             Debug.WriteLine($"[BattleGrid] UpdateShadowSoftness stub");
-        }
-
-        // Fog of War
-        public void InitializeFogOfWar()
-        {
-            Debug.WriteLine($"[BattleGrid] InitializeFogOfWar stub");
-        }
-
-        public void SetFogEnabled(bool enabled)
-        {
-            Debug.WriteLine($"[BattleGrid] SetFogEnabled: {enabled}");
-        }
-
-        public void SetFogBrushMode(DnDBattle.Services.FogBrushMode mode)
-        {
-            Debug.WriteLine($"[BattleGrid] SetFogBrushMode: {mode}");
-        }
-
-        public void SetFogBrushSize(int size)
-        {
-            Debug.WriteLine($"[BattleGrid] SetFogBrushSize: {size}");
-        }
-
-        public void SetPlayerView(bool isPlayerView)
-        {
-            Debug.WriteLine($"[BattleGrid] SetPlayerView: {isPlayerView}");
-        }
-
-        public void RevealAroundPlayers()
-        {
-            Debug.WriteLine($"[BattleGrid] RevealAroundPlayers stub");
-        }
-
-        public void StartFogShapeTool(DnDBattle.Views.FogShapeTool tool)
-        {
-            Debug.WriteLine($"[BattleGrid] StartFogShapeTool: {tool}");
-        }
-
-        public void SetFogOfWar(byte[,] fogData)
-        {
-            Debug.WriteLine($"[BattleGrid] SetFogOfWar stub");
-        }
-
-        public void SetFogOfWar(bool isEnabled, FogMode mode)
-        {
-            Debug.WriteLine($"[BattleGrid] SetFogOfWar stub");
-        }
-
-        public void RevealAllFog()
-        {
-            Debug.WriteLine($"[BattleGrid] RevealAllFog stub");
-        }
-
-        public void ResetFog()
-        {
-            Debug.WriteLine($"[BattleGrid] ResetFog stub");
         }
 
         // Area Effects - Takes AreaEffectShape enum and int size

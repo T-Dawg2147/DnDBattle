@@ -68,7 +68,7 @@ namespace DnDBattle
 
             InitializeBattleGrid();
 
-            
+            BattleGrid.InitializeFogOfWar();
 
             // Setup panels
             SetupInitiativeTracker();
