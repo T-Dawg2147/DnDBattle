@@ -3,11 +3,12 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:DnDBattle.Controls"
         xmlns:views="clr-namespace:DnDBattle.Views.TileMap"
-        Title="Tile Map Builder" Height="700" Width="1200">
+        Title="🗺️ Tile Map Builder" Height="750" Width="1300"
+        Background="#1E1E1E">
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="250"/>
+            <ColumnDefinition Width="280"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
@@ -23,8 +24,8 @@
             </Grid.RowDefinitions>
 
             <!-- Top Menu -->
-            <Menu Grid.Row="0" Background="{StaticResource Brush_Background_Control}">
-                <MenuItem Header="File" Foreground="{StaticResource Brush_Text_Primary}">
+            <Menu Grid.Row="0" Background="#252526" Foreground="White" Padding="5,3">
+                <MenuItem Header="_File" Foreground="White">
                     <MenuItem Header="New Map..." Click="NewMap_Click"/>
                     <MenuItem Header="Open Map..." Click="OpenMap_Click"/>
                     <MenuItem Header="Save Map" Click="SaveMap_Click"/>
@@ -34,11 +35,11 @@
                     <Separator/>
                     <MenuItem Header="Close" Click="Close_Click"/>
                 </MenuItem>
-                <MenuItem Header="Edit" Foreground="{StaticResource Brush_Text_Primary}">
+                <MenuItem Header="_Edit" Foreground="White">
                     <MenuItem Header="Clear All Tiles" Click="ClearAllTiles_Click"/>
                     <MenuItem Header="Resize Map..." Click="ResizeMap_Click"/>
                 </MenuItem>
-                <MenuItem Header="View" Foreground="{StaticResource Brush_Text_Primary}">
+                <MenuItem Header="_View" Foreground="White">
                     <MenuItem Header="Toggle Grid" Click="ToggleGrid_Click" 
                               IsCheckable="True" IsChecked="True" x:Name="MenuShowGrid"/>
                     <MenuItem Header="Zoom In" Click="ZoomIn_Click"/>
@@ -48,11 +49,11 @@
             </Menu>
 
             <!-- Editor Control -->
-            <Grid Grid.Row="1">
+            <Grid Grid.Row="1" Background="#1A1A1D">
                 <!-- Editor Control (existing) -->
                 <controls:TileMapEditorControl x:Name="EditorControl"/>
 
-                <!-- NEW: Minimap Overlay -->
+                <!-- Minimap Overlay -->
                 <views:MinimapControl x:Name="Minimap" 
                               HorizontalAlignment="Right" 
                               VerticalAlignment="Bottom"

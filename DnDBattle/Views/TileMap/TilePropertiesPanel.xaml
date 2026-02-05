@@ -1,23 +1,44 @@
 ﻿<UserControl x:Class="DnDBattle.Views.TileMap.TilePropertiesPanel"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             MinWidth="280">
+             MinWidth="280"
+             Background="#1E1E1E">
+
+    <UserControl.Resources>
+        <Style x:Key="SectionHeader" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="#4FC3F7"/>
+            <Setter Property="Margin" Value="0,15,0,8"/>
+        </Style>
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#888"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Margin" Value="0,0,0,3"/>
+        </Style>
+        <Style x:Key="HintText" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#666"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontStyle" Value="Italic"/>
+        </Style>
+    </UserControl.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="10">
+        <StackPanel Margin="15">
 
             <!-- Header -->
-            <TextBlock Text="⚙️ Tile Properties" 
-                       FontSize="16" 
-                       FontWeight="Bold" 
-                       Margin="0,0,0,10"/>
+            <Border Background="#252526" CornerRadius="6" Padding="12" Margin="0,0,0,10">
+                <StackPanel>
+                    <TextBlock Text="⚙️ TILE PROPERTIES" 
+                               FontSize="13" FontWeight="Bold" Foreground="White"/>
+                    <TextBlock x:Name="TxtTileDefName" Text="No tile selected" 
+                               Style="{StaticResource HintText}" Margin="0,5,0,0"/>
+                </StackPanel>
+            </Border>
 
-            <Separator Margin="0,0,0,10"/>
-
-            <!-- Basic Properties -->
-            <TextBlock Text="📍 Position" FontWeight="SemiBold" Margin="0,0,0,5"/>
-
-            <Grid Margin="0,0,0,10">
+            <!-- Position -->
+            <TextBlock Text="📍 POSITION" Style="{StaticResource SectionHeader}" Margin="0,5,0,8"/>
+            <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="10"/>
@@ -25,72 +46,74 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0">
-                    <TextBlock Text="Grid X:"/>
-                    <TextBox x:Name="TxtGridX" IsReadOnly="True"/>
+                    <TextBlock Text="Grid X" Style="{StaticResource FieldLabel}"/>
+                    <TextBox x:Name="TxtGridX" IsReadOnly="True" Background="#252526" Foreground="#CCC" BorderBrush="#444" Padding="8,6"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="2">
-                    <TextBlock Text="Grid Y:"/>
-                    <TextBox x:Name="TxtGridY" IsReadOnly="True"/>
+                    <TextBlock Text="Grid Y" Style="{StaticResource FieldLabel}"/>
+                    <TextBox x:Name="TxtGridY" IsReadOnly="True" Background="#252526" Foreground="#CCC" BorderBrush="#444" Padding="8,6"/>
                 </StackPanel>
             </Grid>
 
-            <!-- Rotation & Flip -->
-            <TextBlock Text="🔄 Transform" FontWeight="SemiBold" Margin="0,0,0,5"/>
+            <!-- Transform -->
+            <TextBlock Text="🔄 TRANSFORM" Style="{StaticResource SectionHeader}"/>
+            <TextBlock Text="Rotation" Style="{StaticResource FieldLabel}"/>
+            <TextBox x:Name="TxtRotation" IsReadOnly="True" Background="#252526" Foreground="#CCC" BorderBrush="#444" Padding="8,6" Margin="0,0,0,8"/>
 
-            <TextBlock Text="Rotation:"/>
-            <TextBox x:Name="TxtRotation" IsReadOnly="True" Margin="0,0,0,5"/>
-
-            <CheckBox x:Name="ChkFlipH" Content="Flip Horizontal" IsEnabled="False" Margin="0,0,0,2"/>
-            <CheckBox x:Name="ChkFlipV" Content="Flip Vertical" IsEnabled="False" Margin="0,0,0,10"/>
-
-            <Separator Margin="0,0,0,10"/>
-
-            <!-- Tile Definition Properties Section -->
-            <TextBlock Text="🧱 Tile Definition" FontWeight="SemiBold" Margin="0,0,0,5"/>
-            <TextBlock x:Name="TxtTileDefName" Text="No tile selected" 
-                       Style="{StaticResource HintText}" Margin="0,0,0,10"/>
+            <CheckBox x:Name="ChkFlipH" Content="Flip Horizontal" IsEnabled="False" Foreground="#CCC" Margin="0,5"/>
+            <CheckBox x:Name="ChkFlipV" Content="Flip Vertical" IsEnabled="False" Foreground="#CCC" Margin="0,5"/>
 
             <!-- Collision & Vision -->
-            <TextBlock Text="🚧 Collision &amp; Vision" FontWeight="SemiBold" Margin="0,5,0,5"/>
-            <CheckBox x:Name="ChkBlocksMovement" Content="Blocks Movement" Margin="0,0,0,2"
+            <TextBlock Text="🚧 COLLISION &amp; VISION" Style="{StaticResource SectionHeader}"/>
+            <CheckBox x:Name="ChkBlocksMovement" Content="Blocks Movement" Foreground="#CCC" Margin="0,5"
                       Checked="TileDefProperty_Changed" Unchecked="TileDefProperty_Changed"/>
-            <CheckBox x:Name="ChkBlocksSight" Content="Blocks Line of Sight" Margin="0,0,0,2"
+            <CheckBox x:Name="ChkBlocksSight" Content="Blocks Line of Sight" Foreground="#CCC" Margin="0,5"
                       Checked="TileDefProperty_Changed" Unchecked="TileDefProperty_Changed"/>
-            <CheckBox x:Name="ChkBlocksLight" Content="Blocks Light" Margin="0,0,0,5"
+            <CheckBox x:Name="ChkBlocksLight" Content="Blocks Light" Foreground="#CCC" Margin="0,5"
                       Checked="TileDefProperty_Changed" Unchecked="TileDefProperty_Changed"/>
 
-            <!-- Terrain Effects -->
-            <TextBlock Text="🏔️ Terrain Effects" FontWeight="SemiBold" Margin="0,5,0,5"/>
-            <CheckBox x:Name="ChkDifficultTerrain" Content="Difficult Terrain (2x movement cost)" Margin="0,0,0,5"
+            <!-- Terrain -->
+            <TextBlock Text="🏔️ TERRAIN" Style="{StaticResource SectionHeader}"/>
+            <CheckBox x:Name="ChkDifficultTerrain" Content="Difficult Terrain (2x movement cost)" Foreground="#CCC" Margin="0,5"
                       Checked="TileDefProperty_Changed" Unchecked="TileDefProperty_Changed"/>
 
             <!-- Door Properties -->
-            <TextBlock Text="🚪 Door Properties" FontWeight="SemiBold" Margin="0,5,0,5"/>
-            <CheckBox x:Name="ChkIsDoor" Content="Is Door" Margin="0,0,0,2"
+            <TextBlock Text="🚪 DOOR" Style="{StaticResource SectionHeader}"/>
+            <CheckBox x:Name="ChkIsDoor" Content="Is Door" Foreground="#CCC" Margin="0,5"
                       Checked="IsDoor_Changed" Unchecked="IsDoor_Changed"/>
-            <StackPanel x:Name="DoorPropertiesPanel" Visibility="Collapsed" Margin="15,0,0,5">
-                <CheckBox x:Name="ChkIsLocked" Content="Locked by Default" Margin="0,0,0,2"
+            <StackPanel x:Name="DoorPropertiesPanel" Visibility="Collapsed" Margin="15,5,0,5">
+                <CheckBox x:Name="ChkIsLocked" Content="Locked by Default" Foreground="#AAA" Margin="0,3"
                           Checked="TileDefProperty_Changed" Unchecked="TileDefProperty_Changed"/>
-                <StackPanel Orientation="Horizontal" Margin="0,2">
-                    <TextBlock Text="Lock DC:" VerticalAlignment="Center" Width="60"/>
-                    <TextBox x:Name="TxtLockDC" Width="50" Text="15" 
+                <Grid Margin="0,5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="80"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Lock DC:" Foreground="#AAA" VerticalAlignment="Center"/>
+                    <TextBox x:Name="TxtLockDC" Grid.Column="1" Width="60" Text="15" HorizontalAlignment="Left"
+                             Background="#252526" Foreground="White" BorderBrush="#444" Padding="6,4"
                              TextChanged="TileDefProperty_Changed"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="0,2">
-                    <TextBlock Text="Break DC:" VerticalAlignment="Center" Width="60"/>
-                    <TextBox x:Name="TxtBreakDC" Width="50" Text="20" 
+                </Grid>
+                <Grid Margin="0,5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="80"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Break DC:" Foreground="#AAA" VerticalAlignment="Center"/>
+                    <TextBox x:Name="TxtBreakDC" Grid.Column="1" Width="60" Text="20" HorizontalAlignment="Left"
+                             Background="#252526" Foreground="White" BorderBrush="#444" Padding="6,4"
                              TextChanged="TileDefProperty_Changed"/>
-                </StackPanel>
+                </Grid>
             </StackPanel>
 
             <!-- Cover Properties -->
-            <TextBlock Text="🛡️ Cover Properties" FontWeight="SemiBold" Margin="0,5,0,5"/>
-            <CheckBox x:Name="ChkProvidesCover" Content="Provides Cover" Margin="0,0,0,2"
+            <TextBlock Text="🛡️ COVER" Style="{StaticResource SectionHeader}"/>
+            <CheckBox x:Name="ChkProvidesCover" Content="Provides Cover" Foreground="#CCC" Margin="0,5"
                       Checked="ProvidesCover_Changed" Unchecked="ProvidesCover_Changed"/>
-            <StackPanel x:Name="CoverPropertiesPanel" Visibility="Collapsed" Margin="15,0,0,5">
-                <TextBlock Text="Cover Type:" Margin="0,0,0,2"/>
-                <ComboBox x:Name="CmbCoverType" SelectedIndex="0" Margin="0,0,0,5"
+            <StackPanel x:Name="CoverPropertiesPanel" Visibility="Collapsed" Margin="15,5,0,5">
+                <TextBlock Text="Cover Type" Style="{StaticResource FieldLabel}"/>
+                <ComboBox x:Name="CmbCoverType" SelectedIndex="0" Background="#252526" Margin="0,0,0,5"
                           SelectionChanged="CoverType_Changed">
                     <ComboBoxItem Content="None" Tag="None"/>
                     <ComboBoxItem Content="Half (+2 AC)" Tag="Half"/>
@@ -100,12 +123,12 @@
             </StackPanel>
 
             <!-- Interactive Properties -->
-            <TextBlock Text="⚡ Interactive Properties" FontWeight="SemiBold" Margin="0,5,0,5"/>
-            <CheckBox x:Name="ChkIsInteractive" Content="Is Interactive" Margin="0,0,0,2"
+            <TextBlock Text="⚡ INTERACTIVE" Style="{StaticResource SectionHeader}"/>
+            <CheckBox x:Name="ChkIsInteractive" Content="Is Interactive" Foreground="#CCC" Margin="0,5"
                       Checked="IsInteractive_Changed" Unchecked="IsInteractive_Changed"/>
-            <StackPanel x:Name="InteractivePropertiesPanel" Visibility="Collapsed" Margin="15,0,0,5">
-                <TextBlock Text="Interaction Type:" Margin="0,0,0,2"/>
-                <ComboBox x:Name="CmbInteractionType" SelectedIndex="0" Margin="0,0,0,5"
+            <StackPanel x:Name="InteractivePropertiesPanel" Visibility="Collapsed" Margin="15,5,0,5">
+                <TextBlock Text="Interaction Type" Style="{StaticResource FieldLabel}"/>
+                <ComboBox x:Name="CmbInteractionType" SelectedIndex="0" Background="#252526" Margin="0,0,0,8"
                           SelectionChanged="InteractionType_Changed">
                     <ComboBoxItem Content="Open/Close" Tag="OpenClose"/>
                     <ComboBoxItem Content="Loot" Tag="Loot"/>
@@ -113,40 +136,35 @@
                     <ComboBoxItem Content="Button" Tag="Button"/>
                     <ComboBoxItem Content="Custom" Tag="Custom"/>
                 </ComboBox>
-                <TextBlock Text="Interaction Data:" Margin="0,0,0,2"/>
-                <TextBox x:Name="TxtInteractionData" Height="40" TextWrapping="Wrap" 
-                         AcceptsReturn="True" VerticalScrollBarVisibility="Auto"
+                <TextBlock Text="Interaction Data" Style="{StaticResource FieldLabel}"/>
+                <TextBox x:Name="TxtInteractionData" Height="50" TextWrapping="Wrap" AcceptsReturn="True"
+                         Background="#252526" Foreground="White" BorderBrush="#444" Padding="8,6"
+                         VerticalScrollBarVisibility="Auto"
                          TextChanged="TileDefProperty_Changed"/>
             </StackPanel>
 
-            <Separator Margin="0,10,0,10"/>
-
             <!-- Notes -->
-            <TextBlock Text="📝 Notes" FontWeight="SemiBold" Margin="0,0,0,5"/>
+            <TextBlock Text="📝 NOTES" Style="{StaticResource SectionHeader}"/>
             <TextBox x:Name="TxtNotes" 
-                     Height="60" 
+                     Height="70" 
                      TextWrapping="Wrap" 
                      AcceptsReturn="True"
+                     Background="#252526" Foreground="White" BorderBrush="#444" Padding="8,6"
                      VerticalScrollBarVisibility="Auto"
-                     Margin="0,0,0,10"
                      TextChanged="Notes_Changed"/>
 
-            <Separator Margin="0,0,0,10"/>
-
             <!-- Metadata Section -->
-            <TextBlock Text="🏷️ Metadata" FontWeight="SemiBold" Margin="0,0,0,5"/>
+            <TextBlock Text="🏷️ METADATA" Style="{StaticResource SectionHeader}"/>
 
-            <!-- Metadata List -->
-            <Border BorderBrush="{StaticResource Brush_Border_Normal}" 
-                    BorderThickness="1" 
-                    Margin="0,0,0,5"
-                    Height="120">
+            <Border Background="#252526" CornerRadius="4" Padding="5" Height="100" Margin="0,0,0,8">
                 <ListBox x:Name="MetadataList" 
-                         Background="{StaticResource Brush_Background_Dark}"
-                         BorderThickness="0">
+                         Background="Transparent"
+                         BorderThickness="0"
+                         Foreground="White">
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="ListBoxItem">
                             <Setter Property="Padding" Value="5"/>
+                            <Setter Property="Foreground" Value="#CCC"/>
                         </Style>
                     </ListBox.ItemContainerStyle>
                 </ListBox>
@@ -154,52 +172,31 @@
 
             <!-- Metadata Buttons -->
             <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                <Button Content="✏️ Edit" 
-                        Width="70" 
-                        Height="30" 
-                        Margin="0,0,5,0"
-                        Click="EditMetadata_Click"/>
-                <Button Content="🗑️ Remove" 
-                        Width="70" 
-                        Height="30"
-                        Click="RemoveMetadata_Click"/>
+                <Button Content="✏️ Edit" Padding="12,6" Margin="0,0,8,0" Click="EditMetadata_Click"
+                        Background="#3E3E42" Foreground="White" BorderThickness="0"/>
+                <Button Content="🗑️ Remove" Padding="12,6" Click="RemoveMetadata_Click"
+                        Background="#C42B1C" Foreground="White" BorderThickness="0"/>
             </StackPanel>
 
             <!-- Add Metadata Buttons -->
-            <TextBlock Text="Add Metadata:" Margin="0,0,0,5"/>
+            <TextBlock Text="Add Metadata:" Foreground="#888" FontSize="11" Margin="0,0,0,8"/>
             <WrapPanel>
-                <Button Content="⚠️ Trap" 
-                        Margin="2" 
-                        Padding="8,4" 
-                        Click="AddTrap_Click"/>
-                <Button Content="🔍 Secret" 
-                        Margin="2" 
-                        Padding="8,4" 
-                        Click="AddSecret_Click"/>
-                <Button Content="⚙️ Interactive" 
-                        Margin="2" 
-                        Padding="8,4" 
-                        Click="AddInteractive_Click"/>
-                <Button Content="⚡ Trigger" 
-                        Margin="2" 
-                        Padding="8,4" 
-                        Click="AddTrigger_Click"/>
-                <Button Content="☠️ Hazard" 
-                        Margin="2" 
-                        Padding="8,4" 
-                        Click="AddHazard_Click"/>
-                <Button Content="🌀 Teleporter" 
-                        Margin="2" 
-                        Padding="8,4" 
-                        Click="AddTeleporter_Click"/>
-                <Button Content="💚 Healing" 
-                        Margin="2" 
-                        Padding="8,4" 
-                        Click="AddHealing_Click"/>
-                <Button Content="👹 Spawn" 
-                        Margin="2" 
-                        Padding="8,4" 
-                        Click="AddSpawn_Click"/>
+                <Button Content="⚠️ Trap" Margin="3" Padding="10,5" Click="AddTrap_Click"
+                        Background="#3E3E42" Foreground="White" BorderThickness="0"/>
+                <Button Content="🔍 Secret" Margin="3" Padding="10,5" Click="AddSecret_Click"
+                        Background="#3E3E42" Foreground="White" BorderThickness="0"/>
+                <Button Content="⚙️ Interactive" Margin="3" Padding="10,5" Click="AddInteractive_Click"
+                        Background="#3E3E42" Foreground="White" BorderThickness="0"/>
+                <Button Content="⚡ Trigger" Margin="3" Padding="10,5" Click="AddTrigger_Click"
+                        Background="#3E3E42" Foreground="White" BorderThickness="0"/>
+                <Button Content="☠️ Hazard" Margin="3" Padding="10,5" Click="AddHazard_Click"
+                        Background="#3E3E42" Foreground="White" BorderThickness="0"/>
+                <Button Content="🌀 Teleporter" Margin="3" Padding="10,5" Click="AddTeleporter_Click"
+                        Background="#3E3E42" Foreground="White" BorderThickness="0"/>
+                <Button Content="💚 Healing" Margin="3" Padding="10,5" Click="AddHealing_Click"
+                        Background="#3E3E42" Foreground="White" BorderThickness="0"/>
+                <Button Content="👹 Spawn" Margin="3" Padding="10,5" Click="AddSpawn_Click"
+                        Background="#3E3E42" Foreground="White" BorderThickness="0"/>
             </WrapPanel>
 
         </StackPanel>

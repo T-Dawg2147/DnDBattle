@@ -1,7 +1,11 @@
 ﻿<Window x:Class="DnDBattle.Views.TileMap.ManualRollDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Manual Roll" Height="350" Width="450"
+        Title="🎲 Manual Roll" Height="400" Width="480"
+        WindowStartupLocation="CenterOwner"
+        Background="#1E1E1E"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
         KeyDown="Window_KeyDown">
 
     <Grid Margin="20">
@@ -12,53 +16,65 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <StackPanel Grid.Row="0">
+        <StackPanel Grid.Row="0" Margin="0,0,0,15">
             <TextBlock x:Name="TxtHeader" Text="🎲 Manual Roll Required" 
-                       FontSize="16" FontWeight="Bold"/>
-            <Separator/>
+                       FontSize="18" FontWeight="Bold" Foreground="White"/>
+            <TextBlock x:Name="TxtPrompt" Text="Ask the player to roll..." 
+                       Foreground="#888" FontSize="12" Margin="0,5,0,0" TextWrapping="Wrap"/>
         </StackPanel>
 
         <!-- Content -->
-        <StackPanel Grid.Row="1" VerticalAlignment="Center">
-            <TextBlock x:Name="TxtPrompt" Text="Ask the player to roll..." 
-                       FontSize="14" TextWrapping="Wrap" Margin="0,0,0,15"/>
+        <StackPanel Grid.Row="1">
+            <!-- Character Info Card -->
+            <Border Background="#252526" CornerRadius="6" Padding="15" Margin="0,0,0,15">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-            <Border Style="{StaticResource CardBorder}">
-                <StackPanel>
-                    <TextBlock Text="Character:" Style="{StaticResource HintText}"/>
-                    <TextBlock x:Name="TxtCharacter" Text="Character Name" 
-                               FontSize="14" FontWeight="Bold" Margin="0,2,0,10"/>
+                    <StackPanel>
+                        <TextBlock Text="CHARACTER" Foreground="#4FC3F7" FontWeight="Bold" FontSize="10" Margin="0,0,0,5"/>
+                        <TextBlock x:Name="TxtCharacter" Text="Character Name" 
+                                   FontSize="16" FontWeight="Bold" Foreground="White"/>
 
-                    <TextBlock Text="Modifier:" Style="{StaticResource HintText}"/>
-                    <TextBlock x:Name="TxtModifier" Text="+3" 
-                               FontSize="14" FontWeight="Bold" Margin="0,2,0,10"
-                               Foreground="{StaticResource Brush_Info}"/>
+                        <TextBlock Text="MODIFIER" Foreground="#4FC3F7" FontWeight="Bold" FontSize="10" Margin="0,15,0,5"/>
+                        <TextBlock x:Name="TxtModifier" Text="+3" 
+                                   FontSize="20" FontWeight="Bold" Foreground="#4CAF50"/>
+                    </StackPanel>
 
-                    <TextBlock Text="Target DC:" Style="{StaticResource HintText}"/>
-                    <TextBlock x:Name="TxtDC" Text="15" 
-                               FontSize="14" FontWeight="Bold" Margin="0,2,0,0"
-                               Foreground="{StaticResource Brush_Warning}"/>
-                </StackPanel>
+                    <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                        <TextBlock Text="TARGET DC" Foreground="#888" FontSize="10" HorizontalAlignment="Center"/>
+                        <TextBlock x:Name="TxtDC" Text="15" 
+                                   FontSize="36" FontWeight="Bold" Foreground="#FF9800" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Grid>
             </Border>
 
-            <TextBlock Text="Enter the player's d20 roll result:" 
-                       FontSize="12" Margin="0,20,0,5"/>
-            <TextBox x:Name="TxtRoll" FontSize="24" Height="50" 
-                     HorizontalContentAlignment="Center"
-                     TextChanged="TxtRoll_TextChanged"/>
+            <!-- Roll Input -->
+            <Border Background="#252526" CornerRadius="6" Padding="15">
+                <StackPanel>
+                    <TextBlock Text="ENTER D20 ROLL RESULT" Foreground="#4FC3F7" FontWeight="Bold" FontSize="11" Margin="0,0,0,10"/>
+                    <TextBox x:Name="TxtRoll" FontSize="32" Height="60" 
+                             Background="#1E1E1E" Foreground="White" BorderBrush="#444"
+                             HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                             TextChanged="TxtRoll_TextChanged"/>
 
-            <TextBlock x:Name="TxtResult" Text="" 
-                       FontSize="14" FontWeight="Bold" 
-                       HorizontalAlignment="Center" Margin="0,10,0,0"
-                       Foreground="{StaticResource Brush_Info}"/>
+                    <TextBlock x:Name="TxtResult" Text="" 
+                               FontSize="14" FontWeight="Bold" 
+                               HorizontalAlignment="Center" Margin="0,15,0,0"/>
+                </StackPanel>
+            </Border>
         </StackPanel>
 
         <!-- Buttons -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
-            <Button Content="✅ Confirm" Width="100" Height="35" Margin="5" 
-                    Click="Confirm_Click" IsDefault="True" Style="{StaticResource AccentButton}"/>
-            <Button Content="❌ Cancel" Width="100" Height="35" Margin="5" 
-                    Click="Cancel_Click" IsCancel="True"/>
+            <Button Content="❌ Cancel" Padding="20,10" Margin="0,0,10,0" 
+                    Click="Cancel_Click" IsCancel="True"
+                    Background="#3E3E42" Foreground="White" BorderThickness="0"/>
+            <Button Content="✅ Confirm" Padding="20,10" 
+                    Click="Confirm_Click" IsDefault="True"
+                    Background="#4CAF50" Foreground="White" BorderThickness="0" FontWeight="Bold"/>
         </StackPanel>
     </Grid>
 </Window>
