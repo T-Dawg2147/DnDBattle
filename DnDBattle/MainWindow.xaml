@@ -8,7 +8,7 @@
         Title="DnD Battle Builder" 
         Height="950" Width="1720"
         MinHeight="700" MinWidth="1000"
-        Background="#1A1A1D"
+        Background="{StaticResource Brush_Background_Dark}"
         WindowStartupLocation="CenterScreen">
 
     <Window.Resources>
@@ -95,8 +95,8 @@
         </Grid.RowDefinitions>
 
         <!-- ==================== MENU BAR ==================== -->
-        <Menu Grid.Row="0" Background="#1E1E1E" Foreground="White" Padding="5,3">
-            <MenuItem Header="_File" Foreground="White">
+        <Menu Grid.Row="0" Background="{StaticResource Brush_Background_Medium}" Padding="5,3">
+            <MenuItem Header="_File" Style="{StaticResource TopLevelMenuItem}">
                 <MenuItem Header="Save Encounter..." Click="MenuSaveEncounter_Click" InputGestureText="Ctrl+S"/>
                 <MenuItem Header="Load Encounter..." Click="MenuLoadEncounter_Click" InputGestureText="Ctrl+O"/>
                 <Separator/>
@@ -106,29 +106,28 @@
                 <Separator/>
                 <MenuItem Header="Exit" Click="MenuExit_Click" InputGestureText="Alt+F4"/>
             </MenuItem>
-            <MenuItem Header="_Edit" Foreground="White">
+            <MenuItem Header="_Edit" Style="{StaticResource TopLevelMenuItem}">
                 <MenuItem Header="Undo" Click="Undo_Click" InputGestureText="Ctrl+Z"/>
                 <MenuItem Header="Redo" Click="Redo_Click" InputGestureText="Ctrl+Y"/>
             </MenuItem>
-            <MenuItem Header="_Map">
+            <MenuItem Header="_Map" Style="{StaticResource TopLevelMenuItem}">
                 <MenuItem Header="Load Tile Map..." Click="LoadTileMap_Click"/>
                 <MenuItem Header="Clear Tile Map" Click="ClearTileMap_Click"/>
                 <Separator/>
                 <MenuItem Header="Open Tile Map Editor..." Click="OpenTileMapEditor_Click"/>
             </MenuItem>
-            <MenuItem Header="_Encounter" Foreground="White">
-                <Button Content="📋 Encounter Builder" 
-                        Click="BtnEncounterBuilder_Click" />
+            <MenuItem Header="_Encounter" Style="{StaticResource TopLevelMenuItem}">
+                <MenuItem Header="📋 Encounter Builder" Click="BtnEncounterBuilder_Click"/>
                 <Separator/>
                 <MenuItem Header="Encounter Templates..." Click="MenuEncounterTemplates_Click"/>
             </MenuItem>
-            <MenuItem Header="_Database" Foreground="White">
+            <MenuItem Header="_Database" Style="{StaticResource TopLevelMenuItem}">
                 <MenuItem Header="Import JSON to Database..." Click="MenuImportDatabase_Click"/>
                 <MenuItem Header="Reload from Database" Click="MenuReloadDatabase_Click"/>
                 <Separator/>
                 <MenuItem Header="Database Statistics" Click="MenuDatabaseStats_Click"/>
             </MenuItem>
-            <MenuItem Header="_View" Foreground="White">
+            <MenuItem Header="_View" Style="{StaticResource TopLevelMenuItem}">
                 <MenuItem Header="Toggle Left Sidebar" Click="ToggleLeftSidebar_Click" InputGestureText="F9"/>
                 <MenuItem Header="Toggle Right Sidebar" Click="ToggleRightSidebar_Click" InputGestureText="F10"/>
                 <Separator/>
@@ -146,7 +145,7 @@
                 </MenuItem>
             </MenuItem>
 
-            <MenuItem Header="🧱 Walls" Foreground="White">
+            <MenuItem Header="🧱 Walls" Style="{StaticResource TopLevelMenuItem}">
                 <MenuItem Header="Draw Solid Wall" Click="DrawSolidWall_Click"/>
                 <MenuItem Header="Draw Door" Click="DrawDoor_Click"/>
                 <MenuItem Header="Draw Window" Click="DrawWindow_Click"/>
@@ -160,7 +159,7 @@
                 <MenuItem Header="Clear All Walls" Click="ClearAllWalls_Click"/>
             </MenuItem>
 
-            <MenuItem Header="Tools" Foreground="White">
+            <MenuItem Header="Tools" Style="{StaticResource TopLevelMenuItem}">
                 <MenuItem Header="Tile Map Builder" Click="OpenTileMapBuilder_Click"/>
                 <Separator/>
                 <MenuItem Header="🎨 Application Theme..." Click="MenuTheme_Click"/>

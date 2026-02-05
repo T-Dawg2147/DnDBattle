@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
-             MinWidth="900" MinHeight="600" Background="#1E1E1E"
+             MinWidth="900" MinHeight="600" Background="{StaticResource Brush_Background_Medium}"
              Loaded="CreatureBrowserWindow_Loaded">
 
     <UserControl.Resources>
@@ -20,7 +20,7 @@
         </Grid.ColumnDefinitions>
 
         <!-- ========== LEFT PANEL: Categories ========== -->
-        <Border Grid.Column="0" Background="#252526" Padding="10">
+        <Border Grid.Column="0" Background="{StaticResource Brush_Background_Control}" Padding="10">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -30,7 +30,7 @@
 
                 <!-- Header -->
                 <TextBlock Grid.Row="0" Text="📚 LIBRARY" 
-                           Foreground="#4FC3F7" FontWeight="Bold" 
+                           Foreground="{StaticResource Brush_Info}" FontWeight="Bold" 
                            FontSize="12" Margin="0,0,0,10"/>
 
                 <!-- Category Tree -->
@@ -39,7 +39,7 @@
                           SelectedItemChanged="CategoryTree_SelectedItemChanged">
                     <TreeView.ItemContainerStyle>
                         <Style TargetType="TreeViewItem">
-                            <Setter Property="Foreground" Value="White"/>
+                            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
                             <Setter Property="IsExpanded" Value="True"/>
                         </Style>
                     </TreeView.ItemContainerStyle>
@@ -61,10 +61,10 @@
 
         <!-- Splitter -->
         <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" 
-                      Background="#1E1E1E" Cursor="SizeWE"/>
+                      Background="{StaticResource Brush_Background_Medium}" Cursor="SizeWE"/>
 
         <!-- ========== CENTER: Creature List ========== -->
-        <Border Grid.Column="2" Background="#1E1E1E" Padding="10">
+        <Border Grid.Column="2" Background="{StaticResource Brush_Background_Medium}" Padding="10">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -79,26 +79,18 @@
                     <TextBox x:Name="TxtSearch" 
                              Padding="30,8,10,8" 
                              FontSize="14"
-                             Background="#2D2D30"
-                             Foreground="White"
-                             BorderBrush="#444"
                              TextChanged="TxtSearch_TextChanged"/>
                     <TextBlock Text="🔍" 
                                IsHitTestVisible="False"
                                VerticalAlignment="Center"
                                Margin="10,0,0,0"
-                               Foreground="#888"/>
+                               Foreground="{StaticResource Brush_Text_Hint}"/>
                 </Grid>
 
                 <!-- Favorites Section -->
                 <Expander Grid.Row="1" Header="⭐ Favorites" IsExpanded="True" Margin="0,0,0,10"
-                          Foreground="White" Background="Transparent">
-                    <Expander.Style>
-                        <Style TargetType="Expander">
-                            <Setter Property="Foreground" Value="White"/>
-                        </Style>
-                    </Expander.Style>
-                    <Border Background="#252526" CornerRadius="4" Padding="8" MaxHeight="120">
+                          Foreground="{StaticResource Brush_Text_Primary}" Background="Transparent">
+                    <Border Background="{StaticResource Brush_Background_Control}" CornerRadius="4" Padding="8" MaxHeight="120">
                         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                             <ItemsControl x:Name="FavoritesList">
                                 <ItemsControl.ItemsPanel>
@@ -108,17 +100,17 @@
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Background="#3E3E42" CornerRadius="4" Padding="8,5" 
+                                        <Border Background="{StaticResource Brush_Background_Hover}" CornerRadius="4" Padding="8,5" 
                                                 Margin="0,0,6,6" Cursor="Hand"
                                                 MouseLeftButtonDown="Favorite_Click"
                                                 ToolTip="{Binding Name}">
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Text="⭐" Margin="0,0,5,0" Foreground="Gold"/>
-                                                <TextBlock Text="{Binding Name}" Foreground="White" 
+                                                <TextBlock Text="{Binding Name}" Foreground="{StaticResource Brush_Text_Primary}" 
                                                            MaxWidth="100" TextTrimming="CharacterEllipsis"/>
-                                                <TextBlock Text=" CR " Foreground="#666" FontSize="10" 
+                                                <TextBlock Text=" CR " Foreground="{StaticResource Brush_Text_Disabled}" FontSize="10" 
                                                            VerticalAlignment="Center"/>
-                                                <TextBlock Text="{Binding ChallengeRating}" Foreground="#888" 
+                                                <TextBlock Text="{Binding ChallengeRating}" Foreground="{StaticResource Brush_Text_Hint}" 
                                                            FontSize="10" VerticalAlignment="Center"/>
                                             </StackPanel>
                                         </Border>
@@ -130,22 +122,20 @@
                 </Expander>
 
                 <!-- Filter Bar -->
-                <Border Grid.Row="2" Background="#252526" CornerRadius="4" Padding="10,8" Margin="0,0,0,10">
+                <Border Grid.Row="2" Background="{StaticResource Brush_Background_Control}" CornerRadius="4" Padding="10,8" Margin="0,0,0,10">
                     <WrapPanel Orientation="Horizontal">
-                        <TextBlock Text="CR:" Foreground="#AAA" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                        <TextBlock Text="CR:" Foreground="{StaticResource Brush_Text_Hint}" VerticalAlignment="Center" Margin="0,0,5,0"/>
                         <TextBox x:Name="TxtCRMin" Width="40" Margin="0,0,3,0" 
-                                 TextChanged="FilterChanged" Background="#1E1E1E" Foreground="White"
-                                 BorderBrush="#444"/>
-                        <TextBlock Text="—" Foreground="#666" VerticalAlignment="Center" Margin="0,0,3,0"/>
+                                 TextChanged="FilterChanged"/>
+                        <TextBlock Text="—" Foreground="{StaticResource Brush_Text_Disabled}" VerticalAlignment="Center" Margin="0,0,3,0"/>
                         <TextBox x:Name="TxtCRMax" Width="40" Margin="0,0,15,0"
-                                 TextChanged="FilterChanged" Background="#1E1E1E" Foreground="White"
-                                 BorderBrush="#444"/>
+                                 TextChanged="FilterChanged"/>
 
-                        <TextBlock Text="Type:" Foreground="#AAA" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                        <TextBlock Text="Type:" Foreground="{StaticResource Brush_Text_Hint}" VerticalAlignment="Center" Margin="0,0,5,0"/>
                         <ComboBox x:Name="CmbTypeFilter" Width="120" Margin="0,0,15,0" 
                                   SelectionChanged="CmbTypeFilter_SelectionChanged"/>
 
-                        <TextBlock Text="Group:" Foreground="#AAA" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                        <TextBlock Text="Group:" Foreground="{StaticResource Brush_Text_Hint}" VerticalAlignment="Center" Margin="0,0,5,0"/>
                         <ComboBox x:Name="CmbGroupBy" Width="100" Margin="0,0,15,0"
                                   SelectionChanged="CmbGroupBy_SelectionChanged">
                             <ComboBoxItem Content="None" Tag="None"/>
@@ -156,7 +146,7 @@
 
                         <Button Content="Clear" Padding="10,3" Click="BtnClearFilters_Click"/>
 
-                        <TextBlock x:Name="TxtCreatureCount" Foreground="#888" 
+                        <TextBlock x:Name="TxtCreatureCount" Foreground="{StaticResource Brush_Text_Hint}" 
                                    VerticalAlignment="Center" Margin="15,0,0,0"/>
                     </WrapPanel>
                 </Border>
@@ -170,7 +160,7 @@
                     MouseDoubleClick="CreatureTree_MouseDoubleClick">
                     <TreeView.ItemContainerStyle>
                         <Style TargetType="TreeViewItem">
-                            <Setter Property="Foreground" Value="White"/>
+                            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
                             <Setter Property="IsExpanded" Value="False"/>
                             <Setter Property="Padding" Value="2"/>
                         </Style>
@@ -192,13 +182,13 @@
         </Border>
 
         <!-- ========== RIGHT PANEL: Creature Details ========== -->
-        <Border Grid.Column="3" Background="#252526" Padding="15">
+        <Border Grid.Column="3" Background="{StaticResource Brush_Background_Control}" Padding="15">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel x:Name="DetailsPanel">
                     <!-- Placeholder -->
                     <TextBlock x:Name="TxtNoSelection" 
                                Text="Select a creature to view details"
-                               Foreground="#666" FontSize="14"
+                               Foreground="{StaticResource Brush_Text_Disabled}" FontSize="14"
                                HorizontalAlignment="Center" Margin="0,50,0,0"/>
 
                     <!-- Creature Details -->
@@ -215,7 +205,7 @@
                             <Border Grid.Column="0" 
                                 Width="64" Height="64" 
                                 CornerRadius="8" 
-                                Background="#1E1E1E"
+                                Background="{StaticResource Brush_Background_Medium}"
                                 Margin="0,0,12,0">
                                 <Image x:Name="ImgCreatureDetail" 
                                    Stretch="UniformToFill"
@@ -224,9 +214,9 @@
 
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                 <TextBlock x:Name="TxtCreatureName" FontSize="20" FontWeight="Bold" 
-                                    Foreground="White" TextWrapping="Wrap"/>
+                                    Foreground="{StaticResource Brush_Text_Primary}" TextWrapping="Wrap"/>
                                 <TextBlock x:Name="TxtCreatureSubtitle" FontSize="11" 
-                                    Foreground="#888" FontStyle="Italic" TextWrapping="Wrap"/>
+                                    Foreground="{StaticResource Brush_Text_Hint}" FontStyle="Italic" TextWrapping="Wrap"/>
                             </StackPanel>
 
                             <Button Grid.Column="2" x:Name="BtnFavorite" Content="☆" FontSize="24"
@@ -237,68 +227,68 @@
                         </Grid>
 
                         <!-- Stats -->
-                        <Border Background="#1E1E1E" CornerRadius="4" Padding="15" Margin="0,0,0,15">
+                        <Border Background="{StaticResource Brush_Background_Medium}" CornerRadius="4" Padding="15" Margin="0,0,0,15">
                             <UniformGrid Columns="3">
                                 <StackPanel HorizontalAlignment="Center">
-                                    <TextBlock Text="AC" Foreground="#888" FontSize="10" HorizontalAlignment="Center"/>
-                                    <TextBlock x:Name="TxtAC" Foreground="#4FC3F7" FontSize="18" 
+                                    <TextBlock Text="AC" Foreground="{StaticResource Brush_Text_Hint}" FontSize="10" HorizontalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtAC" Foreground="{StaticResource Brush_Info}" FontSize="18" 
                                                FontWeight="Bold" HorizontalAlignment="Center"/>
                                 </StackPanel>
                                 <StackPanel HorizontalAlignment="Center">
-                                    <TextBlock Text="HP" Foreground="#888" FontSize="10" HorizontalAlignment="Center"/>
-                                    <TextBlock x:Name="TxtHP" Foreground="#4CAF50" FontSize="18" 
+                                    <TextBlock Text="HP" Foreground="{StaticResource Brush_Text_Hint}" FontSize="10" HorizontalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtHP" Foreground="{StaticResource Brush_Success}" FontSize="18" 
                                                FontWeight="Bold" HorizontalAlignment="Center"/>
                                 </StackPanel>
                                 <StackPanel HorizontalAlignment="Center">
-                                    <TextBlock Text="CR" Foreground="#888" FontSize="10" HorizontalAlignment="Center"/>
-                                    <TextBlock x:Name="TxtCR" Foreground="#FFB74D" FontSize="18" 
+                                    <TextBlock Text="CR" Foreground="{StaticResource Brush_Text_Hint}" FontSize="10" HorizontalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtCR" Foreground="{StaticResource Brush_Warning}" FontSize="18" 
                                                FontWeight="Bold" HorizontalAlignment="Center"/>
                                 </StackPanel>
                             </UniformGrid>
                         </Border>
 
                         <!-- Ability Scores -->
-                        <TextBlock Text="Ability Scores" Foreground="#4FC3F7" FontWeight="Bold" 
+                        <TextBlock Text="Ability Scores" Foreground="{StaticResource Brush_Info}" FontWeight="Bold" 
                                    FontSize="11" Margin="0,0,0,8"/>
-                        <Border Background="#1E1E1E" CornerRadius="4" Padding="10" Margin="0,0,0,15">
+                        <Border Background="{StaticResource Brush_Background_Medium}" CornerRadius="4" Padding="10" Margin="0,0,0,15">
                             <UniformGrid Columns="6">
                                 <StackPanel HorizontalAlignment="Center">
-                                    <TextBlock Text="STR" Foreground="#888" FontSize="9" HorizontalAlignment="Center"/>
-                                    <TextBlock x:Name="TxtStr" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="STR" Foreground="{StaticResource Brush_Text_Hint}" FontSize="9" HorizontalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtStr" Foreground="{StaticResource Brush_Text_Primary}" FontWeight="Bold" HorizontalAlignment="Center"/>
                                 </StackPanel>
                                 <StackPanel HorizontalAlignment="Center">
-                                    <TextBlock Text="DEX" Foreground="#888" FontSize="9" HorizontalAlignment="Center"/>
-                                    <TextBlock x:Name="TxtDex" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="DEX" Foreground="{StaticResource Brush_Text_Hint}" FontSize="9" HorizontalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtDex" Foreground="{StaticResource Brush_Text_Primary}" FontWeight="Bold" HorizontalAlignment="Center"/>
                                 </StackPanel>
                                 <StackPanel HorizontalAlignment="Center">
-                                    <TextBlock Text="CON" Foreground="#888" FontSize="9" HorizontalAlignment="Center"/>
-                                    <TextBlock x:Name="TxtCon" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="CON" Foreground="{StaticResource Brush_Text_Hint}" FontSize="9" HorizontalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtCon" Foreground="{StaticResource Brush_Text_Primary}" FontWeight="Bold" HorizontalAlignment="Center"/>
                                 </StackPanel>
                                 <StackPanel HorizontalAlignment="Center">
-                                    <TextBlock Text="INT" Foreground="#888" FontSize="9" HorizontalAlignment="Center"/>
-                                    <TextBlock x:Name="TxtInt" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="INT" Foreground="{StaticResource Brush_Text_Hint}" FontSize="9" HorizontalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtInt" Foreground="{StaticResource Brush_Text_Primary}" FontWeight="Bold" HorizontalAlignment="Center"/>
                                 </StackPanel>
                                 <StackPanel HorizontalAlignment="Center">
-                                    <TextBlock Text="WIS" Foreground="#888" FontSize="9" HorizontalAlignment="Center"/>
-                                    <TextBlock x:Name="TxtWis" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="WIS" Foreground="{StaticResource Brush_Text_Hint}" FontSize="9" HorizontalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtWis" Foreground="{StaticResource Brush_Text_Primary}" FontWeight="Bold" HorizontalAlignment="Center"/>
                                 </StackPanel>
                                 <StackPanel HorizontalAlignment="Center">
-                                    <TextBlock Text="CHA" Foreground="#888" FontSize="9" HorizontalAlignment="Center"/>
-                                    <TextBlock x:Name="TxtCha" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="CHA" Foreground="{StaticResource Brush_Text_Hint}" FontSize="9" HorizontalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtCha" Foreground="{StaticResource Brush_Text_Primary}" FontWeight="Bold" HorizontalAlignment="Center"/>
                                 </StackPanel>
                             </UniformGrid>
                         </Border>
 
                         <!-- Speed -->
-                        <TextBlock Text="Speed" Foreground="#4FC3F7" FontWeight="Bold" 
+                        <TextBlock Text="Speed" Foreground="{StaticResource Brush_Info}" FontWeight="Bold" 
                                    FontSize="11" Margin="0,0,0,5"/>
-                        <TextBlock x:Name="TxtSpeed" Foreground="#CCC" Margin="0,0,0,15" TextWrapping="Wrap"/>
+                        <TextBlock x:Name="TxtSpeed" Foreground="{StaticResource Brush_Text_Secondary}" Margin="0,0,0,15" TextWrapping="Wrap"/>
 
                         <!-- Traits -->
                         <StackPanel x:Name="TraitsSection" Margin="0,0,0,15">
-                            <TextBlock Text="Traits" Foreground="#4FC3F7" FontWeight="Bold" 
+                            <TextBlock Text="Traits" Foreground="{StaticResource Brush_Info}" FontWeight="Bold" 
                                        FontSize="11" Margin="0,0,0,5"/>
-                            <TextBlock x:Name="TxtTraits" Foreground="#CCC" TextWrapping="Wrap"/>
+                            <TextBlock x:Name="TxtTraits" Foreground="{StaticResource Brush_Text_Secondary}" TextWrapping="Wrap"/>
                         </StackPanel>
 
                         <!-- Actions -->
@@ -312,7 +302,7 @@
                         <StackPanel Margin="0,20,0,0">
                             <Button Content="➕ Add to Battle Map" Click="BtnAddToMap_Click"
                                     Padding="15,10" FontWeight="Bold"
-                                    Background="#4CAF50" Foreground="White"/>
+                                    Style="{StaticResource SuccessButton}"/>
 
                             <StackPanel Orientation="Horizontal" Margin="0,10,0,0" HorizontalAlignment="Center">
                                 <Button Content="📝 Edit" Click="EditCreature_Click"
@@ -320,7 +310,7 @@
                                 <Button Content="📋 Duplicate" Click="DuplicateCreature_Click"
                                         Padding="10,5" Margin="0,0,5,0"/>
                                 <Button Content="🗑️ Delete" Click="DeleteCreature_Click"
-                                        Padding="10,5" Foreground="#F44336"/>
+                                        Padding="10,5" Foreground="{StaticResource Brush_Error}"/>
                             </StackPanel>
                         </StackPanel>
                     </StackPanel>
@@ -334,13 +324,13 @@
                 Background="#DD1A1A1D" 
                 Visibility="Collapsed"
                 Panel.ZIndex="999">
-            <Border Background="#252526" CornerRadius="12" Padding="30,20"
+            <Border Background="{StaticResource Brush_Background_Control}" CornerRadius="12" Padding="30,20"
                     HorizontalAlignment="Center" VerticalAlignment="Center"
                     MinWidth="350">
                 <StackPanel>
                     <TextBlock x:Name="ImportProgressTitle" 
                                Text="Importing Creatures..." 
-                               Foreground="White" 
+                               Foreground="{StaticResource Brush_Text_Primary}" 
                                FontSize="16" 
                                FontWeight="Bold"
                                HorizontalAlignment="Center"
@@ -348,20 +338,18 @@
 
                     <ProgressBar x:Name="ImportProgressBar" 
                                  Height="8" 
-                                 Minimum="0" Maximum="100" Value="0"
-                                 Background="#1E1E1E" 
-                                 Foreground="#007ACC"/>
+                                 Minimum="0" Maximum="100" Value="0"/>
 
                     <TextBlock x:Name="ImportProgressText" 
                                Text="Preparing..." 
-                               Foreground="#AAA" 
+                               Foreground="{StaticResource Brush_Text_Hint}" 
                                FontSize="12"
                                HorizontalAlignment="Center"
                                Margin="0,10,0,0"/>
 
                     <TextBlock x:Name="ImportProgressDetail" 
                                Text="" 
-                               Foreground="#666" 
+                               Foreground="{StaticResource Brush_Text_Disabled}" 
                                FontSize="11"
                                HorizontalAlignment="Center"
                                Margin="0,5,0,0"
