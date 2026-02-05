@@ -244,10 +244,12 @@ namespace DnDBattle.Controls.BattleGrid
 
             if (e.ChangedButton == MouseButton.Left)
             {
+                // Find the element under the mouse for click handling
+                var clickedElement = FindVisualAtPoint(mousePos);
+
                 // CHECK 0: Handle double-click on token
                 if (e.ClickCount == 2)
                 {
-                    var clickedElement = FindVisualAtPoint(mousePos);
                     if (clickedElement?.Tag is Token token)
                     {
                         TokenDoubleClicked?.Invoke(token);
@@ -293,13 +295,11 @@ namespace DnDBattle.Controls.BattleGrid
                 }
 
                 // CHECK 2: Did we click on a token?
-                var clickedTokenElement = FindVisualAtPoint(mousePos);
-
-                if (clickedTokenElement?.Tag is Token clickedToken)
+                if (clickedElement?.Tag is Token clickedToken)
                 {
                     // Start token drag
                     _draggedToken = clickedToken;
-                    _draggedTokenVisual = clickedTokenElement;
+                    _draggedTokenVisual = clickedElement;
                     _tokenDragStartPoint = mousePos;
                     _tokenDragStartGridX = clickedToken.GridX;
                     _tokenDragStartGridY = clickedToken.GridY;
@@ -990,12 +990,16 @@ namespace DnDBattle.Controls.BattleGrid
                 HasDropShadow = true
             };
 
+            const double tooltipMinWidth = 180;
+            const double tooltipPadding = 12;
+            double barWidth = tooltipMinWidth - (tooltipPadding * 2);
+
             var mainBorder = new Border
             {
                 Background = new SolidColorBrush(Color.FromRgb(30, 30, 30)),
                 CornerRadius = new CornerRadius(6),
-                Padding = new Thickness(12),
-                MinWidth = 180
+                Padding = new Thickness(tooltipPadding),
+                MinWidth = tooltipMinWidth
             };
 
             var stack = new StackPanel();
@@ -1079,7 +1083,7 @@ namespace DnDBattle.Controls.BattleGrid
                 CornerRadius = new CornerRadius(3),
                 Height = 8,
                 HorizontalAlignment = HorizontalAlignment.Left,
-                Width = Math.Max(0, 156 * hpPercent) // 156 = minWidth - padding
+                Width = Math.Max(0, barWidth * hpPercent)
             };
 
             var hpBarGrid = new Grid { Height = 8, Margin = new Thickness(0, 4, 0, 0) };

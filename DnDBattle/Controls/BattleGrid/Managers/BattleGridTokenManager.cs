@@ -173,8 +173,9 @@ namespace DnDBattle.Controls.BattleGrid.Managers
                     {
                         image.ToolTip = _tooltipFactory(token);
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        Debug.WriteLine($"[TokenManager] Error creating tooltip for {token.Name}: {ex.Message}");
                         image.ToolTip = token.Name;
                     }
 
