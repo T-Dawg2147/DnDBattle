@@ -206,7 +206,10 @@ namespace DnDBattle.Services
 
             // Pre-compute adjacency sets for all enemies once
             // This is O(enemies) instead of O(enemies * path_length)
-            var enemyList = enemyPositions as IList<(int x, int y)> ?? enemyPositions.ToList();
+            // Check for common collection types to avoid unnecessary ToList() allocation
+            var enemyList = enemyPositions as IList<(int x, int y)> 
+                         ?? enemyPositions as IReadOnlyList<(int x, int y)> as IList<(int x, int y)>
+                         ?? enemyPositions.ToList();
             if (enemyList.Count == 0) return aooIndices;
 
             var enemyAdjacency = new ((int x, int y) enemy, HashSet<(int x, int y)> adj)[enemyList.Count];

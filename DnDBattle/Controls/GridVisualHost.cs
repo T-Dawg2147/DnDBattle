@@ -29,6 +29,7 @@ namespace DnDBattle.Controls
         private Rect _lastViewport;
         private bool _lastShowCoordinates;
         private bool _lastShowGrid;
+        private const double CellSizeTolerance = 0.01;
         #endregion
 
         static GridVisualHost()
@@ -91,7 +92,7 @@ namespace DnDBattle.Controls
             bool showCoordinates = true, bool showGrid = true)
         {
             // Skip redraw if nothing changed (viewport caching)
-            if (Math.Abs(cellSize - _lastCellSize) < 0.01 && 
+            if (Math.Abs(cellSize - _lastCellSize) < CellSizeTolerance && 
                 viewWorldPixels == _lastViewport && 
                 showCoordinates == _lastShowCoordinates && 
                 showGrid == _lastShowGrid)

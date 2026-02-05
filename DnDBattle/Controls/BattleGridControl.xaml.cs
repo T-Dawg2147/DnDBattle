@@ -1959,8 +1959,15 @@ namespace DnDBattle.Controls
 
         public void UpdateShadowSoftness()
         {
-            var wrapper = RenderCanvas.Children.OfType<FrameworkElement>().FirstOrDefault(w => Panel.GetZIndex(w) == 50);
-            if (wrapper != null) wrapper.Effect = new BlurEffect { Radius = Options.ShadowSoftnessPx, RenderingBias = RenderingBias.Quality };
+            // Direct iteration to avoid LINQ allocation
+            foreach (UIElement child in RenderCanvas.Children)
+            {
+                if (child is FrameworkElement wrapper && Panel.GetZIndex(wrapper) == 50)
+                {
+                    wrapper.Effect = new BlurEffect { Radius = Options.ShadowSoftnessPx, RenderingBias = RenderingBias.Quality };
+                    break;
+                }
+            }
         }
 
         private bool _isMiddlePanning = false;
@@ -2562,15 +2569,18 @@ namespace DnDBattle.Controls
                 }
             }
 
-            // Update tooltip
-            var img = container.Children.OfType<Image>().FirstOrDefault();
-            if (img != null)
+            // Update tooltip - direct iteration to avoid LINQ allocation
+            foreach (UIElement child in container.Children)
             {
-                try
+                if (child is Image img)
                 {
-                    img.ToolTip = CreateTokenTooltip(token);
+                    try
+                    {
+                        img.ToolTip = CreateTokenTooltip(token);
+                    }
+                    catch { }
+                    break;
                 }
-                catch { }
             }
         }
         #endregion
@@ -2602,11 +2612,17 @@ namespace DnDBattle.Controls
 
         private void RenderFogLayer()
         {
-            // Find or create the fog canvas
+            // Find or create the fog canvas - direct iteration to avoid LINQ allocation
             if (_fogCanvas == null)
             {
-                _fogCanvas = RenderCanvas.Children.OfType<Canvas>()
-                    .FirstOrDefault(c => c.Tag as string == "FogLayer");
+                foreach (UIElement child in RenderCanvas.Children)
+                {
+                    if (child is Canvas c && c.Tag as string == "FogLayer")
+                    {
+                        _fogCanvas = c;
+                        break;
+                    }
+                }
             }
 
             if (_fogCanvas == null)
@@ -2668,16 +2684,16 @@ namespace DnDBattle.Controls
             }
 
             // Also remove any stray fog canvases - direct iteration to avoid LINQ allocations
-            var toRemove = new List<Canvas>();
+            var strayFogCanvases = new List<Canvas>();
             foreach (UIElement child in RenderCanvas.Children)
             {
                 if (child is Canvas c && c.Tag as string == "FogLayer")
                 {
-                    toRemove.Add(c);
+                    strayFogCanvases.Add(c);
                 }
             }
 
-            foreach (var canvas in toRemove)
+            foreach (var canvas in strayFogCanvases)
             {
                 RenderCanvas.Children.Remove(canvas);
             }
@@ -3821,17 +3837,21 @@ namespace DnDBattle.Controls
                     }
                 }
 
-                // Draw path line
-                var pts = _lastPreviewPath
-                    .Select(p => new Point(p.x * GridCellSize + GridCellSize / 2.0, p.y * GridCellSize + GridCellSize / 2.0))
-                    .ToArray();
-
-                if (pts.Length >= 2)
+                // Draw path line - avoid LINQ Select/ToArray allocation in hot path
+                if (_lastPreviewPath.Count >= 2)
                 {
                     var pg = new PathGeometry();
-                    var pf = new PathFigure { StartPoint = pts[0], IsClosed = false };
-                    for (int i = 1; i < pts.Length; i++)
-                        pf.Segments.Add(new LineSegment(pts[i], true));
+                    var startPos = _lastPreviewPath[0];
+                    var pf = new PathFigure 
+                    { 
+                        StartPoint = new Point(startPos.x * GridCellSize + GridCellSize / 2.0, startPos.y * GridCellSize + GridCellSize / 2.0), 
+                        IsClosed = false 
+                    };
+                    for (int i = 1; i < _lastPreviewPath.Count; i++)
+                    {
+                        var p = _lastPreviewPath[i];
+                        pf.Segments.Add(new LineSegment(new Point(p.x * GridCellSize + GridCellSize / 2.0, p.y * GridCellSize + GridCellSize / 2.0), true));
+                    }
                     pg.Figures.Add(pf);
                     dc.DrawGeometry(null, PathPreviewLinePen, pg);
                 }
@@ -4563,11 +4583,13 @@ namespace DnDBattle.Controls
             if (defender == null || Tokens == null) return;
 
             // Find enemies (opposite team) that were adjacent to prevCell and are NOT adjacent to curCell
-            var enemies = Tokens.Where(t => t.Id != defender.Id && t.IsPlayer != defender.IsPlayer).ToList();
+            // Direct iteration to avoid LINQ allocation in hot path
             var provokingEnemies = new List<Token>();
 
-            foreach (var eToken in enemies)
+            foreach (var eToken in Tokens)
             {
+                if (eToken.Id == defender.Id || eToken.IsPlayer == defender.IsPlayer) continue;
+                
                 bool prevAdj = AreCellsAdjacent(prevCell, (eToken.GridX, eToken.GridY));
                 bool curAdj = AreCellsAdjacent(curCell, (eToken.GridX, eToken.GridY));
                 if (prevAdj && !curAdj)

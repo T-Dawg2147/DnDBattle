@@ -413,6 +413,7 @@ namespace DnDBattle.Services
         private static async Task<ImageSource> LoadImageFromFileAsync(string path)
         {
             // Load bytes asynchronously to avoid blocking the UI thread
+            // Caller should handle potential IOException or UnauthorizedAccessException
             byte[] imageBytes = await File.ReadAllBytesAsync(path);
             
             var bitmap = new BitmapImage();
