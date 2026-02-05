@@ -679,7 +679,8 @@ namespace DnDBattle.ViewModels
         /// </summary>
         public TileDefinition GetTileDefinition(PlacedTile tile)
         {
-            return _libraryService.GetTileById(tile?.TileDefinitionId ?? Guid.Empty);
+            if (tile == null) return null;
+            return _libraryService.GetTileById(tile.TileDefinitionId);
         }
 
         /// <summary>
