@@ -4,14 +4,14 @@
         Title="📋 Encounter Templates" 
         Width="900" Height="600"
         WindowStartupLocation="CenterOwner"
-        Background="#1E1E1E"
+        Background="{StaticResource Brush_Background_Medium}"
         ShowInTaskbar="False">
 
     <Window.Resources>
         <Style x:Key="SectionHeader" TargetType="TextBlock">
             <Setter Property="FontSize" Value="11"/>
             <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Foreground" Value="#4FC3F7"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Info}"/>
             <Setter Property="Margin" Value="0,0,0,10"/>
         </Style>
     </Window.Resources>
@@ -23,7 +23,7 @@
         </Grid.ColumnDefinitions>
 
         <!-- Left Panel: Template List -->
-        <Border Grid.Column="0" Background="#252526" CornerRadius="6" Margin="0,0,10,0">
+        <Border Grid.Column="0" Background="{StaticResource Brush_Background_Control}" CornerRadius="6" Margin="0,0,10,0">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -32,7 +32,7 @@
                 </Grid.RowDefinitions>
 
                 <!-- Header -->
-                <Border Grid.Row="0" Background="#2D2D30" Padding="15">
+                <Border Grid.Row="0" Background="{StaticResource Brush_Background_Hover}" Padding="15">
                     <TextBlock Text="📋 SAVED TEMPLATES" Style="{StaticResource SectionHeader}" Margin="0"/>
                 </Border>
 
@@ -43,7 +43,7 @@
                          Margin="5">
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="ListBoxItem">
-                            <Setter Property="Foreground" Value="White"/>
+                            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
                             <Setter Property="Padding" Value="10"/>
                             <Setter Property="Template">
                                 <Setter.Value>
@@ -53,10 +53,10 @@
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsSelected" Value="True">
-                                                <Setter TargetName="Bd" Property="Background" Value="#0E639C"/>
+                                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource Brush_Accent_Primary}"/>
                                             </Trigger>
                                             <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="Bd" Property="Background" Value="#3E3E42"/>
+                                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource Brush_Background_Hover}"/>
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
@@ -67,14 +67,14 @@
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <StackPanel>
-                                <TextBlock Text="{Binding Name}" FontWeight="Bold" Foreground="White"/>
-                                <TextBlock Text="{Binding Description}" FontSize="11" Foreground="#888"
+                                <TextBlock Text="{Binding Name}" FontWeight="Bold" Foreground="{StaticResource Brush_Text_Primary}"/>
+                                <TextBlock Text="{Binding Description}" FontSize="11" Foreground="{StaticResource Brush_Text_Hint}"
                                            TextTrimming="CharacterEllipsis" MaxWidth="200"/>
                                 <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
-                                    <Border Background="#3E3E42" CornerRadius="3" Padding="6,2" Margin="0,0,8,0">
-                                        <TextBlock Text="{Binding Difficulty}" FontSize="10" Foreground="#FF9800"/>
+                                    <Border Background="{StaticResource Brush_Background_Hover}" CornerRadius="3" Padding="6,2" Margin="0,0,8,0">
+                                        <TextBlock Text="{Binding Difficulty}" FontSize="10" Foreground="{StaticResource Brush_Warning}"/>
                                     </Border>
-                                    <TextBlock FontSize="10" Foreground="#666" VerticalAlignment="Center">
+                                    <TextBlock FontSize="10" Foreground="{StaticResource Brush_Text_Disabled}" VerticalAlignment="Center">
                                         <Run Text="{Binding Slots.Count, Mode=OneWay}"/>
                                         <Run Text=" creature types"/>
                                     </TextBlock>
@@ -87,15 +87,15 @@
                 <!-- Bottom Buttons -->
                 <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="10">
                     <Button Content="➕ New" Padding="15,8" Margin="0,0,5,0" Click="BtnNewTemplate_Click"
-                            Background="#4CAF50" Foreground="White" BorderThickness="0"/>
+                            Style="{StaticResource SuccessButton}"/>
                     <Button Content="🗑️ Delete" Padding="15,8" Click="BtnDeleteTemplate_Click"
-                            Background="#C42B1C" Foreground="White" BorderThickness="0"/>
+                            Style="{StaticResource ErrorButton}"/>
                 </StackPanel>
             </Grid>
         </Border>
 
         <!-- Right Panel: Editor -->
-        <Border Grid.Column="1" Background="#252526" CornerRadius="6" Padding="15">
+        <Border Grid.Column="1" Background="{StaticResource Brush_Background_Control}" CornerRadius="6" Padding="15">
             <Grid x:Name="EditorPanel">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -108,17 +108,16 @@
                 <StackPanel Grid.Row="0" Margin="0,0,0,15">
                     <TextBlock Text="TEMPLATE DETAILS" Style="{StaticResource SectionHeader}"/>
 
-                    <TextBlock Text="Name" Foreground="#888" FontSize="11" Margin="0,0,0,5"/>
-                    <TextBox x:Name="TxtTemplateName" Background="#1E1E1E" Foreground="White" BorderBrush="#444" 
-                             Padding="10,8" FontSize="14" Margin="0,0,0,10"/>
+                    <TextBlock Text="Name" Foreground="{StaticResource Brush_Text_Hint}" FontSize="11" Margin="0,0,0,5"/>
+                    <TextBox x:Name="TxtTemplateName" Padding="10,8" FontSize="14" Margin="0,0,0,10"/>
 
-                    <TextBlock Text="Description" Foreground="#888" FontSize="11" Margin="0,0,0,5"/>
-                    <TextBox x:Name="TxtTemplateDescription" Height="60" Background="#1E1E1E" Foreground="White" BorderBrush="#444"
+                    <TextBlock Text="Description" Foreground="{StaticResource Brush_Text_Hint}" FontSize="11" Margin="0,0,0,5"/>
+                    <TextBox x:Name="TxtTemplateDescription" Height="60"
                              TextWrapping="Wrap" AcceptsReturn="True" Padding="10,8" Margin="0,0,0,10"/>
 
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Difficulty" Foreground="#888" FontSize="11" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                        <ComboBox x:Name="CmbDifficulty" Width="140" Background="#1E1E1E" Foreground="White">
+                        <TextBlock Text="Difficulty" Foreground="{StaticResource Brush_Text_Hint}" FontSize="11" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <ComboBox x:Name="CmbDifficulty" Width="140">
                             <ComboBoxItem Content="Easy" IsSelected="True"/>
                             <ComboBoxItem Content="Medium"/>
                             <ComboBoxItem Content="Hard"/>
@@ -129,7 +128,7 @@
                 </StackPanel>
 
                 <!-- Add Creature -->
-                <Border Grid.Row="1" Background="#1E1E1E" CornerRadius="4" Padding="15" Margin="0,0,0,15">
+                <Border Grid.Row="1" Background="{StaticResource Brush_Background_Medium}" CornerRadius="4" Padding="15" Margin="0,0,0,15">
                     <StackPanel>
                         <TextBlock Text="➕ ADD CREATURE" Style="{StaticResource SectionHeader}"/>
                         <Grid>
@@ -141,22 +140,21 @@
 
                             <ComboBox x:Name="CmbCreatureSelect" Grid.Column="0"
                                       IsEditable="True" IsTextSearchEnabled="True"
-                                      DisplayMemberPath="Name" Background="#252526"/>
+                                      DisplayMemberPath="Name"/>
 
                             <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="10,0">
-                                <TextBlock Text="×" Foreground="#888" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                <TextBox x:Name="TxtCreatureCount" Width="40" Text="1" Background="#252526" Foreground="White"
-                                         VerticalContentAlignment="Center" HorizontalContentAlignment="Center" BorderBrush="#444"/>
+                                <TextBlock Text="×" Foreground="{StaticResource Brush_Text_Hint}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBox x:Name="TxtCreatureCount" Width="40" Text="1"
+                                         VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
                             </StackPanel>
 
-                            <Button Grid.Column="2" Content="Add" Padding="15,8" Click="BtnAddCreature_Click"
-                                    Background="#3E3E42" Foreground="White" BorderThickness="0"/>
+                            <Button Grid.Column="2" Content="Add" Padding="15,8" Click="BtnAddCreature_Click"/>
                         </Grid>
                     </StackPanel>
                 </Border>
 
                 <!-- Creatures List -->
-                <Border Grid.Row="2" Background="#1E1E1E" CornerRadius="4" Padding="15">
+                <Border Grid.Row="2" Background="{StaticResource Brush_Background_Medium}" CornerRadius="4" Padding="15">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -168,14 +166,14 @@
                         <ListBox x:Name="LstSlots" Grid.Row="1" Background="Transparent" BorderThickness="0">
                             <ListBox.ItemContainerStyle>
                                 <Style TargetType="ListBoxItem">
-                                    <Setter Property="Foreground" Value="White"/>
+                                    <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
                                     <Setter Property="Padding" Value="8"/>
                                     <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
                                 </Style>
                             </ListBox.ItemContainerStyle>
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Background="#252526" CornerRadius="4" Padding="10">
+                                    <Border Background="{StaticResource Brush_Background_Control}" CornerRadius="4" Padding="10">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*"/>
@@ -183,19 +181,19 @@
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
 
-                                            <TextBlock Grid.Column="0" VerticalAlignment="Center" Foreground="White">
+                                            <TextBlock Grid.Column="0" VerticalAlignment="Center" Foreground="{StaticResource Brush_Text_Primary}">
                                                 <Run Text="{Binding CreatureName}" FontWeight="Bold"/>
                                             </TextBlock>
 
                                             <TextBlock Grid.Column="1" VerticalAlignment="Center"
-                                                       Foreground="#4FC3F7" HorizontalAlignment="Center" FontWeight="Bold">
+                                                       Foreground="{StaticResource Brush_Info}" HorizontalAlignment="Center" FontWeight="Bold">
                                                 <Run Text="×"/>
                                                 <Run Text="{Binding Count}"/>
                                             </TextBlock>
 
                                             <Button Grid.Column="2" Content="✕" Width="28" Height="28"
                                                     Click="BtnRemoveSlot_Click" Tag="{Binding}"
-                                                    Background="#C42B1C" Foreground="White" BorderThickness="0"
+                                                    Style="{StaticResource ErrorButton}"
                                                     ToolTip="Remove from template"/>
                                         </Grid>
                                     </Border>
@@ -209,10 +207,11 @@
                 <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
                     <Button Content="💾 Save Template" Padding="15,10" Margin="0,0,10,0"
                             Click="BtnSaveTemplate_Click"
-                            Background="#007ACC" Foreground="White" BorderThickness="0"/>
+                            Style="{StaticResource AccentButton}"/>
                     <Button x:Name="BtnSpawn" Content="⚔️ Spawn Encounter" Padding="15,10"
                             Click="BtnSpawnEncounter_Click"
-                            Background="#4CAF50" Foreground="White" BorderThickness="0" FontWeight="Bold"/>
+                            Style="{StaticResource SuccessButton}"
+                            FontWeight="Bold"/>
                 </StackPanel>
             </Grid>
         </Border>
