@@ -230,7 +230,7 @@ namespace DnDBattle.Controls
                 if (tileMap == null) return;
 
                 // Draw background
-                var bgColor = (Color)ColorConverter.ConvertFromString(tileMap.BackgroundColor ?? "#FF1A1A1A");
+                var bgColor = tileMap.BackgroundColor;
                 var bgBrush = new SolidColorBrush(bgColor);
                 bgBrush.Freeze();
 
@@ -252,11 +252,11 @@ namespace DnDBattle.Controls
             }
         }
 
-        private bool DrawTile(DrawingContext dc, DnDBattle.Models.Tiles.Tile tile, double cellSize)
+        private bool DrawTile(DrawingContext dc, DnDBattle.Models.Tiles.PlacedTile tile, double cellSize)
         {
             try
             {
-                var tileDef = Services.TileService.TileLibraryService.Instance.GetTileById(tile.TileDefinitionId);
+                var tileDef = Services.TileService.TileLibraryService.Instance.GetTileById(tile.TileDefinitionId.ToString());
                 if (tileDef == null)
                 {
                     Debug.WriteLine($"[GridVisualHost] Tile definition not found: {tile.TileDefinitionId}");

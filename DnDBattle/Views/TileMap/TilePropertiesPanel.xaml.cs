@@ -15,7 +15,7 @@ namespace DnDBattle.Views.TileMap
     {
         #region Fields
 
-        private Tile _currentTile;
+        private PlacedTile _currentTile;
         private TileDefinition _currentTileDefinition;
         private bool _isLoadingProperties = false;
 
@@ -23,7 +23,7 @@ namespace DnDBattle.Views.TileMap
 
         #region Events
 
-        public event Action<Tile> TilePropertiesChanged;
+        public event Action<PlacedTile> TilePropertiesChanged;
         public event Action<TileDefinition> TileDefinitionChanged;
 
         #endregion
@@ -42,7 +42,7 @@ namespace DnDBattle.Views.TileMap
         /// <summary>
         /// Loads and displays all properties and metadata for a tile
         /// </summary>
-        public void LoadTileProperties(Tile tile)
+        public void LoadTileProperties(PlacedTile tile)
         {
             _isLoadingProperties = true;
 
@@ -84,7 +84,7 @@ namespace DnDBattle.Views.TileMap
         /// <summary>
         /// Sets the tile to edit (legacy method for compatibility)
         /// </summary>
-        public void SetTile(Tile tile)
+        public void SetTile(PlacedTile tile)
         {
             LoadTileProperties(tile);
         }

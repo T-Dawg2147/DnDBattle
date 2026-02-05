@@ -142,7 +142,7 @@ namespace DnDBattle.Services.TileService
             return triggeredSpawns;
         }
 
-        private bool CheckProximityTrigger(Tile spawnTile, ObservableCollection<Token> tokens, int triggerDistance)
+        private bool CheckProximityTrigger(PlacedTile spawnTile, ObservableCollection<Token> tokens, int triggerDistance)
         {
             foreach (var token in tokens.Where(t => t.IsPlayer))
             {

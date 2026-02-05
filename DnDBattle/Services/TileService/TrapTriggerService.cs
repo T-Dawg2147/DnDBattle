@@ -36,7 +36,7 @@ namespace DnDBattle.Services.TileService
         /// <summary>
         /// Check if a token triggers a trap when entering a tile
         /// </summary>
-        public void CheckForTraps(Token token, Tile tile)
+        public void CheckForTraps(Token token, PlacedTile tile)
         {
             if (tile == null || token == null)
                 return;

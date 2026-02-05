@@ -45,7 +45,7 @@ namespace DnDBattle.Controls
 
         private bool _recordingUndo = true;
 
-        private List<Tile> _clipboard = new List<Tile>();
+        private List<PlacedTile> _clipboard = new List<PlacedTile>();
         private (int X, int Y) _clipboardOrigin;
 
         private enum EditMode { Paint, Erase, Properties }
@@ -71,7 +71,7 @@ namespace DnDBattle.Controls
         };
 
         // Events
-        public event Action<Tile> TileRightClicked;
+        public event Action<PlacedTile> TileRightClicked;
 
         public TileMapEditorControl()
         {
@@ -139,9 +139,9 @@ namespace DnDBattle.Controls
                 DrawGrid();
             }
 
-            foreach (var tile in TileMap.PlacedTiles.OrderBy(t => t.ZIndex ?? 0))
+            foreach (var placedTile in TileMap.PlacedTiles.OrderBy(t => t.ZIndex ?? 0))
             {
-                DrawTile(tile);
+                DrawTile(placedTile);
             }
 
             if (_showDMView)
@@ -200,9 +200,9 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Draw a single tile instance
         /// </summary>
-        private void DrawTile(Tile tile)
+        private void DrawTile(PlacedTile tile)
         {
-            var tileDef = TileLibraryService.Instance.GetTileById(tile.TileDefinitionId);
+            var tileDef = TileLibraryService.Instance.GetTileById(tile.TileDefinitionId.ToString());
             if (tileDef == null) return;
 
             // Check layer visibility
@@ -262,7 +262,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Draw a visual indicator for a tile with metadata
         /// </summary>
-        private void DrawMetadataIndicator(Tile tile)
+        private void DrawMetadataIndicator(PlacedTile tile)
         {
             double cellSize = TileMap.CellSize;
             double x = tile.GridX * cellSize;
@@ -399,7 +399,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Create tooltip showing metadata details
         /// </summary>
-        private ToolTip CreateMetadataTooltip(Tile tile)
+        private ToolTip CreateMetadataTooltip(PlacedTile tile)
         {
             var tooltip = new ToolTip
             {
@@ -514,7 +514,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Draw spawn point radius preview
         /// </summary>
-        private void DrawSpawnPreview(Tile tile, SpawnMetadata spawn)
+        private void DrawSpawnPreview(PlacedTile tile, SpawnMetadata spawn)
         {
             if (spawn.SpawnRadius == 0) return;
 
@@ -751,9 +751,9 @@ namespace DnDBattle.Controls
                 })
                 .ToList();
 
-            var newTile = new Tile
+            var newTile = new PlacedTile
             {
-                TileDefinitionId = SelectedTileDefinition.Id,
+                TileDefinitionId = Guid.Parse(SelectedTileDefinition.Id),
                 GridX = gridX,
                 GridY = gridY,
                 Rotation = _currentRotation,        // Apply rotation
@@ -764,7 +764,7 @@ namespace DnDBattle.Controls
             // Record undo
             if (_recordingUndo && tilesToRemove.Any())
             {
-                var batchAction = new TileBatchAction(TileMap, new List<Tile> { newTile }, tilesToRemove, "Replace Tile");
+                var batchAction = new TileBatchAction(TileMap, new List<PlacedTile> { newTile }, tilesToRemove, "Replace Tile");
                 UndoManager.Record(batchAction);
             }
             else if (_recordingUndo)
@@ -805,7 +805,7 @@ namespace DnDBattle.Controls
                 }
                 else
                 {
-                    var batchAction = new TileBatchAction(TileMap, new List<Tile>(), tilesToRemove, "Remove Tiles");
+                    var batchAction = new TileBatchAction(TileMap, new List<PlacedTile>(), tilesToRemove, "Remove Tiles");
                     UndoManager.Record(batchAction);
                 }
             }
@@ -833,7 +833,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Get tile at grid position (returns topmost if multiple)
         /// </summary>
-        private Tile GetTileAt(int gridX, int gridY)
+        private PlacedTile GetTileAt(int gridX, int gridY)
         {
             return TileMap?.GetTilesAt(gridX, gridY).OrderByDescending(t => t.ZIndex ?? 0).FirstOrDefault();
         }
@@ -1105,7 +1105,7 @@ namespace DnDBattle.Controls
 
         #region Helpers / Utility
 
-        public Brush BackgroundBrush => new SolidColorBrush((Color)ColorConverter.ConvertFromString(TileMap?.BackgroundColor ?? "#FF1A1A1A"));
+        public Brush BackgroundBrush => new SolidColorBrush(TileMap?.BackgroundColor ?? Colors.DarkSlateGray);
         public string StatusText => $"Mode: {_currentMode} | Tiles: {TileMap?.PlacedTiles.Count ?? 0} | DM View: {(_showDMView ? "ON" : "OFF")}";
 
         private void CopySelection()
@@ -1131,9 +1131,9 @@ namespace DnDBattle.Controls
             foreach (var tile in tiles)
             {
                 // Clone the tile
-                _clipboard.Add(new Tile
+                _clipboard.Add(new PlacedTile
                 {
-                    TileDefinitionId = tile.TileDefinitionId.ToString(),
+                    TileDefinitionId = tile.TileDefinitionId,
                     GridX = tile.GridX,
                     GridY = tile.GridY,
                     Rotation = tile.Rotation,
@@ -1158,7 +1158,7 @@ namespace DnDBattle.Controls
             var mousePos = Mouse.GetPosition(MapCanvas);
             var gridPos = ScreenToGrid(mousePos);
 
-            var pastedTiles = new List<Tile>();
+            var pastedTiles = new List<PlacedTile>();
 
             foreach (var clipTile in _clipboard)
             {
@@ -1166,7 +1166,7 @@ namespace DnDBattle.Controls
                 int offsetX = clipTile.GridX - _clipboardOrigin.X;
                 int offsetY = clipTile.GridY - _clipboardOrigin.Y;
 
-                var newTile = new Tile
+                var newTile = new PlacedTile
                 {
                     TileDefinitionId = clipTile.TileDefinitionId,
                     GridX = gridPos.X + offsetX,
@@ -1190,7 +1190,7 @@ namespace DnDBattle.Controls
             // Record undo
             if (_recordingUndo && pastedTiles.Count > 0)
             {
-                var action = new TileBatchAction(TileMap, pastedTiles, new List<Tile>(), "Paste Tiles");
+                var action = new TileBatchAction(TileMap, pastedTiles, new List<PlacedTile>(), "Paste Tiles");
                 UndoManager.Record(action);
             }
 
@@ -1219,7 +1219,7 @@ namespace DnDBattle.Controls
             // Record undo
             if (_recordingUndo)
             {
-                var action = new TileBatchAction(TileMap, new List<Tile>(), tiles, "Cut Tiles");
+                var action = new TileBatchAction(TileMap, new List<PlacedTile>(), tiles, "Cut Tiles");
                 UndoManager.Record(action);
             }
 
