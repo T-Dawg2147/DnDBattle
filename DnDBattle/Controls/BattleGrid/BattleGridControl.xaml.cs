@@ -22,6 +22,9 @@ namespace DnDBattle.Controls.BattleGrid
         public event Action<Token> TokenDoubleClicked;
         public event Action<Token, int, int, int, int> TokenMoved;
         public event Action<string, string> LogMessage;
+        public event Action<Token> RequestEditToken;
+        public event Action<Token> RequestDuplicateToken;
+        public event Action<Token> RequestDeleteToken;
 
         #endregion
 
@@ -148,6 +151,9 @@ namespace DnDBattle.Controls.BattleGrid
             _tileMapManager = new BattleGridTileMapManager();
             _fogManager = new BattleGridFogOfWarManager();
 
+            // Set tooltip factory for token manager
+            _tokenManager.SetTooltipFactory(CreateTokenTooltip);
+
             // Setup events
             SetupManagerEvents();
 
@@ -224,8 +230,33 @@ namespace DnDBattle.Controls.BattleGrid
 
             var mousePos = e.GetPosition(RenderCanvas);
 
+            // Handle right-click for context menu
+            if (e.ChangedButton == MouseButton.Right)
+            {
+                var clickedElement = FindVisualAtPoint(mousePos);
+                if (clickedElement?.Tag is Token token)
+                {
+                    ShowTokenContextMenu(token, mousePos);
+                    e.Handled = true;
+                    return;
+                }
+            }
+
             if (e.ChangedButton == MouseButton.Left)
             {
+                // CHECK 0: Handle double-click on token
+                if (e.ClickCount == 2)
+                {
+                    var clickedElement = FindVisualAtPoint(mousePos);
+                    if (clickedElement?.Tag is Token token)
+                    {
+                        TokenDoubleClicked?.Invoke(token);
+                        Debug.WriteLine($"[BattleGrid] Token double-clicked: {token.Name}");
+                        e.Handled = true;
+                        return;
+                    }
+                }
+
                 // CHECK 1A: Are we in fog shape tool mode?
                 if (_activeFogShapeTool.HasValue && _activeFogShapeTool.Value != DnDBattle.Views.FogShapeTool.None)
                 {
@@ -262,23 +293,23 @@ namespace DnDBattle.Controls.BattleGrid
                 }
 
                 // CHECK 2: Did we click on a token?
-                var clickedElement = FindVisualAtPoint(mousePos);
+                var clickedTokenElement = FindVisualAtPoint(mousePos);
 
-                if (clickedElement?.Tag is Token token)
+                if (clickedTokenElement?.Tag is Token clickedToken)
                 {
                     // Start token drag
-                    _draggedToken = token;
-                    _draggedTokenVisual = clickedElement;
+                    _draggedToken = clickedToken;
+                    _draggedTokenVisual = clickedTokenElement;
                     _tokenDragStartPoint = mousePos;
-                    _tokenDragStartGridX = token.GridX;
-                    _tokenDragStartGridY = token.GridY;
+                    _tokenDragStartGridX = clickedToken.GridX;
+                    _tokenDragStartGridY = clickedToken.GridY;
 
                     _draggedTokenVisual.CaptureMouse();
                     Panel.SetZIndex(_draggedTokenVisual, 1000);
 
-                    TokenClicked?.Invoke(token);
+                    TokenClicked?.Invoke(clickedToken);
 
-                    Debug.WriteLine($"[BattleGrid] Started dragging token: {token.Name}");
+                    Debug.WriteLine($"[BattleGrid] Started dragging token: {clickedToken.Name}");
                     e.Handled = true;
                     return;
                 }
@@ -885,6 +916,301 @@ namespace DnDBattle.Controls.BattleGrid
 
                 RenderCanvas.Children.Add(_fogShapeCirclePreview);
             }
+        }
+
+        private void ShowTokenContextMenu(Token token, Point position)
+        {
+            var menu = new ContextMenu();
+
+            var editItem = new MenuItem { Header = "📝 Edit Stats..." };
+            editItem.Click += (s, e) => RequestEditToken?.Invoke(token);
+            menu.Items.Add(editItem);
+
+            var duplicateItem = new MenuItem { Header = "📋 Duplicate" };
+            duplicateItem.Click += (s, e) => RequestDuplicateToken?.Invoke(token);
+            menu.Items.Add(duplicateItem);
+
+            menu.Items.Add(new Separator());
+
+            // === CONDITIONS SUBMENU ===
+            var conditionsMenu = new MenuItem { Header = "🏷️ Conditions" };
+
+            var commonConditions = new[] {
+                Models.Condition.Blinded, Models.Condition.Charmed, Models.Condition.Deafened, Models.Condition.Frightened,
+                Models.Condition.Grappled, Models.Condition.Incapacitated, Models.Condition.Invisible, Models.Condition.Paralyzed,
+                Models.Condition.Petrified, Models.Condition.Poisoned, Models.Condition.Prone, Models.Condition.Restrained,
+                Models.Condition.Stunned, Models.Condition.Unconscious
+            };
+
+            foreach (var condition in commonConditions)
+            {
+                var condItem = new MenuItem
+                {
+                    Header = $"{ConditionExtensions.GetConditionIcon(condition)} {ConditionExtensions.GetConditionName(condition)}",
+                    IsCheckable = true,
+                    IsChecked = token.HasCondition(condition),
+                    Tag = condition
+                };
+                condItem.Click += (s, e) =>
+                {
+                    var cond = (Models.Condition)((MenuItem)s).Tag;
+                    if (token.HasCondition(cond))
+                        token.RemoveCondition(cond);
+                    else
+                        token.AddCondition(cond);
+
+                    LogMessage?.Invoke("Condition", $"{token.Name} {(token.HasCondition(cond) ? "gained" : "lost")} {ConditionExtensions.GetConditionName(cond)}");
+                };
+                conditionsMenu.Items.Add(condItem);
+            }
+
+            menu.Items.Add(conditionsMenu);
+
+            menu.Items.Add(new Separator());
+
+            var deleteItem = new MenuItem { Header = "🗑️ Remove from Battle" };
+            deleteItem.Click += (s, e) => RequestDeleteToken?.Invoke(token);
+            menu.Items.Add(deleteItem);
+
+            menu.IsOpen = true;
+        }
+
+        /// <summary>
+        /// Creates a tooltip for displaying token information on hover.
+        /// </summary>
+        private ToolTip CreateTokenTooltip(Token token)
+        {
+            var tooltip = new ToolTip
+            {
+                Background = new SolidColorBrush(Color.FromRgb(30, 30, 30)),
+                Foreground = Brushes.White,
+                BorderBrush = new SolidColorBrush(Color.FromRgb(60, 60, 60)),
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(0),
+                HasDropShadow = true
+            };
+
+            var mainBorder = new Border
+            {
+                Background = new SolidColorBrush(Color.FromRgb(30, 30, 30)),
+                CornerRadius = new CornerRadius(6),
+                Padding = new Thickness(12),
+                MinWidth = 180
+            };
+
+            var stack = new StackPanel();
+
+            // Name (bold, larger)
+            stack.Children.Add(new TextBlock
+            {
+                Text = token.Name ?? "Unknown",
+                FontWeight = FontWeights.Bold,
+                FontSize = 15,
+                Foreground = Brushes.White,
+                Margin = new Thickness(0, 0, 0, 2)
+            });
+
+            // Type and Size
+            var subtitleText = "";
+            if (!string.IsNullOrEmpty(token.Size)) subtitleText += token.Size;
+            if (!string.IsNullOrEmpty(token.Type))
+            {
+                if (subtitleText.Length > 0) subtitleText += " ";
+                subtitleText += token.Type;
+            }
+            if (!string.IsNullOrEmpty(subtitleText))
+            {
+                stack.Children.Add(new TextBlock
+                {
+                    Text = subtitleText,
+                    Foreground = new SolidColorBrush(Color.FromRgb(150, 150, 150)),
+                    FontSize = 11,
+                    FontStyle = FontStyles.Italic,
+                    Margin = new Thickness(0, 0, 0, 10)
+                });
+            }
+
+            // HP Bar
+            var hpPanel = new StackPanel { Margin = new Thickness(0, 0, 0, 8) };
+
+            var hpHeader = new Grid();
+            hpHeader.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            hpHeader.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            hpHeader.Children.Add(new TextBlock
+            {
+                Text = "Hit Points",
+                FontSize = 10,
+                Foreground = new SolidColorBrush(Color.FromRgb(130, 130, 130))
+            });
+
+            var hpText = new TextBlock
+            {
+                Text = $"{token.HP} / {token.MaxHP}",
+                FontSize = 10,
+                FontWeight = FontWeights.Bold,
+                HorizontalAlignment = HorizontalAlignment.Right
+            };
+
+            // Color the HP text based on health percentage
+            double hpPercent = token.MaxHP > 0 ? (double)Math.Max(0, token.HP) / token.MaxHP : 0;
+            hpText.Foreground = hpPercent > 0.5 ? new SolidColorBrush(Color.FromRgb(76, 175, 80)) :
+                                hpPercent > 0.25 ? new SolidColorBrush(Color.FromRgb(255, 193, 7)) :
+                                new SolidColorBrush(Color.FromRgb(244, 67, 54));
+
+            Grid.SetColumn(hpText, 1);
+            hpHeader.Children.Add(hpText);
+            hpPanel.Children.Add(hpHeader);
+
+            // HP Bar visual
+            var hpBarBg = new Border
+            {
+                Background = new SolidColorBrush(Color.FromRgb(50, 50, 50)),
+                CornerRadius = new CornerRadius(3),
+                Height = 8,
+                Margin = new Thickness(0, 4, 0, 0)
+            };
+
+            var hpBarFill = new Border
+            {
+                Background = hpPercent > 0.5 ? new SolidColorBrush(Color.FromRgb(76, 175, 80)) :
+                             hpPercent > 0.25 ? new SolidColorBrush(Color.FromRgb(255, 193, 7)) :
+                             new SolidColorBrush(Color.FromRgb(244, 67, 54)),
+                CornerRadius = new CornerRadius(3),
+                Height = 8,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Width = Math.Max(0, 156 * hpPercent) // 156 = minWidth - padding
+            };
+
+            var hpBarGrid = new Grid { Height = 8, Margin = new Thickness(0, 4, 0, 0) };
+            hpBarGrid.Children.Add(hpBarBg);
+            hpBarGrid.Children.Add(hpBarFill);
+            hpPanel.Children.Add(hpBarGrid);
+
+            stack.Children.Add(hpPanel);
+
+            // Stats row (AC, CR, Init)
+            var statsGrid = new Grid { Margin = new Thickness(0, 0, 0, 5) };
+            statsGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            statsGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            statsGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            // AC
+            var acPanel = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center };
+            acPanel.Children.Add(new TextBlock
+            {
+                Text = "AC",
+                FontSize = 9,
+                Foreground = new SolidColorBrush(Color.FromRgb(130, 130, 130)),
+                HorizontalAlignment = HorizontalAlignment.Center
+            });
+            acPanel.Children.Add(new TextBlock
+            {
+                Text = token.ArmorClass.ToString(),
+                FontSize = 14,
+                FontWeight = FontWeights.Bold,
+                Foreground = new SolidColorBrush(Color.FromRgb(100, 181, 246)),
+                HorizontalAlignment = HorizontalAlignment.Center
+            });
+            Grid.SetColumn(acPanel, 0);
+            statsGrid.Children.Add(acPanel);
+
+            // CR
+            var crPanel = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center };
+            crPanel.Children.Add(new TextBlock
+            {
+                Text = "CR",
+                FontSize = 9,
+                Foreground = new SolidColorBrush(Color.FromRgb(130, 130, 130)),
+                HorizontalAlignment = HorizontalAlignment.Center
+            });
+            crPanel.Children.Add(new TextBlock
+            {
+                Text = token.ChallengeRating ?? "—",
+                FontSize = 14,
+                FontWeight = FontWeights.Bold,
+                Foreground = new SolidColorBrush(Color.FromRgb(255, 193, 7)),
+                HorizontalAlignment = HorizontalAlignment.Center
+            });
+            Grid.SetColumn(crPanel, 1);
+            statsGrid.Children.Add(crPanel);
+
+            // Initiative
+            var initPanel = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center };
+            initPanel.Children.Add(new TextBlock
+            {
+                Text = "Init",
+                FontSize = 9,
+                Foreground = new SolidColorBrush(Color.FromRgb(130, 130, 130)),
+                HorizontalAlignment = HorizontalAlignment.Center
+            });
+            initPanel.Children.Add(new TextBlock
+            {
+                Text = token.Initiative > 0 ? token.Initiative.ToString() : "—",
+                FontSize = 14,
+                FontWeight = FontWeights.Bold,
+                Foreground = new SolidColorBrush(Color.FromRgb(186, 104, 200)),
+                HorizontalAlignment = HorizontalAlignment.Center
+            });
+            Grid.SetColumn(initPanel, 2);
+            statsGrid.Children.Add(initPanel);
+
+            stack.Children.Add(statsGrid);
+
+            // Speed
+            if (!string.IsNullOrEmpty(token.Speed))
+            {
+                stack.Children.Add(new TextBlock
+                {
+                    Text = $"Speed: {token.Speed}",
+                    FontSize = 10,
+                    Foreground = new SolidColorBrush(Color.FromRgb(150, 150, 150)),
+                    Margin = new Thickness(0, 5, 0, 0)
+                });
+            }
+
+            // Conditions
+            if (token.Conditions != Models.Condition.None)
+            {
+                var conditionsBorder = new Border
+                {
+                    Background = new SolidColorBrush(Color.FromRgb(50, 40, 30)),
+                    CornerRadius = new CornerRadius(4),
+                    Padding = new Thickness(8, 5, 8, 5),
+                    Margin = new Thickness(0, 8, 0, 0)
+                };
+
+                var conditionsPanel = new WrapPanel();
+                foreach (var condition in token.Conditions.GetActiveConditions())
+                {
+                    conditionsPanel.Children.Add(new TextBlock
+                    {
+                        Text = $"{ConditionExtensions.GetConditionIcon(condition)} ",
+                        FontSize = 12,
+                        VerticalAlignment = VerticalAlignment.Center
+                    });
+                }
+
+                var condText = new TextBlock
+                {
+                    Text = token.ConditionsDisplay,
+                    FontSize = 10,
+                    Foreground = new SolidColorBrush(Color.FromRgb(255, 152, 0)),
+                    TextWrapping = TextWrapping.Wrap,
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+
+                var condStack = new StackPanel { Orientation = Orientation.Horizontal };
+                condStack.Children.Add(conditionsPanel);
+                condStack.Children.Add(condText);
+
+                conditionsBorder.Child = condStack;
+                stack.Children.Add(conditionsBorder);
+            }
+
+            mainBorder.Child = stack;
+            tooltip.Content = mainBorder;
+            return tooltip;
         }
 
         #endregion

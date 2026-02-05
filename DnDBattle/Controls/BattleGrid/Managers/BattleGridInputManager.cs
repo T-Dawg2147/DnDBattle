@@ -24,6 +24,11 @@ namespace DnDBattle.Controls.BattleGrid.Managers
 
         #region Events
 
+        // NOTE: These events are invoked during keyboard handling (HandleKeyDown method).
+        // Currently, PanChanged, ZoomChanged, ResetViewRequested, and ZoomAtCenterRequested
+        // are NOT subscribed to by BattleGridControl. Only GridPositionChanged is subscribed.
+        // The keyboard-based panning and zooming functionality is currently not wired up.
+        // To enable keyboard panning/zooming, BattleGridControl should subscribe to these events.
         public event Action<double, double> PanChanged; // deltaX, deltaY
         public event Action<double, Point> ZoomChanged; // zoomFactor, zoomCenter
         public event Action<Point> GridPositionChanged; // current grid position

@@ -18,11 +18,17 @@ namespace DnDBattle.Controls.BattleGrid.Managers
 
         private readonly Canvas _renderCanvas;
         private ObservableCollection<Token> _tokens;
+        private Func<Token, ToolTip> _tooltipFactory;
 
         #endregion
 
         #region Events
 
+        // NOTE: These events are declared for future use when token interactions
+        // might be handled directly in the TokenManager. Currently, all mouse
+        // interactions (click, double-click, drag/move) are handled by BattleGridControl
+        // which then invokes its own events. The BattleGridControl subscribes to these
+        // events but they are never invoked by this class.
         public event Action<Token> TokenClicked;
         public event Action<Token> TokenDoubleClicked;
         public event Action<Token, int, int, int, int> TokenMoved;
@@ -41,6 +47,14 @@ namespace DnDBattle.Controls.BattleGrid.Managers
         #endregion
 
         #region Public Methods
+
+        /// <summary>
+        /// Sets a factory function to create tooltips for tokens.
+        /// </summary>
+        public void SetTooltipFactory(Func<Token, ToolTip> tooltipFactory)
+        {
+            _tooltipFactory = tooltipFactory;
+        }
 
         public void SetTokens(ObservableCollection<Token> tokens)
         {
@@ -145,11 +159,29 @@ namespace DnDBattle.Controls.BattleGrid.Managers
                     Width = size,
                     Height = size,
                     Source = imageSource,
-                    Stretch = Stretch.UniformToFill
+                    Stretch = Stretch.UniformToFill,
+                    Tag = token
                 };
 
                 var clip = new EllipseGeometry(new Point(size / 2, size / 2), size / 2, size / 2);
                 image.Clip = clip;
+
+                // Set tooltip on image element
+                if (_tooltipFactory != null)
+                {
+                    try
+                    {
+                        image.ToolTip = _tooltipFactory(token);
+                    }
+                    catch
+                    {
+                        image.ToolTip = token.Name;
+                    }
+
+                    ToolTipService.SetInitialShowDelay(image, 100);
+                    ToolTipService.SetShowDuration(image, 30000);
+                    ToolTipService.SetBetweenShowDelay(image, 0);
+                }
 
                 container.Children.Add(image);
 
