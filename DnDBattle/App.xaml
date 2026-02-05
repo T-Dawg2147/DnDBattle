@@ -44,6 +44,7 @@
         <SolidColorBrush x:Key="Brush_Background_Medium" Color="{StaticResource Color_Background_Medium}"/>
         <SolidColorBrush x:Key="Brush_Background_Control" Color="{StaticResource Color_Background_Control}"/>
         <SolidColorBrush x:Key="Brush_Background_Hover" Color="{StaticResource Color_Background_Hover}"/>
+        <SolidColorBrush x:Key="Brush_Background_Transparent" Color="Transparent"/>
 
         <SolidColorBrush x:Key="Brush_Border_Normal" Color="{StaticResource Color_Border_Normal}"/>
         <SolidColorBrush x:Key="Brush_Border_Hover" Color="{StaticResource Color_Border_Hover}"/>

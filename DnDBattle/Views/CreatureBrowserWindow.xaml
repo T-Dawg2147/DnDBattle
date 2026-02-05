@@ -89,7 +89,7 @@
 
                 <!-- Favorites Section -->
                 <Expander Grid.Row="1" Header="⭐ Favorites" IsExpanded="True" Margin="0,0,0,10"
-                          Foreground="{StaticResource Brush_Text_Primary}" Background="Transparent">
+                          Foreground="{StaticResource Brush_Text_Primary}" Background="{StaticResource Brush_Background_Transparent}">
                     <Border Background="{StaticResource Brush_Background_Control}" CornerRadius="4" Padding="8" MaxHeight="120">
                         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                             <ItemsControl x:Name="FavoritesList">
