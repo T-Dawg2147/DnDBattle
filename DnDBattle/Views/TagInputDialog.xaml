@@ -4,15 +4,15 @@
         Title="🏷️ Manage Tags" 
         Width="450" Height="380"
         WindowStartupLocation="CenterOwner"
-        Background="#1E1E1E"
+        Background="{StaticResource Brush_Background_Medium}"
         ResizeMode="NoResize"
         ShowInTaskbar="False">
 
     <Window.Resources>
         <Style x:Key="TagToggleButtonStyle" TargetType="ToggleButton">
-            <Setter Property="Background" Value="#3E3E42"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderBrush" Value="#555"/>
+            <Setter Property="Background" Value="{StaticResource Brush_Background_Hover}"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brush_Border_Hover}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -28,7 +28,7 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="border" Property="Background" Value="#1B5E20"/>
-                                <Setter TargetName="border" Property="BorderBrush" Value="#4CAF50"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource Brush_Success}"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="border" Property="Background" Value="#505054"/>
@@ -50,12 +50,12 @@
 
         <!-- Header -->
         <StackPanel Grid.Row="0" Margin="0,0,0,15">
-            <TextBlock Text="🏷️ Manage Tags" FontSize="18" FontWeight="Bold" Foreground="White"/>
-            <TextBlock Text="Add tags to organize your content" Foreground="#888" FontSize="11" Margin="0,5,0,0"/>
+            <TextBlock Text="🏷️ Manage Tags" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Brush_Text_Primary}"/>
+            <TextBlock Text="Add tags to organize your content" Foreground="{StaticResource Brush_Text_Hint}" FontSize="11" Margin="0,5,0,0"/>
         </StackPanel>
 
         <!-- Add New Tag -->
-        <Border Grid.Row="1" Background="#252526" CornerRadius="6" Padding="15" Margin="0,0,0,15">
+        <Border Grid.Row="1" Background="{StaticResource Brush_Background_Control}" CornerRadius="6" Padding="15" Margin="0,0,0,15">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -64,7 +64,6 @@
 
                 <TextBox x:Name="TxtNewTag"
                          Grid.Column="0"
-                         Background="#1E1E1E" Foreground="White" BorderBrush="#444"
                          Padding="10,8" FontSize="13"
                          KeyDown="TxtNewTag_KeyDown"
                          ToolTip="Type a new tag and press Enter or click Add"/>
@@ -74,16 +73,16 @@
                         Content="➕ Add"
                         Padding="15,8" Margin="10,0,0,0"
                         Click="BtnAddTag_Click"
-                        Background="#4CAF50" Foreground="White" BorderThickness="0"/>
+                        Style="{StaticResource SuccessButton}"/>
             </Grid>
         </Border>
 
         <!-- Tag Selection -->
-        <Border Grid.Row="2" Background="#252526" CornerRadius="6" Padding="15">
+        <Border Grid.Row="2" Background="{StaticResource Brush_Background_Control}" CornerRadius="6" Padding="15">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel>
-                    <TextBlock Text="QUICK TAGS" Foreground="#4FC3F7" FontWeight="Bold" FontSize="11" Margin="0,0,0,10"/>
-                    <TextBlock Text="Click to toggle selection" Foreground="#666" FontSize="10" Margin="0,0,0,10"/>
+                    <TextBlock Text="QUICK TAGS" Foreground="{StaticResource Brush_Info}" FontWeight="Bold" FontSize="11" Margin="0,0,0,10"/>
+                    <TextBlock Text="Click to toggle selection" Foreground="{StaticResource Brush_Text_Disabled}" FontSize="10" Margin="0,0,0,10"/>
 
                     <ItemsControl x:Name="TagButtonsPanel">
                         <ItemsControl.ItemsPanel>
@@ -103,7 +102,7 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
 
-                    <TextBlock Text="COMMON TAGS" Foreground="#4FC3F7" FontWeight="Bold" FontSize="11" Margin="0,15,0,10"/>
+                    <TextBlock Text="COMMON TAGS" Foreground="{StaticResource Brush_Info}" FontWeight="Bold" FontSize="11" Margin="0,15,0,10"/>
 
                     <WrapPanel x:Name="CommonTagsPanel" Orientation="Horizontal"/>
                 </StackPanel>
@@ -114,12 +113,12 @@
         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
             <Button x:Name="BtnCancel" Content="Cancel" 
                     Padding="20,10" Margin="0,0,10,0"
-                    Click="BtnCancel_Click" IsCancel="True"
-                    Background="#3E3E42" Foreground="White" BorderThickness="0"/>
+                    Click="BtnCancel_Click" IsCancel="True"/>
             <Button x:Name="BtnOk" Content="OK" 
                     Padding="20,10"
                     Click="BtnOk_Click" IsDefault="True"
-                    Background="#007ACC" Foreground="White" BorderThickness="0" FontWeight="Bold"/>
+                    Style="{StaticResource AccentButton}"
+                    FontWeight="Bold"/>
         </StackPanel>
     </Grid>
 </Window>

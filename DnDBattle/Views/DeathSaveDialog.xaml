@@ -4,7 +4,7 @@
         Title="Death Saving Throw"
         Width="380" Height="380"
         WindowStartupLocation="CenterOwner"
-        Background="#1E1E1E"
+        Background="{StaticResource Brush_Background_Medium}"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
         WindowStyle="ToolWindow"
@@ -24,18 +24,18 @@
             <TextBlock Text="💀 Death Saving Throw" 
                        FontSize="18" 
                        FontWeight="Bold" 
-                       Foreground="#F44336"/>
+                       Foreground="{StaticResource Brush_Error}"/>
             <TextBlock x:Name="TxtCreatureName" 
-                       Foreground="White" 
+                       Foreground="{StaticResource Brush_Text_Primary}" 
                        FontSize="14"
                        FontWeight="SemiBold"
                        Margin="0,5,0,0"/>
         </StackPanel>
 
         <!-- Current Death Saves Status -->
-        <Border Grid.Row="1" Background="#252526" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+        <Border Grid.Row="1" Background="{StaticResource Brush_Background_Control}" CornerRadius="8" Padding="15" Margin="0,0,0,15">
             <StackPanel>
-                <TextBlock Text="Current Status" Foreground="#888" FontSize="11" Margin="0,0,0,10"/>
+                <TextBlock Text="Current Status" Foreground="{StaticResource Brush_Text_Hint}" FontSize="11" Margin="0,0,0,10"/>
 
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -45,27 +45,27 @@
 
                     <!-- Successes -->
                     <StackPanel HorizontalAlignment="Center">
-                        <TextBlock Text="Successes" Foreground="#4CAF50" FontSize="11" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Successes" Foreground="{StaticResource Brush_Success}" FontSize="11" HorizontalAlignment="Center"/>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,0">
-                            <Ellipse x:Name="Success1" Width="20" Height="20" Stroke="#4CAF50" StrokeThickness="2" Margin="2"/>
-                            <Ellipse x:Name="Success2" Width="20" Height="20" Stroke="#4CAF50" StrokeThickness="2" Margin="2"/>
-                            <Ellipse x:Name="Success3" Width="20" Height="20" Stroke="#4CAF50" StrokeThickness="2" Margin="2"/>
+                            <Ellipse x:Name="Success1" Width="20" Height="20" Stroke="{StaticResource Brush_Success}" StrokeThickness="2" Margin="2"/>
+                            <Ellipse x:Name="Success2" Width="20" Height="20" Stroke="{StaticResource Brush_Success}" StrokeThickness="2" Margin="2"/>
+                            <Ellipse x:Name="Success3" Width="20" Height="20" Stroke="{StaticResource Brush_Success}" StrokeThickness="2" Margin="2"/>
                         </StackPanel>
                     </StackPanel>
 
                     <!-- Failures -->
                     <StackPanel Grid.Column="1" HorizontalAlignment="Center">
-                        <TextBlock Text="Failures" Foreground="#F44336" FontSize="11" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Failures" Foreground="{StaticResource Brush_Error}" FontSize="11" HorizontalAlignment="Center"/>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,0">
-                            <Ellipse x:Name="Failure1" Width="20" Height="20" Stroke="#F44336" StrokeThickness="2" Margin="2"/>
-                            <Ellipse x:Name="Failure2" Width="20" Height="20" Stroke="#F44336" StrokeThickness="2" Margin="2"/>
-                            <Ellipse x:Name="Failure3" Width="20" Height="20" Stroke="#F44336" StrokeThickness="2" Margin="2"/>
+                            <Ellipse x:Name="Failure1" Width="20" Height="20" Stroke="{StaticResource Brush_Error}" StrokeThickness="2" Margin="2"/>
+                            <Ellipse x:Name="Failure2" Width="20" Height="20" Stroke="{StaticResource Brush_Error}" StrokeThickness="2" Margin="2"/>
+                            <Ellipse x:Name="Failure3" Width="20" Height="20" Stroke="{StaticResource Brush_Error}" StrokeThickness="2" Margin="2"/>
                         </StackPanel>
                     </StackPanel>
                 </Grid>
 
                 <TextBlock Text="DC 10" 
-                           Foreground="#666" 
+                           Foreground="{StaticResource Brush_Text_Disabled}" 
                            FontSize="10" 
                            HorizontalAlignment="Center"
                            Margin="0,10,0,0"/>
@@ -73,30 +73,27 @@
         </Border>
 
         <!-- Roll Input -->
-        <Border Grid.Row="2" Background="#252526" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+        <Border Grid.Row="2" Background="{StaticResource Brush_Background_Control}" CornerRadius="8" Padding="15" Margin="0,0,0,15">
             <StackPanel>
                 <!-- Manual Roll -->
                 <StackPanel x:Name="ManualRollPanel">
-                    <TextBlock Text="Enter your d20 roll:" Foreground="#888" FontSize="11"/>
+                    <TextBlock Text="Enter your d20 roll:" Foreground="{StaticResource Brush_Text_Hint}" FontSize="11"/>
                     <TextBox x:Name="TxtRoll" 
                              Width="80" 
                              FontSize="24"
-                             Background="#1E1E1E"
-                             Foreground="White"
-                             BorderBrush="#444"
                              Padding="8,5"
                              TextAlignment="Center"
                              HorizontalAlignment="Left"
                              Margin="0,8,0,0"/>
                     <TextBlock x:Name="TxtRollHint" 
-                               Foreground="#666" 
+                               Foreground="{StaticResource Brush_Text_Disabled}" 
                                FontSize="10"
                                Margin="0,5,0,0"/>
                 </StackPanel>
 
                 <!-- Auto Roll -->
                 <StackPanel x:Name="AutoRollPanel" Visibility="Collapsed">
-                    <TextBlock Text="Roll Result:" Foreground="#888" FontSize="11"/>
+                    <TextBlock Text="Roll Result:" Foreground="{StaticResource Brush_Text_Hint}" FontSize="11"/>
                     <TextBlock x:Name="TxtAutoRoll" 
                                FontSize="36" 
                                FontWeight="Bold" 
@@ -120,16 +117,11 @@
             <Button Content="Cancel" 
                     Padding="15,10" 
                     Margin="0,0,10,0"
-                    Click="BtnCancel_Click"
-                    Background="#3E3E42"
-                    Foreground="White"
-                    BorderThickness="0"/>
+                    Click="BtnCancel_Click"/>
             <Button Content="Confirm (Enter)" 
                     Padding="20,10"
                     Click="BtnConfirm_Click"
-                    Background="#4CAF50"
-                    Foreground="White"
-                    BorderThickness="0"
+                    Style="{StaticResource SuccessButton}"
                     FontWeight="Bold"
                     IsDefault="True"/>
         </StackPanel>
