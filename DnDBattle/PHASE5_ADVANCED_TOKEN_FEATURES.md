@@ -2,7 +2,7 @@
 
 ## Overview
 
-Phase 5 adds seven advanced token features to enhance tactical combat on the battle map. All features can be enabled/disabled from the **Developer Settings** window (`🔧 Developer Settings - Features`).
+Phase 5 adds seven advanced token features to enhance tactical combat on the battle map. Use the top menu **🎭 Phase 5** → **Advanced Token Features Panel...** (or `🔧 Tools → Developer Settings`) to toggle features and run the quick actions listed below.
 
 ---
 
@@ -60,7 +60,7 @@ The cost indicator shows `used/total` squares (e.g. `4/6`).
 | `EnablePathAnimation` | `true` | Enable smooth token movement |
 | `PathAnimationSecondsPerSquare` | `0.3` | Animation speed (seconds per grid square) |
 
-**Simple Test:** Open Developer Settings, adjust the speed slider. Move a token along a path to see the animation speed change.
+**Simple Test:** Open **🎭 Phase 5 → Advanced Token Features Panel...** (or `Tools → Developer Settings`), adjust the **Path Animation Speed** slider, then move a token along a path to see the speed change.
 
 ---
 
@@ -150,20 +150,18 @@ The cost indicator shows `used/total` squares (e.g. `4/6`).
 | `AutoFaceMovementDirection` | `true` | Auto-update facing when moving |
 | `EnableFlankingDetection` | `true` | Check for flanking bonus |
 
-**Simple Test:** Enable token facing in Developer Settings. Tokens should display a yellow arrow pointing in their facing direction. The default direction is right (0°).
+**Simple Test:** In **🎭 Phase 5 → Advanced Token Features Panel...**, enable **Token Facing**. Tokens should display a yellow arrow pointing in their facing direction. The default direction is right (0°).
 
 ---
 
-## 🔧 Developer Window
+## 🔧 UI Access
 
-All Phase 5 features are accessible from the Developer Settings window:
+All Phase 5 features are accessible from the main menu:
 
 1. Open the app
-2. Navigate to **Tools** → **Developer Settings** (or however the developer window is opened)
-3. Scroll down to the **"Phase 5: Advanced Token Features"** section
-4. Toggle features on/off using checkboxes
-5. Adjust sliders for fine-tuning (path depth, animation speed)
-6. Click **"Reset All to Defaults"** to restore all settings
+2. Use **🎭 Phase 5** → **Advanced Token Features Panel...** to toggle features on/off and adjust sliders (path depth, animation speed, facing, auras, elevation)
+3. Quick actions like **Add Paladin Aura** or **Set Elevation** are also under **🎭 Phase 5**
+4. The same settings are mirrored in **Tools** → **Developer Settings** under **"Phase 5: Advanced Token Features"**
 
 ---
 
@@ -198,10 +196,10 @@ All Phase 5 features are accessible from the Developer Settings window:
 To validate all Phase 5 features are working:
 
 1. **Build** the project — should compile with 0 errors
-2. **Open Developer Settings** — scroll to Phase 5 section, verify all toggles are visible and default to enabled
+2. **Open 🎭 Phase 5 → Advanced Token Features Panel...** — verify all toggles are visible and default to enabled
 3. **Select a token** — hover over cells to see movement cost preview (green/yellow/red)
 4. **Ctrl+click** a destination — path preview should show diagonal steps and AOO warnings
 5. **Right-click token** → Auras → add a Paladin Aura — gold ring should appear
 6. **Right-click token** → Elevation → set to 20ft — blue badge should show
-7. **Toggle features off** in Developer Settings — visual elements should disappear
-8. **Reset to defaults** — all features re-enabled
+7. **Toggle features off** in the Phase 5 panel — visual elements should disappear
+8. **Reset to defaults** — all features re-enabled (via Phase 5 panel or Developer Settings)

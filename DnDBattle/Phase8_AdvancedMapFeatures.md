@@ -1,8 +1,7 @@
 # Phase 8 – Advanced Map Features
 
 This document describes the features added in **Phase 8** and explains how to
-test each one.  Every feature can be toggled on/off in the **Developer Settings**
-window (🔧 menu) so they can be enabled or disabled at runtime.
+test each one. Use the top menu **🗺️ Phase 8** → **Map Features Panel...** (or `🔧 Tools → Developer Settings → Phase 8`) to toggle features and run quick actions like setting grid type, enabling gridless mode, adding map notes, or opening the Map Library.
 
 ---
 
@@ -24,11 +23,10 @@ window (🔧 menu) so they can be enabled or disabled at runtime.
 
 ### How to test
 
-1. Open **Developer Settings → Phase 8** and ensure *Enable Multi-Map Management* is checked.
-2. In code (or a future Map Library window) create two `TileMapReference` objects and add them to a `MapLibraryService` instance.
-3. Call `LoadMap(id)` to switch maps – verify the `MapChanged` event fires.
-4. Call `SearchMaps("tavern")` and verify filtering by name/tag works.
-5. Adjust the *Max Recent Maps* slider in Developer Settings and verify `RecentMaps` returns the correct count.
+1. Open **🗺️ Phase 8 → Map Features Panel...** and ensure *Enable Multi-Map Management* is checked.
+2. Open **🗺️ Phase 8 → Open Map Library...**, add two maps, and switch between them — verify the map changes and recent list updates.
+3. Use the search box in the Map Library for "tavern" and verify filtering by name/tag works.
+4. Adjust the *Max Recent Maps* slider in the panel and confirm the Recent Maps list respects the limit.
 
 ---
 
@@ -50,10 +48,9 @@ window (🔧 menu) so they can be enabled or disabled at runtime.
 
 ### How to test
 
-1. Enable *Background Image Layers* in Developer Settings.
-2. Add a `BackgroundLayer` to a `TileMap.BackgroundLayers` list, setting `ImagePath`, `Opacity`, and alignment coordinates.
-3. Serialize the `TileMap` to JSON and verify the background layers are included.
-4. Deserialize and confirm the layer data round-trips correctly.
+1. Enable *Background Image Layers* in the **Map Features Panel...**.
+2. In the panel, add a background image layer to the current map, setting image path, opacity, and alignment.
+3. Save the map, reload it, and verify the layer persists with the configured opacity.
 
 ---
 
@@ -76,11 +73,9 @@ window (🔧 menu) so they can be enabled or disabled at runtime.
 
 ### How to test
 
-1. Enable *Hexagonal Grid Support* in Developer Settings.
-2. Create a `HexCoord(3, 4)` and verify `DistanceTo(new HexCoord(0, 0))` returns `7`.
-3. Convert to pixel with `ToPixel()`, then back with `FromPixel()` – the coordinates should match.
-4. Call `HexGridService.GetHexesInRadius(center, 2)` and confirm 19 hexes are returned.
-5. Call `HexGridService.FindPath(start, goal, isBlocked, 100)` with no blocked cells and verify a path is returned.
+1. In **🗺️ Phase 8**, choose **Grid Type → Hex Grid (Flat Top)** or **Hex Grid (Pointy Top)**.
+2. Place a token and confirm grid snapping follows hex coordinates; switch back to **Square Grid** and verify snapping changes.
+3. Use the Map Features Panel to switch grid types again and confirm distances and movement highlights update accordingly.
 
 ---
 
@@ -100,9 +95,9 @@ window (🔧 menu) so they can be enabled or disabled at runtime.
 
 ### How to test
 
-1. Enable *Gridless Mode* in Developer Settings.
-2. Set `TileMap.GridlessMode = true` and verify tokens are no longer snapped to grid coordinates when placed.
-3. Toggle `ShowGridOverlay` and confirm a subtle dotted grid overlay appears or disappears.
+1. Toggle **🗺️ Phase 8 → Toggle Gridless Mode** on.
+2. Place tokens and verify they are not snapped to grid coordinates.
+3. Toggle **Show Grid Overlay** in the Map Features Panel to show/hide the dotted grid.
 
 ---
 
@@ -122,12 +117,9 @@ window (🔧 menu) so they can be enabled or disabled at runtime.
 
 ### How to test
 
-1. Enable *Custom Grid Sizes* in Developer Settings.
-2. Create a `TileMap` with `FeetPerSquare = 5` and call `GetSpeedInSquares("30 ft")` – result should be `6`.
-3. Call `ChangeGridScale(10)` and verify:
-   - `FeetPerSquare` is now `10`.
-   - Tile positions and map dimensions are halved (scaled by 5/10 = 0.5).
-4. Adjust the *Default Feet/Square* slider in Developer Settings.
+1. In the Map Features Panel, enable *Custom Grid Sizes*.
+2. Set **Default Feet/Square** to 5 and verify a 30 ft move previews as 6 squares.
+3. Change the slider to 10 ft/square and verify movement previews shrink accordingly.
 
 ---
 
@@ -149,11 +141,10 @@ window (🔧 menu) so they can be enabled or disabled at runtime.
 
 ### How to test
 
-1. Enable *Map Notes & Labels* in Developer Settings.
-2. Add a `MapNote` to a `TileMap` via `AddNote()` – verify `Notes.Count` increases.
-3. Set `IsPlayerVisible = false` on a note and toggle *Show DM-Only Notes* in Developer Settings.
-4. Call `RemoveNote(noteId)` and verify the note is removed.
-5. Adjust the *Default Font Size* slider and create a new note – verify it uses the slider value.
+1. Enable *Map Notes & Labels* in the Map Features Panel.
+2. Use **🗺️ Phase 8 → Add Map Note at Center...** to place a note; verify it appears on the map.
+3. Toggle *Show DM-Only Notes* in the panel and confirm DM-only notes hide/show.
+4. Adjust the *Default Font Size* slider and add another note — verify it uses the new size.
 
 ---
 
