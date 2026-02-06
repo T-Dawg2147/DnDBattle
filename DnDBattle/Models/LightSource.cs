@@ -50,7 +50,7 @@ namespace DnDBattle.Models
         public double ConeWidth { get; set; } = 60;
 
         /// <summary>Optional label for identification.</summary>
-        public string Label { get; set; }
+        public string Label { get; set; } = string.Empty;
 
         /// <summary>
         /// For directional lights, checks whether a grid point falls within the cone.

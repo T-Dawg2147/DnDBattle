@@ -60,7 +60,7 @@ namespace DnDBattle.Models
             set { _isOpen = value; OnPropertyChanged(nameof(IsOpen)); }
         }
 
-        private string _label;
+        private string _label = string.Empty;
         public string Label
         {
             get => _label;

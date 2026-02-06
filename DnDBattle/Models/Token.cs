@@ -16,16 +16,16 @@ namespace DnDBattle.Models
         private string _name = "Token";
         public string Name{ get => _name; set => SetProperty(ref _name, value); }
 
-        private string _size;
+        private string _size = string.Empty;
         public string Size { get => _size; set => SetProperty(ref _size, value); }
 
-        private string _type;
+        private string _type = string.Empty;
         public string Type { get => _type; set => SetProperty(ref _type, value); }
 
-        private string _alignment;
+        private string _alignment = string.Empty;
         public string Alignment { get => _alignment; set => SetProperty(ref _alignment, value); }
 
-        private string _challengeRating;
+        private string _challengeRating = string.Empty;
         public string ChallengeRating { get => _challengeRating; set => SetProperty(ref _challengeRating, value); }
 
         private bool _isPlayer = false;
@@ -38,7 +38,7 @@ namespace DnDBattle.Models
         private int _maxHP;
         public int MaxHP { get => _maxHP; set => SetProperty(ref _maxHP, value); }
 
-        private string _hitDice;
+        private string _hitDice = string.Empty;
         public string HitDice { get => _hitDice; set => SetProperty(ref _hitDice, value); }
 
         private int _initiativeModifier;
@@ -47,7 +47,7 @@ namespace DnDBattle.Models
         private int _initiative;
         public int Initiative { get => _initiative; set => SetProperty(ref _initiative, value); }
 
-        private string _speed;
+        private string _speed = string.Empty;
         public string Speed { get => _speed; set => SetProperty(ref _speed, value); }
 
         // Current HP
@@ -154,7 +154,7 @@ namespace DnDBattle.Models
         #endregion
 
         // Traits/features (will remain text to allow anything as input)
-        private string _traits;
+        private string _traits = string.Empty;
         public string Traits { get => _traits; set => SetProperty(ref _traits, value); }
 
         // Action lists
@@ -164,13 +164,13 @@ namespace DnDBattle.Models
         public List<Action> LegendaryActions { get; set; } = new List<Action>();
 
         // Notes
-        private string _notes;
+        private string _notes = string.Empty;
         public string Notes { get => _notes; set => SetProperty(ref _notes, value); }        
 
         // Extra fields (adds context)
         public List<string> Skills { get; set; } = new List<string>();
 
-        private string _senses;
+        private string _senses = string.Empty;
         public string Senses { get => _senses; set => SetProperty(ref _senses, value); }
 
         /// <summary>
@@ -183,16 +183,16 @@ namespace DnDBattle.Models
             set => SetProperty(ref _vision, value);
         }
 
-        private string _languages;
+        private string _languages = string.Empty;
         public string Languages { get => _languages; set => SetProperty(ref _languages, value); }
 
-        private string _immunities;
+        private string _immunities = string.Empty;
         public string Immunities { get => _immunities; set => SetProperty(ref _immunities, value); }
 
-        private string _resistances;
+        private string _resistances = string.Empty;
         public string Resistances { get => _resistances; set => SetProperty(ref _resistances, value); }
 
-        private string _vulnerabilities;
+        private string _vulnerabilities = string.Empty;
         public string Vulnerabilities { get => _vulnerabilities; set => SetProperty(ref _vulnerabilities, value); }
 
         private bool _isFavorite;
@@ -237,7 +237,7 @@ namespace DnDBattle.Models
 
         #region Image States
 
-        private string _iconPath;
+        private string _iconPath = string.Empty;
         public string IconPath { get => _iconPath; set => SetProperty(ref _iconPath, value); }
 
         // Old ImageSource
@@ -415,7 +415,7 @@ namespace DnDBattle.Models
             set => SetProperty(ref _hasLairActions, value);
         }
 
-        private string _lairActionDescription;
+        private string _lairActionDescription = string.Empty;
         public string LairActionDescription
         {
             get => _lairActionDescription;
@@ -450,7 +450,7 @@ namespace DnDBattle.Models
             }
         }
 
-        private string _concentrationSpell;
+        private string _concentrationSpell = string.Empty;
         public string ConcentrationSpell
         {
             get => _concentrationSpell;

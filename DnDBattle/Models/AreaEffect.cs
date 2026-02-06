@@ -10,7 +10,7 @@ namespace DnDBattle.Models
     public class AreaEffect
     {
         public Guid Id { get; set; } = Guid.NewGuid();
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         public AreaEffectShape Shape { get; set; }
 
         /// <summary>
@@ -70,7 +70,7 @@ namespace DnDBattle.Models
         /// <summary>
         /// Dice expression for recurring damage (e.g. "3d8")
         /// </summary>
-        public string DamageExpression { get; set; }
+        public string DamageExpression { get; set; } = string.Empty;
 
         /// <summary>
         /// Type of damage dealt
