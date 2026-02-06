@@ -329,5 +329,11 @@ namespace DnDBattle
 
         /// <summary>Enable voice chat integration (Discord) for Phase 9 multiplayer.</summary>
         public static bool EnableVoiceChat { get; set; } = false;
+
+        /// <summary>Enable cloud save and sync for Phase 9 multiplayer.</summary>
+        public static bool EnableCloudSave { get; set; } = false;
+
+        /// <summary>URL of the self-hosted cloud save server (e.g. "https://my-server.example.com").</summary>
+        public static string CloudSaveServerUrl { get; set; } = string.Empty;
     }
 }
