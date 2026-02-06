@@ -252,9 +252,9 @@ namespace DnDBattle.Views.Effects
         /// </summary>
         private class LightSourceDisplay
         {
-            public string Label { get; set; }
-            public string Type { get; set; }
-            public string Brightness { get; set; }
+            public string Label { get; set; } = string.Empty;
+            public string Type { get; set; } = string.Empty;
+            public string Brightness { get; set; } = string.Empty;
             public LightSource Source { get; set; }
         }
     }
