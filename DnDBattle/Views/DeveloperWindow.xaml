@@ -281,6 +281,68 @@
 
             <Separator Margin="0,12" Background="#FF444466"/>
 
+            <TextBlock Text="⚙️ Phase 8: Advanced Map Features" FontSize="18" FontWeight="Bold" Foreground="#FF88AAFF" Margin="0,12,0,12"/>
+
+            <!-- 8.1 Multi-Map Management -->
+            <GroupBox Header="🗺️ 8.1 Multi-Map Management">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableMultiMap" Content="Enable Multi-Map Management (library, quick-switch, linking)" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Max Recent Maps:" VerticalAlignment="Center" Width="150"/>
+                        <Slider x:Name="SliderMaxRecentMaps" Minimum="1" Maximum="25" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="OnSliderChanged"/>
+                        <TextBlock x:Name="TxtMaxRecentMaps" VerticalAlignment="Center" Margin="4,0"/>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 8.2 Background Image Layers -->
+            <GroupBox Header="🖼️ 8.2 Background Image Layers">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableBackgroundLayers" Content="Enable Background Image Layers" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 8.3 Hexagonal Grids -->
+            <GroupBox Header="⬡ 8.3 Hexagonal Grids">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableHexGrid" Content="Enable Hexagonal Grid Support" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 8.4 Gridless Mode -->
+            <GroupBox Header="📏 8.4 Gridless Mode">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableGridlessMode" Content="Enable Gridless (Free-Form) Mode" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 8.5 Custom Grid Sizes -->
+            <GroupBox Header="📐 8.5 Custom Grid Sizes">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableCustomGridSizes" Content="Enable Custom Grid Sizes (feet per square)" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Default Feet/Square:" VerticalAlignment="Center" Width="150"/>
+                        <Slider x:Name="SliderDefaultFeetPerSquare" Minimum="5" Maximum="100" TickFrequency="5" IsSnapToTickEnabled="True" ValueChanged="OnSliderChanged"/>
+                        <TextBlock x:Name="TxtDefaultFeetPerSquare" VerticalAlignment="Center" Margin="4,0"/>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 8.6 Map Notes & Labels -->
+            <GroupBox Header="📝 8.6 Map Notes &amp; Labels">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableMapNotes" Content="Enable Map Notes &amp; Labels" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <CheckBox x:Name="ChkShowDMOnlyNotes" Content="Show DM-Only Notes" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Default Font Size:" VerticalAlignment="Center" Width="150"/>
+                        <Slider x:Name="SliderMapNoteFontSize" Minimum="8" Maximum="32" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="OnSliderChanged"/>
+                        <TextBlock x:Name="TxtMapNoteFontSize" VerticalAlignment="Center" Margin="4,0"/>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
+
+            <Separator Margin="0,12" Background="#FF444466"/>
+
             <Button Content="Reset All to Defaults" Click="OnResetDefaults" Background="#FF553333" Foreground="White" Padding="8,4" HorizontalAlignment="Left"/>
 
         </StackPanel>

@@ -80,6 +80,18 @@ namespace DnDBattle.Views
             ChkEnableConditionAutomation.IsChecked = Options.EnableConditionAutomation;
             ChkEnableCoverSystem.IsChecked = Options.EnableCoverSystem;
 
+            // Phase 8
+            ChkEnableMultiMap.IsChecked = Options.EnableMultiMapManagement;
+            SliderMaxRecentMaps.Value = Options.MapLibraryMaxRecent;
+            ChkEnableBackgroundLayers.IsChecked = Options.EnableBackgroundLayers;
+            ChkEnableHexGrid.IsChecked = Options.EnableHexGrid;
+            ChkEnableGridlessMode.IsChecked = Options.EnableGridlessMode;
+            ChkEnableCustomGridSizes.IsChecked = Options.EnableCustomGridSizes;
+            SliderDefaultFeetPerSquare.Value = Options.DefaultFeetPerSquare;
+            ChkEnableMapNotes.IsChecked = Options.EnableMapNotes;
+            ChkShowDMOnlyNotes.IsChecked = Options.ShowDMOnlyNotes;
+            SliderMapNoteFontSize.Value = Options.MapNoteDefaultFontSize;
+
             UpdateLabels();
         }
 
@@ -93,6 +105,9 @@ namespace DnDBattle.Views
             TxtPathDepth.Text = $"{SliderPathDepth.Value:F0} sq";
             TxtAnimSpeed.Text = $"{SliderAnimSpeed.Value:F1} s";
             TxtMaxParticles.Text = $"{SliderMaxParticles.Value:F0}";
+            TxtMaxRecentMaps.Text = $"{SliderMaxRecentMaps.Value:F0}";
+            TxtDefaultFeetPerSquare.Text = $"{SliderDefaultFeetPerSquare.Value:F0} ft";
+            TxtMapNoteFontSize.Text = $"{SliderMapNoteFontSize.Value:F0} pt";
         }
 
         private void OnFeatureToggled(object sender, RoutedEventArgs e)
@@ -137,6 +152,15 @@ namespace DnDBattle.Views
             Options.AutoPromptConcentrationCheck = ChkAutoPromptConcentration.IsChecked == true;
             Options.EnableConditionAutomation = ChkEnableConditionAutomation.IsChecked == true;
             Options.EnableCoverSystem = ChkEnableCoverSystem.IsChecked == true;
+
+            // Phase 8
+            Options.EnableMultiMapManagement = ChkEnableMultiMap.IsChecked == true;
+            Options.EnableBackgroundLayers = ChkEnableBackgroundLayers.IsChecked == true;
+            Options.EnableHexGrid = ChkEnableHexGrid.IsChecked == true;
+            Options.EnableGridlessMode = ChkEnableGridlessMode.IsChecked == true;
+            Options.EnableCustomGridSizes = ChkEnableCustomGridSizes.IsChecked == true;
+            Options.EnableMapNotes = ChkEnableMapNotes.IsChecked == true;
+            Options.ShowDMOnlyNotes = ChkShowDMOnlyNotes.IsChecked == true;
         }
 
         private void OnSliderChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -155,6 +179,11 @@ namespace DnDBattle.Views
 
             // Phase 6
             Options.MaxParticlesPerEffect = (int)SliderMaxParticles.Value;
+
+            // Phase 8
+            Options.MapLibraryMaxRecent = (int)SliderMaxRecentMaps.Value;
+            Options.DefaultFeetPerSquare = (int)SliderDefaultFeetPerSquare.Value;
+            Options.MapNoteDefaultFontSize = SliderMapNoteFontSize.Value;
 
             UpdateLabels();
         }
@@ -221,6 +250,18 @@ namespace DnDBattle.Views
             Options.AutoPromptConcentrationCheck = true;
             Options.EnableConditionAutomation = true;
             Options.EnableCoverSystem = true;
+
+            // Phase 8
+            Options.EnableMultiMapManagement = true;
+            Options.MapLibraryMaxRecent = 10;
+            Options.EnableBackgroundLayers = true;
+            Options.EnableHexGrid = true;
+            Options.EnableGridlessMode = true;
+            Options.EnableCustomGridSizes = true;
+            Options.DefaultFeetPerSquare = 5;
+            Options.EnableMapNotes = true;
+            Options.ShowDMOnlyNotes = true;
+            Options.MapNoteDefaultFontSize = 12;
 
             _initializing = true;
             LoadCurrentValues();

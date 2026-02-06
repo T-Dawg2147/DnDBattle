@@ -25,6 +25,54 @@ namespace DnDBattle.Models.Tiles
         /// Serialized tile placements
         /// </summary>
         public List<TileDto> Tiles { get; set; } = new List<TileDto>();
+
+        // ── Phase 8: Advanced Map Features ──
+
+        /// <summary>Grid type (Square, HexFlatTop, HexPointyTop).</summary>
+        public string GridType { get; set; } = "Square";
+
+        /// <summary>Gridless (free-form) mode flag.</summary>
+        public bool GridlessMode { get; set; }
+
+        /// <summary>Show subtle grid overlay in gridless mode.</summary>
+        public bool ShowGridOverlay { get; set; }
+
+        /// <summary>In-game feet per grid square.</summary>
+        public int FeetPerSquare { get; set; } = 5;
+
+        /// <summary>Background image layers.</summary>
+        public List<BackgroundLayerDto> BackgroundLayers { get; set; } = new List<BackgroundLayerDto>();
+
+        /// <summary>Map notes/labels.</summary>
+        public List<MapNoteDto> Notes { get; set; } = new List<MapNoteDto>();
+    }
+
+    /// <summary>DTO for background image layers.</summary>
+    public class BackgroundLayerDto
+    {
+        public string ImagePath { get; set; }
+        public double Opacity { get; set; } = 1.0;
+        public bool IsVisible { get; set; } = true;
+        public int ZOrder { get; set; }
+        public double TopLeftX { get; set; }
+        public double TopLeftY { get; set; }
+        public double BottomRightX { get; set; } = 50;
+        public double BottomRightY { get; set; } = 50;
+    }
+
+    /// <summary>DTO for map notes/labels.</summary>
+    public class MapNoteDto
+    {
+        public Guid Id { get; set; }
+        public int GridX { get; set; }
+        public int GridY { get; set; }
+        public string Text { get; set; }
+        public bool IsPlayerVisible { get; set; }
+        public string Category { get; set; } = "General";
+        public string BackgroundColor { get; set; } = "#FFFFFF00";
+        public double FontSize { get; set; } = 12;
+        public bool IsBold { get; set; }
+        public string Icon { get; set; }
     }
 
     /// <summary>
