@@ -163,6 +163,18 @@
                 <MenuItem Header="Tile Map Builder" Click="OpenTileMapBuilder_Click"/>
                 <MenuItem Header="Developer Window..." Click="OpenDeveloperWindow_Click"/>
             </MenuItem>
+
+            <!-- Phase 4: Lighting & Vision - Top level menu for testing Phase 4 features -->
+            <MenuItem Header="💡 Phase 4" Foreground="White">
+                <MenuItem Header="Lighting &amp; Vision Panel..." Click="OpenPhase4Window_Click"/>
+                <Separator/>
+                <MenuItem Header="Quick: Add Point Light" Click="Phase4_QuickAddPointLight_Click"/>
+                <MenuItem Header="Quick: Add Directional Light" Click="Phase4_QuickAddDirectionalLight_Click"/>
+                <Separator/>
+                <MenuItem Header="Toggle Vision Overlay" Click="Phase4_ToggleVisionOverlay_Click" IsCheckable="True" x:Name="MenuPhase4VisionOverlay"/>
+                <MenuItem Header="Update Fog from Vision" Click="Phase4_UpdateFogFromVision_Click"/>
+                <MenuItem Header="Clear Shadow Cache" Click="Phase4_ClearShadowCache_Click"/>
+            </MenuItem>
         </Menu>
         
 

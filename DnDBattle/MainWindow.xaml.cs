@@ -479,6 +479,94 @@ namespace DnDBattle
             win.Show();
         }
 
+        #region Phase 4: Lighting & Vision Menu Handlers
+
+        /// <summary>
+        /// Opens the Phase 4 Lighting & Vision management window
+        /// </summary>
+        private void OpenPhase4Window_Click(object sender, RoutedEventArgs e)
+        {
+            var window = new Phase4LightingWindow(BattleGrid);
+            window.Owner = this;
+            window.Show();
+        }
+
+        /// <summary>
+        /// Quick-add a default point light at the center of the current view
+        /// </summary>
+        private void Phase4_QuickAddPointLight_Click(object sender, RoutedEventArgs e)
+        {
+            if (!Options.EnableLighting)
+            {
+                MessageBox.Show("Enable the lighting system first (Phase 4 menu or Developer Settings).", "Lighting Disabled");
+                return;
+            }
+            var light = new LightSource
+            {
+                CenterGrid = new System.Windows.Point(10, 10),
+                BrightRadius = Options.DefaultBrightLightRadius,
+                DimRadius = Options.DefaultDimLightRadius,
+                Intensity = 1.0,
+                LightColor = Colors.LightYellow,
+                IsEnabled = true,
+                Type = LightType.Point,
+                Label = "Quick Point Light"
+            };
+            BattleGrid.AddLight(light);
+        }
+
+        /// <summary>
+        /// Quick-add a directional light at the center of the current view
+        /// </summary>
+        private void Phase4_QuickAddDirectionalLight_Click(object sender, RoutedEventArgs e)
+        {
+            if (!Options.EnableLighting || !Options.EnableDirectionalLights)
+            {
+                MessageBox.Show("Enable both the lighting system and directional lights first.", "Feature Disabled");
+                return;
+            }
+            var light = new LightSource
+            {
+                CenterGrid = new System.Windows.Point(10, 10),
+                BrightRadius = Options.DefaultBrightLightRadius,
+                DimRadius = Options.DefaultDimLightRadius,
+                Intensity = 1.0,
+                LightColor = Colors.LightBlue,
+                IsEnabled = true,
+                Type = LightType.Directional,
+                Direction = 0,
+                ConeWidth = 60,
+                Label = "Quick Directional Light"
+            };
+            BattleGrid.AddLight(light);
+        }
+
+        /// <summary>
+        /// Toggle the vision overlay showing what player tokens can see
+        /// </summary>
+        private void Phase4_ToggleVisionOverlay_Click(object sender, RoutedEventArgs e)
+        {
+            BattleGrid.ToggleVisionOverlay(MenuPhase4VisionOverlay.IsChecked);
+        }
+
+        /// <summary>
+        /// Manually update fog of war based on current token vision ranges
+        /// </summary>
+        private void Phase4_UpdateFogFromVision_Click(object sender, RoutedEventArgs e)
+        {
+            BattleGrid.UpdateFogFromTokenVision();
+        }
+
+        /// <summary>
+        /// Clear the shadow cache forcing a full recalculation
+        /// </summary>
+        private void Phase4_ClearShadowCache_Click(object sender, RoutedEventArgs e)
+        {
+            BattleGrid.InvalidateShadowCache();
+        }
+
+        #endregion
+
         private void ToggleLeftSidebar_Click(object seder, RoutedEventArgs e)
         {
             if (LeftSidebarColumn.Width.Value > 0)
