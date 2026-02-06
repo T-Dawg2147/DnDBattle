@@ -209,6 +209,20 @@
                 <MenuItem Header="Advance Round (Tick Durations)" Click="Phase6_AdvanceRound_Click"/>
                 <MenuItem Header="Clear All Effects" Click="Phase6_ClearAllEffects_Click"/>
             </MenuItem>
+
+            <!-- Phase 7: Combat Automation - Top level menu for testing Phase 7 features -->
+            <MenuItem Header="⚔️ Phase 7" Foreground="White">
+                <MenuItem Header="Combat Automation Panel..." Click="OpenPhase7Window_Click"/>
+                <Separator/>
+                <MenuItem Header="Quick: Roll Attack on Target" Click="Phase7_QuickAttack_Click"/>
+                <MenuItem Header="Quick: Roll Saving Throw" Click="Phase7_QuickSave_Click"/>
+                <Separator/>
+                <MenuItem Header="Spell Slots">
+                    <MenuItem Header="Long Rest (Restore All)" Click="Phase7_LongRest_Click"/>
+                    <MenuItem Header="Short Rest" Click="Phase7_ShortRest_Click"/>
+                </MenuItem>
+                <MenuItem Header="Check Concentration" Click="Phase7_CheckConcentration_Click"/>
+            </MenuItem>
         </Menu>
         
 

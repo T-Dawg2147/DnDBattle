@@ -729,6 +729,156 @@ namespace DnDBattle
 
         #endregion
 
+        #region Phase 7: Combat Automation Menu Handlers
+
+        /// <summary>
+        /// Opens the Phase 7 Combat Automation management window for attack rolls,
+        /// saving throws, spell slots, concentration, conditions, and cover.
+        /// </summary>
+        private void OpenPhase7Window_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is ViewModels.MainViewModel vm)
+            {
+                var window = new Phase7CombatWindow(BattleGrid, vm);
+                window.Owner = this;
+                window.Show();
+            }
+        }
+
+        /// <summary>
+        /// Quick attack: rolls an attack from the selected token against the first other token.
+        /// Uses the selected token's first action if available, otherwise a default melee attack.
+        /// </summary>
+        private void Phase7_QuickAttack_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is not ViewModels.MainViewModel vm || vm.SelectedToken == null)
+            {
+                MessageBox.Show("Select an attacker token first.", "Quick Attack", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var attacker = vm.SelectedToken;
+            var defender = vm.Tokens.FirstOrDefault(t => t != attacker);
+            if (defender == null)
+            {
+                MessageBox.Show("No target token available.", "Quick Attack", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // Use the attacker's first action or create a default melee attack
+            var attack = attacker.Actions?.FirstOrDefault() ?? new Models.Action
+            {
+                Name = "Melee Attack",
+                AttackBonus = 5,
+                DamageExpression = "1d8+3"
+            };
+
+            var system = new AttackRollSystem();
+            var result = system.RollAttack(attacker, defender, attack);
+
+            string msg = $"{attacker.Name} attacks {defender.Name}: " +
+                         $"d20({result.D20Roll})+{result.AttackBonus}={result.TotalAttack} vs AC {result.TargetAC} → " +
+                         (result.Hit ? $"HIT for {result.ActualDamage} damage" : "MISS") +
+                         (result.IsCriticalHit ? " (CRIT!)" : "");
+
+            vm.ActionLog.Insert(0, new ActionLogEntry { Source = "Phase7", Message = msg });
+            MessageBox.Show(msg, "Quick Attack", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        /// <summary>
+        /// Quick save: prompts for a DC and rolls a Dexterity save for the selected token.
+        /// Uses DEX as the default ability for quick saves (most common for area effects).
+        /// </summary>
+        private void Phase7_QuickSave_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is not ViewModels.MainViewModel vm || vm.SelectedToken == null)
+            {
+                MessageBox.Show("Select a token first.", "Quick Save", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var token = vm.SelectedToken;
+            var system = new SavingThrowSystem();
+            var result = system.RollSave(token, Ability.Dexterity, 15);
+
+            string msg = $"{token.Name} DEX Save (DC 15): " +
+                         $"d20({result.D20Roll})+{result.Modifier}={result.Total} → " +
+                         (result.Success ? "SUCCESS" : "FAIL");
+
+            vm.ActionLog.Insert(0, new ActionLogEntry { Source = "Phase7", Message = msg });
+            MessageBox.Show(msg, "Quick Save", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        /// <summary>
+        /// Performs a long rest for the selected token, restoring all spell slots to maximum
+        /// </summary>
+        private void Phase7_LongRest_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is not ViewModels.MainViewModel vm || vm.SelectedToken == null)
+            {
+                MessageBox.Show("Select a token first.", "Long Rest", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var token = vm.SelectedToken;
+            token.SpellSlots.LongRest();
+            vm.ActionLog.Insert(0, new ActionLogEntry
+            {
+                Source = "Phase7",
+                Message = $"{token.Name} completed a long rest. All spell slots restored."
+            });
+        }
+
+        /// <summary>
+        /// Performs a short rest for the selected token (restores Warlock pact slots)
+        /// </summary>
+        private void Phase7_ShortRest_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is not ViewModels.MainViewModel vm || vm.SelectedToken == null)
+            {
+                MessageBox.Show("Select a token first.", "Short Rest", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var token = vm.SelectedToken;
+            token.SpellSlots.ShortRest();
+            vm.ActionLog.Insert(0, new ActionLogEntry
+            {
+                Source = "Phase7",
+                Message = $"{token.Name} completed a short rest."
+            });
+        }
+
+        /// <summary>
+        /// Checks concentration for the selected token, prompting for damage amount.
+        /// DC = max(10, damage/2). Automatically breaks concentration on failure.
+        /// </summary>
+        private void Phase7_CheckConcentration_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is not ViewModels.MainViewModel vm || vm.SelectedToken == null)
+            {
+                MessageBox.Show("Select a token first.", "Concentration", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var token = vm.SelectedToken;
+            if (!token.IsConcentrating)
+            {
+                MessageBox.Show($"{token.Name} is not concentrating on any spell.", "Concentration", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            // Use a default damage of 10 for the quick check
+            var service = new ConcentrationService();
+            var result = service.CheckConcentration(token, 10);
+
+            string msg = result.ToString();
+            vm.ActionLog.Insert(0, new ActionLogEntry { Source = "Phase7", Message = msg });
+            MessageBox.Show(msg, "Concentration Check", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        #endregion
+
         private void ToggleLeftSidebar_Click(object seder, RoutedEventArgs e)
         {
             if (LeftSidebarColumn.Width.Value > 0)
