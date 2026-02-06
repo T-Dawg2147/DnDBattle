@@ -232,6 +232,55 @@
 
             <Separator Margin="0,12" Background="#FF444466"/>
 
+            <TextBlock Text="⚙️ Phase 7: Combat Automation" FontSize="18" FontWeight="Bold" Foreground="#FF88AAFF" Margin="0,12,0,12"/>
+
+            <!-- 7.1 Attack Roll System -->
+            <GroupBox Header="⚔️ 7.1 Attack Roll System">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableAttackRolls" Content="Enable Attack Roll System" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <CheckBox x:Name="ChkAutoApplyDamage" Content="Auto-Apply Damage on Hit" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 7.2 Saving Throw Automation -->
+            <GroupBox Header="🎲 7.2 Saving Throw Automation">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableSavingThrows" Content="Enable Saving Throw Automation" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <CheckBox x:Name="ChkAutoRollMonsterSaves" Content="Auto-Roll Monster Saves" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 7.3 Spell Slot Tracking -->
+            <GroupBox Header="✨ 7.3 Spell Slot Tracking">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableSpellSlotTracking" Content="Enable Spell Slot Tracking" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 7.4 Concentration Tracking -->
+            <GroupBox Header="🎯 7.4 Concentration Tracking">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableConcentration" Content="Enable Concentration Tracking" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <CheckBox x:Name="ChkAutoPromptConcentration" Content="Auto-Prompt Concentration Check on Damage" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 7.5 Condition Automation -->
+            <GroupBox Header="📋 7.5 Condition Automation">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableConditionAutomation" Content="Enable Condition Mechanical Effects" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 7.6 Cover System -->
+            <GroupBox Header="🛡️ 7.6 Cover System">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableCoverSystem" Content="Enable Cover Detection (+AC/+DEX saves)" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <Separator Margin="0,12" Background="#FF444466"/>
+
             <Button Content="Reset All to Defaults" Click="OnResetDefaults" Background="#FF553333" Foreground="White" Padding="8,4" HorizontalAlignment="Left"/>
 
         </StackPanel>

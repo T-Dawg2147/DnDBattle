@@ -198,5 +198,34 @@ namespace DnDBattle
 
         /// <summary>Default animation type for newly placed effects.</summary>
         public static int DefaultAnimationType { get; set; } = 1; // 0=None, 1=Pulse, 2=Particle, 3=Rotate
+
+        // ── Phase 7: Combat Automation ──
+
+        /// <summary>Enable the automated attack roll system (d20 + modifiers vs AC).</summary>
+        public static bool EnableAttackRollSystem { get; set; } = true;
+
+        /// <summary>Enable automated saving throw rolls (d20 + modifier vs DC).</summary>
+        public static bool EnableSavingThrowAutomation { get; set; } = true;
+
+        /// <summary>Enable spell slot tracking and consumption on cast.</summary>
+        public static bool EnableSpellSlotTracking { get; set; } = true;
+
+        /// <summary>Enable concentration tracking with auto-checks on damage.</summary>
+        public static bool EnableConcentrationTracking { get; set; } = true;
+
+        /// <summary>Enable condition-based mechanical effects (advantage/disadvantage, auto-fail saves, auto-crits).</summary>
+        public static bool EnableConditionAutomation { get; set; } = true;
+
+        /// <summary>Enable the cover system (half/three-quarters/full cover modifying AC and DEX saves).</summary>
+        public static bool EnableCoverSystem { get; set; } = true;
+
+        /// <summary>Auto-roll saving throws for monster tokens (no player prompt).</summary>
+        public static bool AutoRollMonsterSaves { get; set; } = true;
+
+        /// <summary>Auto-apply damage to targets on a successful hit.</summary>
+        public static bool AutoApplyDamage { get; set; } = true;
+
+        /// <summary>Auto-prompt concentration check when a concentrating token takes damage.</summary>
+        public static bool AutoPromptConcentrationCheck { get; set; } = true;
     }
 }

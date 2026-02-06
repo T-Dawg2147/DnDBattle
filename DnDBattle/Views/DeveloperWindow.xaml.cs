@@ -69,6 +69,17 @@ namespace DnDBattle.Views
             SliderMaxParticles.Value = Options.MaxParticlesPerEffect;
             CmbDefaultAnimation.SelectedIndex = Options.DefaultAnimationType;
 
+            // Phase 7
+            ChkEnableAttackRolls.IsChecked = Options.EnableAttackRollSystem;
+            ChkAutoApplyDamage.IsChecked = Options.AutoApplyDamage;
+            ChkEnableSavingThrows.IsChecked = Options.EnableSavingThrowAutomation;
+            ChkAutoRollMonsterSaves.IsChecked = Options.AutoRollMonsterSaves;
+            ChkEnableSpellSlotTracking.IsChecked = Options.EnableSpellSlotTracking;
+            ChkEnableConcentration.IsChecked = Options.EnableConcentrationTracking;
+            ChkAutoPromptConcentration.IsChecked = Options.AutoPromptConcentrationCheck;
+            ChkEnableConditionAutomation.IsChecked = Options.EnableConditionAutomation;
+            ChkEnableCoverSystem.IsChecked = Options.EnableCoverSystem;
+
             UpdateLabels();
         }
 
@@ -115,6 +126,17 @@ namespace DnDBattle.Views
             Options.AutoApplyDotDamage = ChkAutoApplyDot.IsChecked == true;
             Options.EnablePolygonEffects = ChkEnablePolygonEffects.IsChecked == true;
             Options.EnableEffectAnimations = ChkEnableEffectAnimations.IsChecked == true;
+
+            // Phase 7
+            Options.EnableAttackRollSystem = ChkEnableAttackRolls.IsChecked == true;
+            Options.AutoApplyDamage = ChkAutoApplyDamage.IsChecked == true;
+            Options.EnableSavingThrowAutomation = ChkEnableSavingThrows.IsChecked == true;
+            Options.AutoRollMonsterSaves = ChkAutoRollMonsterSaves.IsChecked == true;
+            Options.EnableSpellSlotTracking = ChkEnableSpellSlotTracking.IsChecked == true;
+            Options.EnableConcentrationTracking = ChkEnableConcentration.IsChecked == true;
+            Options.AutoPromptConcentrationCheck = ChkAutoPromptConcentration.IsChecked == true;
+            Options.EnableConditionAutomation = ChkEnableConditionAutomation.IsChecked == true;
+            Options.EnableCoverSystem = ChkEnableCoverSystem.IsChecked == true;
         }
 
         private void OnSliderChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -188,6 +210,17 @@ namespace DnDBattle.Views
             Options.EnableEffectAnimations = true;
             Options.MaxParticlesPerEffect = 50;
             Options.DefaultAnimationType = 1;
+
+            // Phase 7
+            Options.EnableAttackRollSystem = true;
+            Options.AutoApplyDamage = true;
+            Options.EnableSavingThrowAutomation = true;
+            Options.AutoRollMonsterSaves = true;
+            Options.EnableSpellSlotTracking = true;
+            Options.EnableConcentrationTracking = true;
+            Options.AutoPromptConcentrationCheck = true;
+            Options.EnableConditionAutomation = true;
+            Options.EnableCoverSystem = true;
 
             _initializing = true;
             LoadCurrentValues();
