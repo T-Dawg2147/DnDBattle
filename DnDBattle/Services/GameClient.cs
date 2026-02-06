@@ -75,8 +75,15 @@ namespace DnDBattle.Services
             {
                 _client = new TcpClient();
 
-                using var connectCts = new CancellationTokenSource(TimeSpan.FromSeconds(Options.NetworkConnectionTimeoutSeconds));
-                await _client.ConnectAsync(host, port).ConfigureAwait(false);
+                var connectTask = _client.ConnectAsync(host, port);
+                var completedTask = await Task.WhenAny(connectTask, Task.Delay(TimeSpan.FromSeconds(Options.NetworkConnectionTimeoutSeconds))).ConfigureAwait(false);
+                if (completedTask != connectTask)
+                {
+                    _client.Close();
+                    Log("Client", "Connection timed out");
+                    return false;
+                }
+                await connectTask.ConfigureAwait(false); // propagate any exception
 
                 if (!_client.Connected)
                     return false;

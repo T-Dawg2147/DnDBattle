@@ -206,7 +206,7 @@ namespace DnDBattle.Services
 
             int x = 0, y = 0;
 
-            for (int i = 4; i < data.Length - 1; i += 2)
+            for (int i = 4; i + 1 < data.Length; i += 2)
             {
                 bool value = data[i] != 0;
                 int count = data[i + 1];
