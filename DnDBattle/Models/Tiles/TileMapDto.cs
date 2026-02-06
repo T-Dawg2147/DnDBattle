@@ -91,6 +91,10 @@ namespace DnDBattle.Models.Tiles
     {
         public Guid InstanceId { get; set; }
         public string TileDefinitionId { get; set; }
+        /// <summary>
+        /// Image path stored for resilient tile resolution when the library is reloaded.
+        /// </summary>
+        public string ImagePath { get; set; }
         public int GridX { get; set; }
         public int GridY { get; set; }
         public int Rotation { get; set; }
