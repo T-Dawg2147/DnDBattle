@@ -129,8 +129,7 @@ namespace DnDBattle.Services.TileService
         private static string GenerateDeterministicId(string relativePath)
         {
             var normalized = relativePath.Replace('\\', '/').ToLowerInvariant();
-            using var sha = SHA256.Create();
-            var hash = sha.ComputeHash(Encoding.UTF8.GetBytes(normalized));
+            var hash = SHA256.HashData(Encoding.UTF8.GetBytes(normalized));
             // Use first 16 bytes to form a GUID-shaped string for compatibility
             var guid = new Guid(hash.Take(16).ToArray());
             return guid.ToString();
