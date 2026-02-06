@@ -320,5 +320,8 @@ namespace DnDBattle
 
         /// <summary>Enable full keyboard navigation mode.</summary>
         public static bool EnableKeyboardNavigation { get; set; } = false;
+
+        /// <summary>Enable multiplayer networking (Phase 9).</summary>
+        public static bool EnableNetworking { get; set; } = false;
     }
 }
