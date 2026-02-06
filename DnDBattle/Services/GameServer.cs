@@ -53,7 +53,7 @@ namespace DnDBattle.Services
 
         /// <summary>Gets snapshot of connected players.</summary>
         public IReadOnlyList<PlayerInfo> ConnectedPlayers =>
-            _players.Values.Select(p => p.Info).ToList().AsReadOnly();
+            _players.Values.Select(p => p.Info).ToArray();
 
         /// <summary>
         /// Start the server on the given port.

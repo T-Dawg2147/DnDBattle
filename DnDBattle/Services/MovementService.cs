@@ -9,6 +9,12 @@ namespace DnDBattle.Services
         private static readonly (int dx, int dy)[] CardinalDirs = { (1, 0), (-1, 0), (0, 1), (0, -1) };
         private static readonly (int dx, int dy)[] DiagonalDirs = { (1, 1), (1, -1), (-1, 1), (-1, -1) };
 
+        private static readonly (int dx, int dy, double baseCost)[] _cardinalDirsWithCost =
+            { (1, 0, 1.0), (-1, 0, 1.0), (0, 1, 1.0), (0, -1, 1.0) };
+
+        private static readonly (int dx, int dy, double baseCost)[] _allDirsWithCost =
+            { (1, 0, 1.0), (-1, 0, 1.0), (0, 1, 1.0), (0, -1, 1.0), (1, 1, 1.5), (1, -1, 1.5), (-1, 1, 1.5), (-1, -1, 1.5) };
+
         public static HashSet<(int x, int y)> GetReachableSquares(
             int startX, int startY, int maxSquares,
             int gridWidth, int gridHeight,
@@ -24,12 +30,7 @@ namespace DnDBattle.Services
             costMap[(startX, startY)] = 0;
             visited.Add((startX, startY));
 
-            var dirs = new List<(int dx, int dy, double baseCost)>();
-            foreach (var d in CardinalDirs)
-                dirs.Add((d.dx, d.dy, 1.0));
-            if (Options.AllowDiagonalMovement)
-                foreach (var d in DiagonalDirs)
-                    dirs.Add((d.dx, d.dy, 1.5));
+            var dirs = Options.AllowDiagonalMovement ? _allDirsWithCost : _cardinalDirsWithCost;
 
             while (q.Count > 0)
             {
@@ -75,12 +76,7 @@ namespace DnDBattle.Services
             q.Enqueue((startX, startY), 0);
             costMap[(startX, startY)] = 0;
 
-            var dirs = new List<(int dx, int dy, double baseCost)>();
-            foreach (var d in CardinalDirs)
-                dirs.Add((d.dx, d.dy, 1.0));
-            if (Options.AllowDiagonalMovement)
-                foreach (var d in DiagonalDirs)
-                    dirs.Add((d.dx, d.dy, 1.5));
+            var dirs = Options.AllowDiagonalMovement ? _allDirsWithCost : _cardinalDirsWithCost;
 
             while (q.Count > 0)
             {
@@ -120,12 +116,7 @@ namespace DnDBattle.Services
             var cameFrom = new Dictionary<(int x, int y), (int x, int y)>();
             int nodesVisited = 0;
 
-            var dirs = new List<(int dx, int dy, double baseCost)>();
-            foreach (var d in CardinalDirs)
-                dirs.Add((d.dx, d.dy, 1.0));
-            if (Options.AllowDiagonalMovement)
-                foreach (var d in DiagonalDirs)
-                    dirs.Add((d.dx, d.dy, 1.5));
+            var dirs = Options.AllowDiagonalMovement ? _allDirsWithCost : _cardinalDirsWithCost;
 
             gScore[start] = 0;
             open.Enqueue(start, Heuristic(start, goal));

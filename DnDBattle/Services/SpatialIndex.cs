@@ -46,7 +46,11 @@ namespace DnDBattle.Services
                     var key = (gx / _cellResolution, gy / _cellResolution);
                     if (_cells.TryGetValue(key, out var list))
                     {
-                        foreach (var l in list.OfType<LightSource>()) results.Add(l);
+                        foreach (var item in list)
+                        {
+                            if (item is LightSource l)
+                                results.Add(l);
+                        }
                     }
                 }
             return results;
