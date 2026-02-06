@@ -268,13 +268,13 @@ namespace DnDBattle
         // ── Dynamic Weather & Environment ──
 
         /// <summary>Enable dynamic weather particle effects on the map.</summary>
-        public static bool EnableWeatherEffects { get; set; } = true;
+        public static bool EnableWeatherEffects { get; set; } = false;
 
         /// <summary>Enable the day/night cycle lighting overlay.</summary>
-        public static bool EnableDayNightCycle { get; set; } = true;
+        public static bool EnableDayNightCycle { get; set; } = false;
 
         /// <summary>Maximum weather particles allowed (performance tuning).</summary>
-        public static int WeatherMaxParticles { get; set; } = 500;
+        public static int WeatherMaxParticles { get; set; } = 300;
 
         // ── Undecided Features: Animated Tiles ──
 
