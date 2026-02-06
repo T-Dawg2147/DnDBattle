@@ -44,6 +44,21 @@ namespace DnDBattle.Views
             // 4.6
             ChkEnableDirectionalLights.IsChecked = Options.EnableDirectionalLights;
 
+            // Phase 5
+            ChkEnablePathfinding.IsChecked = Options.EnablePathfinding;
+            ChkAllowDiagonal.IsChecked = Options.AllowDiagonalMovement;
+            SliderPathDepth.Value = Options.PathfindingMaxDepth;
+            ChkEnableMovementCost.IsChecked = Options.EnableMovementCostPreview;
+            ChkEnablePathAnimation.IsChecked = Options.EnablePathAnimation;
+            SliderAnimSpeed.Value = Options.PathAnimationSecondsPerSquare;
+            ChkEnableAOO.IsChecked = Options.EnableAOODetection;
+            ChkAutoResolveAOO.IsChecked = Options.AutoResolveAOOs;
+            ChkEnableAuras.IsChecked = Options.EnableTokenAuras;
+            ChkEnableElevation.IsChecked = Options.EnableTokenElevation;
+            ChkEnableFacing.IsChecked = Options.EnableTokenFacing;
+            ChkAutoFace.IsChecked = Options.AutoFaceMovementDirection;
+            ChkEnableFlanking.IsChecked = Options.EnableFlankingDetection;
+
             UpdateLabels();
         }
 
@@ -54,6 +69,8 @@ namespace DnDBattle.Views
             TxtRayCount.Text = $"{SliderRayCount.Value:F0}";
             TxtShadowSoftness.Text = $"{SliderShadowSoftness.Value:F0} px";
             TxtVisionRange.Text = $"{SliderVisionRange.Value:F0} sq";
+            TxtPathDepth.Text = $"{SliderPathDepth.Value:F0} sq";
+            TxtAnimSpeed.Text = $"{SliderAnimSpeed.Value:F1} s";
         }
 
         private void OnFeatureToggled(object sender, RoutedEventArgs e)
@@ -66,6 +83,19 @@ namespace DnDBattle.Views
             Options.EnableVisionModeRendering = ChkEnableVisionRendering.IsChecked == true;
             Options.EnableAutoFogReveal = ChkEnableAutoFogReveal.IsChecked == true;
             Options.EnableDirectionalLights = ChkEnableDirectionalLights.IsChecked == true;
+
+            // Phase 5
+            Options.EnablePathfinding = ChkEnablePathfinding.IsChecked == true;
+            Options.AllowDiagonalMovement = ChkAllowDiagonal.IsChecked == true;
+            Options.EnableMovementCostPreview = ChkEnableMovementCost.IsChecked == true;
+            Options.EnablePathAnimation = ChkEnablePathAnimation.IsChecked == true;
+            Options.EnableAOODetection = ChkEnableAOO.IsChecked == true;
+            Options.AutoResolveAOOs = ChkAutoResolveAOO.IsChecked == true;
+            Options.EnableTokenAuras = ChkEnableAuras.IsChecked == true;
+            Options.EnableTokenElevation = ChkEnableElevation.IsChecked == true;
+            Options.EnableTokenFacing = ChkEnableFacing.IsChecked == true;
+            Options.AutoFaceMovementDirection = ChkAutoFace.IsChecked == true;
+            Options.EnableFlankingDetection = ChkEnableFlanking.IsChecked == true;
         }
 
         private void OnSliderChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -77,6 +107,10 @@ namespace DnDBattle.Views
             Options.ShadowCastRayCount = (int)SliderRayCount.Value;
             Options.ShadowSoftnessPx = SliderShadowSoftness.Value;
             Options.DefaultTokenVisionRange = (int)SliderVisionRange.Value;
+
+            // Phase 5
+            Options.PathfindingMaxDepth = (int)SliderPathDepth.Value;
+            Options.PathAnimationSecondsPerSquare = SliderAnimSpeed.Value;
 
             UpdateLabels();
         }
@@ -101,6 +135,21 @@ namespace DnDBattle.Views
             Options.ShadowSoftnessPx = 6.0;
             Options.DefaultTokenVisionRange = 12;
             Options.FogRevealMode = 0;
+
+            // Phase 5
+            Options.EnablePathfinding = true;
+            Options.AllowDiagonalMovement = true;
+            Options.PathfindingMaxDepth = 60;
+            Options.EnableMovementCostPreview = true;
+            Options.EnablePathAnimation = true;
+            Options.PathAnimationSecondsPerSquare = 0.3;
+            Options.EnableAOODetection = true;
+            Options.AutoResolveAOOs = true;
+            Options.EnableTokenAuras = true;
+            Options.EnableTokenElevation = true;
+            Options.EnableTokenFacing = true;
+            Options.AutoFaceMovementDirection = true;
+            Options.EnableFlankingDetection = true;
 
             _initializing = true;
             LoadCurrentValues();

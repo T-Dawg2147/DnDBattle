@@ -269,6 +269,86 @@ namespace DnDBattle.Controls
 
             menu.Items.Add(conditionsMenu);
 
+            // ===== PHASE 5: AURAS =====
+            if (Options.EnableTokenAuras)
+            {
+                var aurasMenu = new MenuItem { Header = "🔮 Auras" };
+
+                // Pre-built auras
+                var prebuiltMenu = new MenuItem { Header = "➕ Add Pre-built Aura" };
+                var paladinAura = new MenuItem { Header = "🛡️ Paladin Aura (10ft, Gold)" };
+                paladinAura.Click += (s, e) => { token.Auras.Add(Models.TokenAura.PaladinAura()); RedrawAuras(); };
+                prebuiltMenu.Items.Add(paladinAura);
+
+                var spiritGuardians = new MenuItem { Header = "✨ Spirit Guardians (15ft, Blue)" };
+                spiritGuardians.Click += (s, e) => { token.Auras.Add(Models.TokenAura.SpiritGuardians()); RedrawAuras(); };
+                prebuiltMenu.Items.Add(spiritGuardians);
+
+                var rageAura = new MenuItem { Header = "💢 Rage (5ft, Red)" };
+                rageAura.Click += (s, e) => { token.Auras.Add(Models.TokenAura.Rage()); RedrawAuras(); };
+                prebuiltMenu.Items.Add(rageAura);
+
+                var blessAura = new MenuItem { Header = "🙏 Bless (30ft, Green)" };
+                blessAura.Click += (s, e) => { token.Auras.Add(Models.TokenAura.Bless()); RedrawAuras(); };
+                prebuiltMenu.Items.Add(blessAura);
+
+                aurasMenu.Items.Add(prebuiltMenu);
+
+                // Toggle existing auras
+                if (token.Auras.Count > 0)
+                {
+                    aurasMenu.Items.Add(new Separator());
+                    foreach (var aura in token.Auras.ToList())
+                    {
+                        var auraItem = new MenuItem
+                        {
+                            Header = $"{(aura.IsVisible ? "👁️" : "🚫")} {aura.Name} ({aura.RadiusSquares * 5}ft)",
+                            IsCheckable = true,
+                            IsChecked = aura.IsVisible
+                        };
+                        var capturedAura = aura;
+                        auraItem.Click += (s, e) =>
+                        {
+                            capturedAura.IsVisible = !capturedAura.IsVisible;
+                            RedrawAuras();
+                        };
+                        aurasMenu.Items.Add(auraItem);
+                    }
+
+                    aurasMenu.Items.Add(new Separator());
+                    var clearAuras = new MenuItem { Header = "❌ Remove All Auras" };
+                    clearAuras.Click += (s, e) => { token.Auras.Clear(); RedrawAuras(); };
+                    aurasMenu.Items.Add(clearAuras);
+                }
+
+                menu.Items.Add(aurasMenu);
+            }
+
+            // ===== PHASE 5: ELEVATION =====
+            if (Options.EnableTokenElevation)
+            {
+                var elevMenu = new MenuItem { Header = $"🏔️ Elevation ({token.Elevation}ft)" };
+                var elevPresets = new[] { 0, 5, 10, 15, 20, 30, 50, 100 };
+                foreach (var elev in elevPresets)
+                {
+                    var elevItem = new MenuItem
+                    {
+                        Header = elev == 0 ? "Ground (0ft)" : $"{elev}ft",
+                        IsCheckable = true,
+                        IsChecked = token.Elevation == elev
+                    };
+                    var capturedElev = elev;
+                    elevItem.Click += (s, e) =>
+                    {
+                        token.Elevation = capturedElev;
+                        RebuildTokenVisuals();
+                        AddToActionLog("Elevation", $"{token.Name} elevation set to {capturedElev}ft");
+                    };
+                    elevMenu.Items.Add(elevItem);
+                }
+                menu.Items.Add(elevMenu);
+            }
+
             menu.Items.Add(new Separator());
 
             // Combat actions

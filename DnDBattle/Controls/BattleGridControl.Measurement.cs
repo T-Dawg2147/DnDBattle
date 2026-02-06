@@ -259,6 +259,16 @@ namespace DnDBattle.Controls
                     pg.Figures.Add(pf);
                     dc.DrawGeometry(null, pen, pg);
                 }
+
+                // Phase 5: AOO enemy warnings
+                if (Options.EnableAOODetection && SelectedToken != null && Tokens != null)
+                {
+                    var enemies = Tokens
+                        .Where(t => t.Id != SelectedToken.Id && t.IsPlayer != SelectedToken.IsPlayer && t.HP > 0)
+                        .Select(t => (t.GridX, t.GridY));
+                    var aooEnemies = MovementService.DetectAOOEnemies(_lastPreviewPath, enemies);
+                    DrawAOOWarnings(dc, aooEnemies);
+                }
             }
         }
 

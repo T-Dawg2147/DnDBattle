@@ -288,6 +288,11 @@ namespace DnDBattle.Controls
             e.Handled = true;
         }
 
+        private void GridBackground_MouseLeave(object sender, MouseEventArgs e)
+        {
+            ClearMovementCostPreview();
+        }
+
         private void GridBackground_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             if (_isDraggingWallEndpoint)
@@ -314,6 +319,14 @@ namespace DnDBattle.Controls
 
             // Update status bar with current cell
             UpdateCurrentCellDisplay(gridPoint);
+
+            // Phase 5: Movement cost preview
+            if (SelectedToken != null && !_isDraggingToken && !_measureMode && !_wallDrawMode)
+            {
+                int cellX = (int)Math.Floor(worldPt.X / GridCellSize);
+                int cellY = (int)Math.Floor(worldPt.Y / GridCellSize);
+                UpdateMovementCostPreview(cellX, cellY);
+            }
 
             // AOE preview
             if (_isPlacingAreaEffect && _previewEffect != null)
