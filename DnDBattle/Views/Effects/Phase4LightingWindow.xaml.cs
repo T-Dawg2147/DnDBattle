@@ -29,6 +29,7 @@ using DnDBattle.Models.Tiles;
 
 namespace DnDBattle.Views.Effects
 {
+    //
     /// <summary>
     /// Phase 4: Lighting & Vision System window.
     /// Provides UI for managing light sources, shadow casting, token vision,
