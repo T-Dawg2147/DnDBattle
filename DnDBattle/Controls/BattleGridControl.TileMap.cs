@@ -177,6 +177,13 @@ namespace DnDBattle.Controls
                     return;
                 }
 
+                // Ensure tile library is loaded before rendering
+                if (TileLibraryService.Instance.AvailableTiles.Count == 0)
+                {
+                    System.Diagnostics.Debug.WriteLine("[BattleGrid] Tile library empty, loading...");
+                    TileLibraryService.Instance.LoadTileLibrary();
+                }
+
                 System.Diagnostics.Debug.WriteLine($"[BattleGrid] Rendering {_loadedTileMap.PlacedTiles.Count} tiles...");
 
                 using (var dc = _tileMapVisual.RenderOpen())
