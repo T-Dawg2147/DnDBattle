@@ -99,7 +99,10 @@
                 <MenuItem Header="Save Encounter..." Click="MenuSaveEncounter_Click" InputGestureText="Ctrl+S"/>
                 <MenuItem Header="Load Encounter..." Click="MenuLoadEncounter_Click" InputGestureText="Ctrl+O"/>
                 <Separator/>
-                <MenuItem Header="Import SRD Pack..." Click="MenuImportSrdPack_Click"/>
+                <MenuItem Header="Import">
+                    <MenuItem Header="Import SRD Pack..." Click="MenuImportSrdPack_Click"/>
+                    <MenuItem Header="Import JSON to Database..." Click="MenuImportDatabase_Click"/>
+                </MenuItem>
                 <Separator/>
                 <MenuItem Header="Settings..." Click="MenuOptions_Click"/>
                 <Separator/>
@@ -109,27 +112,11 @@
                 <MenuItem Header="Undo" Click="Undo_Click" InputGestureText="Ctrl+Z"/>
                 <MenuItem Header="Redo" Click="Redo_Click" InputGestureText="Ctrl+Y"/>
             </MenuItem>
-            <MenuItem Header="_Map">
-                <MenuItem Header="Load Tile Map..." Click="LoadTileMap_Click"/>
-                <MenuItem Header="Clear Tile Map" Click="ClearTileMap_Click"/>
-                <Separator/>
-                <MenuItem Header="Open Tile Map Editor..." Click="OpenTileMapEditor_Click"/>
-            </MenuItem>
-            <MenuItem Header="_Encounter" Foreground="White">
-                <Button Content="📋 Encounter Builder" 
-                        Click="BtnEncounterBuilder_Click" />
-                <Separator/>
-                <MenuItem Header="Encounter Templates..." Click="MenuEncounterTemplates_Click"/>
-            </MenuItem>
-            <MenuItem Header="_Database" Foreground="White">
-                <MenuItem Header="Import JSON to Database..." Click="MenuImportDatabase_Click"/>
-                <MenuItem Header="Reload from Database" Click="MenuReloadDatabase_Click"/>
-                <Separator/>
-                <MenuItem Header="Database Statistics" Click="MenuDatabaseStats_Click"/>
-            </MenuItem>
             <MenuItem Header="_View" Foreground="White">
-                <MenuItem Header="Toggle Left Sidebar" Click="ToggleLeftSidebar_Click" InputGestureText="F9"/>
-                <MenuItem Header="Toggle Right Sidebar" Click="ToggleRightSidebar_Click" InputGestureText="F10"/>
+                <MenuItem Header="Panels">
+                    <MenuItem Header="Toggle Left Sidebar" Click="ToggleLeftSidebar_Click" InputGestureText="F9"/>
+                    <MenuItem Header="Toggle Right Sidebar" Click="ToggleRightSidebar_Click" InputGestureText="F10"/>
+                </MenuItem>
                 <Separator/>
                 <MenuItem Header="Grid Settings..." Click="MenuGridSettings_Click"/>
                 <Separator/>
@@ -144,23 +131,34 @@
                     <MenuItem Header="Reset Fog" Click="ResetFog_Click"/>
                 </MenuItem>
             </MenuItem>
-
-            <MenuItem Header="🧱 Walls" Foreground="White">
-                <MenuItem Header="Draw Solid Wall" Click="DrawSolidWall_Click"/>
-                <MenuItem Header="Draw Door" Click="DrawDoor_Click"/>
-                <MenuItem Header="Draw Window" Click="DrawWindow_Click"/>
-                <MenuItem Header="Draw Half Wall" Click="DrawHalfWall_Click"/>
+            <MenuItem Header="_Map" Foreground="White">
+                <MenuItem Header="Load Tile Map..." Click="LoadTileMap_Click"/>
+                <MenuItem Header="Clear Tile Map" Click="ClearTileMap_Click"/>
                 <Separator/>
-                <MenuItem Header="🏠 Draw Room (Solid)" Click="DrawRoom_Click"/>
-                <MenuItem Header="🚪 Draw Room (with Doors)" Click="DrawRoomWithDoors_Click"/>
+                <MenuItem Header="Tile Map Editor..." Click="OpenTileMapEditor_Click"/>
                 <Separator/>
-                <MenuItem Header="Stop Drawing" Click="StopWallDraw_Click"/>
-                <Separator/>
-                <MenuItem Header="Clear All Walls" Click="ClearAllWalls_Click"/>
+                <MenuItem Header="Walls">
+                    <MenuItem Header="Draw Solid Wall" Click="DrawSolidWall_Click"/>
+                    <MenuItem Header="Draw Door" Click="DrawDoor_Click"/>
+                    <MenuItem Header="Draw Window" Click="DrawWindow_Click"/>
+                    <MenuItem Header="Draw Half Wall" Click="DrawHalfWall_Click"/>
+                    <Separator/>
+                    <MenuItem Header="🏠 Draw Room (Solid)" Click="DrawRoom_Click"/>
+                    <MenuItem Header="🚪 Draw Room (with Doors)" Click="DrawRoomWithDoors_Click"/>
+                    <Separator/>
+                    <MenuItem Header="Stop Drawing" Click="StopWallDraw_Click"/>
+                    <Separator/>
+                    <MenuItem Header="Clear All Walls" Click="ClearAllWalls_Click"/>
+                </MenuItem>
             </MenuItem>
-
-            <MenuItem Header="Tools" Foreground="White">
-                <MenuItem Header="Tile Map Builder" Click="OpenTileMapBuilder_Click"/>
+            <MenuItem Header="_Encounter" Foreground="White">
+                <MenuItem Header="Encounter Builder..." Click="BtnEncounterBuilder_Click"/>
+                <MenuItem Header="Encounter Templates..." Click="MenuEncounterTemplates_Click"/>
+            </MenuItem>
+            <MenuItem Header="_Database" Foreground="White">
+                <MenuItem Header="Reload from Database" Click="MenuReloadDatabase_Click"/>
+                <Separator/>
+                <MenuItem Header="Database Statistics" Click="MenuDatabaseStats_Click"/>
             </MenuItem>
         </Menu>
         
@@ -257,9 +255,9 @@
                     </Grid.RowDefinitions>
 
                     <!-- Initiative Tracker -->
-                    <views:InitiativeTrackerPanel x:Name="InitiativeTracker" 
-                                       Grid.Row="0"
-                                       Margin="0"/>
+                    <views:DockablePanel x:Name="InitiativeTrackerDock" 
+                                         PanelTitle="⚔️ Initiative Tracker"
+                                         Grid.Row="0"/>
 
                     <!-- Horizontal Splitter -->
                     <GridSplitter Grid.Row="1" 
@@ -275,64 +273,9 @@
                     </StackPanel>
 
                     <!-- Action Log at Bottom -->
-                    <Border Grid.Row="2" Background="#1E1E1E" Padding="10,5">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                            </Grid.RowDefinitions>
-
-                            <TextBlock Grid.Row="0" 
-                           Text="ACTION LOG" 
-                           Style="{StaticResource SidebarHeader}"
-                           Margin="0,5,0,8"/>
-
-                            <Border Grid.Row="1" Background="#252526" CornerRadius="6">
-                                <ListBox ItemsSource="{Binding ActionLog}" 
-                             Background="Transparent" 
-                             BorderThickness="0"
-                             Foreground="#CCC"
-                             FontFamily="Consolas"
-                             FontSize="10"
-                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                             VirtualizingPanel.ScrollUnit="Pixel">
-                                    <ListBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <TextBlock TextWrapping="Wrap" Margin="8,3">
-                                    <Run Text="{Binding Timestamp, StringFormat='[{0:HH:mm:ss}]'}" Foreground="#555"/>
-                                    <Run Text=" "/>
-                                    <Run Text="{Binding Source}" Foreground="#4FC3F7"/>
-                                    <Run Text=": " Foreground="#555"/>
-                                    <Run Text="{Binding Message}" Foreground="#AAA"/>
-                                            </TextBlock>
-                                        </DataTemplate>
-                                    </ListBox.ItemTemplate>
-                                    <ListBox.ItemContainerStyle>
-                                        <Style TargetType="ListBoxItem">
-                                            <Setter Property="Padding" Value="0"/>
-                                            <Setter Property="Margin" Value="0"/>
-                                            <Setter Property="Background" Value="Transparent"/>
-                                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                                            <Setter Property="Template">
-                                                <Setter.Value>
-                                                    <ControlTemplate TargetType="ListBoxItem">
-                                                        <Border Background="{TemplateBinding Background}">
-                                                            <ContentPresenter/>
-                                                        </Border>
-                                                    </ControlTemplate>
-                                                </Setter.Value>
-                                            </Setter>
-                                            <Style.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter Property="Background" Value="#2A2A2A"/>
-                                                </Trigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </ListBox.ItemContainerStyle>
-                                </ListBox>
-                            </Border>
-                        </Grid>
-                    </Border>
+                    <views:DockablePanel x:Name="ActionLogDock" 
+                                         PanelTitle="📜 Action Log"
+                                         Grid.Row="2"/>
                 </Grid>
             </Border>
 
@@ -388,7 +331,8 @@
                     Background="#252526" 
                     MinWidth="380"
                     MaxWidth="500">
-                <views:SelectedTokenPanel x:Name="SelectedTokenPanel"/>
+                <views:DockablePanel x:Name="SelectedTokenDock" 
+                                     PanelTitle="🎯 Selected Token"/>
             </Border>
         </Grid>
 
