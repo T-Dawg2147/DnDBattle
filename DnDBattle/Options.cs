@@ -303,5 +303,22 @@ namespace DnDBattle
 
         /// <summary>Enable dice roll statistics tracking.</summary>
         public static bool EnableDiceStatistics { get; set; } = false;
+
+        // ── Undecided Features: Accessibility Suite ──
+
+        /// <summary>Enable high contrast mode for maximum readability.</summary>
+        public static bool EnableHighContrast { get; set; } = false;
+
+        /// <summary>Enable colorblind-friendly color palettes.</summary>
+        public static bool EnableColorblindMode { get; set; } = false;
+
+        /// <summary>UI scale percentage (100 = normal, 150 = 150%, 200 = 200%, up to 300).</summary>
+        public static int AccessibilityUIScale { get; set; } = 100;
+
+        /// <summary>Enable dyslexia-friendly font (OpenDyslexic/Verdana).</summary>
+        public static bool EnableDyslexiaFont { get; set; } = false;
+
+        /// <summary>Enable full keyboard navigation mode.</summary>
+        public static bool EnableKeyboardNavigation { get; set; } = false;
     }
 }
