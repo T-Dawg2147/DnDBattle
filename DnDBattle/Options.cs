@@ -134,5 +134,43 @@ namespace DnDBattle
         /// Default vision range for tokens without explicit vision settings (in grid squares).
         /// </summary>
         public static int DefaultTokenVisionRange { get; set; } = 12;
+
+        // ── Phase 5: Advanced Token Features ──
+
+        /// <summary>Enable A* pathfinding with diagonal support and difficult terrain.</summary>
+        public static bool EnablePathfinding { get; set; } = true;
+
+        /// <summary>Allow diagonal movement in pathfinding (costs 1.5 squares each).</summary>
+        public static bool AllowDiagonalMovement { get; set; } = true;
+
+        /// <summary>Maximum search depth for pathfinding in squares (prevents runaway searches).</summary>
+        public static int PathfindingMaxDepth { get; set; } = 60;
+
+        /// <summary>Enable movement cost preview overlay when hovering.</summary>
+        public static bool EnableMovementCostPreview { get; set; } = true;
+
+        /// <summary>Enable smooth path animation when tokens move along a path.</summary>
+        public static bool EnablePathAnimation { get; set; } = true;
+
+        /// <summary>Seconds per square during path animation.</summary>
+        public static double PathAnimationSecondsPerSquare { get; set; } = 0.3;
+
+        /// <summary>Enable Attack of Opportunity detection during movement.</summary>
+        public static bool EnableAOODetection { get; set; } = true;
+
+        /// <summary>Enable token aura rendering (Paladin aura, Spirit Guardians, etc.).</summary>
+        public static bool EnableTokenAuras { get; set; } = true;
+
+        /// <summary>Enable token elevation tracking and visual display.</summary>
+        public static bool EnableTokenElevation { get; set; } = true;
+
+        /// <summary>Enable token facing/direction indicator.</summary>
+        public static bool EnableTokenFacing { get; set; } = true;
+
+        /// <summary>Auto-face tokens in their movement direction.</summary>
+        public static bool AutoFaceMovementDirection { get; set; } = true;
+
+        /// <summary>Enable flanking detection based on token positioning.</summary>
+        public static bool EnableFlankingDetection { get; set; } = true;
     }
 }

@@ -104,6 +104,20 @@ namespace DnDBattle.Models
 
         public int SizeInSquares { get; set; } = 1;
 
+        // ── Phase 5 Properties ──
+
+        private int _elevation;
+        /// <summary>Token elevation in feet (0 = ground, positive = flying/elevated).</summary>
+        public int Elevation { get => _elevation; set => SetProperty(ref _elevation, value); }
+
+        private double _facingAngle;
+        /// <summary>Facing direction in degrees (0=right, 90=down, 180=left, 270=up).</summary>
+        public double FacingAngle { get => _facingAngle; set => SetProperty(ref _facingAngle, value); }
+
+        private List<TokenAura> _auras = new List<TokenAura>();
+        /// <summary>Active auras on this token.</summary>
+        public List<TokenAura> Auras { get => _auras; set => SetProperty(ref _auras, value); }
+
         private int _movementUsedThisTurn;
         public int MovementUsedThisTurn
         {
