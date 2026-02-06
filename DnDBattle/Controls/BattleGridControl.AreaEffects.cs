@@ -54,7 +54,13 @@ namespace DnDBattle.Controls
                 SizeInFeet = preset.SizeInFeet,
                 WidthInFeet = preset.WidthInFeet,
                 Color = preset.Color,
-                IsPreview = true
+                IsPreview = true,
+                DurationRounds = preset.DurationRounds,
+                RoundsRemaining = preset.DurationRounds,
+                RequiresConcentration = preset.RequiresConcentration,
+                DamageExpression = preset.DamageExpression,
+                DamageType = preset.DamageType,
+                DamageTiming = preset.DamageTiming
             };
 
             Cursor = Cursors.Cross;
@@ -126,20 +132,45 @@ namespace DnDBattle.Controls
         {
             var geometry = AreaEffectService.GetEffectGeometry(effect, GridCellSize);
 
+            // Animation: pulsing border
+            double pulseValue = 0;
+            double borderThickness = effect.IsPreview ? 2 : 3;
+            byte borderAlpha = 200;
+
+            if (!effect.IsPreview && Options.EnableEffectAnimations && effect.AnimationType == EffectAnimationType.Pulse)
+            {
+                pulseValue = (Math.Sin(effect.AnimationPhase) + 1.0) / 2.0;
+                borderThickness = 2 + pulseValue * 4;
+                borderAlpha = (byte)(100 + pulseValue * 155);
+            }
+
             // Create fill brush with transparency
             var fillBrush = new SolidColorBrush(effect.Color);
             fillBrush.Freeze();
 
             // Create outline pen
-            var outlineColor = Color.FromArgb(200, effect.Color.R, effect.Color.G, effect.Color.B);
-            var pen = new Pen(new SolidColorBrush(outlineColor), effect.IsPreview ? 2 : 3);
+            var outlineColor = Color.FromArgb(borderAlpha, effect.Color.R, effect.Color.G, effect.Color.B);
+            var pen = new Pen(new SolidColorBrush(outlineColor), borderThickness);
             if (effect.IsPreview)
             {
                 pen.DashStyle = DashStyles.Dash;
             }
             pen.Freeze();
 
+            // Animation: rotation
+            if (!effect.IsPreview && Options.EnableEffectAnimations && effect.AnimationType == EffectAnimationType.Rotate)
+            {
+                double cx = effect.Origin.X * GridCellSize;
+                double cy = effect.Origin.Y * GridCellSize;
+                dc.PushTransform(new RotateTransform(effect.AnimationPhase, cx, cy));
+            }
+
             dc.DrawGeometry(fillBrush, pen, geometry);
+
+            if (!effect.IsPreview && Options.EnableEffectAnimations && effect.AnimationType == EffectAnimationType.Rotate)
+            {
+                dc.Pop();
+            }
 
             // Draw origin point for cones and lines
             if (effect.Shape == AreaEffectShape.Cone || effect.Shape == AreaEffectShape.Line)
@@ -158,8 +189,14 @@ namespace DnDBattle.Controls
             if (!effect.IsPreview && !string.IsNullOrEmpty(effect.Name))
             {
                 var bounds = geometry.Bounds;
+                var labelParts = effect.Name;
+
+                // Append concentration indicator
+                if (effect.RequiresConcentration)
+                    labelParts += " (C)";
+
                 var text = new FormattedText(
-                    effect.Name,
+                    labelParts,
                     System.Globalization.CultureInfo.CurrentCulture,
                     FlowDirection.LeftToRight,
                     new Typeface("Segoe UI"),
@@ -175,6 +212,39 @@ namespace DnDBattle.Controls
                     new Rect(textPos.X - 4, textPos.Y - 2, text.Width + 8, text.Height + 4));
                 dc.DrawText(text, textPos);
             }
+
+            // Phase 6.2: Duration timer badge
+            if (!effect.IsPreview && Options.EnableDurationTracking && effect.DurationRounds > 0)
+            {
+                DrawEffectTimerBadge(dc, geometry.Bounds, effect);
+            }
+        }
+
+        /// <summary>
+        /// Draws a round timer badge showing remaining rounds on an area effect
+        /// </summary>
+        private void DrawEffectTimerBadge(DrawingContext dc, Rect bounds, AreaEffect effect)
+        {
+            var badgeCenter = new Point(bounds.Right - 12, bounds.Top + 12);
+
+            var badgeBrush = effect.RoundsRemaining <= 1
+                ? Brushes.Red
+                : new SolidColorBrush(Color.FromRgb(100, 181, 246));
+
+            dc.DrawEllipse(badgeBrush, new Pen(Brushes.White, 2), badgeCenter, 12, 12);
+
+            var roundsText = new FormattedText(
+                effect.RoundsRemaining.ToString(),
+                System.Globalization.CultureInfo.CurrentCulture,
+                FlowDirection.LeftToRight,
+                new Typeface("Segoe UI"),
+                12,
+                Brushes.White,
+                1.0);
+
+            dc.DrawText(roundsText, new Point(
+                badgeCenter.X - roundsText.Width / 2,
+                badgeCenter.Y - roundsText.Height / 2));
         }
 
         #endregion
@@ -205,13 +275,23 @@ namespace DnDBattle.Controls
                 Origin = _previewEffect.Origin,
                 DirectionAngle = _previewEffect.DirectionAngle,
                 Color = _previewEffect.Color,
-                IsPreview = false
+                IsPreview = false,
+                // Phase 6 fields
+                DurationRounds = _previewEffect.DurationRounds,
+                RoundsRemaining = _previewEffect.RoundsRemaining > 0 ? _previewEffect.RoundsRemaining : _previewEffect.DurationRounds,
+                RequiresConcentration = _previewEffect.RequiresConcentration,
+                DamageExpression = _previewEffect.DamageExpression,
+                DamageType = _previewEffect.DamageType,
+                DamageTiming = _previewEffect.DamageTiming,
+                AnimationType = (EffectAnimationType)Options.DefaultAnimationType
             };
 
             _areaEffectService.AddEffect(placedEffect);
 
             // Log the action
-            AddToActionLog("AoE", $"Placed {placedEffect.Name ?? placedEffect.Shape.ToString()} ({placedEffect.SizeInFeet} ft)");
+            string durationInfo = placedEffect.DurationRounds > 0 ? $", {placedEffect.DurationRounds} rounds" : "";
+            string damageInfo = !string.IsNullOrEmpty(placedEffect.DamageExpression) ? $", {placedEffect.DamageExpression} {placedEffect.DamageType.GetDisplayName()}" : "";
+            AddToActionLog("AoE", $"Placed {placedEffect.Name ?? placedEffect.Shape.ToString()} ({placedEffect.SizeInFeet} ft{durationInfo}{damageInfo})");
 
             // Reset for next placement (keep the same settings)
             _previewEffect = new AreaEffect
@@ -221,7 +301,12 @@ namespace DnDBattle.Controls
                 SizeInFeet = placedEffect.SizeInFeet,
                 WidthInFeet = placedEffect.WidthInFeet,
                 Color = placedEffect.Color,
-                IsPreview = true
+                IsPreview = true,
+                DurationRounds = placedEffect.DurationRounds,
+                DamageExpression = placedEffect.DamageExpression,
+                DamageType = placedEffect.DamageType,
+                DamageTiming = placedEffect.DamageTiming,
+                RequiresConcentration = placedEffect.RequiresConcentration
             };
 
             RedrawAreaEffects();
