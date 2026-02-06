@@ -28,12 +28,12 @@
 
         <!-- Current Turn Style -->
         <Style x:Key="CurrentTurnStyle" TargetType="Border" BasedOn="{StaticResource InitiativeEntryStyle}">
-            <Setter Property="Background" Value="#2E5830"/>
+            <Setter Property="Background" Value="{StaticResource Brush_Success}"/>
             <Setter Property="BorderBrush" Value="{StaticResource Brush_Success}"/>
             <Setter Property="BorderThickness" Value="2"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#3E6840"/>
+                    <Setter Property="Background" Value="{StaticResource Brush_Success}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -75,10 +75,10 @@
             <Setter Property="Background" Value="{StaticResource Brush_Success}"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#5CBF60"/>
+                    <Setter Property="Background" Value="{StaticResource Brush_Success}"/>
                 </Trigger>
                 <Trigger Property="IsPressed" Value="True">
-                    <Setter Property="Background" Value="#3D8B40"/>
+                    <Setter Property="Background" Value="{StaticResource Brush_Success}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -102,7 +102,7 @@
                 <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
                     <TextBlock Text="Round: " Foreground="{StaticResource Brush_Text_Hint}" FontSize="11"/>
                     <TextBlock x:Name="TxtRound" Text="1" Foreground="{StaticResource Brush_Info}" FontSize="11" FontWeight="Bold"/>
-                    <TextBlock Text="  •  " Foreground="#444" FontSize="11"/>
+                    <TextBlock Text="  •  " Foreground="{StaticResource Brush_Border_Normal}" FontSize="11"/>
                     <TextBlock x:Name="TxtTurnCount" Text="0 creatures" Foreground="{StaticResource Brush_Text_Hint}" FontSize="11"/>
                     <viewsDice:TurnTimerDisplay x:Name="TurnTimer" Margin="0,0,0,10"/>
                 </StackPanel>

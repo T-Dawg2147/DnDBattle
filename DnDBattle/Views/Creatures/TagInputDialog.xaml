@@ -100,11 +100,11 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#2D5A27"/>
-                                <Setter TargetName="border" Property="BorderBrush" Value="#4A4"/>
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource Brush_Success}"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource Brush_Success}"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#505054"/>
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource Brush_Background_Hover}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>

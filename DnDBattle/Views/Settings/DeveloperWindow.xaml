@@ -13,7 +13,7 @@
             <Setter Property="FontSize" Value="13"/>
         </Style>
         <Style TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#FFCCCCDD"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Secondary}"/>
             <Setter Property="Margin" Value="0,2"/>
         </Style>
         <Style TargetType="Slider">
@@ -22,8 +22,8 @@
             <Setter Property="HorizontalAlignment" Value="Left"/>
         </Style>
         <Style TargetType="GroupBox">
-            <Setter Property="Foreground" Value="#FF88AAFF"/>
-            <Setter Property="BorderBrush" Value="#FF444466"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Info}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brush_Border_Normal}"/>
             <Setter Property="Margin" Value="0,6"/>
             <Setter Property="Padding" Value="8"/>
         </Style>

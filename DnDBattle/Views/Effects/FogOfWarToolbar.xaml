@@ -51,7 +51,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#0078D4"/>
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource Brush_Accent_Primary}"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Bd" Property="Background" Value="{StaticResource Brush_Background_Hover}"/>
@@ -61,7 +61,7 @@
                                     <Condition Property="IsMouseOver" Value="True"/>
                                     <Condition Property="IsChecked" Value="True"/>
                                 </MultiTrigger.Conditions>
-                                <Setter TargetName="Bd" Property="Background" Value="#1084D8"/>
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource Brush_Accent_Hover}"/>
                             </MultiTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -104,7 +104,7 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="#2E7D32"/>
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource Brush_Success}"/>
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Bd" Property="Background" Value="{StaticResource Brush_Background_Hover}"/>
@@ -128,7 +128,7 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="#C62828"/>
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource Brush_Error}"/>
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Bd" Property="Background" Value="{StaticResource Brush_Background_Hover}"/>

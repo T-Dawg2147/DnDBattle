@@ -95,7 +95,7 @@
                                         <Setter Property="Background" Value="{StaticResource Brush_Background_Hover}"/>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding IsCritical}" Value="True">
-                                                <Setter Property="Background" Value="#FFD700"/>
+                                                <Setter Property="Background" Value="{StaticResource Brush_Warning}"/>
                                             </DataTrigger>
                                             <DataTrigger Binding="{Binding IsCriticalFail}" Value="True">
                                                 <Setter Property="Background" Value="{StaticResource Brush_Error}"/>

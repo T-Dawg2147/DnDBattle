@@ -58,7 +58,7 @@
             <Setter Property="Background" Value="{StaticResource Brush_Error}"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#FFE81123"/>
+                    <Setter Property="Background" Value="{StaticResource Brush_Error}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>

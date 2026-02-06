@@ -368,10 +368,10 @@
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="#66BB6A"/>
+                                    <Setter Property="Background" Value="{StaticResource Brush_Success}"/>
                                 </Trigger>
                                 <Trigger Property="IsPressed" Value="True">
-                                    <Setter Property="Background" Value="#43A047"/>
+                                    <Setter Property="Background" Value="{StaticResource Brush_Success}"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
