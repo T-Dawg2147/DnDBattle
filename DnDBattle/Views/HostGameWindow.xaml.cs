@@ -89,7 +89,7 @@ namespace DnDBattle.Views
                 Payload = System.Text.Json.JsonSerializer.Serialize(chatData)
             });
 
-            ChatHistory.Items.Add($"[{DateTime.Now:HH:mm}] DM: {msg}");
+            ChatHistory.Items.Add($"[{chatData.Timestamp.ToLocalTime():HH:mm}] DM: {msg}");
             ChatInput.Clear();
         }
 

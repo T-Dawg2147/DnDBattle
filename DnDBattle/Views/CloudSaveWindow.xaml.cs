@@ -21,13 +21,11 @@ namespace DnDBattle.Views
         private async void SaveEncounter_Click(object sender, RoutedEventArgs e)
         {
             var campaignId = CampaignIdBox.Text?.Trim() ?? "default";
-            var encounterId = Guid.NewGuid().ToString("N")[..8];
+            var encounterId = Guid.NewGuid().ToString("N");
 
             StatusText.Text = "Saving...";
             // Placeholder – a real integration would serialize the encounter from the main view model.
-            MessageBox.Show("Note: This will save a placeholder encounter. Full integration requires wiring to the main encounter data.",
-                "Cloud Save", MessageBoxButton.OK, MessageBoxImage.Information);
-            var encounterJson = "{}";
+            var encounterJson = System.Text.Json.JsonSerializer.Serialize(new { Id = encounterId, CampaignId = campaignId, SavedAt = DateTime.UtcNow });
             var success = await _cloudSave.SaveEncounterAsync(encounterId, encounterJson, campaignId);
             StatusText.Text = success ? $"Saved encounter {encounterId}" : "Save failed";
         }
