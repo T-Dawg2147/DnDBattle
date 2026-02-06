@@ -26,6 +26,12 @@ Phase 5 adds seven advanced token features to enhance tactical combat on the bat
 
 **Simple Test:** Select a token, hold Ctrl and click a destination. The path preview should show diagonal steps where appropriate. Try placing walls to verify the path routes around them.
 
+### Feature Review
+
+**Review 1**
+
+- **Ctrl click does not do anything**
+
 ---
 
 ### 5.2 📊 Movement Cost Preview
@@ -44,6 +50,12 @@ The cost indicator shows `used/total` squares (e.g. `4/6`).
 | `EnableMovementCostPreview` | `true` | Show cost overlay on hover |
 
 **Simple Test:** Select a token on the map, then hover your mouse over nearby cells. You should see a colored rectangle with movement cost text appear at each cell. Green cells are reachable, red are too far.
+
+### Feature Review
+
+**Review 1**
+
+- **Feature does not work, maybe an issue with the battlegrid itself? (Im unsure if the actual issue)**
 
 ---
 
