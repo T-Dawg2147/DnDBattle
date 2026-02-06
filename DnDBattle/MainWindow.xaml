@@ -195,6 +195,20 @@
                 <Separator/>
                 <MenuItem Header="Refresh Token Visuals" Click="Phase5_RefreshVisuals_Click"/>
             </MenuItem>
+
+            <!-- Phase 6: Area Effects Expansion - Top level menu for testing Phase 6 features -->
+            <MenuItem Header="🔥 Phase 6" Foreground="White">
+                <MenuItem Header="Area Effects Panel..." Click="OpenPhase6Window_Click"/>
+                <Separator/>
+                <MenuItem Header="Open Spell Library..." Click="Phase6_OpenSpellLibrary_Click"/>
+                <Separator/>
+                <MenuItem Header="Quick: Place Fireball (20ft)" Click="Phase6_PlaceFireball_Click"/>
+                <MenuItem Header="Quick: Place Darkness (15ft)" Click="Phase6_PlaceDarkness_Click"/>
+                <MenuItem Header="Quick: Place Fog Cloud (20ft)" Click="Phase6_PlaceFogCloud_Click"/>
+                <Separator/>
+                <MenuItem Header="Advance Round (Tick Durations)" Click="Phase6_AdvanceRound_Click"/>
+                <MenuItem Header="Clear All Effects" Click="Phase6_ClearAllEffects_Click"/>
+            </MenuItem>
         </Menu>
         
 

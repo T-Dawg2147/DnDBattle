@@ -640,6 +640,95 @@ namespace DnDBattle
 
         #endregion
 
+        #region Phase 6: Area Effects Expansion Menu Handlers
+
+        /// <summary>
+        /// Opens the Phase 6 Area Effects Expansion management window
+        /// </summary>
+        private void OpenPhase6Window_Click(object sender, RoutedEventArgs e)
+        {
+            var window = new Phase6AreaEffectsWindow(BattleGrid);
+            window.Owner = this;
+            window.Show();
+        }
+
+        /// <summary>
+        /// Opens the Spell Library window for browsing and placing spells
+        /// </summary>
+        private void Phase6_OpenSpellLibrary_Click(object sender, RoutedEventArgs e)
+        {
+            var spellWindow = new SpellLibraryWindow();
+            spellWindow.Owner = this;
+
+            // When a spell is selected, start placement on the battle grid
+            spellWindow.SpellSelected += (AreaEffect effect) =>
+            {
+                BattleGrid.StartAreaEffectPlacement(effect);
+            };
+
+            spellWindow.ShowDialog();
+        }
+
+        /// <summary>
+        /// Quick-place a Fireball (20ft sphere) on the battle grid
+        /// </summary>
+        private void Phase6_PlaceFireball_Click(object sender, RoutedEventArgs e)
+        {
+            BattleGrid.StartAreaEffectPlacement(AreaEffectPresets.Fireball);
+        }
+
+        /// <summary>
+        /// Quick-place Darkness (15ft sphere) on the battle grid
+        /// </summary>
+        private void Phase6_PlaceDarkness_Click(object sender, RoutedEventArgs e)
+        {
+            BattleGrid.StartAreaEffectPlacement(AreaEffectPresets.Darkness);
+        }
+
+        /// <summary>
+        /// Quick-place Fog Cloud (20ft sphere) on the battle grid
+        /// </summary>
+        private void Phase6_PlaceFogCloud_Click(object sender, RoutedEventArgs e)
+        {
+            BattleGrid.StartAreaEffectPlacement(AreaEffectPresets.FogCloud);
+        }
+
+        /// <summary>
+        /// Advance one combat round, ticking down all effect durations and logging expired effects
+        /// </summary>
+        private void Phase6_AdvanceRound_Click(object sender, RoutedEventArgs e)
+        {
+            var durationService = new EffectDurationService(BattleGrid.AreaEffectService);
+            var expired = durationService.OnRoundEnd();
+
+            if (expired.Count > 0)
+            {
+                string msg = $"Round advanced. Expired: {string.Join(", ", expired)}";
+                if (DataContext is ViewModels.MainViewModel vm)
+                {
+                    vm.ActionLog.Insert(0, new ActionLogEntry { Source = "Phase6", Message = msg });
+                }
+                MessageBox.Show(msg, "Duration Tick", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            else
+            {
+                if (DataContext is ViewModels.MainViewModel vm)
+                {
+                    vm.ActionLog.Insert(0, new ActionLogEntry { Source = "Phase6", Message = "Round advanced. No effects expired." });
+                }
+            }
+        }
+
+        /// <summary>
+        /// Clear all active area effects from the battle grid
+        /// </summary>
+        private void Phase6_ClearAllEffects_Click(object sender, RoutedEventArgs e)
+        {
+            BattleGrid.AreaEffectService.ClearAllEffects();
+        }
+
+        #endregion
+
         private void ToggleLeftSidebar_Click(object seder, RoutedEventArgs e)
         {
             if (LeftSidebarColumn.Width.Value > 0)
