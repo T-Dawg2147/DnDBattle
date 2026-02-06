@@ -879,6 +879,116 @@ namespace DnDBattle
 
         #endregion
 
+        #region Phase 8: Advanced Map Features Menu Handlers
+
+        /// <summary>
+        /// Opens the Phase 8 Advanced Map Features management window.
+        /// </summary>
+        private void OpenPhase8Window_Click(object sender, RoutedEventArgs e)
+        {
+            var window = new Phase8MapFeaturesWindow(BattleGrid);
+            window.Owner = this;
+            window.Show();
+        }
+
+        /// <summary>
+        /// Sets the grid type on the current tile map from the menu Tag.
+        /// </summary>
+        private void Phase8_SetGridType_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not MenuItem item || item.Tag is not string tag) return;
+
+            var map = BattleGrid?.TileMap;
+            if (map == null) return;
+
+            map.GridType = tag switch
+            {
+                "HexFlatTop" => Models.Tiles.GridType.HexFlatTop,
+                "HexPointyTop" => Models.Tiles.GridType.HexPointyTop,
+                _ => Models.Tiles.GridType.Square
+            };
+
+            if (DataContext is MainViewModel vm)
+            {
+                vm.ActionLog.Insert(0, new ActionLogEntry
+                {
+                    Source = "Phase8",
+                    Message = $"Grid type set to {map.GridType}."
+                });
+            }
+        }
+
+        /// <summary>
+        /// Toggles gridless mode on the current tile map.
+        /// </summary>
+        private void Phase8_ToggleGridless_Click(object sender, RoutedEventArgs e)
+        {
+            var map = BattleGrid?.TileMap;
+            if (map == null) return;
+
+            map.GridlessMode = MenuGridlessMode.IsChecked;
+            Options.EnableGridlessMode = map.GridlessMode;
+
+            if (DataContext is MainViewModel vm)
+            {
+                vm.ActionLog.Insert(0, new ActionLogEntry
+                {
+                    Source = "Phase8",
+                    Message = $"Gridless mode: {(map.GridlessMode ? "ON" : "OFF")}."
+                });
+            }
+        }
+
+        /// <summary>
+        /// Adds a map note at the center of the current map, prompting for text.
+        /// </summary>
+        private void Phase8_AddMapNote_Click(object sender, RoutedEventArgs e)
+        {
+            var map = BattleGrid?.TileMap;
+            if (map == null)
+            {
+                MessageBox.Show("No map loaded.", "Map Note", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var text = Microsoft.VisualBasic.Interaction.InputBox(
+                "Enter note text:", "Add Map Note", "New note");
+
+            if (string.IsNullOrWhiteSpace(text)) return;
+
+            var note = new Models.Tiles.MapNote
+            {
+                Text = text,
+                GridX = map.Width / 2,
+                GridY = map.Height / 2,
+                FontSize = Options.MapNoteDefaultFontSize,
+                IsPlayerVisible = true
+            };
+
+            map.AddNote(note);
+
+            if (DataContext is MainViewModel vm)
+            {
+                vm.ActionLog.Insert(0, new ActionLogEntry
+                {
+                    Source = "Phase8",
+                    Message = $"Added note '{text}' at ({note.GridX},{note.GridY})."
+                });
+            }
+        }
+
+        /// <summary>
+        /// Opens the Phase 8 map features window focused on the map library tab.
+        /// </summary>
+        private void Phase8_OpenMapLibrary_Click(object sender, RoutedEventArgs e)
+        {
+            var window = new Phase8MapFeaturesWindow(BattleGrid);
+            window.Owner = this;
+            window.Show();
+        }
+
+        #endregion
+
         private void ToggleLeftSidebar_Click(object seder, RoutedEventArgs e)
         {
             if (LeftSidebarColumn.Width.Value > 0)

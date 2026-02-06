@@ -45,6 +45,25 @@
                     <MenuItem Header="Zoom Out" Click="ZoomOut_Click"/>
                     <MenuItem Header="Reset View" Click="ResetView_Click"/>
                 </MenuItem>
+                <MenuItem Header="Map Features" Foreground="{StaticResource Brush_Text_Primary}">
+                    <MenuItem Header="Grid Type">
+                        <MenuItem Header="Square Grid" Click="SetSquareGrid_Click" IsCheckable="True" IsChecked="True" x:Name="MenuSquareGrid"/>
+                        <MenuItem Header="Hex Grid (Flat Top)" Click="SetHexFlatTop_Click" IsCheckable="True" x:Name="MenuHexFlatTop"/>
+                        <MenuItem Header="Hex Grid (Pointy Top)" Click="SetHexPointyTop_Click" IsCheckable="True" x:Name="MenuHexPointyTop"/>
+                    </MenuItem>
+                    <Separator/>
+                    <MenuItem Header="Toggle Gridless Mode" Click="ToggleGridless_Click" IsCheckable="True" x:Name="MenuGridless"/>
+                    <Separator/>
+                    <MenuItem Header="Custom Grid Size...">
+                        <MenuItem Header="5 ft/square (Standard)" Click="SetGridScale_Click" Tag="5"/>
+                        <MenuItem Header="10 ft/square" Click="SetGridScale_Click" Tag="10"/>
+                        <MenuItem Header="20 ft/square" Click="SetGridScale_Click" Tag="20"/>
+                        <MenuItem Header="50 ft/square" Click="SetGridScale_Click" Tag="50"/>
+                    </MenuItem>
+                    <Separator/>
+                    <MenuItem Header="Add Map Note..." Click="AddMapNote_Click"/>
+                    <MenuItem Header="Add Background Layer..." Click="AddBackgroundLayer_Click"/>
+                </MenuItem>
             </Menu>
 
             <!-- Editor Control -->

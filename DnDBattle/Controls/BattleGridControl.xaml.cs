@@ -149,6 +149,13 @@ namespace DnDBattle.Controls
 
         private TileMap _loadedTileMap;
 
+        /// <summary>Gets or sets the currently loaded tile map.</summary>
+        public TileMap TileMap
+        {
+            get => _loadedTileMap;
+            set => LoadTileMap(value);
+        }
+
         #endregion
 
         #region Private Fields - Area Effect State

@@ -223,6 +223,21 @@
                 </MenuItem>
                 <MenuItem Header="Check Concentration" Click="Phase7_CheckConcentration_Click"/>
             </MenuItem>
+
+            <!-- Phase 8: Advanced Map Features - Top level menu for testing Phase 8 features -->
+            <MenuItem Header="🗺️ Phase 8" Foreground="White">
+                <MenuItem Header="Map Features Panel..." Click="OpenPhase8Window_Click"/>
+                <Separator/>
+                <MenuItem Header="Grid Type">
+                    <MenuItem Header="Square Grid (Default)" Click="Phase8_SetGridType_Click" Tag="Square"/>
+                    <MenuItem Header="Hex Grid (Flat Top)" Click="Phase8_SetGridType_Click" Tag="HexFlatTop"/>
+                    <MenuItem Header="Hex Grid (Pointy Top)" Click="Phase8_SetGridType_Click" Tag="HexPointyTop"/>
+                </MenuItem>
+                <MenuItem Header="Toggle Gridless Mode" Click="Phase8_ToggleGridless_Click" IsCheckable="True" x:Name="MenuGridlessMode"/>
+                <Separator/>
+                <MenuItem Header="Add Map Note at Center..." Click="Phase8_AddMapNote_Click"/>
+                <MenuItem Header="Open Map Library..." Click="Phase8_OpenMapLibrary_Click"/>
+            </MenuItem>
         </Menu>
         
 

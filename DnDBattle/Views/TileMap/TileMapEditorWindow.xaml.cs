@@ -313,6 +313,110 @@ namespace DnDBattle.Views.TileMap
 
         #endregion
 
+        #region Map Features Menu
+
+        private void UpdateGridTypeChecks(Models.Tiles.GridType type)
+        {
+            MenuSquareGrid.IsChecked = type == Models.Tiles.GridType.Square;
+            MenuHexFlatTop.IsChecked = type == Models.Tiles.GridType.HexFlatTop;
+            MenuHexPointyTop.IsChecked = type == Models.Tiles.GridType.HexPointyTop;
+        }
+
+        private void SetSquareGrid_Click(object sender, RoutedEventArgs e)
+        {
+            if (_currentMap == null) return;
+            _currentMap.GridType = Models.Tiles.GridType.Square;
+            UpdateGridTypeChecks(Models.Tiles.GridType.Square);
+            EditorControl.TileMap = _currentMap;
+        }
+
+        private void SetHexFlatTop_Click(object sender, RoutedEventArgs e)
+        {
+            if (_currentMap == null) return;
+            _currentMap.GridType = Models.Tiles.GridType.HexFlatTop;
+            UpdateGridTypeChecks(Models.Tiles.GridType.HexFlatTop);
+            EditorControl.TileMap = _currentMap;
+        }
+
+        private void SetHexPointyTop_Click(object sender, RoutedEventArgs e)
+        {
+            if (_currentMap == null) return;
+            _currentMap.GridType = Models.Tiles.GridType.HexPointyTop;
+            UpdateGridTypeChecks(Models.Tiles.GridType.HexPointyTop);
+            EditorControl.TileMap = _currentMap;
+        }
+
+        private void ToggleGridless_Click(object sender, RoutedEventArgs e)
+        {
+            if (_currentMap == null) return;
+            _currentMap.GridlessMode = MenuGridless.IsChecked;
+            Options.EnableGridlessMode = _currentMap.GridlessMode;
+            EditorControl.TileMap = _currentMap;
+        }
+
+        private void SetGridScale_Click(object sender, RoutedEventArgs e)
+        {
+            if (_currentMap == null) return;
+            if (sender is not System.Windows.Controls.MenuItem item || item.Tag is not string tag) return;
+            if (!int.TryParse(tag, out int feet) || feet <= 0) return;
+
+            _currentMap.ChangeGridScale(feet);
+            Options.DefaultFeetPerSquare = feet;
+            EditorControl.TileMap = _currentMap;
+            MessageBox.Show($"Grid scale set to {feet} ft per square.", "Grid Scale",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void AddMapNote_Click(object sender, RoutedEventArgs e)
+        {
+            if (_currentMap == null) return;
+
+            var text = Microsoft.VisualBasic.Interaction.InputBox(
+                "Enter note text:", "Add Map Note", "New note");
+
+            if (string.IsNullOrWhiteSpace(text)) return;
+
+            var note = new Models.Tiles.MapNote
+            {
+                Text = text,
+                GridX = _currentMap.Width / 2,
+                GridY = _currentMap.Height / 2,
+                FontSize = Options.MapNoteDefaultFontSize,
+                IsPlayerVisible = true
+            };
+
+            _currentMap.AddNote(note);
+            MessageBox.Show($"Note added at ({note.GridX},{note.GridY}).", "Map Note",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void AddBackgroundLayer_Click(object sender, RoutedEventArgs e)
+        {
+            if (_currentMap == null) return;
+
+            var dialog = new OpenFileDialog
+            {
+                Filter = "Image Files (*.png;*.jpg;*.jpeg;*.bmp)|*.png;*.jpg;*.jpeg;*.bmp|All Files (*.*)|*.*",
+                Title = "Select Background Image"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                var layer = new Models.Tiles.BackgroundLayer
+                {
+                    ImagePath = dialog.FileName,
+                    Opacity = 1.0,
+                    IsVisible = true
+                };
+
+                _currentMap.BackgroundLayers.Add(layer);
+                MessageBox.Show($"Background layer added: {System.IO.Path.GetFileName(dialog.FileName)}",
+                    "Background Layer", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+
+        #endregion
+
         #region Helper Methods
 
         private void CreateNewMap(int width, int height)
