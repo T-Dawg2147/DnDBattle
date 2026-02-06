@@ -220,7 +220,7 @@
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,4">
                         <TextBlock Text="Default Animation:" VerticalAlignment="Center" Width="150"/>
-                        <ComboBox x:Name="CmbDefaultAnimation" Width="180" SelectionChanged="OnComboChanged">
+                        <ComboBox x:Name="CmbDefaultAnimation" Width="180" SelectionChanged="OnAnimationComboChanged">
                             <ComboBoxItem Content="None"/>
                             <ComboBoxItem Content="Pulse"/>
                             <ComboBoxItem Content="Particle"/>

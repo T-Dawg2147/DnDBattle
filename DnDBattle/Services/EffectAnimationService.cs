@@ -10,6 +10,11 @@ namespace DnDBattle.Services
     /// </summary>
     public class EffectAnimationService
     {
+        private const double MaxDeltaTimeSeconds = 0.016; // ~60 FPS cap to prevent jumps
+        private const double OpacityDecayRate = 0.5;
+        private const double PulseSpeed = 2.0; // radians per second
+        private const double RotateSpeed = 45.0; // degrees per second
+
         private readonly AreaEffectService _areaEffectService;
         private readonly Random _random = new Random();
         private DateTime _lastUpdate = DateTime.Now;
@@ -35,7 +40,7 @@ namespace DnDBattle.Services
             _lastUpdate = now;
 
             // Clamp delta to avoid huge jumps if window was hidden
-            if (deltaTime > 0.5) deltaTime = 0.016;
+            if (deltaTime > 0.5) deltaTime = MaxDeltaTimeSeconds;
 
             bool anyUpdated = false;
 
@@ -46,14 +51,14 @@ namespace DnDBattle.Services
                 switch (effect.AnimationType)
                 {
                     case EffectAnimationType.Pulse:
-                        effect.AnimationPhase += deltaTime * 2.0;
+                        effect.AnimationPhase += deltaTime * PulseSpeed;
                         if (effect.AnimationPhase > Math.PI * 2)
                             effect.AnimationPhase -= Math.PI * 2;
                         anyUpdated = true;
                         break;
 
                     case EffectAnimationType.Rotate:
-                        effect.AnimationPhase += deltaTime * 45.0; // 45 degrees/sec
+                        effect.AnimationPhase += deltaTime * RotateSpeed;
                         if (effect.AnimationPhase > 360)
                             effect.AnimationPhase -= 360;
                         anyUpdated = true;
@@ -109,7 +114,7 @@ namespace DnDBattle.Services
                     p.Position.X + p.Velocity.X * deltaTime,
                     p.Position.Y + p.Velocity.Y * deltaTime);
                 p.Lifetime -= deltaTime;
-                p.Opacity = Math.Max(0, p.Opacity - deltaTime * 0.5);
+                p.Opacity = Math.Max(0, p.Opacity - deltaTime * OpacityDecayRate);
 
                 if (p.Lifetime <= 0 || p.Opacity <= 0)
                     particles.RemoveAt(i);

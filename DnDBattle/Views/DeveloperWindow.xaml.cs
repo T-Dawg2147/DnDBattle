@@ -140,10 +140,13 @@ namespace DnDBattle.Views
         private void OnComboChanged(object sender, SelectionChangedEventArgs e)
         {
             if (_initializing) return;
-            if (sender == CmbFogRevealMode)
-                Options.FogRevealMode = CmbFogRevealMode.SelectedIndex;
-            else if (sender == CmbDefaultAnimation)
-                Options.DefaultAnimationType = CmbDefaultAnimation.SelectedIndex;
+            Options.FogRevealMode = CmbFogRevealMode.SelectedIndex;
+        }
+
+        private void OnAnimationComboChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_initializing) return;
+            Options.DefaultAnimationType = CmbDefaultAnimation.SelectedIndex;
         }
 
         private void OnResetDefaults(object sender, RoutedEventArgs e)

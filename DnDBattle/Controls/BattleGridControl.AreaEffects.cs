@@ -277,8 +277,9 @@ namespace DnDBattle.Controls
                 Color = _previewEffect.Color,
                 IsPreview = false,
                 // Phase 6 fields
+                // Initialize remaining rounds from duration
                 DurationRounds = _previewEffect.DurationRounds,
-                RoundsRemaining = _previewEffect.RoundsRemaining > 0 ? _previewEffect.RoundsRemaining : _previewEffect.DurationRounds,
+                RoundsRemaining = _previewEffect.DurationRounds,
                 RequiresConcentration = _previewEffect.RequiresConcentration,
                 DamageExpression = _previewEffect.DamageExpression,
                 DamageType = _previewEffect.DamageType,
