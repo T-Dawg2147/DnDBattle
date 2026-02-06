@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using DnDBattle.Services;
@@ -74,7 +75,7 @@ namespace DnDBattle.Services.TileService
 
                     var tileDef = new TileDefinition()
                     {
-                        Id = Guid.NewGuid().ToString(),
+                        Id = GenerateDeterministicId(relativePath),
                         ImagePath = relativePath,
                         DisplayName = FormatDisplayName(fileName),
                         Category = category,
@@ -108,6 +109,31 @@ namespace DnDBattle.Services.TileService
         public TileDefinition GetTileById(string id)
         {
             return AvailableTiles.FirstOrDefault(t => t.Id == id);
+        }
+
+        /// <summary>
+        /// Finds a tile definition by its image path.
+        /// Used as a fallback when ID lookup fails (e.g., maps saved with non-deterministic IDs).
+        /// </summary>
+        public TileDefinition GetTileByImagePath(string imagePath)
+        {
+            if (string.IsNullOrEmpty(imagePath)) return null;
+            return AvailableTiles.FirstOrDefault(t =>
+                string.Equals(t.ImagePath, imagePath, StringComparison.OrdinalIgnoreCase));
+        }
+
+        /// <summary>
+        /// Generates a deterministic ID from the relative image path so the same
+        /// tile file always receives the same ID across library reloads.
+        /// </summary>
+        private static string GenerateDeterministicId(string relativePath)
+        {
+            var normalized = relativePath.Replace('\\', '/').ToLowerInvariant();
+            using var sha = SHA256.Create();
+            var hash = sha.ComputeHash(Encoding.UTF8.GetBytes(normalized));
+            // Use first 16 bytes to form a GUID-shaped string for compatibility
+            var guid = new Guid(hash.Take(16).ToArray());
+            return guid.ToString();
         }
 
         private string GetRelativePath(string absolutePath)

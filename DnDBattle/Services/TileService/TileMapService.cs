@@ -147,6 +147,7 @@ namespace DnDBattle.Services.TileService
                 {
                     InstanceId = t.InstanceId,
                     TileDefinitionId = t.TileDefinitionId,
+                    ImagePath = TileLibraryService.Instance.GetTileById(t.TileDefinitionId)?.ImagePath,
                     GridX = t.GridX,
                     GridY = t.GridY,
                     Rotation = t.Rotation,
@@ -160,6 +161,12 @@ namespace DnDBattle.Services.TileService
 
         private Models.Tiles.TileMap DtoToMap(TileMapDto dto)
         {
+            // Ensure tile library is loaded so IDs can be resolved
+            if (TileLibraryService.Instance.AvailableTiles.Count == 0)
+            {
+                TileLibraryService.Instance.LoadTileLibrary();
+            }
+
             var map = new Models.Tiles.TileMap
             {
                 Id = dto.Id,
@@ -175,7 +182,7 @@ namespace DnDBattle.Services.TileService
                     dto.Tiles.Select(t => new Tile
                     {
                         InstanceId = t.InstanceId,
-                        TileDefinitionId = t.TileDefinitionId,
+                        TileDefinitionId = ResolveTileDefinitionId(t),
                         GridX = t.GridX,
                         GridY = t.GridY,
                         Rotation = t.Rotation,
@@ -188,6 +195,33 @@ namespace DnDBattle.Services.TileService
             };
 
             return map;
+        }
+
+        /// <summary>
+        /// Resolves the correct TileDefinitionId for a tile DTO.
+        /// First tries the stored ID; if not found, falls back to looking up by ImagePath.
+        /// This handles maps saved before deterministic IDs were introduced.
+        /// </summary>
+        private string ResolveTileDefinitionId(TileDto tileDto)
+        {
+            // Try the stored ID first
+            var tileDef = TileLibraryService.Instance.GetTileById(tileDto.TileDefinitionId);
+            if (tileDef != null)
+                return tileDto.TileDefinitionId;
+
+            // Fallback: resolve by ImagePath if available
+            if (!string.IsNullOrEmpty(tileDto.ImagePath))
+            {
+                var fallback = TileLibraryService.Instance.GetTileByImagePath(tileDto.ImagePath);
+                if (fallback != null)
+                {
+                    Debug.WriteLine($"[TileMapService] Resolved tile by ImagePath fallback: {tileDto.ImagePath} -> {fallback.Id}");
+                    return fallback.Id;
+                }
+            }
+
+            // Return original ID even if unresolved; rendering will handle the null case
+            return tileDto.TileDefinitionId;
         }
 
         /// <summary>
