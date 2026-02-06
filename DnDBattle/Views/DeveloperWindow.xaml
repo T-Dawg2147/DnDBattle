@@ -343,6 +343,81 @@
 
             <Separator Margin="0,12" Background="#FF444466"/>
 
+            <TextBlock Text="⚙️ Undecided Features (Experimental)" FontSize="18" FontWeight="Bold" Foreground="#FFFF8844" Margin="0,12,0,12"/>
+
+            <!-- UD.1 Dynamic Weather & Environment -->
+            <GroupBox Header="🌧️ UD.1 Dynamic Weather &amp; Environment">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableWeatherEffects" Content="Enable Weather Effects (rain, snow, fog, storm)" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <CheckBox x:Name="ChkEnableDayNightCycle" Content="Enable Day/Night Cycle" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Max Weather Particles:" VerticalAlignment="Center" Width="150"/>
+                        <Slider x:Name="SliderWeatherMaxParticles" Minimum="50" Maximum="1000" TickFrequency="50" IsSnapToTickEnabled="True" ValueChanged="OnSliderChanged"/>
+                        <TextBlock x:Name="TxtWeatherMaxParticles" VerticalAlignment="Center" Margin="4,0"/>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- UD.2 2.5D Token Elevation -->
+            <GroupBox Header="🏔️ UD.2 2.5D Elevation System">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableElevationSystem" Content="Enable 2.5D Terrain Elevation Layers" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- UD.3 Animated Tiles -->
+            <GroupBox Header="🎞️ UD.3 Animated Tiles">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableAnimatedTiles" Content="Enable Animated Tiles (water, fire, torch, magic)" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- UD.4 Procedural Map Generation -->
+            <GroupBox Header="🎲 UD.4 Procedural Map Generation">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableProceduralMapGen" Content="Enable Procedural Map Generation (BSP, caves)" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- UD.5 Advanced Token Customization -->
+            <GroupBox Header="🎨 UD.5 Advanced Token Customization">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableTokenCustomization" Content="Enable Token Customization (borders, shapes, name plates)" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- UD.6 Persistent Measurements -->
+            <GroupBox Header="📏 UD.6 Persistent Measurements">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableMeasurements" Content="Enable Persistent Measurement Templates" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- UD.8 3D Dice Roller -->
+            <GroupBox Header="🎲 UD.8 3D Dice Roller">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableDiceRoller3D" Content="Enable 3D Dice Roller" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <CheckBox x:Name="ChkEnableDiceStatistics" Content="Enable Dice Roll Statistics" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- UD.9 Accessibility Suite -->
+            <GroupBox Header="♿ UD.9 Accessibility Suite">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableHighContrast" Content="Enable High Contrast Mode" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <CheckBox x:Name="ChkEnableColorblindMode" Content="Enable Colorblind-Friendly Palettes" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <CheckBox x:Name="ChkEnableDyslexiaFont" Content="Enable Dyslexia-Friendly Font" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <CheckBox x:Name="ChkEnableKeyboardNav" Content="Enable Full Keyboard Navigation" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="UI Scale:" VerticalAlignment="Center" Width="150"/>
+                        <Slider x:Name="SliderUIScale" Minimum="100" Maximum="300" TickFrequency="25" IsSnapToTickEnabled="True" ValueChanged="OnSliderChanged"/>
+                        <TextBlock x:Name="TxtUIScale" VerticalAlignment="Center" Margin="4,0"/>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
+
+            <Separator Margin="0,12" Background="#FF444466"/>
+
             <Button Content="Reset All to Defaults" Click="OnResetDefaults" Background="#FF553333" Foreground="White" Padding="8,4" HorizontalAlignment="Left"/>
 
         </StackPanel>

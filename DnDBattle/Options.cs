@@ -259,5 +259,66 @@ namespace DnDBattle
 
         /// <summary>Show DM-only notes in the map view (true = visible to DM, false = hidden entirely).</summary>
         public static bool ShowDMOnlyNotes { get; set; } = true;
+
+        // ── Undecided Features: 2.5D Elevation System ──
+
+        /// <summary>Enable the 2.5D terrain elevation system (height layers, 3D distance, falling damage).</summary>
+        public static bool EnableElevationSystem { get; set; } = false;
+
+        // ── Dynamic Weather & Environment ──
+
+        /// <summary>Enable dynamic weather particle effects on the map.</summary>
+        public static bool EnableWeatherEffects { get; set; } = false;
+
+        /// <summary>Enable the day/night cycle lighting overlay.</summary>
+        public static bool EnableDayNightCycle { get; set; } = false;
+
+        /// <summary>Maximum weather particles allowed (performance tuning).</summary>
+        public static int WeatherMaxParticles { get; set; } = 300;
+
+        // ── Undecided Features: Animated Tiles ──
+
+        /// <summary>Enable animated tile rendering (water, fire, torch, magic effects).</summary>
+        public static bool EnableAnimatedTiles { get; set; } = false;
+
+        // ── Undecided Features: Procedural Map Generation ──
+
+        /// <summary>Enable procedural map generation (BSP dungeons, cellular automata caves).</summary>
+        public static bool EnableProceduralMapGeneration { get; set; } = false;
+
+        // ── Undecided Features: Advanced Token Customization ──
+
+        /// <summary>Enable advanced token customization (borders, shapes, name plates, overlays).</summary>
+        public static bool EnableTokenCustomization { get; set; } = false;
+
+        // ── Undecided Features: Persistent Measurements ──
+
+        /// <summary>Enable persistent measurement templates on the battle map.</summary>
+        public static bool EnableMeasurements { get; set; } = false;
+
+        // ── Undecided Features: 3D Dice Roller ──
+
+        /// <summary>Enable 3D dice roller with physics simulation.</summary>
+        public static bool EnableDiceRoller3D { get; set; } = false;
+
+        /// <summary>Enable dice roll statistics tracking.</summary>
+        public static bool EnableDiceStatistics { get; set; } = false;
+
+        // ── Undecided Features: Accessibility Suite ──
+
+        /// <summary>Enable high contrast mode for maximum readability.</summary>
+        public static bool EnableHighContrast { get; set; } = false;
+
+        /// <summary>Enable colorblind-friendly color palettes.</summary>
+        public static bool EnableColorblindMode { get; set; } = false;
+
+        /// <summary>UI scale percentage (100 = normal, 150 = 150%, 200 = 200%, up to 300).</summary>
+        public static int AccessibilityUIScale { get; set; } = 100;
+
+        /// <summary>Enable dyslexia-friendly font (OpenDyslexic/Verdana).</summary>
+        public static bool EnableDyslexiaFont { get; set; } = false;
+
+        /// <summary>Enable full keyboard navigation mode.</summary>
+        public static bool EnableKeyboardNavigation { get; set; } = false;
     }
 }
