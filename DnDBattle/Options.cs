@@ -326,5 +326,8 @@ namespace DnDBattle
 
         /// <summary>Timeout in seconds for network connection attempts.</summary>
         public static int NetworkConnectionTimeoutSeconds { get; set; } = 10;
+
+        /// <summary>Enable voice chat integration (Discord) for Phase 9 multiplayer.</summary>
+        public static bool EnableVoiceChat { get; set; } = false;
     }
 }
