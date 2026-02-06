@@ -323,5 +323,8 @@ namespace DnDBattle
 
         /// <summary>Enable multiplayer networking (Phase 9).</summary>
         public static bool EnableNetworking { get; set; } = false;
+
+        /// <summary>Timeout in seconds for network connection attempts.</summary>
+        public static int NetworkConnectionTimeoutSeconds { get; set; } = 10;
     }
 }
