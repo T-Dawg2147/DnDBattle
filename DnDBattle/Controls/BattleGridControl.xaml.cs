@@ -23,6 +23,7 @@ using System.Windows.Media.Imaging;
 
 namespace DnDBattle.Controls
 {
+    //
     /// <summary>
     /// Main BattleGridControl class - provides the battle map canvas for D&D encounters.
     /// This partial class contains core fields, properties, events and initialization.
