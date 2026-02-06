@@ -227,5 +227,37 @@ namespace DnDBattle
 
         /// <summary>Auto-prompt concentration check when a concentrating token takes damage.</summary>
         public static bool AutoPromptConcentrationCheck { get; set; } = true;
+
+        // ── Phase 8: Advanced Map Features ──
+
+        /// <summary>Enable the multi-map management system (map library, quick-switch, map linking).</summary>
+        public static bool EnableMultiMapManagement { get; set; } = true;
+
+        /// <summary>Maximum number of recently used maps shown in the map library.</summary>
+        public static int MapLibraryMaxRecent { get; set; } = 10;
+
+        /// <summary>Enable background image layers on maps.</summary>
+        public static bool EnableBackgroundLayers { get; set; } = true;
+
+        /// <summary>Enable hexagonal grid support (flat-top and pointy-top).</summary>
+        public static bool EnableHexGrid { get; set; } = true;
+
+        /// <summary>Enable gridless (free-form) token placement mode.</summary>
+        public static bool EnableGridlessMode { get; set; } = true;
+
+        /// <summary>Enable custom grid size configuration (feet per square).</summary>
+        public static bool EnableCustomGridSizes { get; set; } = true;
+
+        /// <summary>Default feet per grid square for new maps.</summary>
+        public static int DefaultFeetPerSquare { get; set; } = 5;
+
+        /// <summary>Enable map notes and labels on the grid.</summary>
+        public static bool EnableMapNotes { get; set; } = true;
+
+        /// <summary>Default font size for new map notes.</summary>
+        public static double MapNoteDefaultFontSize { get; set; } = 12;
+
+        /// <summary>Show DM-only notes in the map view (true = visible to DM, false = hidden entirely).</summary>
+        public static bool ShowDMOnlyNotes { get; set; } = true;
     }
 }
