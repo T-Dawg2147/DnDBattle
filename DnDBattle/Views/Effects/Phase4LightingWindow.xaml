@@ -4,11 +4,11 @@
         Title="💡 Phase 4: Lighting &amp; Vision System"
         Width="560" Height="850"
         WindowStartupLocation="CenterOwner"
-        Background="#FF1E1E2E" Foreground="White"
+        Background="{StaticResource Brush_Background_Medium}" Foreground="{StaticResource Brush_Text_Primary}"
         ResizeMode="CanResizeWithGrip">
     <Window.Resources>
         <Style TargetType="CheckBox">
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
             <Setter Property="Margin" Value="0,4"/>
             <Setter Property="FontSize" Value="13"/>
         </Style>
@@ -29,7 +29,7 @@
         </Style>
         <Style x:Key="ActionButton" TargetType="Button">
             <Setter Property="Background" Value="#FF2A2A3E"/>
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
             <Setter Property="Padding" Value="10,5"/>
             <Setter Property="Margin" Value="0,4"/>
             <Setter Property="BorderBrush" Value="#FF444466"/>
@@ -40,8 +40,8 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16">
         <StackPanel>
 
-            <TextBlock Text="💡 Phase 4: Lighting &amp; Vision System" FontSize="18" FontWeight="Bold" Foreground="#FF88AAFF" Margin="0,0,0,12"/>
-            <TextBlock Text="Manage light sources, shadows, vision ranges, and fog reveal." Foreground="#FF888899" Margin="0,0,0,8"/>
+            <TextBlock Text="💡 Phase 4: Lighting &amp; Vision System" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Brush_Info}" Margin="0,0,0,12"/>
+            <TextBlock Text="Manage light sources, shadows, vision ranges, and fog reveal." Foreground="{StaticResource Brush_Text_Hint}" Margin="0,0,0,8"/>
 
             <!-- 4.1 Basic Light Sources -->
             <GroupBox Header="💡 4.1 Basic Light Sources">
@@ -76,7 +76,7 @@
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,4">
                         <TextBlock Text="Label:" VerticalAlignment="Center" Width="110"/>
-                        <TextBox x:Name="TxtLightLabel" Width="180" Background="#FF2A2A3E" Foreground="White" BorderBrush="#FF444466" Padding="4,2" Text=""/>
+                        <TextBox x:Name="TxtLightLabel" Width="180" Background="{StaticResource Brush_Background_Control}" Foreground="{StaticResource Brush_Text_Primary}" BorderBrush="{StaticResource Brush_Border_Normal}" Padding="4,2" Text=""/>
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" Margin="0,8,0,4">
@@ -86,13 +86,13 @@
 
                     <!-- Light list -->
                     <TextBlock Text="Current Lights:" Margin="0,8,0,4" FontWeight="SemiBold"/>
-                    <ListBox x:Name="LightsList" Height="100" Background="#FF1A1A2E" Foreground="White" BorderBrush="#FF444466">
+                    <ListBox x:Name="LightsList" Height="100" Background="{StaticResource Brush_Background_Dark}" Foreground="{StaticResource Brush_Text_Primary}" BorderBrush="{StaticResource Brush_Border_Normal}">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{Binding Label}" Width="160" Foreground="White"/>
-                                    <TextBlock Text="{Binding Type}" Width="80" Foreground="#FF88AAFF"/>
-                                    <TextBlock Text="{Binding Brightness}" Foreground="#FFAAAAAA"/>
+                                    <TextBlock Text="{Binding Label}" Width="160" Foreground="{StaticResource Brush_Text_Primary}"/>
+                                    <TextBlock Text="{Binding Type}" Width="80" Foreground="{StaticResource Brush_Info}"/>
+                                    <TextBlock Text="{Binding Brightness}" Foreground="{StaticResource Brush_Text_Hint}"/>
                                 </StackPanel>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
@@ -127,7 +127,7 @@
                         <Slider x:Name="SliderVisionRange" Minimum="1" Maximum="30" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="OnSliderChanged"/>
                         <TextBlock x:Name="TxtVisionRange" VerticalAlignment="Center" Margin="4,0"/>
                     </StackPanel>
-                    <TextBlock Text="💡 Vision types (Darkvision, Blindsight, Truesight) are auto-parsed from token Senses field." Foreground="#FF888899" TextWrapping="Wrap" FontSize="11" Margin="0,4"/>
+                    <TextBlock Text="💡 Vision types (Darkvision, Blindsight, Truesight) are auto-parsed from token Senses field." Foreground="{StaticResource Brush_Text_Hint}" TextWrapping="Wrap" FontSize="11" Margin="0,4"/>
                 </StackPanel>
             </GroupBox>
 

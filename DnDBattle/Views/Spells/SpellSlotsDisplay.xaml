@@ -4,13 +4,13 @@
              Background="Transparent">
 
     <Border x:Name="MainBorder" 
-            Background="#252526" 
+            Background="{StaticResource Brush_Background_Dark}" 
             CornerRadius="4" 
             Padding="10"
             Visibility="Collapsed">
         <StackPanel>
             <TextBlock Text="✨ Spell Slots" 
-                       Foreground="#BA68C8" 
+                       Foreground="{StaticResource Brush_Accent_Hover}" 
                        FontWeight="Bold" 
                        FontSize="11"
                        Margin="0,0,0,8"/>
@@ -22,8 +22,8 @@
                     Padding="8,4"
                     Margin="0,8,0,0"
                     Click="BtnLongRest_Click"
-                    Background="#3E3E42"
-                    Foreground="White"
+                    Background="{StaticResource Brush_Background_Hover}"
+                    Foreground="{StaticResource Brush_Text_Primary}"
                     BorderThickness="0"
                     HorizontalAlignment="Left"
                     Cursor="Hand"

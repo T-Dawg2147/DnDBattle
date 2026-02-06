@@ -4,11 +4,11 @@
         Title="🗺️ Phase 8: Advanced Map Features"
         Width="640" Height="1060"
         WindowStartupLocation="CenterOwner"
-        Background="#FF1E1E2E" Foreground="White"
+        Background="{StaticResource Brush_Background_Medium}" Foreground="{StaticResource Brush_Text_Primary}"
         ResizeMode="CanResizeWithGrip">
     <Window.Resources>
         <Style TargetType="CheckBox">
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
             <Setter Property="Margin" Value="0,4"/>
             <Setter Property="FontSize" Value="13"/>
         </Style>
@@ -24,7 +24,7 @@
         </Style>
         <Style x:Key="ActionButton" TargetType="Button">
             <Setter Property="Background" Value="#FF2A2A3E"/>
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
             <Setter Property="Padding" Value="10,5"/>
             <Setter Property="Margin" Value="0,4"/>
             <Setter Property="BorderBrush" Value="#FF444466"/>
@@ -45,9 +45,9 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16">
         <StackPanel>
 
-            <TextBlock Text="🗺️ Phase 8: Advanced Map Features" FontSize="18" FontWeight="Bold" Foreground="#FF88AAFF" Margin="0,0,0,4"/>
+            <TextBlock Text="🗺️ Phase 8: Advanced Map Features" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Brush_Info}" Margin="0,0,0,4"/>
             <TextBlock Text="Configure multi-map management, background layers, hex grids, gridless mode, custom grid sizes, and map notes." 
-                       TextWrapping="Wrap" Foreground="#FF999999" Margin="0,0,0,12"/>
+                       TextWrapping="Wrap" Foreground="{StaticResource Brush_Text_Hint}" Margin="0,0,0,12"/>
 
             <!-- 8.1 Multi-Map Management -->
             <GroupBox Header="📚 8.1 Multi-Map Management">
@@ -59,7 +59,7 @@
                         <Slider x:Name="SliderMaxRecent" Minimum="1" Maximum="25" Width="150" 
                                 Value="10" TickFrequency="1" IsSnapToTickEnabled="True"
                                 ValueChanged="SliderMaxRecent_ValueChanged"/>
-                        <TextBlock x:Name="TxtMaxRecent" Text="10" Margin="8,0,0,0" Foreground="#FFFFCC66"/>
+                        <TextBlock x:Name="TxtMaxRecent" Text="10" Margin="8,0,0,0" Foreground="{StaticResource Brush_Warning}"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,4">
                         <Button Content="Add Current Map to Library" Style="{StaticResource ActionButton}" Click="AddMapToLibrary_Click"/>
@@ -67,11 +67,11 @@
                     </StackPanel>
                     <TextBlock Text="Recent Maps:" FontWeight="Bold" Margin="0,8,0,4"/>
                     <ListBox x:Name="LstRecentMaps" Height="100" 
-                             Background="#FF2A2A3E" Foreground="White" BorderBrush="#FF444466"
+                             Background="{StaticResource Brush_Background_Control}" Foreground="{StaticResource Brush_Text_Primary}" BorderBrush="{StaticResource Brush_Border_Normal}"
                              SelectionChanged="LstRecentMaps_SelectionChanged">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding Name}" Foreground="White"/>
+                                <TextBlock Text="{Binding Name}" Foreground="{StaticResource Brush_Text_Primary}"/>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
@@ -90,18 +90,18 @@
                         <Slider x:Name="SliderLayerOpacity" Minimum="0" Maximum="1" Width="150" 
                                 Value="1.0" TickFrequency="0.05" IsSnapToTickEnabled="True"
                                 ValueChanged="SliderLayerOpacity_ValueChanged"/>
-                        <TextBlock x:Name="TxtLayerOpacity" Text="1.0" Margin="8,0,0,0" Foreground="#FFFFCC66"/>
+                        <TextBlock x:Name="TxtLayerOpacity" Text="1.0" Margin="8,0,0,0" Foreground="{StaticResource Brush_Warning}"/>
                     </StackPanel>
                     <TextBlock Text="Layers:" FontWeight="Bold" Margin="0,8,0,4"/>
                     <ListBox x:Name="LstBackgroundLayers" Height="80" 
-                             Background="#FF2A2A3E" Foreground="White" BorderBrush="#FF444466"
+                             Background="{StaticResource Brush_Background_Control}" Foreground="{StaticResource Brush_Text_Primary}" BorderBrush="{StaticResource Brush_Border_Normal}"
                              SelectionChanged="LstBackgroundLayers_SelectionChanged">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{Binding ImagePath}" Foreground="White" MaxWidth="300" TextTrimming="CharacterEllipsis"/>
-                                    <TextBlock Text=" | Opacity: " Foreground="#FF999999"/>
-                                    <TextBlock Text="{Binding Opacity, StringFormat=F2}" Foreground="#FFFFCC66"/>
+                                    <TextBlock Text="{Binding ImagePath}" Foreground="{StaticResource Brush_Text_Primary}" MaxWidth="300" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text=" | Opacity: " Foreground="{StaticResource Brush_Text_Hint}"/>
+                                    <TextBlock Text="{Binding Opacity, StringFormat=F2}" Foreground="{StaticResource Brush_Warning}"/>
                                 </StackPanel>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
@@ -124,7 +124,7 @@
                         </ComboBox>
                     </StackPanel>
                     <TextBlock Text="Hex grids use axial coordinates for movement and distance calculation." 
-                               Foreground="#FF999999" TextWrapping="Wrap" Margin="0,4"/>
+                               Foreground="{StaticResource Brush_Text_Hint}" TextWrapping="Wrap" Margin="0,4"/>
                 </StackPanel>
             </GroupBox>
 
@@ -134,7 +134,7 @@
                     <CheckBox x:Name="ChkEnableGridless" Content="Enable Gridless Mode" 
                               Checked="ChkEnableGridless_Changed" Unchecked="ChkEnableGridless_Changed"/>
                     <TextBlock Text="In gridless mode, tokens are placed at exact pixel positions instead of snapping to grid cells. Useful for theatre-of-the-mind style play with visual reference." 
-                               Foreground="#FF999999" TextWrapping="Wrap" Margin="0,4"/>
+                               Foreground="{StaticResource Brush_Text_Hint}" TextWrapping="Wrap" Margin="0,4"/>
                 </StackPanel>
             </GroupBox>
 
@@ -148,10 +148,10 @@
                         <Slider x:Name="SliderFeetPerSquare" Minimum="5" Maximum="100" Width="150" 
                                 Value="5" TickFrequency="5" IsSnapToTickEnabled="True"
                                 ValueChanged="SliderFeetPerSquare_ValueChanged"/>
-                        <TextBlock x:Name="TxtFeetPerSquare" Text="5 ft" Margin="8,0,0,0" Foreground="#FFFFCC66"/>
+                        <TextBlock x:Name="TxtFeetPerSquare" Text="5 ft" Margin="8,0,0,0" Foreground="{StaticResource Brush_Warning}"/>
                     </StackPanel>
                     <TextBlock Text="Changing the scale adjusts movement distances and area effect sizes. Standard D&amp;D uses 5 ft per square." 
-                               Foreground="#FF999999" TextWrapping="Wrap" Margin="0,4"/>
+                               Foreground="{StaticResource Brush_Text_Hint}" TextWrapping="Wrap" Margin="0,4"/>
                 </StackPanel>
             </GroupBox>
 
@@ -167,7 +167,7 @@
                         <Slider x:Name="SliderNoteFontSize" Minimum="8" Maximum="36" Width="150" 
                                 Value="12" TickFrequency="1" IsSnapToTickEnabled="True"
                                 ValueChanged="SliderNoteFontSize_ValueChanged"/>
-                        <TextBlock x:Name="TxtNoteFontSize" Text="12" Margin="8,0,0,0" Foreground="#FFFFCC66"/>
+                        <TextBlock x:Name="TxtNoteFontSize" Text="12" Margin="8,0,0,0" Foreground="{StaticResource Brush_Warning}"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,4">
                         <TextBlock Text="Category:" Style="{StaticResource FieldLabel}"/>
@@ -183,18 +183,18 @@
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,4">
                         <TextBlock Text="Note Text:" Style="{StaticResource FieldLabel}"/>
-                        <TextBox x:Name="TxtNoteText" Width="300" Background="#FF2A2A3E" Foreground="White" 
-                                 BorderBrush="#FF444466" Padding="4,2"/>
+                        <TextBox x:Name="TxtNoteText" Width="300" Background="{StaticResource Brush_Background_Control}" Foreground="{StaticResource Brush_Text_Primary}" 
+                                 BorderBrush="{StaticResource Brush_Border_Normal}" Padding="4,2"/>
                     </StackPanel>
                     <Button Content="Add Note to Map Center" Style="{StaticResource ActionButton}" Click="AddNote_Click"/>
                     <TextBlock Text="Map Notes:" FontWeight="Bold" Margin="0,8,0,4"/>
                     <ListBox x:Name="LstMapNotes" Height="120" 
-                             Background="#FF2A2A3E" Foreground="White" BorderBrush="#FF444466">
+                             Background="{StaticResource Brush_Background_Control}" Foreground="{StaticResource Brush_Text_Primary}" BorderBrush="{StaticResource Brush_Border_Normal}">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{Binding Category}" Foreground="#FF88AAFF" Width="60"/>
-                                    <TextBlock Text="{Binding Text}" Foreground="White" MaxWidth="350" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{Binding Category}" Foreground="{StaticResource Brush_Info}" Width="60"/>
+                                    <TextBlock Text="{Binding Text}" Foreground="{StaticResource Brush_Text_Primary}" MaxWidth="350" TextTrimming="CharacterEllipsis"/>
                                 </StackPanel>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
@@ -206,7 +206,7 @@
             <!-- Action Log -->
             <GroupBox Header="📋 Action Log">
                 <ListBox x:Name="LstActionLog" Height="100" 
-                         Background="#FF2A2A3E" Foreground="#FFCCCCDD" BorderBrush="#FF444466"/>
+                         Background="{StaticResource Brush_Background_Control}" Foreground="{StaticResource Brush_Text_Secondary}" BorderBrush="{StaticResource Brush_Border_Normal}"/>
             </GroupBox>
 
         </StackPanel>

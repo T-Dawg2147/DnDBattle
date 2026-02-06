@@ -1,13 +1,13 @@
 ﻿<UserControl x:Class="DnDBattle.Views.Effects.AreaEffectToolbar"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             Background="#2D2D30"
+             Background="{StaticResource Brush_Background_Control}"
              Height="40">
 
     <UserControl.Resources>
         <Style x:Key="ToolbarButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="10,5"/>
             <Setter Property="Margin" Value="2,0"/>
@@ -22,10 +22,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#3E3E42"/>
+                                <Setter Property="Background" Value="{StaticResource Brush_Background_Hover}"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" Value="#4E4E52"/>
+                                <Setter Property="Background" Value="{StaticResource Brush_Background_Hover}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -35,7 +35,7 @@
 
         <Style x:Key="ToolbarToggleStyle" TargetType="ToggleButton">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="10,5"/>
             <Setter Property="Margin" Value="2,0"/>
@@ -51,10 +51,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#3E3E42"/>
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource Brush_Background_Hover}"/>
                             </Trigger>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#4CAF50"/>
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource Brush_Success}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -66,7 +66,7 @@
     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0">
 
         <!-- Shape Buttons -->
-        <TextBlock Text="AoE:" Foreground="#888" VerticalAlignment="Center" Margin="0,0,8,0" FontSize="11"/>
+        <TextBlock Text="AoE:" Foreground="{StaticResource Brush_Text_Hint}" VerticalAlignment="Center" Margin="0,0,8,0" FontSize="11"/>
 
         <ToggleButton x:Name="BtnSphere" 
                       Style="{StaticResource ToolbarToggleStyle}"
@@ -74,7 +74,7 @@
                       Click="ShapeButton_Click"
                       Tag="Sphere">
             <StackPanel Orientation="Horizontal">
-                <Ellipse Width="14" Height="14" Stroke="White" StrokeThickness="2" Fill="Transparent"/>
+                <Ellipse Width="14" Height="14" Stroke="{StaticResource Brush_Text_Primary}" StrokeThickness="2" Fill="Transparent"/>
                 <TextBlock Text=" Sphere" FontSize="11" VerticalAlignment="Center"/>
             </StackPanel>
         </ToggleButton>
@@ -85,7 +85,7 @@
                       Click="ShapeButton_Click"
                       Tag="Cube">
             <StackPanel Orientation="Horizontal">
-                <Rectangle Width="14" Height="14" Stroke="White" StrokeThickness="2" Fill="Transparent"/>
+                <Rectangle Width="14" Height="14" Stroke="{StaticResource Brush_Text_Primary}" StrokeThickness="2" Fill="Transparent"/>
                 <TextBlock Text=" Cube" FontSize="11" VerticalAlignment="Center"/>
             </StackPanel>
         </ToggleButton>
@@ -96,7 +96,7 @@
                       Click="ShapeButton_Click"
                       Tag="Cone">
             <StackPanel Orientation="Horizontal">
-                <Polygon Points="0,14 7,0 14,14" Stroke="White" StrokeThickness="2" Fill="Transparent"/>
+                <Polygon Points="0,14 7,0 14,14" Stroke="{StaticResource Brush_Text_Primary}" StrokeThickness="2" Fill="Transparent"/>
                 <TextBlock Text=" Cone" FontSize="11" VerticalAlignment="Center"/>
             </StackPanel>
         </ToggleButton>
@@ -107,15 +107,15 @@
                       Click="ShapeButton_Click"
                       Tag="Line">
             <StackPanel Orientation="Horizontal">
-                <Rectangle Width="20" Height="6" Stroke="White" StrokeThickness="2" Fill="Transparent" VerticalAlignment="Center"/>
+                <Rectangle Width="20" Height="6" Stroke="{StaticResource Brush_Text_Primary}" StrokeThickness="2" Fill="Transparent" VerticalAlignment="Center"/>
                 <TextBlock Text=" Line" FontSize="11" VerticalAlignment="Center"/>
             </StackPanel>
         </ToggleButton>
 
-        <Rectangle Width="1" Fill="#444" Margin="10,5"/>
+        <Rectangle Width="1" Fill="{StaticResource Brush_Border_Normal}" Margin="10,5"/>
 
         <!-- Size Input -->
-        <TextBlock Text="Size:" Foreground="#888" VerticalAlignment="Center" Margin="0,0,5,0" FontSize="11"/>
+        <TextBlock Text="Size:" Foreground="{StaticResource Brush_Text_Hint}" VerticalAlignment="Center" Margin="0,0,5,0" FontSize="11"/>
         <ComboBox x:Name="CmbSize" 
                   Width="70"
                   SelectedIndex="3"
@@ -131,10 +131,10 @@
             <ComboBoxItem Content="120 ft"/>
         </ComboBox>
 
-        <Rectangle Width="1" Fill="#444" Margin="10,5"/>
+        <Rectangle Width="1" Fill="{StaticResource Brush_Border_Normal}" Margin="10,5"/>
 
         <!-- Color Picker -->
-        <TextBlock Text="Color:" Foreground="#888" VerticalAlignment="Center" Margin="0,0,5,0" FontSize="11"/>
+        <TextBlock Text="Color:" Foreground="{StaticResource Brush_Text_Hint}" VerticalAlignment="Center" Margin="0,0,5,0" FontSize="11"/>
         <ComboBox x:Name="CmbColor" 
                   Width="90" 
                   SelectedIndex="0"
@@ -142,42 +142,42 @@
             <ComboBoxItem>
                 <StackPanel Orientation="Horizontal">
                     <Rectangle Width="14" Height="14" Fill="#FF4500" Margin="0,0,5,0"/>
-                    <TextBlock Text="Fire" Foreground="White"/>
+                    <TextBlock Text="Fire" Foreground="{StaticResource Brush_Text_Primary}"/>
                 </StackPanel>
             </ComboBoxItem>
             <ComboBoxItem>
                 <StackPanel Orientation="Horizontal">
                     <Rectangle Width="14" Height="14" Fill="#87CEEB" Margin="0,0,5,0"/>
-                    <TextBlock Text="Ice" Foreground="White"/>
+                    <TextBlock Text="Ice" Foreground="{StaticResource Brush_Text_Primary}"/>
                 </StackPanel>
             </ComboBoxItem>
             <ComboBoxItem>
                 <StackPanel Orientation="Horizontal">
                     <Rectangle Width="14" Height="14" Fill="#9370DB" Margin="0,0,5,0"/>
-                    <TextBlock Text="Arcane" Foreground="White"/>
+                    <TextBlock Text="Arcane" Foreground="{StaticResource Brush_Text_Primary}"/>
                 </StackPanel>
             </ComboBoxItem>
             <ComboBoxItem>
                 <StackPanel Orientation="Horizontal">
                     <Rectangle Width="14" Height="14" Fill="#32CD32" Margin="0,0,5,0"/>
-                    <TextBlock Text="Nature" Foreground="White"/>
+                    <TextBlock Text="Nature" Foreground="{StaticResource Brush_Text_Primary}"/>
                 </StackPanel>
             </ComboBoxItem>
             <ComboBoxItem>
                 <StackPanel Orientation="Horizontal">
                     <Rectangle Width="14" Height="14" Fill="#FFD700" Margin="0,0,5,0"/>
-                    <TextBlock Text="Holy" Foreground="White"/>
+                    <TextBlock Text="Holy" Foreground="{StaticResource Brush_Text_Primary}"/>
                 </StackPanel>
             </ComboBoxItem>
             <ComboBoxItem>
                 <StackPanel Orientation="Horizontal">
                     <Rectangle Width="14" Height="14" Fill="#2F4F4F" Margin="0,0,5,0"/>
-                    <TextBlock Text="Shadow" Foreground="White"/>
+                    <TextBlock Text="Shadow" Foreground="{StaticResource Brush_Text_Primary}"/>
                 </StackPanel>
             </ComboBoxItem>
         </ComboBox>
 
-        <Rectangle Width="1" Fill="#444" Margin="10,5"/>
+        <Rectangle Width="1" Fill="{StaticResource Brush_Border_Normal}" Margin="10,5"/>
 
         <!-- Presets -->
         <Button x:Name="BtnPresets"

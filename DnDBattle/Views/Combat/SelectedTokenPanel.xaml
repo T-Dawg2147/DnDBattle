@@ -6,7 +6,7 @@
              xmlns:local="clr-namespace:DnDBattle.Views.Combat"
              mc:Ignorable="d" 
              d:DesignWidth="320"
-             Background="#1E1E1E"
+             Background="{StaticResource Brush_Background_Medium}"
              HorizontalAlignment="Stretch"
              VerticalAlignment="Stretch">
 
@@ -15,7 +15,7 @@
 
         <!-- Stat Box Style -->
         <Style x:Key="StatBoxStyle" TargetType="Border">
-            <Setter Property="Background" Value="#2D2D30"/>
+            <Setter Property="Background" Value="{StaticResource Brush_Background_Control}"/>
             <Setter Property="CornerRadius" Value="4"/>
             <Setter Property="Padding" Value="6,4"/>
             <Setter Property="Margin" Value="2"/>
@@ -23,7 +23,7 @@
 
         <!-- Section Header Style -->
         <Style x:Key="SectionHeaderStyle" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#4FC3F7"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Info}"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="FontSize" Value="10"/>
             <Setter Property="Margin" Value="0,12,0,6"/>
@@ -31,8 +31,8 @@
 
         <!-- Action Button Style -->
         <Style x:Key="ActionButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="#3E3E42"/>
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Background" Value="{StaticResource Brush_Background_Hover}"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="10,6"/>
             <Setter Property="Margin" Value="0,0,0,4"/>
@@ -50,10 +50,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#4E4E52"/>
+                                <Setter Property="Background" Value="{StaticResource Brush_Background_Hover}"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" Value="#5E5E62"/>
+                                <Setter Property="Background" Value="{StaticResource Brush_Background_Hover}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -72,7 +72,7 @@
         <!-- No Token Selected Message -->
         <TextBlock x:Name="NoSelectionMessage"
                    Text="Select a token on the map"
-                   Foreground="#666"
+                   Foreground="{StaticResource Brush_Text_Disabled}"
                    FontSize="12"
                    HorizontalAlignment="Center"
                    VerticalAlignment="Center"
@@ -87,7 +87,7 @@
 
                 <!-- Targeting Mode Indicator -->
                 <Border x:Name="TargetingIndicator" 
-                        Background="#1B5E20" 
+                        Background="{StaticResource Brush_Success}" 
                         CornerRadius="4" 
                         Padding="10,8" 
                         Margin="0,0,0,10"
@@ -100,11 +100,11 @@
 
                         <StackPanel Grid.Column="0">
                             <TextBlock x:Name="TxtTargetingAction" 
-                                       Foreground="White" 
+                                       Foreground="{StaticResource Brush_Text_Primary}" 
                                        FontWeight="Bold" 
                                        FontSize="12"/>
                             <TextBlock Text="Click a target on the map" 
-                                       Foreground="#A5D6A7" 
+                                       Foreground="{StaticResource Brush_Success}" 
                                        FontSize="10"/>
                         </StackPanel>
 
@@ -112,8 +112,8 @@
                                 Content="✕ Cancel" 
                                 Padding="8,4"
                                 Click="BtnCancelTargeting_Click"
-                                Background="#C62828"
-                                Foreground="White"
+                                Background="{StaticResource Brush_Error}"
+                                Foreground="{StaticResource Brush_Text_Primary}"
                                 BorderThickness="0"
                                 Cursor="Hand"/>
                     </Grid>
@@ -130,11 +130,11 @@
                         <TextBlock x:Name="TxtTokenName" 
                                    FontSize="18" 
                                    FontWeight="Bold" 
-                                   Foreground="White"
+                                   Foreground="{StaticResource Brush_Text_Primary}"
                                    TextWrapping="Wrap"/>
                         <TextBlock x:Name="TxtTokenSubtitle" 
                                    FontSize="10" 
-                                   Foreground="#888" 
+                                   Foreground="{StaticResource Brush_Text_Hint}" 
                                    FontStyle="Italic"/>
                     </StackPanel>
 
@@ -142,7 +142,7 @@
                     <Border Grid.Column="1" 
                             Width="40" Height="40" 
                             CornerRadius="4" 
-                            Background="#2D2D30"
+                            Background="{StaticResource Brush_Background_Control}"
                             Margin="8,0,0,0">
                         <Image x:Name="ImgToken" 
                                Stretch="UniformToFill"
@@ -152,7 +152,7 @@
 
                 <!-- Conditions Bar -->
                 <Border x:Name="ConditionsBar" 
-                        Background="#3E3220" 
+                        Background="{StaticResource Brush_Background_Control}" 
                         CornerRadius="4" 
                         Padding="8,6" 
                         Margin="0,0,0,8"
@@ -160,7 +160,7 @@
                     <StackPanel>
                         <TextBlock Text="Active Conditions" 
                                    FontSize="9" 
-                                   Foreground="#888" 
+                                   Foreground="{StaticResource Brush_Text_Hint}" 
                                    Margin="0,0,0,4"/>
                         <WrapPanel x:Name="ConditionIconsPanel"/>
                     </StackPanel>
@@ -168,7 +168,7 @@
 
                 <!-- Concentration Indicator -->
                 <Border x:Name="ConcentrationBar" 
-                        Background="#1565C0" 
+                        Background="{StaticResource Brush_Accent_Primary}" 
                         CornerRadius="4" 
                         Padding="8,6" 
                         Margin="0,0,0,8"
@@ -182,10 +182,10 @@
                         <StackPanel>
                             <TextBlock Text="🎯 Concentrating" 
                                        FontSize="10" 
-                                       Foreground="#90CAF9"/>
+                                       Foreground="{StaticResource Brush_Info}"/>
                             <TextBlock x:Name="TxtConcentrationSpell" 
                                        FontSize="12" 
-                                       Foreground="White"
+                                       Foreground="{StaticResource Brush_Text_Primary}"
                                        FontWeight="SemiBold"/>
                         </StackPanel>
 
@@ -194,8 +194,8 @@
                                 Width="24" Height="24"
                                 ToolTip="Break Concentration"
                                 Click="BtnBreakConcentration_Click"
-                                Background="#C62828"
-                                Foreground="White"
+                                Background="{StaticResource Brush_Error}"
+                                Foreground="{StaticResource Brush_Text_Primary}"
                                 BorderThickness="0"
                                 FontWeight="Bold"/>
                     </Grid>
@@ -203,7 +203,7 @@
 
                 <!-- Death Saves Panel -->
                 <Border x:Name="DeathSavesPanel" 
-                        Background="#37474F" 
+                        Background="{StaticResource Brush_Background_Control}" 
                         CornerRadius="4" 
                         Padding="10,8" 
                         Margin="0,0,0,8"
@@ -211,7 +211,7 @@
                     <StackPanel>
                         <TextBlock Text="💀 Death Saving Throws" 
                                    FontSize="10" 
-                                   Foreground="#B0BEC5"
+                                   Foreground="{StaticResource Brush_Text_Secondary}"
                                    Margin="0,0,0,8"/>
 
                         <Grid>
@@ -222,21 +222,21 @@
 
                             <!-- Successes -->
                             <StackPanel HorizontalAlignment="Center">
-                                <TextBlock Text="Successes" Foreground="#81C784" FontSize="9" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Successes" Foreground="{StaticResource Brush_Success}" FontSize="9" HorizontalAlignment="Center"/>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,0">
-                                    <Ellipse x:Name="DeathSuccess1" Width="16" Height="16" Stroke="#4CAF50" StrokeThickness="2" Margin="2"/>
-                                    <Ellipse x:Name="DeathSuccess2" Width="16" Height="16" Stroke="#4CAF50" StrokeThickness="2" Margin="2"/>
-                                    <Ellipse x:Name="DeathSuccess3" Width="16" Height="16" Stroke="#4CAF50" StrokeThickness="2" Margin="2"/>
+                                    <Ellipse x:Name="DeathSuccess1" Width="16" Height="16" Stroke="{StaticResource Brush_Success}" StrokeThickness="2" Margin="2"/>
+                                    <Ellipse x:Name="DeathSuccess2" Width="16" Height="16" Stroke="{StaticResource Brush_Success}" StrokeThickness="2" Margin="2"/>
+                                    <Ellipse x:Name="DeathSuccess3" Width="16" Height="16" Stroke="{StaticResource Brush_Success}" StrokeThickness="2" Margin="2"/>
                                 </StackPanel>
                             </StackPanel>
 
                             <!-- Failures -->
                             <StackPanel Grid.Column="1" HorizontalAlignment="Center">
-                                <TextBlock Text="Failures" Foreground="#E57373" FontSize="9" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Failures" Foreground="{StaticResource Brush_Error}" FontSize="9" HorizontalAlignment="Center"/>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,0">
-                                    <Ellipse x:Name="DeathFailure1" Width="16" Height="16" Stroke="#F44336" StrokeThickness="2" Margin="2"/>
-                                    <Ellipse x:Name="DeathFailure2" Width="16" Height="16" Stroke="#F44336" StrokeThickness="2" Margin="2"/>
-                                    <Ellipse x:Name="DeathFailure3" Width="16" Height="16" Stroke="#F44336" StrokeThickness="2" Margin="2"/>
+                                    <Ellipse x:Name="DeathFailure1" Width="16" Height="16" Stroke="{StaticResource Brush_Error}" StrokeThickness="2" Margin="2"/>
+                                    <Ellipse x:Name="DeathFailure2" Width="16" Height="16" Stroke="{StaticResource Brush_Error}" StrokeThickness="2" Margin="2"/>
+                                    <Ellipse x:Name="DeathFailure3" Width="16" Height="16" Stroke="{StaticResource Brush_Error}" StrokeThickness="2" Margin="2"/>
                                 </StackPanel>
                             </StackPanel>
                         </Grid>
@@ -253,8 +253,8 @@
                                 Margin="0,8,0,0"
                                 Padding="10,6"
                                 Click="BtnRollDeathSave_Click"
-                                Background="#455A64"
-                                Foreground="White"
+                                Background="{StaticResource Brush_Background_Hover}"
+                                Foreground="{StaticResource Brush_Text_Primary}"
                                 BorderThickness="0"
                                 HorizontalAlignment="Center"/>
                     </StackPanel>
@@ -262,7 +262,7 @@
 
                 <!-- HP Section -->
                 <TextBlock Text="Hit Points" Style="{StaticResource SectionHeaderStyle}" Margin="0,4,0,6"/>
-                <Border Background="#252526" CornerRadius="4" Padding="10,8">
+                <Border Background="{StaticResource Brush_Background_Dark}" CornerRadius="4" Padding="10,8">
                     <StackPanel>
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -274,15 +274,15 @@
                                 <TextBlock x:Name="TxtCurrentHP" 
                                            FontSize="22" 
                                            FontWeight="Bold" 
-                                           Foreground="#4CAF50"/>
+                                           Foreground="{StaticResource Brush_Success}"/>
                                 <TextBlock Text=" / " 
                                            FontSize="14" 
-                                           Foreground="#666" 
+                                           Foreground="{StaticResource Brush_Text_Disabled}" 
                                            VerticalAlignment="Bottom" 
                                            Margin="0,0,0,3"/>
                                 <TextBlock x:Name="TxtMaxHP" 
                                            FontSize="14" 
-                                           Foreground="#888" 
+                                           Foreground="{StaticResource Brush_Text_Hint}" 
                                            VerticalAlignment="Bottom" 
                                            Margin="0,0,0,3"/>
                             </StackPanel>
@@ -304,9 +304,9 @@
 
                         <!-- HP Bar -->
                         <Grid Height="6" Margin="0,8,0,0">
-                            <Border Background="#1E1E1E" CornerRadius="3"/>
+                            <Border Background="{StaticResource Brush_Background_Medium}" CornerRadius="3"/>
                             <Border x:Name="HPBarFill" 
-                                    Background="#4CAF50" 
+                                    Background="{StaticResource Brush_Success}" 
                                     CornerRadius="3" 
                                     HorizontalAlignment="Left"/>
                         </Grid>
@@ -316,8 +316,8 @@
                                     Orientation="Horizontal" 
                                     Margin="0,6,0,0"
                                     Visibility="Collapsed">
-                            <TextBlock Text="Temp HP: " Foreground="#888" FontSize="10"/>
-                            <TextBlock x:Name="TxtTempHP" Foreground="#64B5F6" FontSize="10" FontWeight="Bold"/>
+                            <TextBlock Text="Temp HP: " Foreground="{StaticResource Brush_Text_Hint}" FontSize="10"/>
+                            <TextBlock x:Name="TxtTempHP" Foreground="{StaticResource Brush_Info}" FontSize="10" FontWeight="Bold"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>
@@ -327,76 +327,76 @@
                 <UniformGrid Columns="3">
                     <Border Style="{StaticResource StatBoxStyle}">
                         <StackPanel HorizontalAlignment="Center">
-                            <TextBlock Text="AC" Foreground="#888" FontSize="9" HorizontalAlignment="Center"/>
-                            <TextBlock x:Name="TxtAC" Foreground="#4FC3F7" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center"/>
+                            <TextBlock Text="AC" Foreground="{StaticResource Brush_Text_Hint}" FontSize="9" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="TxtAC" Foreground="{StaticResource Brush_Info}" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center"/>
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource StatBoxStyle}">
                         <StackPanel HorizontalAlignment="Center">
-                            <TextBlock Text="Initiative" Foreground="#888" FontSize="9" HorizontalAlignment="Center"/>
-                            <TextBlock x:Name="TxtInitiative" Foreground="#BA68C8" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Initiative" Foreground="{StaticResource Brush_Text_Hint}" FontSize="9" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="TxtInitiative" Foreground="{StaticResource Brush_Accent_Hover}" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center"/>
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource StatBoxStyle}">
                         <StackPanel HorizontalAlignment="Center">
-                            <TextBlock Text="CR" Foreground="#888" FontSize="9" HorizontalAlignment="Center"/>
-                            <TextBlock x:Name="TxtCR" Foreground="#FFB74D" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center"/>
+                            <TextBlock Text="CR" Foreground="{StaticResource Brush_Text_Hint}" FontSize="9" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="TxtCR" Foreground="{StaticResource Brush_Warning}" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center"/>
                         </StackPanel>
                     </Border>
                 </UniformGrid>
 
                 <!-- Ability Scores -->
                 <TextBlock Text="Ability Scores" Style="{StaticResource SectionHeaderStyle}"/>
-                <Border Background="#252526" CornerRadius="4" Padding="8">
+                <Border Background="{StaticResource Brush_Background_Dark}" CornerRadius="4" Padding="8">
                     <UniformGrid Columns="6">
                         <StackPanel HorizontalAlignment="Center" Margin="1">
-                            <TextBlock Text="STR" Foreground="#888" FontSize="8" HorizontalAlignment="Center"/>
-                            <TextBlock x:Name="TxtStr" Foreground="White" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center"/>
-                            <TextBlock x:Name="TxtStrMod" Foreground="#888" FontSize="9" HorizontalAlignment="Center"/>
+                            <TextBlock Text="STR" Foreground="{StaticResource Brush_Text_Hint}" FontSize="8" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="TxtStr" Foreground="{StaticResource Brush_Text_Primary}" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="TxtStrMod" Foreground="{StaticResource Brush_Text_Hint}" FontSize="9" HorizontalAlignment="Center"/>
                         </StackPanel>
                         <StackPanel HorizontalAlignment="Center" Margin="1">
-                            <TextBlock Text="DEX" Foreground="#888" FontSize="8" HorizontalAlignment="Center"/>
-                            <TextBlock x:Name="TxtDex" Foreground="White" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center"/>
-                            <TextBlock x:Name="TxtDexMod" Foreground="#888" FontSize="9" HorizontalAlignment="Center"/>
+                            <TextBlock Text="DEX" Foreground="{StaticResource Brush_Text_Hint}" FontSize="8" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="TxtDex" Foreground="{StaticResource Brush_Text_Primary}" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="TxtDexMod" Foreground="{StaticResource Brush_Text_Hint}" FontSize="9" HorizontalAlignment="Center"/>
                         </StackPanel>
                         <StackPanel HorizontalAlignment="Center" Margin="1">
-                            <TextBlock Text="CON" Foreground="#888" FontSize="8" HorizontalAlignment="Center"/>
-                            <TextBlock x:Name="TxtCon" Foreground="White" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center"/>
-                            <TextBlock x:Name="TxtConMod" Foreground="#888" FontSize="9" HorizontalAlignment="Center"/>
+                            <TextBlock Text="CON" Foreground="{StaticResource Brush_Text_Hint}" FontSize="8" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="TxtCon" Foreground="{StaticResource Brush_Text_Primary}" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="TxtConMod" Foreground="{StaticResource Brush_Text_Hint}" FontSize="9" HorizontalAlignment="Center"/>
                         </StackPanel>
                         <StackPanel HorizontalAlignment="Center" Margin="1">
-                            <TextBlock Text="INT" Foreground="#888" FontSize="8" HorizontalAlignment="Center"/>
-                            <TextBlock x:Name="TxtInt" Foreground="White" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center"/>
-                            <TextBlock x:Name="TxtIntMod" Foreground="#888" FontSize="9" HorizontalAlignment="Center"/>
+                            <TextBlock Text="INT" Foreground="{StaticResource Brush_Text_Hint}" FontSize="8" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="TxtInt" Foreground="{StaticResource Brush_Text_Primary}" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="TxtIntMod" Foreground="{StaticResource Brush_Text_Hint}" FontSize="9" HorizontalAlignment="Center"/>
                         </StackPanel>
                         <StackPanel HorizontalAlignment="Center" Margin="1">
-                            <TextBlock Text="WIS" Foreground="#888" FontSize="8" HorizontalAlignment="Center"/>
-                            <TextBlock x:Name="TxtWis" Foreground="White" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center"/>
-                            <TextBlock x:Name="TxtWisMod" Foreground="#888" FontSize="9" HorizontalAlignment="Center"/>
+                            <TextBlock Text="WIS" Foreground="{StaticResource Brush_Text_Hint}" FontSize="8" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="TxtWis" Foreground="{StaticResource Brush_Text_Primary}" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="TxtWisMod" Foreground="{StaticResource Brush_Text_Hint}" FontSize="9" HorizontalAlignment="Center"/>
                         </StackPanel>
                         <StackPanel HorizontalAlignment="Center" Margin="1">
-                            <TextBlock Text="CHA" Foreground="#888" FontSize="8" HorizontalAlignment="Center"/>
-                            <TextBlock x:Name="TxtCha" Foreground="White" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center"/>
-                            <TextBlock x:Name="TxtChaMod" Foreground="#888" FontSize="9" HorizontalAlignment="Center"/>
+                            <TextBlock Text="CHA" Foreground="{StaticResource Brush_Text_Hint}" FontSize="8" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="TxtCha" Foreground="{StaticResource Brush_Text_Primary}" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="TxtChaMod" Foreground="{StaticResource Brush_Text_Hint}" FontSize="9" HorizontalAlignment="Center"/>
                         </StackPanel>
                     </UniformGrid>
                 </Border>
 
                 <!-- Speed -->
                 <TextBlock Text="Speed" Style="{StaticResource SectionHeaderStyle}"/>
-                <TextBlock x:Name="TxtSpeed" Foreground="#CCC" FontSize="11" TextWrapping="Wrap"/>
+                <TextBlock x:Name="TxtSpeed" Foreground="{StaticResource Brush_Text_Secondary}" FontSize="11" TextWrapping="Wrap"/>
 
                 <!-- Movement (During Combat) -->
                 <StackPanel x:Name="MovementSection" Visibility="Collapsed">
                     <TextBlock Text="Movement This Turn" Style="{StaticResource SectionHeaderStyle}"/>
-                    <Border Background="#252526" CornerRadius="4" Padding="8">
+                    <Border Background="{StaticResource Brush_Background_Dark}" CornerRadius="4" Padding="8">
                         <StackPanel>
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="TxtMovementRemaining" Foreground="#64B5F6" FontSize="11"/>
+                                <TextBlock x:Name="TxtMovementRemaining" Foreground="{StaticResource Brush_Info}" FontSize="11"/>
                                 <Button Grid.Column="1" 
                                         Content="Reset" 
                                         FontSize="9" 
@@ -405,9 +405,9 @@
                                         Style="{StaticResource QuickActionButtonStyle}"/>
                             </Grid>
                             <Grid Height="5" Margin="0,6,0,0">
-                                <Border Background="#1E1E1E" CornerRadius="2"/>
+                                <Border Background="{StaticResource Brush_Background_Medium}" CornerRadius="2"/>
                                 <Border x:Name="MovementBarFill" 
-                                        Background="#64B5F6" 
+                                        Background="{StaticResource Brush_Info}" 
                                         CornerRadius="2" 
                                         HorizontalAlignment="Left"/>
                             </Grid>
@@ -417,14 +417,14 @@
 
                 <!-- Legendary Actions Display -->
                 <Border x:Name="LegendaryActionsPanel" 
-                        Background="#252526" 
+                        Background="{StaticResource Brush_Background_Dark}" 
                         CornerRadius="4" 
                         Padding="10"
                         Margin="0,8,0,0"
                         Visibility="Collapsed">
                     <StackPanel>
                         <TextBlock Text="⭐ Legendary Actions" 
-                                   Foreground="#FFD700" 
+                                   Foreground="{StaticResource Brush_Warning}" 
                                    FontWeight="Bold" 
                                    FontSize="11"
                                    Margin="0,0,0,8"/>
@@ -436,7 +436,7 @@
 
                         <TextBlock x:Name="TxtLegendaryRemaining" 
                                    HorizontalAlignment="Center"
-                                   Foreground="#888"
+                                   Foreground="{StaticResource Brush_Text_Hint}"
                                    FontSize="10"/>
 
                         <Button x:Name="BtnResetLegendary"
@@ -444,8 +444,8 @@
                                 Padding="8,4"
                                 Margin="0,8,0,0"
                                 Click="BtnResetLegendary_Click"
-                                Background="#3E3E42"
-                                Foreground="White"
+                                Background="{StaticResource Brush_Background_Hover}"
+                                Foreground="{StaticResource Brush_Text_Primary}"
                                 BorderThickness="0"
                                 HorizontalAlignment="Center"
                                 Cursor="Hand"
@@ -455,14 +455,14 @@
 
                 <!-- Spell Slots Display -->
                 <Border x:Name="SpellSlotsPanel" 
-                        Background="#252526" 
+                        Background="{StaticResource Brush_Background_Dark}" 
                         CornerRadius="4" 
                         Padding="10"
                         Margin="0,8,0,0"
                         Visibility="Collapsed">
                     <StackPanel>
                         <TextBlock Text="✨ Spell Slots" 
-                                   Foreground="#BA68C8" 
+                                   Foreground="{StaticResource Brush_Accent_Hover}" 
                                    FontWeight="Bold" 
                                    FontSize="11"
                                    Margin="0,0,0,8"/>
@@ -473,8 +473,8 @@
                                 Padding="8,4"
                                 Margin="0,8,0,0"
                                 Click="BtnLongRest_Click"
-                                Background="#3E3E42"
-                                Foreground="White"
+                                Background="{StaticResource Brush_Background_Hover}"
+                                Foreground="{StaticResource Brush_Text_Primary}"
                                 BorderThickness="0"
                                 HorizontalAlignment="Left"
                                 Cursor="Hand"/>
@@ -483,7 +483,7 @@
 
                 <!-- Token Notes -->
                 <Border x:Name="NotesPanel" 
-                        Background="#252526" 
+                        Background="{StaticResource Brush_Background_Dark}" 
                         CornerRadius="4" 
                         Padding="10"
                         Margin="0,8,0,0">
@@ -494,14 +494,14 @@
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
 
-                            <TextBlock Text="📝 Notes" Foreground="#4FC3F7" FontWeight="Bold" FontSize="11"/>
+                            <TextBlock Text="📝 Notes" Foreground="{StaticResource Brush_Info}" FontWeight="Bold" FontSize="11"/>
 
                             <Button Grid.Column="1" 
                                     Content="+" 
                                     Width="20" Height="20"
                                     Click="BtnAddNote_Click"
-                                    Background="#4CAF50"
-                                    Foreground="White"
+                                    Background="{StaticResource Brush_Success}"
+                                    Foreground="{StaticResource Brush_Text_Primary}"
                                     BorderThickness="0"
                                     FontWeight="Bold"
                                     Cursor="Hand"/>
@@ -516,9 +516,9 @@
                             </Grid.ColumnDefinitions>
 
                             <TextBox x:Name="TxtQuickNote" 
-                                     Background="#1E1E1E"
-                                     Foreground="White"
-                                     BorderBrush="#444"
+                                     Background="{StaticResource Brush_Background_Medium}"
+                                     Foreground="{StaticResource Brush_Text_Primary}"
+                                     BorderBrush="{StaticResource Brush_Border_Normal}"
                                      Padding="8,6"
                                      KeyDown="TxtQuickNote_KeyDown"/>
 
@@ -527,8 +527,8 @@
                                     Width="28"
                                     Margin="5,0,0,0"
                                     Click="BtnConfirmNote_Click"
-                                    Background="#4CAF50"
-                                    Foreground="White"
+                                    Background="{StaticResource Brush_Success}"
+                                    Foreground="{StaticResource Brush_Text_Primary}"
                                     BorderThickness="0"
                                     FontWeight="Bold"/>
                         </Grid>
@@ -536,11 +536,11 @@
                 </Border>
 
                 <!-- Actions Section -->
-                <TextBlock Text="Actions" Style="{StaticResource SectionHeaderStyle}" Foreground="#F44336"/>
+                <TextBlock Text="Actions" Style="{StaticResource SectionHeaderStyle}" Foreground="{StaticResource Brush_Error}"/>
                 <StackPanel x:Name="ActionsPanel">
                     <TextBlock x:Name="NoActionsText" 
                                Text="No actions available" 
-                               Foreground="#666" 
+                               Foreground="{StaticResource Brush_Text_Disabled}" 
                                FontStyle="Italic"
                                FontSize="10"
                                Visibility="Collapsed"/>
@@ -548,19 +548,19 @@
 
                 <!-- Bonus Actions -->
                 <StackPanel x:Name="BonusActionsSection" Visibility="Collapsed">
-                    <TextBlock Text="Bonus Actions" Style="{StaticResource SectionHeaderStyle}" Foreground="#FF9800"/>
+                    <TextBlock Text="Bonus Actions" Style="{StaticResource SectionHeaderStyle}" Foreground="{StaticResource Brush_Warning}"/>
                     <StackPanel x:Name="BonusActionsPanel"/>
                 </StackPanel>
 
                 <!-- Reactions -->
                 <StackPanel x:Name="ReactionsSection" Visibility="Collapsed">
-                    <TextBlock Text="Reactions" Style="{StaticResource SectionHeaderStyle}" Foreground="#9C27B0"/>
+                    <TextBlock Text="Reactions" Style="{StaticResource SectionHeaderStyle}" Foreground="{StaticResource Brush_Accent_Primary}"/>
                     <StackPanel x:Name="ReactionsPanel"/>
                 </StackPanel>
 
                 <!-- Legendary Actions -->
                 <StackPanel x:Name="LegendaryActionsSection" Visibility="Collapsed">
-                    <TextBlock Text="Legendary Actions" Style="{StaticResource SectionHeaderStyle}" Foreground="#FFD700"/>
+                    <TextBlock Text="Legendary Actions" Style="{StaticResource SectionHeaderStyle}" Foreground="{StaticResource Brush_Warning}"/>
                     <StackPanel x:Name="LegendaryActionsListPanel"/>
                 </StackPanel>
 
@@ -571,14 +571,14 @@
                 <!-- Traits (Collapsible) -->
                 <Expander x:Name="TraitsExpander" 
                           Header="Traits &amp; Features" 
-                          Foreground="#4FC3F7"
+                          Foreground="{StaticResource Brush_Info}"
                           FontSize="10"
                           Margin="0,8,0,0"
                           IsExpanded="False"
                           Visibility="Collapsed">
-                    <Border Background="#252526" CornerRadius="4" Padding="8" Margin="0,4,0,0">
+                    <Border Background="{StaticResource Brush_Background_Dark}" CornerRadius="4" Padding="8" Margin="0,4,0,0">
                         <TextBlock x:Name="TxtTraits" 
-                                   Foreground="#CCC" 
+                                   Foreground="{StaticResource Brush_Text_Secondary}" 
                                    TextWrapping="Wrap" 
                                    FontSize="10"/>
                     </Border>
@@ -586,14 +586,14 @@
 
                 <!-- Notes (Collapsible) -->
                 <Expander Header="DM Notes" 
-                          Foreground="#4FC3F7"
+                          Foreground="{StaticResource Brush_Info}"
                           FontSize="10"
                           Margin="0,8,0,0"
                           IsExpanded="False">
-                    <Border Background="#252526" CornerRadius="4" Padding="8" Margin="0,4,0,0">
+                    <Border Background="{StaticResource Brush_Background_Dark}" CornerRadius="4" Padding="8" Margin="0,4,0,0">
                         <TextBox x:Name="TxtDMNotes" 
                                  Background="Transparent"
-                                 Foreground="#CCC"
+                                 Foreground="{StaticResource Brush_Text_Secondary}"
                                  BorderThickness="0"
                                  TextWrapping="Wrap"
                                  AcceptsReturn="True"

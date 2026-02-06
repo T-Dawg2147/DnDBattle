@@ -4,11 +4,11 @@
         Title="🔥 Phase 6: Area Effects Expansion"
         Width="600" Height="980"
         WindowStartupLocation="CenterOwner"
-        Background="#FF1E1E2E" Foreground="White"
+        Background="{StaticResource Brush_Background_Medium}" Foreground="{StaticResource Brush_Text_Primary}"
         ResizeMode="CanResizeWithGrip">
     <Window.Resources>
         <Style TargetType="CheckBox">
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
             <Setter Property="Margin" Value="0,4"/>
             <Setter Property="FontSize" Value="13"/>
         </Style>
@@ -29,7 +29,7 @@
         </Style>
         <Style x:Key="ActionButton" TargetType="Button">
             <Setter Property="Background" Value="#FF2A2A3E"/>
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
             <Setter Property="Padding" Value="10,5"/>
             <Setter Property="Margin" Value="0,4"/>
             <Setter Property="BorderBrush" Value="#FF444466"/>
@@ -40,8 +40,8 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16">
         <StackPanel>
 
-            <TextBlock Text="🔥 Phase 6: Area Effects Expansion" FontSize="18" FontWeight="Bold" Foreground="#FF88AAFF" Margin="0,0,0,12"/>
-            <TextBlock Text="Manage spell templates, duration tracking, DoT, polygon effects, and animations." Foreground="#FF888899" Margin="0,0,0,4"/>
+            <TextBlock Text="🔥 Phase 6: Area Effects Expansion" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Brush_Info}" Margin="0,0,0,12"/>
+            <TextBlock Text="Manage spell templates, duration tracking, DoT, polygon effects, and animations." Foreground="{StaticResource Brush_Text_Hint}" Margin="0,0,0,4"/>
 
             <!-- 6.1 Spell Templates Library -->
             <GroupBox Header="📖 6.1 Spell Templates Library">
@@ -55,7 +55,7 @@
                         <Button Content="⚡ Lightning Bolt (100ft Line)" Click="QuickLightningBolt_Click" Style="{StaticResource ActionButton}" Margin="0,0,6,0"/>
                         <Button Content="❄️ Cone of Cold (60ft Cone)" Click="QuickConeOfCold_Click" Style="{StaticResource ActionButton}" Margin="0,0,6,0"/>
                     </WrapPanel>
-                    <TextBlock Text="💡 Use the Spell Library to search, filter, and place any D&amp;D spell as an area effect." Foreground="#FF888899" TextWrapping="Wrap" FontSize="11" Margin="0,4"/>
+                    <TextBlock Text="💡 Use the Spell Library to search, filter, and place any D&amp;D spell as an area effect." Foreground="{StaticResource Brush_Text_Hint}" TextWrapping="Wrap" FontSize="11" Margin="0,4"/>
                 </StackPanel>
             </GroupBox>
 
@@ -63,9 +63,9 @@
             <GroupBox Header="⏱️ 6.2 Duration Tracking">
                 <StackPanel>
                     <CheckBox x:Name="ChkEnableDurationTracking" Content="Enable Duration Tracking" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
-                    <TextBlock Text="💡 Effect durations auto-countdown each round. Effects are removed when their duration expires." Foreground="#FF888899" TextWrapping="Wrap" FontSize="11" Margin="0,4"/>
+                    <TextBlock Text="💡 Effect durations auto-countdown each round. Effects are removed when their duration expires." Foreground="{StaticResource Brush_Text_Hint}" TextWrapping="Wrap" FontSize="11" Margin="0,4"/>
                     <Button Content="⏩ Advance Round (Tick Durations)" Click="AdvanceRound_Click" Style="{StaticResource ActionButton}" HorizontalAlignment="Left"/>
-                    <TextBlock x:Name="TxtDurationStatus" Text="No active duration effects." Foreground="#FFFFCC66" Margin="0,4" TextWrapping="Wrap"/>
+                    <TextBlock x:Name="TxtDurationStatus" Text="No active duration effects." Foreground="{StaticResource Brush_Warning}" Margin="0,4" TextWrapping="Wrap"/>
                 </StackPanel>
             </GroupBox>
 
@@ -74,7 +74,7 @@
                 <StackPanel>
                     <CheckBox x:Name="ChkEnableDamageOverTime" Content="Enable Damage Over Time" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
                     <CheckBox x:Name="ChkAutoApplyDot" Content="Auto-Apply DoT Damage" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
-                    <TextBlock Text="💡 Damage timing modes: OnEnter (when token moves in), StartOfTurn, EndOfTurn. When auto-apply is off, reminders are shown instead." Foreground="#FF888899" TextWrapping="Wrap" FontSize="11" Margin="0,4"/>
+                    <TextBlock Text="💡 Damage timing modes: OnEnter (when token moves in), StartOfTurn, EndOfTurn. When auto-apply is off, reminders are shown instead." Foreground="{StaticResource Brush_Text_Hint}" TextWrapping="Wrap" FontSize="11" Margin="0,4"/>
                 </StackPanel>
             </GroupBox>
 
@@ -82,7 +82,7 @@
             <GroupBox Header="🔷 6.4 Custom Polygon Areas">
                 <StackPanel>
                     <CheckBox x:Name="ChkEnablePolygonEffects" Content="Enable Custom Polygon Effects" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
-                    <TextBlock Text="💡 Click on the grid to place vertices defining a custom polygon area. Useful for irregular shapes like Hunger of Hadar or Wall of Fire." Foreground="#FF888899" TextWrapping="Wrap" FontSize="11" Margin="0,4"/>
+                    <TextBlock Text="💡 Click on the grid to place vertices defining a custom polygon area. Useful for irregular shapes like Hunger of Hadar or Wall of Fire." Foreground="{StaticResource Brush_Text_Hint}" TextWrapping="Wrap" FontSize="11" Margin="0,4"/>
                 </StackPanel>
             </GroupBox>
 
@@ -104,14 +104,14 @@
                             <ComboBoxItem Content="Rotate"/>
                         </ComboBox>
                     </StackPanel>
-                    <TextBlock Text="💡 Animations add visual flair: Pulse fades in/out, Particle spawns floating particles, Rotate spins the effect overlay." Foreground="#FF888899" TextWrapping="Wrap" FontSize="11" Margin="0,4"/>
+                    <TextBlock Text="💡 Animations add visual flair: Pulse fades in/out, Particle spawns floating particles, Rotate spins the effect overlay." Foreground="{StaticResource Brush_Text_Hint}" TextWrapping="Wrap" FontSize="11" Margin="0,4"/>
                 </StackPanel>
             </GroupBox>
 
             <!-- Active Effects List -->
             <GroupBox Header="📋 Active Area Effects">
                 <StackPanel>
-                    <ListBox x:Name="LstActiveEffects" Height="140" Background="#FF1A1A2E" Foreground="White" BorderBrush="#FF444466">
+                    <ListBox x:Name="LstActiveEffects" Height="140" Background="{StaticResource Brush_Background_Dark}" Foreground="{StaticResource Brush_Text_Primary}" BorderBrush="{StaticResource Brush_Border_Normal}">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <Grid>
@@ -120,9 +120,9 @@
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="{Binding Name}" Foreground="White" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding RoundsRemaining, StringFormat='({0} rds)'}" Foreground="#FF88AAFF" VerticalAlignment="Center" Margin="8,0"/>
-                                    <Button Grid.Column="2" Content="❌" Tag="{Binding Id}" Click="RemoveEffect_Click" Background="Transparent" Foreground="#FFFF6666" BorderThickness="0" Cursor="Hand" Padding="4,2"/>
+                                    <TextBlock Grid.Column="0" Text="{Binding Name}" Foreground="{StaticResource Brush_Text_Primary}" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding RoundsRemaining, StringFormat='({0} rds)'}" Foreground="{StaticResource Brush_Info}" VerticalAlignment="Center" Margin="8,0"/>
+                                    <Button Grid.Column="2" Content="❌" Tag="{Binding Id}" Click="RemoveEffect_Click" Background="Transparent" Foreground="{StaticResource Brush_Error}" BorderThickness="0" Cursor="Hand" Padding="4,2"/>
                                 </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>

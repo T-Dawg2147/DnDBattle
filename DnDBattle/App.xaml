@@ -737,5 +737,490 @@
             <Setter Property="Foreground" Value="{StaticResource Brush_Error}"/>
         </Style>
 
+        <!-- ==================== MODERN PANEL STYLES ==================== -->
+
+        <!-- Modern Panel -->
+        <Style x:Key="ModernPanel" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource Brush_Background_Control}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brush_Border_Normal}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="16"/>
+            <Setter Property="Margin" Value="4"/>
+        </Style>
+
+        <!-- Modern Panel Flat (no border) -->
+        <Style x:Key="ModernPanelFlat" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource Brush_Background_Control}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="16"/>
+            <Setter Property="Margin" Value="4"/>
+        </Style>
+
+        <!-- Sidebar Panel -->
+        <Style x:Key="SidebarPanel" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource Brush_Background_Medium}"/>
+            <Setter Property="Padding" Value="12"/>
+        </Style>
+
+        <!-- Floating Panel (for popups/dialogs feel) -->
+        <Style x:Key="FloatingPanel" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource Brush_Background_Control}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brush_Border_Normal}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="20"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="Black" Opacity="0.4" BlurRadius="20" ShadowDepth="4"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Section Card (for grouped content) -->
+        <Style x:Key="SectionCard" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource Brush_Background_Dark}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brush_Border_Normal}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+
+        <!-- Toolbar Panel -->
+        <Style x:Key="ToolbarPanel" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource Brush_Background_Dark}"/>
+            <Setter Property="Padding" Value="8,6"/>
+        </Style>
+
+        <!-- ==================== MODERN SCROLLBAR ==================== -->
+
+        <Style x:Key="ModernScrollBarThumb" TargetType="Thumb">
+            <Setter Property="OverridesDefaultStyle" Value="True"/>
+            <Setter Property="IsTabStop" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Thumb">
+                        <Border x:Name="ThumbBorder"
+                                Background="{StaticResource Brush_Border_Normal}"
+                                CornerRadius="4"
+                                Margin="2"/>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ThumbBorder" Property="Background" Value="{StaticResource Brush_Border_Hover}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ModernScrollBar" TargetType="ScrollBar">
+            <Setter Property="Width" Value="10"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollBar">
+                        <Grid>
+                            <Border Background="{StaticResource Brush_Background_Darkest}" CornerRadius="4"/>
+                            <Track x:Name="PART_Track" IsDirectionReversed="True">
+                                <Track.Thumb>
+                                    <Thumb Style="{StaticResource ModernScrollBarThumb}"/>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="Orientation" Value="Horizontal">
+                    <Setter Property="Width" Value="Auto"/>
+                    <Setter Property="Height" Value="10"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ScrollBar">
+                                <Grid>
+                                    <Border Background="{StaticResource Brush_Background_Darkest}" CornerRadius="4"/>
+                                    <Track x:Name="PART_Track" IsDirectionReversed="False">
+                                        <Track.Thumb>
+                                            <Thumb Style="{StaticResource ModernScrollBarThumb}"/>
+                                        </Track.Thumb>
+                                    </Track>
+                                </Grid>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- ==================== MODERN CHECKBOX ==================== -->
+
+        <Style x:Key="ModernCheckBox" TargetType="CheckBox">
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
+            <Setter Property="Background" Value="{StaticResource Brush_Background_Control}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brush_Border_Normal}"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border x:Name="CheckBorder" 
+                                    Grid.Column="0"
+                                    Width="18" Height="18"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="4"
+                                    VerticalAlignment="Center">
+                                <Path x:Name="CheckMark"
+                                      Data="M 2 6 L 6 10 L 14 2"
+                                      Stroke="{StaticResource Brush_Text_Primary}"
+                                      StrokeThickness="2"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      Visibility="Collapsed"/>
+                            </Border>
+                            <ContentPresenter Grid.Column="1" 
+                                              Margin="8,0,0,0"
+                                              VerticalAlignment="Center"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="CheckBorder" Property="Background" Value="{StaticResource Brush_Accent_Primary}"/>
+                                <Setter TargetName="CheckBorder" Property="BorderBrush" Value="{StaticResource Brush_Accent_Primary}"/>
+                                <Setter TargetName="CheckMark" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="CheckBorder" Property="BorderBrush" Value="{StaticResource Brush_Border_Hover}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="{StaticResource Brush_Text_Disabled}"/>
+                                <Setter TargetName="CheckBorder" Property="Background" Value="{StaticResource Brush_Background_Dark}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ==================== MODERN RADIO BUTTON ==================== -->
+
+        <Style x:Key="ModernRadioButton" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
+            <Setter Property="Background" Value="{StaticResource Brush_Background_Control}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brush_Border_Normal}"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border x:Name="RadioBorder" 
+                                    Grid.Column="0"
+                                    Width="18" Height="18"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="2"
+                                    CornerRadius="9"
+                                    VerticalAlignment="Center">
+                                <Ellipse x:Name="RadioDot"
+                                         Width="8" Height="8"
+                                         Fill="{StaticResource Brush_Text_Primary}"
+                                         HorizontalAlignment="Center"
+                                         VerticalAlignment="Center"
+                                         Visibility="Collapsed"/>
+                            </Border>
+                            <ContentPresenter Grid.Column="1" 
+                                              Margin="8,0,0,0"
+                                              VerticalAlignment="Center"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="RadioBorder" Property="BorderBrush" Value="{StaticResource Brush_Accent_Primary}"/>
+                                <Setter TargetName="RadioDot" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="RadioDot" Property="Fill" Value="{StaticResource Brush_Accent_Primary}"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="RadioBorder" Property="BorderBrush" Value="{StaticResource Brush_Border_Hover}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="{StaticResource Brush_Text_Disabled}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ==================== MODERN BUTTON VARIANTS ==================== -->
+
+        <!-- Ghost Button (transparent background) -->
+        <Style x:Key="GhostButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Secondary}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="4"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource Brush_Background_Hover}"/>
+                                <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource Brush_Accent_Pressed}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Outlined Button -->
+        <Style x:Key="OutlinedButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Accent_Primary}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brush_Accent_Primary}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource Brush_Accent_Primary}"/>
+                                <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource Brush_Accent_Pressed}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Small Button -->
+        <Style x:Key="SmallButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="MinHeight" Value="24"/>
+        </Style>
+
+        <!-- ==================== MODERN TEXT STYLES ==================== -->
+
+        <!-- Title Text -->
+        <Style x:Key="TitleText" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+
+        <!-- Subtitle Text -->
+        <Style x:Key="SubtitleText" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Secondary}"/>
+        </Style>
+
+        <!-- Caption Text -->
+        <Style x:Key="CaptionText" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Hint}"/>
+        </Style>
+
+        <!-- Badge/Label Text -->
+        <Style x:Key="BadgeText" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Padding" Value="6,2"/>
+        </Style>
+
+        <!-- ==================== MODERN WINDOW STYLES ==================== -->
+
+        <!-- Dialog Window Style -->
+        <Style x:Key="DialogWindow" TargetType="Window">
+            <Setter Property="Background" Value="{StaticResource Brush_Background_Medium}"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="WindowStyle" Value="None"/>
+            <Setter Property="AllowsTransparency" Value="True"/>
+            <Setter Property="ResizeMode" Value="CanResizeWithGrip"/>
+        </Style>
+
+        <!-- ==================== STATUS BADGES ==================== -->
+
+        <!-- Status Badge Base -->
+        <Style x:Key="StatusBadge" TargetType="Border">
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+        </Style>
+
+        <!-- Success Badge -->
+        <Style x:Key="SuccessBadge" TargetType="Border" BasedOn="{StaticResource StatusBadge}">
+            <Setter Property="Background" Value="{StaticResource Brush_Success}"/>
+        </Style>
+
+        <!-- Warning Badge -->
+        <Style x:Key="WarningBadge" TargetType="Border" BasedOn="{StaticResource StatusBadge}">
+            <Setter Property="Background" Value="{StaticResource Brush_Warning}"/>
+        </Style>
+
+        <!-- Error Badge -->
+        <Style x:Key="ErrorBadge" TargetType="Border" BasedOn="{StaticResource StatusBadge}">
+            <Setter Property="Background" Value="{StaticResource Brush_Error}"/>
+        </Style>
+
+        <!-- Info Badge -->
+        <Style x:Key="InfoBadge" TargetType="Border" BasedOn="{StaticResource StatusBadge}">
+            <Setter Property="Background" Value="{StaticResource Brush_Info}"/>
+        </Style>
+
+        <!-- ==================== DIVIDERS AND SEPARATORS ==================== -->
+
+        <!-- Vertical Divider -->
+        <Style x:Key="VerticalDivider" TargetType="Rectangle">
+            <Setter Property="Width" Value="1"/>
+            <Setter Property="Fill" Value="{StaticResource Brush_Border_Normal}"/>
+            <Setter Property="Margin" Value="8,4"/>
+        </Style>
+
+        <!-- Horizontal Divider -->
+        <Style x:Key="HorizontalDivider" TargetType="Rectangle">
+            <Setter Property="Height" Value="1"/>
+            <Setter Property="Fill" Value="{StaticResource Brush_Border_Normal}"/>
+            <Setter Property="Margin" Value="0,8"/>
+        </Style>
+
+        <!-- ==================== DATA GRID STYLES ==================== -->
+
+        <Style TargetType="DataGrid">
+            <Setter Property="Background" Value="{StaticResource Brush_Background_Control}"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brush_Border_Normal}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="RowBackground" Value="{StaticResource Brush_Background_Control}"/>
+            <Setter Property="AlternatingRowBackground" Value="{StaticResource Brush_Background_Dark}"/>
+            <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+            <Setter Property="HorizontalGridLinesBrush" Value="{StaticResource Brush_Border_Normal}"/>
+            <Setter Property="VerticalGridLinesBrush" Value="{StaticResource Brush_Border_Normal}"/>
+            <Setter Property="HeadersVisibility" Value="Column"/>
+        </Style>
+
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="{StaticResource Brush_Background_Dark}"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brush_Border_Normal}"/>
+            <Setter Property="BorderThickness" Value="0,0,1,1"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+
+        <Style TargetType="DataGridCell">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{StaticResource Brush_Accent_Primary}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="DataGridRow">
+            <Setter Property="Background" Value="Transparent"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{StaticResource Brush_Background_Hover}"/>
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{StaticResource Brush_Accent_Primary}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- ==================== MODERN SLIDER ==================== -->
+
+        <Style x:Key="ModernSlider" TargetType="Slider">
+            <Setter Property="Background" Value="{StaticResource Brush_Background_Dark}"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Accent_Primary}"/>
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Slider">
+                        <Grid VerticalAlignment="Center">
+                            <Border x:Name="TrackBackground"
+                                    Height="4"
+                                    Background="{StaticResource Brush_Background_Dark}"
+                                    CornerRadius="2"/>
+                            <Track x:Name="PART_Track">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="Slider.DecreaseLarge">
+                                        <RepeatButton.Template>
+                                            <ControlTemplate TargetType="RepeatButton">
+                                                <Border Background="{StaticResource Brush_Accent_Primary}" 
+                                                        Height="4" CornerRadius="2"/>
+                                            </ControlTemplate>
+                                        </RepeatButton.Template>
+                                    </RepeatButton>
+                                </Track.DecreaseRepeatButton>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="Slider.IncreaseLarge">
+                                        <RepeatButton.Template>
+                                            <ControlTemplate TargetType="RepeatButton">
+                                                <Border Background="Transparent"/>
+                                            </ControlTemplate>
+                                        </RepeatButton.Template>
+                                    </RepeatButton>
+                                </Track.IncreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb>
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Ellipse Width="16" Height="16" 
+                                                         Fill="{StaticResource Brush_Accent_Primary}"
+                                                         Stroke="{StaticResource Brush_Background_Darkest}"
+                                                         StrokeThickness="2"/>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
     </Application.Resources>
 </Application>

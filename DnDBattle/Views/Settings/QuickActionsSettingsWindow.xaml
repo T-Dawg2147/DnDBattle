@@ -4,23 +4,23 @@
         Title="Configure Quick Actions" 
         Height="500" Width="450"
         WindowStartupLocation="CenterOwner"
-        Background="#1E1E1E"
+        Background="{StaticResource Brush_Background_Medium}"
         ResizeMode="CanResizeWithGrip">
 
     <Window.Resources>
         <Style x:Key="CheckBoxStyle" TargetType="CheckBox">
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
 
         <Style x:Key="ListItemStyle" TargetType="Border">
-            <Setter Property="Background" Value="#2D2D30"/>
+            <Setter Property="Background" Value="{StaticResource Brush_Background_Control}"/>
             <Setter Property="CornerRadius" Value="4"/>
             <Setter Property="Padding" Value="10,8"/>
             <Setter Property="Margin" Value="0,0,0,4"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#3E3E42"/>
+                    <Setter Property="Background" Value="{StaticResource Brush_Background_Hover}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -39,10 +39,10 @@
             <TextBlock Text="Configure Quick Actions" 
                        FontSize="18" 
                        FontWeight="Bold" 
-                       Foreground="White"/>
+                       Foreground="{StaticResource Brush_Text_Primary}"/>
             <TextBlock Text="Select which quick actions appear in the token panel. Drag to reorder." 
                        FontSize="11" 
-                       Foreground="#888"
+                       Foreground="{StaticResource Brush_Text_Hint}"
                        Margin="0,5,0,0"
                        TextWrapping="Wrap"/>
         </StackPanel>
@@ -56,9 +56,9 @@
 
             <TextBox x:Name="TxtSearch" 
                      Grid.Row="0"
-                     Background="#252526"
-                     Foreground="White"
-                     BorderBrush="#444"
+                     Background="{StaticResource Brush_Background_Dark}"
+                     Foreground="{StaticResource Brush_Text_Primary}"
+                     BorderBrush="{StaticResource Brush_Border_Normal}"
                      Padding="8,6"
                      Margin="0,0,0,10"
                      TextChanged="TxtSearch_TextChanged">
@@ -70,7 +70,7 @@
                                     <Setter.Value>
                                         <VisualBrush Stretch="None" AlignmentX="Left">
                                             <VisualBrush.Visual>
-                                                <TextBlock Text="  🔍 Search actions..." Foreground="#666" Margin="5,0,0,0"/>
+                                                <TextBlock Text="  🔍 Search actions..." Foreground="{StaticResource Brush_Text_Disabled}" Margin="5,0,0,0"/>
                                             </VisualBrush.Visual>
                                         </VisualBrush>
                                     </Setter.Value>
@@ -98,7 +98,7 @@
                                     <!-- Drag Handle -->
                                     <TextBlock Grid.Column="0" 
                                                Text="⋮⋮" 
-                                               Foreground="#666" 
+                                               Foreground="{StaticResource Brush_Text_Disabled}" 
                                                FontSize="14"
                                                VerticalAlignment="Center"
                                                Margin="0,0,10,0"
@@ -118,12 +118,12 @@
                                                        FontSize="14" 
                                                        Margin="0,0,8,0"/>
                                             <TextBlock Text="{Binding Name}" 
-                                                       Foreground="White" 
+                                                       Foreground="{StaticResource Brush_Text_Primary}" 
                                                        FontSize="12"
                                                        FontWeight="SemiBold"/>
                                         </StackPanel>
                                         <TextBlock Text="{Binding Description}" 
-                                                   Foreground="#888" 
+                                                   Foreground="{StaticResource Brush_Text_Hint}" 
                                                    FontSize="10"
                                                    TextTrimming="CharacterEllipsis"
                                                    Margin="22,2,0,0"/>
@@ -136,8 +136,8 @@
                                         <Button Content="▲" 
                                                 Width="24" Height="24"
                                                 FontSize="10"
-                                                Background="#3E3E42"
-                                                Foreground="White"
+                                                Background="{StaticResource Brush_Background_Hover}"
+                                                Foreground="{StaticResource Brush_Text_Primary}"
                                                 BorderThickness="0"
                                                 Margin="0,0,2,0"
                                                 Click="BtnMoveUp_Click"
@@ -145,8 +145,8 @@
                                         <Button Content="▼" 
                                                 Width="24" Height="24"
                                                 FontSize="10"
-                                                Background="#3E3E42"
-                                                Foreground="White"
+                                                Background="{StaticResource Brush_Background_Hover}"
+                                                Foreground="{StaticResource Brush_Text_Primary}"
                                                 BorderThickness="0"
                                                 Click="BtnMoveDown_Click"
                                                 Tag="{Binding Id}"/>
@@ -164,21 +164,21 @@
             <Button Content="Select All" 
                     Padding="10,5" 
                     Margin="0,0,5,0"
-                    Background="#3E3E42"
-                    Foreground="White"
+                    Background="{StaticResource Brush_Background_Hover}"
+                    Foreground="{StaticResource Brush_Text_Primary}"
                     BorderThickness="0"
                     Click="BtnSelectAll_Click"/>
             <Button Content="Select None" 
                     Padding="10,5" 
                     Margin="0,0,5,0"
-                    Background="#3E3E42"
-                    Foreground="White"
+                    Background="{StaticResource Brush_Background_Hover}"
+                    Foreground="{StaticResource Brush_Text_Primary}"
                     BorderThickness="0"
                     Click="BtnSelectNone_Click"/>
             <Button Content="Reset Defaults" 
                     Padding="10,5"
-                    Background="#3E3E42"
-                    Foreground="White"
+                    Background="{StaticResource Brush_Background_Hover}"
+                    Foreground="{StaticResource Brush_Text_Primary}"
                     BorderThickness="0"
                     Click="BtnResetDefaults_Click"/>
         </StackPanel>
@@ -191,16 +191,16 @@
             <Button Content="Cancel" 
                     Width="80" 
                     Padding="0,8"
-                    Background="#3E3E42"
-                    Foreground="White"
+                    Background="{StaticResource Brush_Background_Hover}"
+                    Foreground="{StaticResource Brush_Text_Primary}"
                     BorderThickness="0"
                     Margin="0,0,10,0"
                     Click="BtnCancel_Click"/>
             <Button Content="Save" 
                     Width="80" 
                     Padding="0,8"
-                    Background="#4CAF50"
-                    Foreground="White"
+                    Background="{StaticResource Brush_Success}"
+                    Foreground="{StaticResource Brush_Text_Primary}"
                     BorderThickness="0"
                     Click="BtnSave_Click"/>
         </StackPanel>

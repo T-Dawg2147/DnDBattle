@@ -4,7 +4,7 @@
         Title="Manage Tags" 
         Width="400" Height="300"
         WindowStartupLocation="CenterOwner"
-        Background="#2D2D30"
+        Background="{StaticResource Brush_Background_Control}"
         ResizeMode="NoResize">
     <Grid Margin="15">
         <Grid.RowDefinitions>
@@ -15,7 +15,7 @@
         </Grid.RowDefinitions>
 
         <TextBlock Grid.Row="0" Text="Add or select tags:"
-                   Foreground="White" FontSize="14" Margin="0,0,0,10"/>
+                   Foreground="{StaticResource Brush_Text_Primary}" FontSize="14" Margin="0,0,0,10"/>
 
         <Grid Grid.Row="1" Margin="0,0,0,15">
             <Grid.ColumnDefinitions>
@@ -38,11 +38,11 @@
                     Click="BtnAddTag_Click"/>
         </Grid>
 
-        <Border Grid.Row="2" Background="#1E1E1E" CornerRadius="4" Padding="10">
+        <Border Grid.Row="2" Background="{StaticResource Brush_Background_Medium}" CornerRadius="4" Padding="10">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel>
                     <TextBlock Text="Quick Tags (click to toggle):"
-                               Foreground="#999" FontSize="11" Margin="0,0,0,8"/>
+                               Foreground="{StaticResource Brush_Text_Hint}" FontSize="11" Margin="0,0,0,8"/>
 
                     <ItemsControl x:Name="TagButtonsPanel">
                         <ItemsControl.ItemsPanel>
@@ -63,7 +63,7 @@
                     </ItemsControl>
 
                     <TextBlock Text="Common Tags:"
-                               Foreground="#999" FontSize="11" Margin="0,15,0,8"/>
+                               Foreground="{StaticResource Brush_Text_Hint}" FontSize="11" Margin="0,15,0,8"/>
 
                     <WrapPanel x:Name="CommonTagsPanel" Orientation="Horizontal">
                         
@@ -83,9 +83,9 @@
 
     <Window.Resources>
         <Style x:Key="TagToggleButtonStyle" TargetType="ToggleButton">
-            <Setter Property="Background" Value="#3E3E42"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderBrush" Value="#555"/>
+            <Setter Property="Background" Value="{StaticResource Brush_Background_Hover}"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brush_Text_Disabled}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Template">
                 <Setter.Value>

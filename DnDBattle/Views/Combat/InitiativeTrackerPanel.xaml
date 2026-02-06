@@ -7,21 +7,21 @@
              xmlns:viewsDice="clr-namespace:DnDBattle.Views.Dice"
              mc:Ignorable="d" 
              d:DesignWidth="280"
-             Background="#1E1E1E">
+             Background="{StaticResource Brush_Background_Medium}">
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
         <!-- Initiative Entry Style -->
         <Style x:Key="InitiativeEntryStyle" TargetType="Border">
-            <Setter Property="Background" Value="#2D2D30"/>
+            <Setter Property="Background" Value="{StaticResource Brush_Background_Control}"/>
             <Setter Property="CornerRadius" Value="6"/>
             <Setter Property="Margin" Value="0,0,0,4"/>
             <Setter Property="Padding" Value="10,8"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#3E3E42"/>
+                    <Setter Property="Background" Value="{StaticResource Brush_Background_Hover}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -29,7 +29,7 @@
         <!-- Current Turn Style -->
         <Style x:Key="CurrentTurnStyle" TargetType="Border" BasedOn="{StaticResource InitiativeEntryStyle}">
             <Setter Property="Background" Value="#2E5830"/>
-            <Setter Property="BorderBrush" Value="#4CAF50"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brush_Success}"/>
             <Setter Property="BorderThickness" Value="2"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
@@ -40,8 +40,8 @@
 
         <!-- Button Style -->
         <Style x:Key="TrackerButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="#3E3E42"/>
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Background" Value="{StaticResource Brush_Background_Hover}"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="12,8"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -56,10 +56,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#4E4E52"/>
+                                <Setter Property="Background" Value="{StaticResource Brush_Background_Hover}"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" Value="#5E5E62"/>
+                                <Setter Property="Background" Value="{StaticResource Brush_Background_Hover}"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Opacity" Value="0.5"/>
@@ -72,7 +72,7 @@
 
         <!-- Primary Button Style (Green) -->
         <Style x:Key="PrimaryButtonStyle" TargetType="Button" BasedOn="{StaticResource TrackerButtonStyle}">
-            <Setter Property="Background" Value="#4CAF50"/>
+            <Setter Property="Background" Value="{StaticResource Brush_Success}"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Background" Value="#5CBF60"/>
@@ -93,24 +93,24 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <Border Grid.Row="0" Background="#252526" Padding="12,10">
+        <Border Grid.Row="0" Background="{StaticResource Brush_Background_Dark}" Padding="12,10">
             <StackPanel>
                 <TextBlock Text="Initiative Tracker" 
                    FontSize="14" 
                    FontWeight="Bold" 
-                   Foreground="White"/>
+                   Foreground="{StaticResource Brush_Text_Primary}"/>
                 <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                    <TextBlock Text="Round: " Foreground="#888" FontSize="11"/>
-                    <TextBlock x:Name="TxtRound" Text="1" Foreground="#4FC3F7" FontSize="11" FontWeight="Bold"/>
+                    <TextBlock Text="Round: " Foreground="{StaticResource Brush_Text_Hint}" FontSize="11"/>
+                    <TextBlock x:Name="TxtRound" Text="1" Foreground="{StaticResource Brush_Info}" FontSize="11" FontWeight="Bold"/>
                     <TextBlock Text="  •  " Foreground="#444" FontSize="11"/>
-                    <TextBlock x:Name="TxtTurnCount" Text="0 creatures" Foreground="#888" FontSize="11"/>
+                    <TextBlock x:Name="TxtTurnCount" Text="0 creatures" Foreground="{StaticResource Brush_Text_Hint}" FontSize="11"/>
                     <viewsDice:TurnTimerDisplay x:Name="TurnTimer" Margin="0,0,0,10"/>
                 </StackPanel>
             </StackPanel>
         </Border>
 
         <!-- Combat Controls -->
-        <Border Grid.Row="1" Background="#252526" Padding="12,8" Margin="0,1,0,0">
+        <Border Grid.Row="1" Background="{StaticResource Brush_Background_Dark}" Padding="12,8" Margin="0,1,0,0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -169,7 +169,7 @@
                                 <!-- Drag Handle -->
                                 <TextBlock Grid.Column="0" 
                                            Text="⋮⋮" 
-                                           Foreground="#666" 
+                                           Foreground="{StaticResource Brush_Text_Disabled}" 
                                            FontSize="14"
                                            VerticalAlignment="Center"
                                            Margin="0,0,8,0"
@@ -180,7 +180,7 @@
                                     <!-- Creature Image (circular) -->
                                     <Border Width="36" Height="36" 
                                         CornerRadius="18" 
-                                        Background="#1E1E1E">
+                                        Background="{StaticResource Brush_Background_Medium}">
                                         <Image Source="{Binding Token.DisplayImage}" 
                                            Stretch="UniformToFill"
                                            RenderOptions.BitmapScalingMode="HighQuality">
@@ -191,14 +191,14 @@
                                     </Border>
 
                                     <!-- Initiative Badge (overlay) -->
-                                    <Border Background="#1E1E1E" 
+                                    <Border Background="{StaticResource Brush_Background_Medium}" 
                                         CornerRadius="10"
                                         Padding="4,1"
                                         HorizontalAlignment="Right"
                                         VerticalAlignment="Bottom"
                                         Margin="0,0,-2,-2">
                                         <TextBlock Text="{Binding InitiativeTotal}" 
-                                           Foreground="#4FC3F7"
+                                           Foreground="{StaticResource Brush_Info}"
                                            FontSize="10"
                                            FontWeight="Bold"/>
                                     </Border>
@@ -208,7 +208,7 @@
                                 <StackPanel Grid.Column="2" VerticalAlignment="Center">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="{Binding DisplayName}" 
-                                                   Foreground="White"
+                                                   Foreground="{StaticResource Brush_Text_Primary}"
                                                    FontSize="13"
                                                    FontWeight="SemiBold"/>
                                         <!-- Player Icon -->
@@ -219,13 +219,13 @@
 
                                     <!-- HP Bar -->
                                     <Grid Height="4" Margin="0,4,20,0">
-                                        <Border Background="#1E1E1E" CornerRadius="2"/>
+                                        <Border Background="{StaticResource Brush_Background_Medium}" CornerRadius="2"/>
                                         <Border x:Name="HPBar" 
                                                 CornerRadius="2" 
                                                 HorizontalAlignment="Left">
                                             <Border.Style>
                                                 <Style TargetType="Border">
-                                                    <Setter Property="Background" Value="#4CAF50"/>
+                                                    <Setter Property="Background" Value="{StaticResource Brush_Success}"/>
                                                 </Style>
                                             </Border.Style>
                                         </Border>
@@ -233,7 +233,7 @@
 
                                     <!-- Status Text -->
                                     <TextBlock Text="{Binding StatusText}" 
-                                               Foreground="#FFB74D"
+                                               Foreground="{StaticResource Brush_Warning}"
                                                FontSize="10"
                                                FontStyle="Italic"
                                                Visibility="{Binding StatusText, Converter={StaticResource StringToVisibilityConverter}}"/>
@@ -278,7 +278,7 @@
         </ScrollViewer>
 
         <!-- Footer Actions -->
-        <Border Grid.Row="3" Background="#252526" Padding="12,8" Margin="0,1,0,0">
+        <Border Grid.Row="3" Background="{StaticResource Brush_Background_Dark}" Padding="12,8" Margin="0,1,0,0">
             <WrapPanel HorizontalAlignment="Center">
                 <Button Content="➕ Add" 
                         Style="{StaticResource TrackerButtonStyle}"

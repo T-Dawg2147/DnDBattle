@@ -18,7 +18,7 @@
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal">
                         <Image Source="{Binding Image}" Width="28" Height="28" Margin="2"/>
-                        <TextBlock Text="{Binding Name}" Foreground="White" Margin="8,0,0,0"/>
+                        <TextBlock Text="{Binding Name}" Foreground="{StaticResource Brush_Text_Primary}" Margin="8,0,0,0"/>
                         <TextBlock Text="{Binding Initiative, StringFormat='  ({0})'}" Foreground="LightGray" Margin="6,0,0,0"/>
                         <TextBlock Text="{Binding InitiativeModifier, StringFormat='  [+{0}]'}" Foreground="LightGray" Margin="6,0,0,0"/>
                     </StackPanel>
