@@ -260,6 +260,11 @@ namespace DnDBattle
         /// <summary>Show DM-only notes in the map view (true = visible to DM, false = hidden entirely).</summary>
         public static bool ShowDMOnlyNotes { get; set; } = true;
 
+        // ── Undecided Features: 2.5D Elevation System ──
+
+        /// <summary>Enable the 2.5D terrain elevation system (height layers, 3D distance, falling damage).</summary>
+        public static bool EnableElevationSystem { get; set; } = false;
+
         // ── Dynamic Weather & Environment ──
 
         /// <summary>Enable dynamic weather particle effects on the map.</summary>
