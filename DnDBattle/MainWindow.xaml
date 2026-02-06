@@ -161,6 +161,7 @@
 
             <MenuItem Header="Tools" Foreground="White">
                 <MenuItem Header="Tile Map Builder" Click="OpenTileMapBuilder_Click"/>
+                <MenuItem Header="Developer Window..." Click="OpenDeveloperWindow_Click"/>
             </MenuItem>
         </Menu>
         
