@@ -418,6 +418,56 @@
 
             <Separator Margin="0,12" Background="#FF444466"/>
 
+            <TextBlock Text="⚙️ Phase 9: Multiplayer / Networking" FontSize="18" FontWeight="Bold" Foreground="#FF88AAFF" Margin="0,12,0,12"/>
+
+            <!-- 9.1 Network Architecture -->
+            <GroupBox Header="🌐 9.1 Network Architecture">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableNetworking" Content="Enable Multiplayer Networking" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Default Server Port:" VerticalAlignment="Center" Width="150"/>
+                        <Slider x:Name="SliderNetworkPort" Minimum="1024" Maximum="65535" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="OnSliderChanged"/>
+                        <TextBlock x:Name="TxtNetworkPort" VerticalAlignment="Center" Margin="4,0"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Connection Timeout:" VerticalAlignment="Center" Width="150"/>
+                        <Slider x:Name="SliderNetworkTimeout" Minimum="5" Maximum="60" TickFrequency="5" IsSnapToTickEnabled="True" ValueChanged="OnSliderChanged"/>
+                        <TextBlock x:Name="TxtNetworkTimeout" VerticalAlignment="Center" Margin="4,0"/>
+                    </StackPanel>
+                    <CheckBox x:Name="ChkEnableClientPrediction" Content="Enable Client-Side Prediction (lag compensation)" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 9.2 Player Client -->
+            <GroupBox Header="👤 9.2 Player Client Features">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableMultiplayerChat" Content="Enable Multiplayer Chat System" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 9.3 Synchronized Fog of War -->
+            <GroupBox Header="🌫️ 9.3 Synchronized Fog of War">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableFogSync" Content="Enable Real-Time Fog Sync" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 9.4 Voice Chat Integration -->
+            <GroupBox Header="🎤 9.4 Voice Chat Integration">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableVoiceChat" Content="Enable Voice Chat (Discord Integration)" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 9.5 Cloud Save & Sync -->
+            <GroupBox Header="☁️ 9.5 Cloud Save &amp; Sync">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableCloudSave" Content="Enable Cloud Save &amp; Sync" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <Separator Margin="0,12" Background="#FF444466"/>
+
             <Button Content="Reset All to Defaults" Click="OnResetDefaults" Background="#FF553333" Foreground="White" Padding="8,4" HorizontalAlignment="Left"/>
 
         </StackPanel>
