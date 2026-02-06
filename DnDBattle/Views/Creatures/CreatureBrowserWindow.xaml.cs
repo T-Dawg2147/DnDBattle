@@ -33,7 +33,6 @@ using DnDBattle.Views.Settings;
 using DnDBattle.Views.Spells;
 using DnDBattle.Views.TileMap;
 using DnDBattle.Services.TileService;
-using DnDBattle.Views.Creatures;
 using DnDBattle.Models.Combat;
 using DnDBattle.Models.Creatures;
 using DnDBattle.Models.Effects;

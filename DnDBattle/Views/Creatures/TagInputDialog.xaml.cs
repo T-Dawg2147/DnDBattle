@@ -25,7 +25,6 @@ using DnDBattle.Views.Multiplayer;
 using DnDBattle.Views.Settings;
 using DnDBattle.Views.Spells;
 using DnDBattle.Views.TileMap;
-using DnDBattle.Views.Creatures;
 
 namespace DnDBattle.Views.Creatures
 {

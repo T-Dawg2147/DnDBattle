@@ -20,7 +20,6 @@ using DnDBattle.Models.Encounters;
 using DnDBattle.Models.Environment;
 using DnDBattle.Models.Networking;
 using DnDBattle.Models.Spells;
-using DnDBattle.Services.Grid;
 
 namespace DnDBattle.Services.Grid
 {

@@ -36,7 +36,6 @@ using DnDBattle.Views.Spells;
 using DnDBattle.Views.TileMap;
 using DnDBattle.Models.Tiles;
 using DnDBattle.Services.TileService;
-using DnDBattle.Views.Multiplayer;
 
 namespace DnDBattle.Views.Multiplayer
 {

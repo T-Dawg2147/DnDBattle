@@ -14,7 +14,6 @@ using DnDBattle.Models.Networking;
 using DnDBattle.Models.Spells;
 using DnDBattle.Models.Tiles;
 using Action = DnDBattle.Models.Combat.Action;
-using DnDBattle.Models.Encounters;
 
 namespace DnDBattle.Models.Encounters
 {

@@ -26,7 +26,6 @@ using DnDBattle.Models.Spells;
 using DnDBattle.Models.Tiles;
 using Action = DnDBattle.Models.Combat.Action;
 using Condition = DnDBattle.Models.Effects.Condition;
-using DnDBattle.Models.Creatures;
 using DnDBattle.Services.TileService;
 
 namespace DnDBattle.Models.Creatures

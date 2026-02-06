@@ -11,7 +11,6 @@ using DnDBattle.Services.Persistence;
 using DnDBattle.Services.TileService;
 using DnDBattle.Services.UI;
 using DnDBattle.Services.Vision;
-using DnDBattle.Services.Grid;
 
 namespace DnDBattle.Services.Grid
 {

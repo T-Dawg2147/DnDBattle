@@ -37,7 +37,6 @@ using DnDBattle.Models.Environment;
 using DnDBattle.Models.Networking;
 using DnDBattle.Models.Spells;
 using DnDBattle.Services.TileService;
-using DnDBattle.Views.Features;
 
 namespace DnDBattle.Views.Features
 {

@@ -23,7 +23,6 @@ using DnDBattle.Views.Features;
 using DnDBattle.Views.Multiplayer;
 using DnDBattle.Views.Spells;
 using DnDBattle.Views.TileMap;
-using DnDBattle.Views.Settings;
 using DnDBattle.Models.Combat;
 using DnDBattle.Models.Creatures;
 using DnDBattle.Models.Effects;

@@ -24,7 +24,6 @@ using DnDBattle.Services.Persistence;
 using DnDBattle.Services.TileService;
 using DnDBattle.Services.UI;
 using DnDBattle.Models.Tiles;
-using DnDBattle.Services.Vision;
 
 namespace DnDBattle.Services.Vision
 {

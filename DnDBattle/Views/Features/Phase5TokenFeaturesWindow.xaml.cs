@@ -25,7 +25,6 @@ using DnDBattle.Views.Settings;
 using DnDBattle.Views.Spells;
 using DnDBattle.Views.TileMap;
 using DnDBattle.Models.Tiles;
-using DnDBattle.Views.Features;
 
 namespace DnDBattle.Views.Features
 {

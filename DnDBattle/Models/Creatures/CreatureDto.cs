@@ -12,7 +12,6 @@ using DnDBattle.Models.Environment;
 using DnDBattle.Models.Networking;
 using DnDBattle.Models.Spells;
 using DnDBattle.Models.Tiles;
-using DnDBattle.Models.Creatures;
 
 namespace DnDBattle.Models.Creatures
 {

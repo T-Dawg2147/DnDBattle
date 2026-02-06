@@ -17,7 +17,6 @@ using DnDBattle.Services.Networking;
 using DnDBattle.Services.Persistence;
 using DnDBattle.Services.UI;
 using DnDBattle.Services.Vision;
-using DnDBattle.Models;
 using DnDBattle.Models.Combat;
 using DnDBattle.Models.Creatures;
 using DnDBattle.Models.Effects;
@@ -25,7 +24,6 @@ using DnDBattle.Models.Encounters;
 using DnDBattle.Models.Environment;
 using DnDBattle.Models.Networking;
 using DnDBattle.Models.Spells;
-using DnDBattle.Services.TileService;
 
 namespace DnDBattle.Services.TileService
 {

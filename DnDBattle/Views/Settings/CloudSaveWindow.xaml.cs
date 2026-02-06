@@ -33,7 +33,6 @@ using DnDBattle.Views.Spells;
 using DnDBattle.Views.TileMap;
 using DnDBattle.Models.Tiles;
 using DnDBattle.Services.TileService;
-using DnDBattle.Views.Settings;
 
 namespace DnDBattle.Views.Settings
 {

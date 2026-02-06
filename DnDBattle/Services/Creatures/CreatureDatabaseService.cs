@@ -30,7 +30,6 @@ using DnDBattle.Services.Persistence;
 using DnDBattle.Services.TileService;
 using DnDBattle.Services.UI;
 using DnDBattle.Services.Vision;
-using DnDBattle.Services.Creatures;
 using DnDBattle.Views.Editors;
 using DnDBattle.Views.TileMap;
 using DnDBattle.Models.Combat;

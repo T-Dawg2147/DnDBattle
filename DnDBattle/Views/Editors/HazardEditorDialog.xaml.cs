@@ -24,7 +24,6 @@ using DnDBattle.Views.Multiplayer;
 using DnDBattle.Views.Settings;
 using DnDBattle.Views.Spells;
 using DnDBattle.Views.TileMap;
-using DnDBattle.Models;
 using DnDBattle.Models.Combat;
 using DnDBattle.Models.Creatures;
 using DnDBattle.Models.Effects;
@@ -32,7 +31,6 @@ using DnDBattle.Models.Encounters;
 using DnDBattle.Models.Environment;
 using DnDBattle.Models.Networking;
 using DnDBattle.Models.Spells;
-using DnDBattle.Views.Editors;
 
 namespace DnDBattle.Views.Editors
 {

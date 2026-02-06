@@ -14,7 +14,6 @@ using DnDBattle.Services.Networking;
 using DnDBattle.Services.Persistence;
 using DnDBattle.Services.TileService;
 using DnDBattle.Services.Vision;
-using DnDBattle.Services.UI;
 
 namespace DnDBattle.Services.UI
 {

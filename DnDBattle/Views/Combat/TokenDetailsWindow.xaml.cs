@@ -25,7 +25,6 @@ using DnDBattle.Views.Spells;
 using DnDBattle.Views.TileMap;
 using Action = DnDBattle.Models.Combat.Action;
 using DnDBattle.Models.Tiles;
-using DnDBattle.Views.Combat;
 
 namespace DnDBattle.Views.Combat
 {

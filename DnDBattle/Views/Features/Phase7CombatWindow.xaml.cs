@@ -39,7 +39,6 @@ using Action = DnDBattle.Models.Combat.Action;
 using Condition = DnDBattle.Models.Effects.Condition;
 using DnDBattle.Models.Tiles;
 using DnDBattle.Services.TileService;
-using DnDBattle.Views.Features;
 
 namespace DnDBattle.Views.Features
 {

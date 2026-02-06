@@ -21,7 +21,6 @@ using DnDBattle.Services.UI;
 using DnDBattle.Services.Vision;
 using Action = DnDBattle.Models.Combat.Action;
 using DnDBattle.Models.Tiles;
-using DnDBattle.Services.Combat;
 
 namespace DnDBattle.Services.Combat
 {

@@ -7,7 +7,6 @@ using DnDBattle.Models.Environment;
 using DnDBattle.Models.Networking;
 using DnDBattle.Models.Spells;
 using DnDBattle.Models.Tiles;
-using DnDBattle.Models.Combat;
 ﻿using System;
 
 namespace DnDBattle.Models.Combat

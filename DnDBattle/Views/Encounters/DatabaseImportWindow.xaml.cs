@@ -17,7 +17,6 @@ using DnDBattle.Views.Multiplayer;
 using DnDBattle.Views.Settings;
 using DnDBattle.Views.Spells;
 using DnDBattle.Views.TileMap;
-using DnDBattle.Views.Encounters;
 using DnDBattle.Services.Combat;
 using DnDBattle.Services.Creatures;
 using DnDBattle.Services.Dice;

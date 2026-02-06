@@ -11,7 +11,6 @@ using DnDBattle.Views.Features;
 using DnDBattle.Views.Multiplayer;
 using DnDBattle.Views.Spells;
 using DnDBattle.Views.TileMap;
-using DnDBattle.Views.Settings;
 
 namespace DnDBattle.Views.Settings
 {

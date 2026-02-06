@@ -26,7 +26,6 @@ using DnDBattle.Models.Environment;
 using DnDBattle.Models.Networking;
 using DnDBattle.Models.Spells;
 using DnDBattle.Models.Tiles;
-using DnDBattle.Models;
 using DnDBattle.Services.TileService;
 
 namespace DnDBattle.Models

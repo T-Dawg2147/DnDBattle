@@ -9,7 +9,6 @@ using DnDBattle.Models.Encounters;
 using DnDBattle.Models.Networking;
 using DnDBattle.Models.Spells;
 using DnDBattle.Models.Tiles;
-using DnDBattle.Models.Environment;
 
 namespace DnDBattle.Models.Environment
 {

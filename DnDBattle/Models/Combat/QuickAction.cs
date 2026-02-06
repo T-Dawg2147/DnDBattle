@@ -13,7 +13,6 @@ using DnDBattle.Models.Networking;
 using DnDBattle.Models.Spells;
 using DnDBattle.Models.Tiles;
 using Condition = DnDBattle.Models.Effects.Condition;
-using DnDBattle.Models.Combat;
 
 namespace DnDBattle.Models.Combat
 {

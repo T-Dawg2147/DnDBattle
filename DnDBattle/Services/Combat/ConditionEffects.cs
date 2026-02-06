@@ -20,7 +20,6 @@ using DnDBattle.Services.UI;
 using DnDBattle.Services.Vision;
 using Condition = DnDBattle.Models.Effects.Condition;
 using DnDBattle.Models.Tiles;
-using DnDBattle.Services.Combat;
 
 namespace DnDBattle.Services.Combat
 {

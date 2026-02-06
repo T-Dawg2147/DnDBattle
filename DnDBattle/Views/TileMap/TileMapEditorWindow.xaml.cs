@@ -28,7 +28,6 @@ using DnDBattle.Services.Networking;
 using DnDBattle.Services.Persistence;
 using DnDBattle.Services.UI;
 using DnDBattle.Services.Vision;
-using DnDBattle.Views.TileMap;
 using DnDBattle.Models;
 using DnDBattle.Models.Combat;
 using DnDBattle.Models.Creatures;
