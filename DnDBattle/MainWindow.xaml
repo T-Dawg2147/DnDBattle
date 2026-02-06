@@ -175,6 +175,26 @@
                 <MenuItem Header="Update Fog from Vision" Click="Phase4_UpdateFogFromVision_Click"/>
                 <MenuItem Header="Clear Shadow Cache" Click="Phase4_ClearShadowCache_Click"/>
             </MenuItem>
+
+            <!-- Phase 5: Advanced Token Features - Top level menu for testing Phase 5 features -->
+            <MenuItem Header="🎭 Phase 5" Foreground="White">
+                <MenuItem Header="Advanced Token Features Panel..." Click="OpenPhase5Window_Click"/>
+                <Separator/>
+                <MenuItem Header="Quick: Add Paladin Aura to Selected" Click="Phase5_AddPaladinAura_Click"/>
+                <MenuItem Header="Quick: Add Spirit Guardians to Selected" Click="Phase5_AddSpiritGuardians_Click"/>
+                <Separator/>
+                <MenuItem Header="Set Elevation...">
+                    <MenuItem Header="Ground (0 ft)" Click="Phase5_SetElevation_Click" Tag="0"/>
+                    <MenuItem Header="5 ft" Click="Phase5_SetElevation_Click" Tag="5"/>
+                    <MenuItem Header="10 ft" Click="Phase5_SetElevation_Click" Tag="10"/>
+                    <MenuItem Header="20 ft" Click="Phase5_SetElevation_Click" Tag="20"/>
+                    <MenuItem Header="30 ft" Click="Phase5_SetElevation_Click" Tag="30"/>
+                    <MenuItem Header="50 ft" Click="Phase5_SetElevation_Click" Tag="50"/>
+                    <MenuItem Header="100 ft" Click="Phase5_SetElevation_Click" Tag="100"/>
+                </MenuItem>
+                <Separator/>
+                <MenuItem Header="Refresh Token Visuals" Click="Phase5_RefreshVisuals_Click"/>
+            </MenuItem>
         </Menu>
         
 

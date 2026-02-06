@@ -567,6 +567,79 @@ namespace DnDBattle
 
         #endregion
 
+        #region Phase 5: Advanced Token Features Menu Handlers
+
+        /// <summary>
+        /// Opens the Phase 5 Advanced Token Features management window
+        /// </summary>
+        private void OpenPhase5Window_Click(object sender, RoutedEventArgs e)
+        {
+            var window = new Phase5TokenFeaturesWindow(BattleGrid, DataContext as ViewModels.MainViewModel);
+            window.Owner = this;
+            window.Show();
+        }
+
+        /// <summary>
+        /// Quick-add a Paladin Aura (10 sq radius) to the selected token
+        /// </summary>
+        private void Phase5_AddPaladinAura_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is ViewModels.MainViewModel vm && vm.SelectedToken != null)
+            {
+                vm.SelectedToken.Auras.Add(Models.TokenAura.PaladinAura());
+                BattleGrid.RedrawAuras();
+            }
+            else
+            {
+                MessageBox.Show("Please select a token first.", "No Token Selected");
+            }
+        }
+
+        /// <summary>
+        /// Quick-add Spirit Guardians aura to the selected token
+        /// </summary>
+        private void Phase5_AddSpiritGuardians_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is ViewModels.MainViewModel vm && vm.SelectedToken != null)
+            {
+                vm.SelectedToken.Auras.Add(Models.TokenAura.SpiritGuardians());
+                BattleGrid.RedrawAuras();
+            }
+            else
+            {
+                MessageBox.Show("Please select a token first.", "No Token Selected");
+            }
+        }
+
+        /// <summary>
+        /// Set elevation of selected token from menu Tag value
+        /// </summary>
+        private void Phase5_SetElevation_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is ViewModels.MainViewModel vm && vm.SelectedToken != null)
+            {
+                if (sender is MenuItem mi && int.TryParse(mi.Tag?.ToString(), out int elev))
+                {
+                    vm.SelectedToken.Elevation = elev;
+                    BattleGrid.InitializePhase5Visuals();
+                }
+            }
+            else
+            {
+                MessageBox.Show("Please select a token first.", "No Token Selected");
+            }
+        }
+
+        /// <summary>
+        /// Force refresh of all Phase 5 token visuals (auras, elevation badges, facing arrows)
+        /// </summary>
+        private void Phase5_RefreshVisuals_Click(object sender, RoutedEventArgs e)
+        {
+            BattleGrid.InitializePhase5Visuals();
+        }
+
+        #endregion
+
         private void ToggleLeftSidebar_Click(object seder, RoutedEventArgs e)
         {
             if (LeftSidebarColumn.Width.Value > 0)
