@@ -290,5 +290,10 @@ namespace DnDBattle
 
         /// <summary>Enable advanced token customization (borders, shapes, name plates, overlays).</summary>
         public static bool EnableTokenCustomization { get; set; } = false;
+
+        // ── Undecided Features: Persistent Measurements ──
+
+        /// <summary>Enable persistent measurement templates on the battle map.</summary>
+        public static bool EnableMeasurements { get; set; } = false;
     }
 }
