@@ -30,15 +30,15 @@ namespace DnDBattle.ViewModels
 
         #region Properties
 
-        private Token _selectedToken;
-        public Token SelectedToken
+        private Token? _selectedToken;
+        public Token? SelectedToken
         {
             get => _selectedToken;
             set => SetProperty(ref _selectedToken, value);
         }
 
-        private Token _selectedBankItem;
-        public Token SelectedBankItem
+        private Token? _selectedBankItem;
+        public Token? SelectedBankItem
         {
             get => _selectedBankItem;
             set => SetProperty(ref _selectedBankItem, value);
@@ -58,21 +58,21 @@ namespace DnDBattle.ViewModels
             set => SetProperty(ref _diceExpression, value);
         }
 
-        private ImageSource _mapImage;
-        public ImageSource MapImageSource
+        private ImageSource? _mapImage;
+        public ImageSource? MapImageSource
         {
             get => _mapImage;
             set => SetProperty(ref _mapImage, value);
         }
 
-        private Token _currentTurnToken;
-        public Token CurrentTurnToken
+        private Token? _currentTurnToken;
+        public Token? CurrentTurnToken
         {
             get => _currentTurnToken;
             set => SetProperty(ref _currentTurnToken, value);
         }
 
-        private ICollectionView _creatureBankView;
+        private ICollectionView? _creatureBankView;
         public ICollectionView CreatureBankView
         {
             get
@@ -97,7 +97,7 @@ namespace DnDBattle.ViewModels
             }
         }
 
-        private string _loadingMessage;
+        private string _loadingMessage = string.Empty;
         public string LoadingMessage
         {
             get => _loadingMessage;

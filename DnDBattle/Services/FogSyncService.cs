@@ -228,7 +228,8 @@ namespace DnDBattle.Services
 
         private List<CellCoord> GetCellsInRadius(int cx, int cy, int radius)
         {
-            var cells = new List<CellCoord>();
+            int estimatedCapacity = (2 * radius + 1) * (2 * radius + 1);
+            var cells = new List<CellCoord>(estimatedCapacity);
             int r2 = radius * radius;
 
             for (int dx = -radius; dx <= radius; dx++)

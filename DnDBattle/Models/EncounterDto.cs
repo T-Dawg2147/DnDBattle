@@ -7,7 +7,7 @@ namespace DnDBattle.Models
     /// </summary>
     public class EncounterDto
     {
-        public string MapImagePath { get; set; }
+        public string MapImagePath { get; set; } = string.Empty;
         public List<TokenDto> Tokens { get; set; } = new List<TokenDto>();
         public List<WallDto> Walls { get; set; } = new List<WallDto>();
         public List<LightDto> Lights { get; set; } = new List<LightDto>();
@@ -22,9 +22,9 @@ namespace DnDBattle.Models
         public double StartY { get; set; }
         public double EndX { get; set; }
         public double EndY { get; set; }
-        public string WallType { get; set; }
+        public string WallType { get; set; } = string.Empty;
         public bool IsOpen { get; set; }
-        public string Label { get; set; }
+        public string Label { get; set; } = string.Empty;
     }
 
     /// <summary>
@@ -45,7 +45,7 @@ namespace DnDBattle.Models
         public string LightType { get; set; } = "Point";
         public double Direction { get; set; }
         public double ConeWidth { get; set; } = 60;
-        public string Label { get; set; }
+        public string Label { get; set; } = string.Empty;
     }
 
     /// <summary>

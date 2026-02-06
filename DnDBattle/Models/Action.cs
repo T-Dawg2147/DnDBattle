@@ -8,12 +8,12 @@ namespace DnDBattle.Models
 {
     public class Action
     {
-        public string Name { get; set; }
-        public string Type { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;
         public int? Cost { get; set; }
         public int? AttackBonus { get; set; }
-        public string DamageExpression { get; set; }
-        public string Range { get; set; }
+        public string DamageExpression { get; set; } = string.Empty;
+        public string Range { get; set; } = string.Empty;
         public string? Description { get; set; }
 
         public override string ToString() =>

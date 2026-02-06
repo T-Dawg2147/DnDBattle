@@ -990,6 +990,42 @@ namespace DnDBattle
 
         #endregion
 
+        #region Multiplayer Menu Handlers
+
+        private void Multiplayer_HostGame_Click(object sender, RoutedEventArgs e)
+        {
+            var window = new HostGameWindow();
+            if (DataContext is ViewModels.MainViewModel vm)
+            {
+                window.SetTokens(vm.Tokens);
+            }
+            window.Owner = this;
+            window.Show();
+        }
+
+        private void Multiplayer_JoinGame_Click(object sender, RoutedEventArgs e)
+        {
+            var window = new JoinGameWindow();
+            window.Owner = this;
+            window.Show();
+        }
+
+        private void Multiplayer_VoiceChat_Click(object sender, RoutedEventArgs e)
+        {
+            var window = new VoiceChatWindow();
+            window.Owner = this;
+            window.ShowDialog();
+        }
+
+        private void Multiplayer_CloudSave_Click(object sender, RoutedEventArgs e)
+        {
+            var window = new CloudSaveWindow();
+            window.Owner = this;
+            window.ShowDialog();
+        }
+
+        #endregion
+
         #region Experimental / Undecided Features Menu Handlers
 
         /// <summary>
