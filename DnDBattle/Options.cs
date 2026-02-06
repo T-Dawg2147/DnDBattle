@@ -172,5 +172,31 @@ namespace DnDBattle
 
         /// <summary>Enable flanking detection based on token positioning.</summary>
         public static bool EnableFlankingDetection { get; set; } = true;
+
+        // ── Phase 6: Area Effects Expansion ──
+
+        /// <summary>Enable the spell templates library (search/browse/favorites).</summary>
+        public static bool EnableSpellLibrary { get; set; } = true;
+
+        /// <summary>Enable duration tracking for area effects (countdown per round).</summary>
+        public static bool EnableDurationTracking { get; set; } = true;
+
+        /// <summary>Enable damage-over-time auto-application for area effects.</summary>
+        public static bool EnableDamageOverTime { get; set; } = true;
+
+        /// <summary>Auto-apply DoT damage (false = manual/reminder only).</summary>
+        public static bool AutoApplyDotDamage { get; set; } = true;
+
+        /// <summary>Enable custom polygon area effects (click vertices to draw).</summary>
+        public static bool EnablePolygonEffects { get; set; } = true;
+
+        /// <summary>Enable area effect animations (pulsing, particles, rotation).</summary>
+        public static bool EnableEffectAnimations { get; set; } = true;
+
+        /// <summary>Maximum particles per animated effect (performance tuning).</summary>
+        public static int MaxParticlesPerEffect { get; set; } = 50;
+
+        /// <summary>Default animation type for newly placed effects.</summary>
+        public static int DefaultAnimationType { get; set; } = 1; // 0=None, 1=Pulse, 2=Particle, 3=Rotate
     }
 }

@@ -178,6 +178,60 @@
 
             <Separator Margin="0,12" Background="#FF444466"/>
 
+            <TextBlock Text="⚙️ Phase 6: Area Effects Expansion" FontSize="18" FontWeight="Bold" Foreground="#FF88AAFF" Margin="0,12,0,12"/>
+
+            <!-- 6.1 Spell Templates Library -->
+            <GroupBox Header="📖 6.1 Spell Templates Library">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableSpellLibrary" Content="Enable Spell Templates Library" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 6.2 Duration Tracking -->
+            <GroupBox Header="⏱️ 6.2 Duration Tracking">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableDurationTracking" Content="Enable Duration Tracking (countdown per round)" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 6.3 Damage Over Time -->
+            <GroupBox Header="🔥 6.3 Damage Over Time">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableDamageOverTime" Content="Enable Damage Over Time" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <CheckBox x:Name="ChkAutoApplyDot" Content="Auto-Apply DoT Damage (uncheck for manual)" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 6.4 Custom Polygon Areas -->
+            <GroupBox Header="📐 6.4 Custom Polygon Areas">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnablePolygonEffects" Content="Enable Custom Polygon Area Effects" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 6.5 Effect Animations -->
+            <GroupBox Header="✨ 6.5 Effect Animations">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableEffectAnimations" Content="Enable Effect Animations" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Max Particles/Effect:" VerticalAlignment="Center" Width="150"/>
+                        <Slider x:Name="SliderMaxParticles" Minimum="10" Maximum="200" TickFrequency="10" IsSnapToTickEnabled="True" ValueChanged="OnSliderChanged"/>
+                        <TextBlock x:Name="TxtMaxParticles" VerticalAlignment="Center" Margin="4,0"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Default Animation:" VerticalAlignment="Center" Width="150"/>
+                        <ComboBox x:Name="CmbDefaultAnimation" Width="180" SelectionChanged="OnAnimationComboChanged">
+                            <ComboBoxItem Content="None"/>
+                            <ComboBoxItem Content="Pulse"/>
+                            <ComboBoxItem Content="Particle"/>
+                            <ComboBoxItem Content="Rotate"/>
+                        </ComboBox>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
+
+            <Separator Margin="0,12" Background="#FF444466"/>
+
             <Button Content="Reset All to Defaults" Click="OnResetDefaults" Background="#FF553333" Foreground="White" Padding="8,4" HorizontalAlignment="Left"/>
 
         </StackPanel>

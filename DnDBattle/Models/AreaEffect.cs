@@ -48,6 +48,52 @@ namespace DnDBattle.Models
         /// </summary>
         public Guid? SourceTokenId { get; set; }
 
+        // ── Phase 6.2: Duration Tracking ──
+
+        /// <summary>
+        /// Duration in rounds (0 = permanent/instantaneous)
+        /// </summary>
+        public int DurationRounds { get; set; }
+
+        /// <summary>
+        /// Remaining rounds before effect expires
+        /// </summary>
+        public int RoundsRemaining { get; set; }
+
+        /// <summary>
+        /// Whether this spell requires concentration
+        /// </summary>
+        public bool RequiresConcentration { get; set; }
+
+        // ── Phase 6.3: Damage Over Time ──
+
+        /// <summary>
+        /// Dice expression for recurring damage (e.g. "3d8")
+        /// </summary>
+        public string DamageExpression { get; set; }
+
+        /// <summary>
+        /// Type of damage dealt
+        /// </summary>
+        public DamageType DamageType { get; set; }
+
+        /// <summary>
+        /// When the damage is applied
+        /// </summary>
+        public DamageTiming DamageTiming { get; set; }
+
+        // ── Phase 6.5: Effect Animations ──
+
+        /// <summary>
+        /// Animation style for this effect
+        /// </summary>
+        public EffectAnimationType AnimationType { get; set; }
+
+        /// <summary>
+        /// Current animation phase (radians for pulse, degrees for rotation)
+        /// </summary>
+        public double AnimationPhase { get; set; }
+
         /// <summary>
         /// Gets the size in grid squares (assuming 5ft per square)
         /// </summary>

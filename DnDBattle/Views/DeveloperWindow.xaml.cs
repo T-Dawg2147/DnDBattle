@@ -59,6 +59,16 @@ namespace DnDBattle.Views
             ChkAutoFace.IsChecked = Options.AutoFaceMovementDirection;
             ChkEnableFlanking.IsChecked = Options.EnableFlankingDetection;
 
+            // Phase 6
+            ChkEnableSpellLibrary.IsChecked = Options.EnableSpellLibrary;
+            ChkEnableDurationTracking.IsChecked = Options.EnableDurationTracking;
+            ChkEnableDamageOverTime.IsChecked = Options.EnableDamageOverTime;
+            ChkAutoApplyDot.IsChecked = Options.AutoApplyDotDamage;
+            ChkEnablePolygonEffects.IsChecked = Options.EnablePolygonEffects;
+            ChkEnableEffectAnimations.IsChecked = Options.EnableEffectAnimations;
+            SliderMaxParticles.Value = Options.MaxParticlesPerEffect;
+            CmbDefaultAnimation.SelectedIndex = Options.DefaultAnimationType;
+
             UpdateLabels();
         }
 
@@ -71,6 +81,7 @@ namespace DnDBattle.Views
             TxtVisionRange.Text = $"{SliderVisionRange.Value:F0} sq";
             TxtPathDepth.Text = $"{SliderPathDepth.Value:F0} sq";
             TxtAnimSpeed.Text = $"{SliderAnimSpeed.Value:F1} s";
+            TxtMaxParticles.Text = $"{SliderMaxParticles.Value:F0}";
         }
 
         private void OnFeatureToggled(object sender, RoutedEventArgs e)
@@ -96,6 +107,14 @@ namespace DnDBattle.Views
             Options.EnableTokenFacing = ChkEnableFacing.IsChecked == true;
             Options.AutoFaceMovementDirection = ChkAutoFace.IsChecked == true;
             Options.EnableFlankingDetection = ChkEnableFlanking.IsChecked == true;
+
+            // Phase 6
+            Options.EnableSpellLibrary = ChkEnableSpellLibrary.IsChecked == true;
+            Options.EnableDurationTracking = ChkEnableDurationTracking.IsChecked == true;
+            Options.EnableDamageOverTime = ChkEnableDamageOverTime.IsChecked == true;
+            Options.AutoApplyDotDamage = ChkAutoApplyDot.IsChecked == true;
+            Options.EnablePolygonEffects = ChkEnablePolygonEffects.IsChecked == true;
+            Options.EnableEffectAnimations = ChkEnableEffectAnimations.IsChecked == true;
         }
 
         private void OnSliderChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -112,6 +131,9 @@ namespace DnDBattle.Views
             Options.PathfindingMaxDepth = (int)SliderPathDepth.Value;
             Options.PathAnimationSecondsPerSquare = SliderAnimSpeed.Value;
 
+            // Phase 6
+            Options.MaxParticlesPerEffect = (int)SliderMaxParticles.Value;
+
             UpdateLabels();
         }
 
@@ -119,6 +141,12 @@ namespace DnDBattle.Views
         {
             if (_initializing) return;
             Options.FogRevealMode = CmbFogRevealMode.SelectedIndex;
+        }
+
+        private void OnAnimationComboChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_initializing) return;
+            Options.DefaultAnimationType = CmbDefaultAnimation.SelectedIndex;
         }
 
         private void OnResetDefaults(object sender, RoutedEventArgs e)
@@ -150,6 +178,16 @@ namespace DnDBattle.Views
             Options.EnableTokenFacing = true;
             Options.AutoFaceMovementDirection = true;
             Options.EnableFlankingDetection = true;
+
+            // Phase 6
+            Options.EnableSpellLibrary = true;
+            Options.EnableDurationTracking = true;
+            Options.EnableDamageOverTime = true;
+            Options.AutoApplyDotDamage = true;
+            Options.EnablePolygonEffects = true;
+            Options.EnableEffectAnimations = true;
+            Options.MaxParticlesPerEffect = 50;
+            Options.DefaultAnimationType = 1;
 
             _initializing = true;
             LoadCurrentValues();
