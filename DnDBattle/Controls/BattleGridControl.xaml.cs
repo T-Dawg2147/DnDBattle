@@ -371,7 +371,12 @@ namespace DnDBattle.Controls
         private class FrameworkElementForVisual : FrameworkElement
         {
             private readonly DrawingVisual _visual;
-            public FrameworkElementForVisual(DrawingVisual visual) => _visual = visual;
+            public FrameworkElementForVisual(DrawingVisual visual)
+            {
+                _visual = visual;
+                AddVisualChild(visual);
+                AddLogicalChild(visual);
+            }
             protected override int VisualChildrenCount => 1;
             protected override Visual GetVisualChild(int index) => _visual;
         }
