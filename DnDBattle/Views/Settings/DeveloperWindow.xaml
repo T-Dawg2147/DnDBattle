@@ -1,0 +1,475 @@
+<Window x:Class="DnDBattle.Views.Settings.DeveloperWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="🔧 Developer Settings - Features"
+        Width="520" Height="900"
+        WindowStartupLocation="CenterOwner"
+        Background="#FF1E1E2E" Foreground="White"
+        ResizeMode="CanResizeWithGrip">
+    <Window.Resources>
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Margin" Value="0,4"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#FFCCCCDD"/>
+            <Setter Property="Margin" Value="0,2"/>
+        </Style>
+        <Style TargetType="Slider">
+            <Setter Property="Margin" Value="0,2,0,6"/>
+            <Setter Property="Width" Value="220"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+        </Style>
+        <Style TargetType="GroupBox">
+            <Setter Property="Foreground" Value="#FF88AAFF"/>
+            <Setter Property="BorderBrush" Value="#FF444466"/>
+            <Setter Property="Margin" Value="0,6"/>
+            <Setter Property="Padding" Value="8"/>
+        </Style>
+    </Window.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16">
+        <StackPanel>
+
+            <TextBlock Text="⚙️ Phase 4: Lighting &amp; Vision Features" FontSize="18" FontWeight="Bold" Foreground="#FF88AAFF" Margin="0,0,0,12"/>
+
+            <!-- 4.1 Basic Light Sources -->
+            <GroupBox Header="💡 4.1 Basic Light Sources">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableLighting" Content="Enable Lighting System" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Default Bright Radius:" VerticalAlignment="Center" Width="150"/>
+                        <Slider x:Name="SliderBrightRadius" Minimum="1" Maximum="20" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="OnSliderChanged"/>
+                        <TextBlock x:Name="TxtBrightRadius" VerticalAlignment="Center" Margin="4,0"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Default Dim Radius:" VerticalAlignment="Center" Width="150"/>
+                        <Slider x:Name="SliderDimRadius" Minimum="1" Maximum="30" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="OnSliderChanged"/>
+                        <TextBlock x:Name="TxtDimRadius" VerticalAlignment="Center" Margin="4,0"/>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 4.2 Shadow Casting -->
+            <GroupBox Header="🌑 4.2 Shadow Casting">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableShadowCasting" Content="Enable Shadow Casting" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Ray Count (quality):" VerticalAlignment="Center" Width="150"/>
+                        <Slider x:Name="SliderRayCount" Minimum="36" Maximum="720" TickFrequency="36" IsSnapToTickEnabled="True" ValueChanged="OnSliderChanged"/>
+                        <TextBlock x:Name="TxtRayCount" VerticalAlignment="Center" Margin="4,0"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Shadow Softness (px):" VerticalAlignment="Center" Width="150"/>
+                        <Slider x:Name="SliderShadowSoftness" Minimum="0" Maximum="20" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="OnSliderChanged"/>
+                        <TextBlock x:Name="TxtShadowSoftness" VerticalAlignment="Center" Margin="4,0"/>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 4.3 Token Vision Ranges -->
+            <GroupBox Header="👁️ 4.3 Token Vision Ranges">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableTokenVision" Content="Enable Token Vision System" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Default Vision Range:" VerticalAlignment="Center" Width="150"/>
+                        <Slider x:Name="SliderVisionRange" Minimum="1" Maximum="30" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="OnSliderChanged"/>
+                        <TextBlock x:Name="TxtVisionRange" VerticalAlignment="Center" Margin="4,0"/>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 4.4 Vision Mode Rendering -->
+            <GroupBox Header="🎨 4.4 Vision Mode Rendering">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableVisionRendering" Content="Enable Vision Mode Rendering (grayscale darkvision, etc.)" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 4.5 Automatic Fog Reveal -->
+            <GroupBox Header="🌫️ 4.5 Automatic Fog Reveal">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableAutoFogReveal" Content="Enable Auto Fog Reveal from Token Vision" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Fog Reveal Mode:" VerticalAlignment="Center" Width="150"/>
+                        <ComboBox x:Name="CmbFogRevealMode" Width="180" SelectionChanged="OnComboChanged">
+                            <ComboBoxItem Content="Exploration (permanent)"/>
+                            <ComboBoxItem Content="Dynamic (current only)"/>
+                            <ComboBoxItem Content="Hybrid (dim memory)"/>
+                        </ComboBox>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 4.6 Directional Lights -->
+            <GroupBox Header="🔦 4.6 Directional Lights">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableDirectionalLights" Content="Enable Directional / Cone Lights" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <Separator Margin="0,12" Background="#FF444466"/>
+
+            <TextBlock Text="⚙️ Phase 5: Advanced Token Features" FontSize="18" FontWeight="Bold" Foreground="#FF88AAFF" Margin="0,12,0,12"/>
+
+            <!-- 5.1 A* Pathfinding -->
+            <GroupBox Header="🧭 5.1 A* Pathfinding">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnablePathfinding" Content="Enable Enhanced Pathfinding" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <CheckBox x:Name="ChkAllowDiagonal" Content="Allow Diagonal Movement (1.5x cost)" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Max Search Depth:" VerticalAlignment="Center" Width="150"/>
+                        <Slider x:Name="SliderPathDepth" Minimum="10" Maximum="120" TickFrequency="10" IsSnapToTickEnabled="True" ValueChanged="OnSliderChanged"/>
+                        <TextBlock x:Name="TxtPathDepth" VerticalAlignment="Center" Margin="4,0"/>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 5.2 Movement Cost Preview -->
+            <GroupBox Header="📊 5.2 Movement Cost Preview">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableMovementCost" Content="Show Movement Cost on Hover" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 5.3 Path Animation -->
+            <GroupBox Header="🎬 5.3 Path Animation">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnablePathAnimation" Content="Enable Smooth Path Animation" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Speed (sec/square):" VerticalAlignment="Center" Width="150"/>
+                        <Slider x:Name="SliderAnimSpeed" Minimum="0.1" Maximum="2.0" TickFrequency="0.1" IsSnapToTickEnabled="True" ValueChanged="OnSliderChanged"/>
+                        <TextBlock x:Name="TxtAnimSpeed" VerticalAlignment="Center" Margin="4,0"/>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 5.4 Attack of Opportunity -->
+            <GroupBox Header="⚔️ 5.4 Attack of Opportunity Detection">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableAOO" Content="Enable AOO Detection" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <CheckBox x:Name="ChkAutoResolveAOO" Content="Auto-Resolve AOO (dice rolls)" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 5.5 Token Auras -->
+            <GroupBox Header="🔮 5.5 Token Auras">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableAuras" Content="Enable Token Aura Rendering" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 5.6 Token Elevation -->
+            <GroupBox Header="🏔️ 5.6 Token Elevation">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableElevation" Content="Enable Elevation Tracking" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 5.7 Token Facing -->
+            <GroupBox Header="🧭 5.7 Token Facing / Direction">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableFacing" Content="Enable Facing Direction Indicator" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <CheckBox x:Name="ChkAutoFace" Content="Auto-Face Movement Direction" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <CheckBox x:Name="ChkEnableFlanking" Content="Enable Flanking Detection" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <Separator Margin="0,12" Background="#FF444466"/>
+
+            <TextBlock Text="⚙️ Phase 6: Area Effects Expansion" FontSize="18" FontWeight="Bold" Foreground="#FF88AAFF" Margin="0,12,0,12"/>
+
+            <!-- 6.1 Spell Templates Library -->
+            <GroupBox Header="📖 6.1 Spell Templates Library">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableSpellLibrary" Content="Enable Spell Templates Library" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 6.2 Duration Tracking -->
+            <GroupBox Header="⏱️ 6.2 Duration Tracking">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableDurationTracking" Content="Enable Duration Tracking (countdown per round)" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 6.3 Damage Over Time -->
+            <GroupBox Header="🔥 6.3 Damage Over Time">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableDamageOverTime" Content="Enable Damage Over Time" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <CheckBox x:Name="ChkAutoApplyDot" Content="Auto-Apply DoT Damage (uncheck for manual)" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 6.4 Custom Polygon Areas -->
+            <GroupBox Header="📐 6.4 Custom Polygon Areas">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnablePolygonEffects" Content="Enable Custom Polygon Area Effects" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 6.5 Effect Animations -->
+            <GroupBox Header="✨ 6.5 Effect Animations">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableEffectAnimations" Content="Enable Effect Animations" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Max Particles/Effect:" VerticalAlignment="Center" Width="150"/>
+                        <Slider x:Name="SliderMaxParticles" Minimum="10" Maximum="200" TickFrequency="10" IsSnapToTickEnabled="True" ValueChanged="OnSliderChanged"/>
+                        <TextBlock x:Name="TxtMaxParticles" VerticalAlignment="Center" Margin="4,0"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Default Animation:" VerticalAlignment="Center" Width="150"/>
+                        <ComboBox x:Name="CmbDefaultAnimation" Width="180" SelectionChanged="OnAnimationComboChanged">
+                            <ComboBoxItem Content="None"/>
+                            <ComboBoxItem Content="Pulse"/>
+                            <ComboBoxItem Content="Particle"/>
+                            <ComboBoxItem Content="Rotate"/>
+                        </ComboBox>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
+
+            <Separator Margin="0,12" Background="#FF444466"/>
+
+            <TextBlock Text="⚙️ Phase 7: Combat Automation" FontSize="18" FontWeight="Bold" Foreground="#FF88AAFF" Margin="0,12,0,12"/>
+
+            <!-- 7.1 Attack Roll System -->
+            <GroupBox Header="⚔️ 7.1 Attack Roll System">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableAttackRolls" Content="Enable Attack Roll System" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <CheckBox x:Name="ChkAutoApplyDamage" Content="Auto-Apply Damage on Hit" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 7.2 Saving Throw Automation -->
+            <GroupBox Header="🎲 7.2 Saving Throw Automation">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableSavingThrows" Content="Enable Saving Throw Automation" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <CheckBox x:Name="ChkAutoRollMonsterSaves" Content="Auto-Roll Monster Saves" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 7.3 Spell Slot Tracking -->
+            <GroupBox Header="✨ 7.3 Spell Slot Tracking">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableSpellSlotTracking" Content="Enable Spell Slot Tracking" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 7.4 Concentration Tracking -->
+            <GroupBox Header="🎯 7.4 Concentration Tracking">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableConcentration" Content="Enable Concentration Tracking" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <CheckBox x:Name="ChkAutoPromptConcentration" Content="Auto-Prompt Concentration Check on Damage" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 7.5 Condition Automation -->
+            <GroupBox Header="📋 7.5 Condition Automation">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableConditionAutomation" Content="Enable Condition Mechanical Effects" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 7.6 Cover System -->
+            <GroupBox Header="🛡️ 7.6 Cover System">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableCoverSystem" Content="Enable Cover Detection (+AC/+DEX saves)" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <Separator Margin="0,12" Background="#FF444466"/>
+
+            <TextBlock Text="⚙️ Phase 8: Advanced Map Features" FontSize="18" FontWeight="Bold" Foreground="#FF88AAFF" Margin="0,12,0,12"/>
+
+            <!-- 8.1 Multi-Map Management -->
+            <GroupBox Header="🗺️ 8.1 Multi-Map Management">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableMultiMap" Content="Enable Multi-Map Management (library, quick-switch, linking)" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Max Recent Maps:" VerticalAlignment="Center" Width="150"/>
+                        <Slider x:Name="SliderMaxRecentMaps" Minimum="1" Maximum="25" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="OnSliderChanged"/>
+                        <TextBlock x:Name="TxtMaxRecentMaps" VerticalAlignment="Center" Margin="4,0"/>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 8.2 Background Image Layers -->
+            <GroupBox Header="🖼️ 8.2 Background Image Layers">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableBackgroundLayers" Content="Enable Background Image Layers" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 8.3 Hexagonal Grids -->
+            <GroupBox Header="⬡ 8.3 Hexagonal Grids">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableHexGrid" Content="Enable Hexagonal Grid Support" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 8.4 Gridless Mode -->
+            <GroupBox Header="📏 8.4 Gridless Mode">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableGridlessMode" Content="Enable Gridless (Free-Form) Mode" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 8.5 Custom Grid Sizes -->
+            <GroupBox Header="📐 8.5 Custom Grid Sizes">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableCustomGridSizes" Content="Enable Custom Grid Sizes (feet per square)" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Default Feet/Square:" VerticalAlignment="Center" Width="150"/>
+                        <Slider x:Name="SliderDefaultFeetPerSquare" Minimum="5" Maximum="100" TickFrequency="5" IsSnapToTickEnabled="True" ValueChanged="OnSliderChanged"/>
+                        <TextBlock x:Name="TxtDefaultFeetPerSquare" VerticalAlignment="Center" Margin="4,0"/>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 8.6 Map Notes & Labels -->
+            <GroupBox Header="📝 8.6 Map Notes &amp; Labels">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableMapNotes" Content="Enable Map Notes &amp; Labels" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <CheckBox x:Name="ChkShowDMOnlyNotes" Content="Show DM-Only Notes" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Default Font Size:" VerticalAlignment="Center" Width="150"/>
+                        <Slider x:Name="SliderMapNoteFontSize" Minimum="8" Maximum="32" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="OnSliderChanged"/>
+                        <TextBlock x:Name="TxtMapNoteFontSize" VerticalAlignment="Center" Margin="4,0"/>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
+
+            <Separator Margin="0,12" Background="#FF444466"/>
+
+            <TextBlock Text="⚙️ Undecided Features (Experimental)" FontSize="18" FontWeight="Bold" Foreground="#FFFF8844" Margin="0,12,0,12"/>
+
+            <!-- UD.1 Dynamic Weather & Environment -->
+            <GroupBox Header="🌧️ UD.1 Dynamic Weather &amp; Environment">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableWeatherEffects" Content="Enable Weather Effects (rain, snow, fog, storm)" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <CheckBox x:Name="ChkEnableDayNightCycle" Content="Enable Day/Night Cycle" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Max Weather Particles:" VerticalAlignment="Center" Width="150"/>
+                        <Slider x:Name="SliderWeatherMaxParticles" Minimum="50" Maximum="1000" TickFrequency="50" IsSnapToTickEnabled="True" ValueChanged="OnSliderChanged"/>
+                        <TextBlock x:Name="TxtWeatherMaxParticles" VerticalAlignment="Center" Margin="4,0"/>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- UD.2 2.5D Token Elevation -->
+            <GroupBox Header="🏔️ UD.2 2.5D Elevation System">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableElevationSystem" Content="Enable 2.5D Terrain Elevation Layers" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- UD.3 Animated Tiles -->
+            <GroupBox Header="🎞️ UD.3 Animated Tiles">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableAnimatedTiles" Content="Enable Animated Tiles (water, fire, torch, magic)" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- UD.4 Procedural Map Generation -->
+            <GroupBox Header="🎲 UD.4 Procedural Map Generation">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableProceduralMapGen" Content="Enable Procedural Map Generation (BSP, caves)" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- UD.5 Advanced Token Customization -->
+            <GroupBox Header="🎨 UD.5 Advanced Token Customization">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableTokenCustomization" Content="Enable Token Customization (borders, shapes, name plates)" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- UD.6 Persistent Measurements -->
+            <GroupBox Header="📏 UD.6 Persistent Measurements">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableMeasurements" Content="Enable Persistent Measurement Templates" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- UD.8 3D Dice Roller -->
+            <GroupBox Header="🎲 UD.8 3D Dice Roller">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableDiceRoller3D" Content="Enable 3D Dice Roller" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <CheckBox x:Name="ChkEnableDiceStatistics" Content="Enable Dice Roll Statistics" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- UD.9 Accessibility Suite -->
+            <GroupBox Header="♿ UD.9 Accessibility Suite">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableHighContrast" Content="Enable High Contrast Mode" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <CheckBox x:Name="ChkEnableColorblindMode" Content="Enable Colorblind-Friendly Palettes" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <CheckBox x:Name="ChkEnableDyslexiaFont" Content="Enable Dyslexia-Friendly Font" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <CheckBox x:Name="ChkEnableKeyboardNav" Content="Enable Full Keyboard Navigation" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="UI Scale:" VerticalAlignment="Center" Width="150"/>
+                        <Slider x:Name="SliderUIScale" Minimum="100" Maximum="300" TickFrequency="25" IsSnapToTickEnabled="True" ValueChanged="OnSliderChanged"/>
+                        <TextBlock x:Name="TxtUIScale" VerticalAlignment="Center" Margin="4,0"/>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
+
+            <Separator Margin="0,12" Background="#FF444466"/>
+
+            <TextBlock Text="⚙️ Phase 9: Multiplayer / Networking" FontSize="18" FontWeight="Bold" Foreground="#FF88AAFF" Margin="0,12,0,12"/>
+
+            <!-- 9.1 Network Architecture -->
+            <GroupBox Header="🌐 9.1 Network Architecture">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableNetworking" Content="Enable Multiplayer Networking" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Default Server Port:" VerticalAlignment="Center" Width="150"/>
+                        <Slider x:Name="SliderNetworkPort" Minimum="1024" Maximum="65535" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="OnSliderChanged"/>
+                        <TextBlock x:Name="TxtNetworkPort" VerticalAlignment="Center" Margin="4,0"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Connection Timeout:" VerticalAlignment="Center" Width="150"/>
+                        <Slider x:Name="SliderNetworkTimeout" Minimum="5" Maximum="60" TickFrequency="5" IsSnapToTickEnabled="True" ValueChanged="OnSliderChanged"/>
+                        <TextBlock x:Name="TxtNetworkTimeout" VerticalAlignment="Center" Margin="4,0"/>
+                    </StackPanel>
+                    <CheckBox x:Name="ChkEnableClientPrediction" Content="Enable Client-Side Prediction (lag compensation)" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 9.2 Player Client -->
+            <GroupBox Header="👤 9.2 Player Client Features">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableMultiplayerChat" Content="Enable Multiplayer Chat System" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 9.3 Synchronized Fog of War -->
+            <GroupBox Header="🌫️ 9.3 Synchronized Fog of War">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableFogSync" Content="Enable Real-Time Fog Sync" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 9.4 Voice Chat Integration -->
+            <GroupBox Header="🎤 9.4 Voice Chat Integration">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableVoiceChat" Content="Enable Voice Chat (Discord Integration)" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 9.5 Cloud Save & Sync -->
+            <GroupBox Header="☁️ 9.5 Cloud Save &amp; Sync">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableCloudSave" Content="Enable Cloud Save &amp; Sync" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
+                </StackPanel>
+            </GroupBox>
+
+            <Separator Margin="0,12" Background="#FF444466"/>
+
+            <Button Content="Reset All to Defaults" Click="OnResetDefaults" Background="#FF553333" Foreground="White" Padding="8,4" HorizontalAlignment="Left"/>
+
+        </StackPanel>
+    </ScrollViewer>
+</Window>

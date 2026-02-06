@@ -4,6 +4,8 @@
         xmlns:local="clr-namespace:DnDBattle"
         xmlns:controls="clr-namespace:DnDBattle.Controls"
         xmlns:views="clr-namespace:DnDBattle.Views"
+        xmlns:viewsCombat="clr-namespace:DnDBattle.Views.Combat"
+        xmlns:viewsEffects="clr-namespace:DnDBattle.Views.Effects"
         Title="DnD Battle Builder" 
         Height="950" Width="1720"
         MinHeight="700" MinWidth="1000"
@@ -375,7 +377,7 @@
                     </Grid.RowDefinitions>
 
                     <!-- Initiative Tracker -->
-                    <views:InitiativeTrackerPanel x:Name="InitiativeTracker" 
+                    <viewsCombat:InitiativeTrackerPanel x:Name="InitiativeTracker" 
                                        Grid.Row="0"
                                        Margin="0"/>
 
@@ -462,11 +464,11 @@
 
                     <!-- Area Effect Toolbar -->
                     <StackPanel>
-                        <views:AreaEffectToolbar x:Name="AoeToolbar" 
+                        <viewsEffects:AreaEffectToolbar x:Name="AoeToolbar" 
                         Grid.Row="0"
                         Visibility="Visible"/>
 
-                        <views:FogOfWarToolbar x:Name="FogToolbar" 
+                        <viewsEffects:FogOfWarToolbar x:Name="FogToolbar" 
                        Grid.Row="0"
                        Visibility="Visible"/>
                     </StackPanel>
@@ -500,7 +502,7 @@
                     Background="#252526" 
                     MinWidth="380"
                     MaxWidth="500">
-                <views:SelectedTokenPanel x:Name="SelectedTokenPanel"/>
+                <viewsCombat:SelectedTokenPanel x:Name="SelectedTokenPanel"/>
             </Border>
         </Grid>
 

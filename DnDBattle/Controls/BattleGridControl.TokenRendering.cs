@@ -1,4 +1,12 @@
 using DnDBattle.Models;
+using DnDBattle.Models.Combat;
+using DnDBattle.Models.Combat.Actions;
+using DnDBattle.Models.Creatures;
+using DnDBattle.Models.Effects;
+using DnDBattle.Models.Encounters;
+using DnDBattle.Models.Environment;
+using DnDBattle.Models.Networking;
+using DnDBattle.Models.Spells;
 using DnDBattle.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -7,6 +15,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using DnDBattle.Models.Tiles;
+using Condition = DnDBattle.Models.Effects.Condition;
 
 namespace DnDBattle.Controls
 {
@@ -416,7 +426,7 @@ namespace DnDBattle.Controls
             }
 
             // Conditions
-            if (token.Conditions != Models.Condition.None)
+            if (token.Conditions != Models.Effects.Condition.None)
             {
                 var conditionsBorder = new Border
                 {

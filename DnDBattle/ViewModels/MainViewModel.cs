@@ -1,7 +1,25 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DnDBattle.Models;
+using DnDBattle.Models.Combat;
+using DnDBattle.Models.Combat.Actions;
+using DnDBattle.Models.Creatures;
+using DnDBattle.Models.Effects;
+using DnDBattle.Models.Encounters;
+using DnDBattle.Models.Environment;
+using DnDBattle.Models.Networking;
+using DnDBattle.Models.Spells;
 using DnDBattle.Services;
+using DnDBattle.Services.Combat;
+using DnDBattle.Services.Creatures;
+using DnDBattle.Services.Dice;
+using DnDBattle.Services.Effects;
+using DnDBattle.Services.Encounters;
+using DnDBattle.Services.Grid;
+using DnDBattle.Services.Networking;
+using DnDBattle.Services.Persistence;
+using DnDBattle.Services.UI;
+using DnDBattle.Services.Vision;
 using DnDBattle.Utils;
 using Microsoft.Win32;
 using System.Collections.ObjectModel;
@@ -13,6 +31,20 @@ using System.Windows.Input;
 using System.Windows.Data;
 using System.Collections.Generic;
 using DnDBattle.Views;
+using DnDBattle.Views.Combat;
+using DnDBattle.Views.Creatures;
+using DnDBattle.Views.Dice;
+using DnDBattle.Views.Effects;
+using DnDBattle.Views.Encounters;
+using DnDBattle.Views.Features;
+using DnDBattle.Views.Multiplayer;
+using DnDBattle.Views.Settings;
+using DnDBattle.Views.Spells;
+using DnDBattle.Models.Tiles;
+using DnDBattle.Services.TileService;
+using DnDBattle.Views.Editors;
+using DnDBattle.Views.TileMap;
+using Action = DnDBattle.Models.Combat.Action;
 
 namespace DnDBattle.ViewModels
 {
@@ -665,7 +697,7 @@ namespace DnDBattle.ViewModels
                 Notes = creature.Notes,
 
                 // ACTIONS - Deep copy all action types
-                Actions = creature.Actions?.Select(a => new Models.Action
+                Actions = creature.Actions?.Select(a => new Models.Combat.Action
                 {
                     Name = a.Name,
                     AttackBonus = a.AttackBonus,
@@ -674,9 +706,9 @@ namespace DnDBattle.ViewModels
                     Description = a.Description,
                     Type = a.Type,
                     Cost = a.Cost
-                }).ToList() ?? new List<Models.Action>(),
+                }).ToList() ?? new List<Models.Combat.Action>(),
 
-                BonusActions = creature.BonusActions?.Select(a => new Models.Action
+                BonusActions = creature.BonusActions?.Select(a => new Models.Combat.Action
                 {
                     Name = a.Name,
                     AttackBonus = a.AttackBonus,
@@ -685,9 +717,9 @@ namespace DnDBattle.ViewModels
                     Description = a.Description,
                     Type = a.Type,
                     Cost = a.Cost
-                }).ToList() ?? new List<Models.Action>(),
+                }).ToList() ?? new List<Models.Combat.Action>(),
 
-                Reactions = creature.Reactions?.Select(a => new Models.Action
+                Reactions = creature.Reactions?.Select(a => new Models.Combat.Action
                 {
                     Name = a.Name,
                     AttackBonus = a.AttackBonus,
@@ -696,9 +728,9 @@ namespace DnDBattle.ViewModels
                     Description = a.Description,
                     Type = a.Type,
                     Cost = a.Cost
-                }).ToList() ?? new List<Models.Action>(),
+                }).ToList() ?? new List<Models.Combat.Action>(),
 
-                LegendaryActions = creature.LegendaryActions?.Select(a => new Models.Action
+                LegendaryActions = creature.LegendaryActions?.Select(a => new Models.Combat.Action
                 {
                     Name = a.Name,
                     AttackBonus = a.AttackBonus,
@@ -707,7 +739,7 @@ namespace DnDBattle.ViewModels
                     Description = a.Description,
                     Type = a.Type,
                     Cost = a.Cost
-                }).ToList() ?? new List<Models.Action>(),
+                }).ToList() ?? new List<Models.Combat.Action>(),
 
                 Tags = creature.Tags?.ToList() ?? new List<string>()
             };

@@ -1,9 +1,35 @@
 ﻿using System;
 using DnDBattle.Models;
+using DnDBattle.Models.Combat;
+using DnDBattle.Models.Combat.Actions;
+using DnDBattle.Models.Creatures;
+using DnDBattle.Models.Effects;
+using DnDBattle.Models.Encounters;
+using DnDBattle.Models.Environment;
+using DnDBattle.Models.Networking;
+using DnDBattle.Models.Spells;
 using DnDBattle.Services;
-using DnDBattle.Services.FogOfWar;
+using DnDBattle.Services.Combat;
+using DnDBattle.Services.Creatures;
+using DnDBattle.Services.Dice;
+using DnDBattle.Services.Effects;
+using DnDBattle.Services.Encounters;
+using DnDBattle.Services.Grid;
+using DnDBattle.Services.Networking;
+using DnDBattle.Services.Persistence;
+using DnDBattle.Services.UI;
+using DnDBattle.Services.Vision;
 using DnDBattle.ViewModels;
 using DnDBattle.Views;
+using DnDBattle.Views.Combat;
+using DnDBattle.Views.Creatures;
+using DnDBattle.Views.Dice;
+using DnDBattle.Views.Effects;
+using DnDBattle.Views.Encounters;
+using DnDBattle.Views.Features;
+using DnDBattle.Views.Multiplayer;
+using DnDBattle.Views.Settings;
+using DnDBattle.Views.Spells;
 using Microsoft.Win32;
 using System.Diagnostics;
 using System.IO;
@@ -13,6 +39,11 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using DnDBattle.Models.Tiles;
+using DnDBattle.Services.TileService;
+using DnDBattle.Views.Editors;
+using DnDBattle.Views.TileMap;
+using Action = DnDBattle.Models.Combat.Action;
 
 namespace DnDBattle
 {
@@ -34,7 +65,7 @@ namespace DnDBattle
             var vm = new MainViewModel();
             DataContext = vm;
 
-            Services.OptionsService.LoadOptions();
+            Services.Persistence.OptionsService.LoadOptions();
             UndoManager.Limit = Options.UndoStackLimit;
             UndoManager.StateChanged += UndoManager_StateChanged;
 
@@ -82,7 +113,7 @@ namespace DnDBattle
             Loaded += MainWindow_Loaded;
 
             this.PreviewKeyDown += MainWindow_PreviewKeyDown;
-            this.Closing += (s, e) => Services.OptionsService.SaveOptions();
+            this.Closing += (s, e) => Services.Persistence.OptionsService.SaveOptions();
             Closing += (s, e) => AutosaveNow();
         }
 
@@ -587,7 +618,7 @@ namespace DnDBattle
         {
             if (DataContext is ViewModels.MainViewModel vm && vm.SelectedToken != null)
             {
-                vm.SelectedToken.Auras.Add(Models.TokenAura.PaladinAura());
+                vm.SelectedToken.Auras.Add(Models.Creatures.TokenAura.PaladinAura());
                 BattleGrid.RedrawAuras();
             }
             else
@@ -603,7 +634,7 @@ namespace DnDBattle
         {
             if (DataContext is ViewModels.MainViewModel vm && vm.SelectedToken != null)
             {
-                vm.SelectedToken.Auras.Add(Models.TokenAura.SpiritGuardians());
+                vm.SelectedToken.Auras.Add(Models.Creatures.TokenAura.SpiritGuardians());
                 BattleGrid.RedrawAuras();
             }
             else
@@ -767,7 +798,7 @@ namespace DnDBattle
             }
 
             // Use the attacker's first action or create a default melee attack
-            var attack = attacker.Actions?.FirstOrDefault() ?? new Models.Action
+            var attack = attacker.Actions?.FirstOrDefault() ?? new Models.Combat.Action
             {
                 Name = "Melee Attack",
                 AttackBonus = 5,
@@ -1046,8 +1077,8 @@ namespace DnDBattle
         {
             if (sender is not MenuItem item || item.Tag is not string tag) return;
 
-            if (!Enum.TryParse<Models.WeatherType>(tag, out var weatherType))
-                weatherType = Models.WeatherType.None;
+            if (!Enum.TryParse<Models.Environment.WeatherType>(tag, out var weatherType))
+                weatherType = Models.Environment.WeatherType.None;
 
             var weatherService = new WeatherService(Options.WeatherMaxParticles);
             weatherService.SetWeather(weatherType, 0.5);
@@ -1069,8 +1100,8 @@ namespace DnDBattle
         {
             if (sender is not MenuItem item || item.Tag is not string tag) return;
 
-            if (!Enum.TryParse<Models.TimeOfDay>(tag, out var tod))
-                tod = Models.TimeOfDay.Day;
+            if (!Enum.TryParse<Models.Environment.TimeOfDay>(tag, out var tod))
+                tod = Models.Environment.TimeOfDay.Day;
 
             var weatherService = new WeatherService(Options.WeatherMaxParticles);
             weatherService.SetTimeOfDay(tod);
@@ -1093,8 +1124,8 @@ namespace DnDBattle
         {
             if (sender is not MenuItem item || item.Tag is not string tag) return;
 
-            if (!Enum.TryParse<Models.DiceType>(tag, out var diceType))
-                diceType = Models.DiceType.D20;
+            if (!Enum.TryParse<Models.Combat.DiceType>(tag, out var diceType))
+                diceType = Models.Combat.DiceType.D20;
 
             var diceService = new DicePhysicsService();
             diceService.Roll(diceType, 1);
@@ -1120,9 +1151,9 @@ namespace DnDBattle
         private void Experimental_GenerateMap_Click(object sender, RoutedEventArgs e)
         {
             var service = new ProceduralMapService();
-            var config = new Models.ProceduralMapConfig
+            var config = new Models.Environment.ProceduralMapConfig
             {
-                Type = Models.MapGenerationType.Dungeon,
+                Type = Models.Environment.MapGenerationType.Dungeon,
                 Width = 50,
                 Height = 50,
                 TargetRoomCount = 15
@@ -1249,7 +1280,7 @@ namespace DnDBattle
                     Image = edited.Image,
                     IsPlayer = edited.IsPlayer,
                     SizeInSquares = edited.SizeInSquares,
-                    Actions = edited.Actions != null ? new List<Models.Action>(edited.Actions) : new List<Models.Action>()
+                    Actions = edited.Actions != null ? new List<Models.Combat.Action>(edited.Actions) : new List<Models.Combat.Action>()
                 };
                 if (idx >= 0) vm.CreatureBank[idx] = proto;
                 else vm.CreatureBank.Add(proto);
@@ -1266,7 +1297,7 @@ namespace DnDBattle
                     Image = edited.Image,
                     IsPlayer = edited.IsPlayer,
                     SizeInSquares = edited.SizeInSquares,
-                    Actions = edited.Actions != null ? new List<Models.Action>(edited.Actions) : new List<Models.Action>()
+                    Actions = edited.Actions != null ? new List<Models.Combat.Action>(edited.Actions) : new List<Models.Combat.Action>()
                 };
                 vm.CreatureBank.Add(proto);
             }
@@ -1316,7 +1347,7 @@ namespace DnDBattle
 
         private void MenuImportDatabase_Click(object sender, RoutedEventArgs e)
         {
-            var window = new Views.DatabaseImportWindow()
+            var window = new Views.Encounters.DatabaseImportWindow()
             {
                 Owner = this
             };
@@ -1334,7 +1365,7 @@ namespace DnDBattle
 
         private async void MenuDatabaseStats_Click(object sender, RoutedEventArgs e)
         {
-            using var db = new Services.CreatureDatabaseService();
+            using var db = new Services.Creatures.CreatureDatabaseService();
             var count = await db.GetCreatureCountAsync();
             var categories = await db.GetCategoriesAsync();
             var types = await db.GetAllTypesAsync();
@@ -1386,7 +1417,7 @@ namespace DnDBattle
                 BattleGrid.GridCellSize = Options.DefaultGridCellSize;
                 BattleGrid.SetGridMaxSize(Options.GridMaxWidth, Options.GridMaxHeight);
                 BattleGrid.UpdateShadowSoftness();
-                Services.OptionsService.SaveOptions();
+                Services.Persistence.OptionsService.SaveOptions();
             }
         }
 
@@ -1515,7 +1546,7 @@ namespace DnDBattle
         {
             if (DataContext is MainViewModel vm)
             {
-                var window = new Views.EncounterTemplateWindow(vm)
+                var window = new Views.Encounters.EncounterTemplateWindow(vm)
                 {
                     Owner = this
                 };
@@ -1714,7 +1745,7 @@ namespace DnDBattle
         {
             if (!(DataContext is MainViewModel vm)) return;
 
-            using var db = new Services.CreatureDatabaseService();
+            using var db = new Services.Creatures.CreatureDatabaseService();
             var creatures = await db.SearchCreaturesAsync(sortBy: "Name");
 
             vm.CreatureBank.Clear();
@@ -1918,7 +1949,7 @@ namespace DnDBattle
                 Vulnerabilities = source.Vulnerabilities,
                 Traits = source.Traits,
                 Notes = source.Notes,
-                Actions = source.Actions?.Select(a => new Models.Action
+                Actions = source.Actions?.Select(a => new Models.Combat.Action
                 {
                     Name = a.Name,
                     AttackBonus = a.AttackBonus,
@@ -1927,8 +1958,8 @@ namespace DnDBattle
                     Description = a.Description,
                     Type = a.Type,
                     Cost = a.Cost
-                }).ToList() ?? new List<Models.Action>(),
-                BonusActions = source.BonusActions?.Select(a => new Models.Action
+                }).ToList() ?? new List<Models.Combat.Action>(),
+                BonusActions = source.BonusActions?.Select(a => new Models.Combat.Action
                 {
                     Name = a.Name,
                     AttackBonus = a.AttackBonus,
@@ -1937,8 +1968,8 @@ namespace DnDBattle
                     Description = a.Description,
                     Type = a.Type,
                     Cost = a.Cost
-                }).ToList() ?? new List<Models.Action>(),
-                Reactions = source.Reactions?.Select(a => new Models.Action
+                }).ToList() ?? new List<Models.Combat.Action>(),
+                Reactions = source.Reactions?.Select(a => new Models.Combat.Action
                 {
                     Name = a.Name,
                     AttackBonus = a.AttackBonus,
@@ -1947,8 +1978,8 @@ namespace DnDBattle
                     Description = a.Description,
                     Type = a.Type,
                     Cost = a.Cost
-                }).ToList() ?? new List<Models.Action>(),
-                LegendaryActions = source.LegendaryActions?.Select(a => new Models.Action
+                }).ToList() ?? new List<Models.Combat.Action>(),
+                LegendaryActions = source.LegendaryActions?.Select(a => new Models.Combat.Action
                 {
                     Name = a.Name,
                     AttackBonus = a.AttackBonus,
@@ -1957,7 +1988,7 @@ namespace DnDBattle
                     Description = a.Description,
                     Type = a.Type,
                     Cost = a.Cost
-                }).ToList() ?? new List<Models.Action>(),
+                }).ToList() ?? new List<Models.Combat.Action>(),
                 Tags = source.Tags?.ToList() ?? new List<string>()
             };
         }

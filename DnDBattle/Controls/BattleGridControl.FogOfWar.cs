@@ -1,8 +1,34 @@
 using DnDBattle.Models;
+using DnDBattle.Models.Combat;
+using DnDBattle.Models.Combat.Actions;
+using DnDBattle.Models.Creatures;
+using DnDBattle.Models.Effects;
+using DnDBattle.Models.Encounters;
+using DnDBattle.Models.Environment;
+using DnDBattle.Models.Networking;
+using DnDBattle.Models.Spells;
 using DnDBattle.Services;
-using DnDBattle.Services.FogOfWar;
+using DnDBattle.Services.Combat;
+using DnDBattle.Services.Creatures;
+using DnDBattle.Services.Dice;
+using DnDBattle.Services.Effects;
+using DnDBattle.Services.Encounters;
+using DnDBattle.Services.Grid;
+using DnDBattle.Services.Networking;
+using DnDBattle.Services.Persistence;
+using DnDBattle.Services.UI;
+using DnDBattle.Services.Vision;
 using DnDBattle.ViewModels;
 using DnDBattle.Views;
+using DnDBattle.Views.Combat;
+using DnDBattle.Views.Creatures;
+using DnDBattle.Views.Dice;
+using DnDBattle.Views.Effects;
+using DnDBattle.Views.Encounters;
+using DnDBattle.Views.Features;
+using DnDBattle.Views.Multiplayer;
+using DnDBattle.Views.Settings;
+using DnDBattle.Views.Spells;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +36,10 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using DnDBattle.Models.Tiles;
+using DnDBattle.Services.TileService;
+using DnDBattle.Views.Editors;
+using DnDBattle.Views.TileMap;
 
 namespace DnDBattle.Controls
 {
@@ -286,7 +316,7 @@ namespace DnDBattle.Controls
             // Hide tokens that are in fog
             foreach (var child in RenderCanvas.Children.OfType<FrameworkElement>())
             {
-                if (child.Tag is Models.Token token && !token.IsPlayer)
+                if (child.Tag is Models.Creatures.Token token && !token.IsPlayer)
                 {
                     bool visible = _fogService.IsTokenVisible(token);
                     child.Visibility = visible ? Visibility.Visible : Visibility.Hidden;
@@ -298,7 +328,7 @@ namespace DnDBattle.Controls
         {
             foreach (var child in RenderCanvas.Children.OfType<FrameworkElement>())
             {
-                if (child.Tag is Models.Token)
+                if (child.Tag is Models.Creatures.Token)
                 {
                     child.Visibility = Visibility.Visible;
                 }

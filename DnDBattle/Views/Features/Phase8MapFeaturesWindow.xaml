@@ -1,0 +1,214 @@
+<Window x:Class="DnDBattle.Views.Features.Phase8MapFeaturesWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="🗺️ Phase 8: Advanced Map Features"
+        Width="640" Height="1060"
+        WindowStartupLocation="CenterOwner"
+        Background="#FF1E1E2E" Foreground="White"
+        ResizeMode="CanResizeWithGrip">
+    <Window.Resources>
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Margin" Value="0,4"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#FFCCCCDD"/>
+            <Setter Property="Margin" Value="0,2"/>
+        </Style>
+        <Style TargetType="GroupBox">
+            <Setter Property="Foreground" Value="#FF88AAFF"/>
+            <Setter Property="BorderBrush" Value="#FF444466"/>
+            <Setter Property="Margin" Value="0,6"/>
+            <Setter Property="Padding" Value="8"/>
+        </Style>
+        <Style x:Key="ActionButton" TargetType="Button">
+            <Setter Property="Background" Value="#FF2A2A3E"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="Margin" Value="0,4"/>
+            <Setter Property="BorderBrush" Value="#FF444466"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#FFCCCCDD"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Width" Value="130"/>
+            <Setter Property="Margin" Value="0,2"/>
+        </Style>
+        <Style x:Key="FieldCombo" TargetType="ComboBox">
+            <Setter Property="Width" Value="160"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+        </Style>
+    </Window.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16">
+        <StackPanel>
+
+            <TextBlock Text="🗺️ Phase 8: Advanced Map Features" FontSize="18" FontWeight="Bold" Foreground="#FF88AAFF" Margin="0,0,0,4"/>
+            <TextBlock Text="Configure multi-map management, background layers, hex grids, gridless mode, custom grid sizes, and map notes." 
+                       TextWrapping="Wrap" Foreground="#FF999999" Margin="0,0,0,12"/>
+
+            <!-- 8.1 Multi-Map Management -->
+            <GroupBox Header="📚 8.1 Multi-Map Management">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableMultiMap" Content="Enable Multi-Map Management" 
+                              Checked="ChkEnableMultiMap_Changed" Unchecked="ChkEnableMultiMap_Changed"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Max Recent Maps:" Style="{StaticResource FieldLabel}"/>
+                        <Slider x:Name="SliderMaxRecent" Minimum="1" Maximum="25" Width="150" 
+                                Value="10" TickFrequency="1" IsSnapToTickEnabled="True"
+                                ValueChanged="SliderMaxRecent_ValueChanged"/>
+                        <TextBlock x:Name="TxtMaxRecent" Text="10" Margin="8,0,0,0" Foreground="#FFFFCC66"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <Button Content="Add Current Map to Library" Style="{StaticResource ActionButton}" Click="AddMapToLibrary_Click"/>
+                        <Button Content="Search Maps..." Style="{StaticResource ActionButton}" Margin="8,4,0,4" Click="SearchMaps_Click"/>
+                    </StackPanel>
+                    <TextBlock Text="Recent Maps:" FontWeight="Bold" Margin="0,8,0,4"/>
+                    <ListBox x:Name="LstRecentMaps" Height="100" 
+                             Background="#FF2A2A3E" Foreground="White" BorderBrush="#FF444466"
+                             SelectionChanged="LstRecentMaps_SelectionChanged">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}" Foreground="White"/>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <Button Content="Load Selected Map" Style="{StaticResource ActionButton}" Click="LoadSelectedMap_Click"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 8.2 Background Image Layers -->
+            <GroupBox Header="🖼️ 8.2 Background Image Layers">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableBackgroundLayers" Content="Enable Background Layers" 
+                              Checked="ChkEnableBackgroundLayers_Changed" Unchecked="ChkEnableBackgroundLayers_Changed"/>
+                    <Button Content="Add Background Layer..." Style="{StaticResource ActionButton}" Click="AddBackgroundLayer_Click"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Layer Opacity:" Style="{StaticResource FieldLabel}"/>
+                        <Slider x:Name="SliderLayerOpacity" Minimum="0" Maximum="1" Width="150" 
+                                Value="1.0" TickFrequency="0.05" IsSnapToTickEnabled="True"
+                                ValueChanged="SliderLayerOpacity_ValueChanged"/>
+                        <TextBlock x:Name="TxtLayerOpacity" Text="1.0" Margin="8,0,0,0" Foreground="#FFFFCC66"/>
+                    </StackPanel>
+                    <TextBlock Text="Layers:" FontWeight="Bold" Margin="0,8,0,4"/>
+                    <ListBox x:Name="LstBackgroundLayers" Height="80" 
+                             Background="#FF2A2A3E" Foreground="White" BorderBrush="#FF444466"
+                             SelectionChanged="LstBackgroundLayers_SelectionChanged">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding ImagePath}" Foreground="White" MaxWidth="300" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text=" | Opacity: " Foreground="#FF999999"/>
+                                    <TextBlock Text="{Binding Opacity, StringFormat=F2}" Foreground="#FFFFCC66"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <Button Content="Remove Selected Layer" Style="{StaticResource ActionButton}" Click="RemoveBackgroundLayer_Click"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 8.3 Hexagonal Grids -->
+            <GroupBox Header="⬡ 8.3 Hexagonal Grids">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableHexGrid" Content="Enable Hex Grid Support" 
+                              Checked="ChkEnableHexGrid_Changed" Unchecked="ChkEnableHexGrid_Changed"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Grid Type:" Style="{StaticResource FieldLabel}"/>
+                        <ComboBox x:Name="CmbGridType" Style="{StaticResource FieldCombo}" SelectionChanged="CmbGridType_SelectionChanged">
+                            <ComboBoxItem Content="Square" IsSelected="True"/>
+                            <ComboBoxItem Content="Hex Flat Top"/>
+                            <ComboBoxItem Content="Hex Pointy Top"/>
+                        </ComboBox>
+                    </StackPanel>
+                    <TextBlock Text="Hex grids use axial coordinates for movement and distance calculation." 
+                               Foreground="#FF999999" TextWrapping="Wrap" Margin="0,4"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 8.4 Gridless Mode -->
+            <GroupBox Header="✨ 8.4 Gridless Mode">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableGridless" Content="Enable Gridless Mode" 
+                              Checked="ChkEnableGridless_Changed" Unchecked="ChkEnableGridless_Changed"/>
+                    <TextBlock Text="In gridless mode, tokens are placed at exact pixel positions instead of snapping to grid cells. Useful for theatre-of-the-mind style play with visual reference." 
+                               Foreground="#FF999999" TextWrapping="Wrap" Margin="0,4"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 8.5 Custom Grid Sizes -->
+            <GroupBox Header="📏 8.5 Custom Grid Sizes">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableCustomGridSizes" Content="Enable Custom Grid Sizes" 
+                              Checked="ChkEnableCustomGridSizes_Changed" Unchecked="ChkEnableCustomGridSizes_Changed"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Feet Per Square:" Style="{StaticResource FieldLabel}"/>
+                        <Slider x:Name="SliderFeetPerSquare" Minimum="5" Maximum="100" Width="150" 
+                                Value="5" TickFrequency="5" IsSnapToTickEnabled="True"
+                                ValueChanged="SliderFeetPerSquare_ValueChanged"/>
+                        <TextBlock x:Name="TxtFeetPerSquare" Text="5 ft" Margin="8,0,0,0" Foreground="#FFFFCC66"/>
+                    </StackPanel>
+                    <TextBlock Text="Changing the scale adjusts movement distances and area effect sizes. Standard D&amp;D uses 5 ft per square." 
+                               Foreground="#FF999999" TextWrapping="Wrap" Margin="0,4"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 8.6 Map Notes & Labels -->
+            <GroupBox Header="📝 8.6 Map Notes &amp; Labels">
+                <StackPanel>
+                    <CheckBox x:Name="ChkEnableMapNotes" Content="Enable Map Notes" 
+                              Checked="ChkEnableMapNotes_Changed" Unchecked="ChkEnableMapNotes_Changed"/>
+                    <CheckBox x:Name="ChkShowDMNotes" Content="Show DM-Only Notes" 
+                              Checked="ChkShowDMNotes_Changed" Unchecked="ChkShowDMNotes_Changed"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Note Font Size:" Style="{StaticResource FieldLabel}"/>
+                        <Slider x:Name="SliderNoteFontSize" Minimum="8" Maximum="36" Width="150" 
+                                Value="12" TickFrequency="1" IsSnapToTickEnabled="True"
+                                ValueChanged="SliderNoteFontSize_ValueChanged"/>
+                        <TextBlock x:Name="TxtNoteFontSize" Text="12" Margin="8,0,0,0" Foreground="#FFFFCC66"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Category:" Style="{StaticResource FieldLabel}"/>
+                        <ComboBox x:Name="CmbNoteCategory" Style="{StaticResource FieldCombo}">
+                            <ComboBoxItem Content="General" IsSelected="True"/>
+                            <ComboBoxItem Content="Trap"/>
+                            <ComboBoxItem Content="Treasure"/>
+                            <ComboBoxItem Content="NPC"/>
+                            <ComboBoxItem Content="Quest"/>
+                            <ComboBoxItem Content="Lore"/>
+                            <ComboBoxItem Content="Secret"/>
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Note Text:" Style="{StaticResource FieldLabel}"/>
+                        <TextBox x:Name="TxtNoteText" Width="300" Background="#FF2A2A3E" Foreground="White" 
+                                 BorderBrush="#FF444466" Padding="4,2"/>
+                    </StackPanel>
+                    <Button Content="Add Note to Map Center" Style="{StaticResource ActionButton}" Click="AddNote_Click"/>
+                    <TextBlock Text="Map Notes:" FontWeight="Bold" Margin="0,8,0,4"/>
+                    <ListBox x:Name="LstMapNotes" Height="120" 
+                             Background="#FF2A2A3E" Foreground="White" BorderBrush="#FF444466">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Category}" Foreground="#FF88AAFF" Width="60"/>
+                                    <TextBlock Text="{Binding Text}" Foreground="White" MaxWidth="350" TextTrimming="CharacterEllipsis"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <Button Content="Remove Selected Note" Style="{StaticResource ActionButton}" Click="RemoveNote_Click"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- Action Log -->
+            <GroupBox Header="📋 Action Log">
+                <ListBox x:Name="LstActionLog" Height="100" 
+                         Background="#FF2A2A3E" Foreground="#FFCCCCDD" BorderBrush="#FF444466"/>
+            </GroupBox>
+
+        </StackPanel>
+    </ScrollViewer>
+</Window>

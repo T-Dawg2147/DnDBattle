@@ -12,6 +12,25 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using DnDBattle.Views;
+using DnDBattle.Views.Combat;
+using DnDBattle.Views.Creatures;
+using DnDBattle.Views.Dice;
+using DnDBattle.Views.Effects;
+using DnDBattle.Views.Encounters;
+using DnDBattle.Views.Features;
+using DnDBattle.Views.Multiplayer;
+using DnDBattle.Views.Settings;
+using DnDBattle.Views.Spells;
+using DnDBattle.Views.TileMap;
+using DnDBattle.Models;
+using DnDBattle.Models.Combat;
+using DnDBattle.Models.Creatures;
+using DnDBattle.Models.Effects;
+using DnDBattle.Models.Encounters;
+using DnDBattle.Models.Environment;
+using DnDBattle.Models.Networking;
+using DnDBattle.Models.Spells;
 
 namespace DnDBattle.Views.Editors
 {
