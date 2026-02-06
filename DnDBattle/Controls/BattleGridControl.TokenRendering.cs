@@ -133,6 +133,16 @@ namespace DnDBattle.Controls
                         container.Children.Add(hpBar);
                     }
 
+                    // Phase 5: Elevation badge
+                    var elevBadge = CreateElevationBadge(token);
+                    if (elevBadge != null)
+                        container.Children.Add(elevBadge);
+
+                    // Phase 5: Facing arrow
+                    var facingArrow = CreateFacingArrow(token);
+                    if (facingArrow != null)
+                        container.Children.Add(facingArrow);
+
                     container.MouseLeftButtonDown += Token_MouseLeftButtonDown;
                     container.MouseMove += Token_MouseMove;
                     container.MouseLeftButtonUp += Token_MouseLeftButtonUp;
@@ -149,6 +159,7 @@ namespace DnDBattle.Controls
             LayoutTokens();
             UpdateGridVisual();
             RedrawLighting();
+            RedrawAuras();
         }
 
         #endregion

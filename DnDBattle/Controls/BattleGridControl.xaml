@@ -26,6 +26,7 @@
                 MouseRightButtonDown="GridBackground_MouseRightButtonDown"
                 MouseDown="GridBackground_MouseDown"
                 MouseUp="GridBackground_MouseUp"
+                MouseLeave="GridBackground_MouseLeave"
                 AllowDrop="True"
                 Drop="RenderCanvas_Drop">
 

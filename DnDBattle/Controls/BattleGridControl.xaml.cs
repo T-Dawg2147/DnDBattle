@@ -275,6 +275,8 @@ namespace DnDBattle.Controls
             // Wire up metadata services
             SetupMetadataServices();
 
+            InitializePhase5Visuals();
+
             Loaded += BattleGridControl_Loaded;
             KeyDown += BattleGridControl_KeyDown;
 
