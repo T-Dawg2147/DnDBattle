@@ -275,5 +275,10 @@ namespace DnDBattle
 
         /// <summary>Maximum weather particles allowed (performance tuning).</summary>
         public static int WeatherMaxParticles { get; set; } = 500;
+
+        // ── Undecided Features: Animated Tiles ──
+
+        /// <summary>Enable animated tile rendering (water, fire, torch, magic effects).</summary>
+        public static bool EnableAnimatedTiles { get; set; } = false;
     }
 }
