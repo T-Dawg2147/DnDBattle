@@ -295,5 +295,13 @@ namespace DnDBattle
 
         /// <summary>Enable persistent measurement templates on the battle map.</summary>
         public static bool EnableMeasurements { get; set; } = false;
+
+        // ── Undecided Features: 3D Dice Roller ──
+
+        /// <summary>Enable 3D dice roller with physics simulation.</summary>
+        public static bool EnableDiceRoller3D { get; set; } = false;
+
+        /// <summary>Enable dice roll statistics tracking.</summary>
+        public static bool EnableDiceStatistics { get; set; } = false;
     }
 }
