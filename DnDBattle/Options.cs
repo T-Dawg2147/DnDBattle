@@ -280,5 +280,10 @@ namespace DnDBattle
 
         /// <summary>Enable animated tile rendering (water, fire, torch, magic effects).</summary>
         public static bool EnableAnimatedTiles { get; set; } = false;
+
+        // ── Undecided Features: Procedural Map Generation ──
+
+        /// <summary>Enable procedural map generation (BSP dungeons, cellular automata caves).</summary>
+        public static bool EnableProceduralMapGeneration { get; set; } = false;
     }
 }
