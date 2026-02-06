@@ -219,10 +219,10 @@ namespace DnDBattle.Views.Effects
         private void OnSliderChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             Options.DefaultBrightLightRadius = SliderBrightRadius.Value;
-            Options.DefaultDimLightRadius = SliderDimRadius.Value;
-            Options.ShadowCastRayCount = (int)SliderRayCount.Value;
-            Options.ShadowSoftnessPx = SliderShadowSoftness.Value;
-            Options.DefaultTokenVisionRange = (int)SliderVisionRange.Value;
+            Options.DefaultDimLightRadius = SliderDimRadius != null ? SliderDimRadius.Value : Options.DefaultDimLightRadius;
+            Options.ShadowCastRayCount = SliderRayCount != null ? (int)SliderRayCount.Value : Options.ShadowCastRayCount;
+            Options.ShadowSoftnessPx = SliderShadowSoftness != null ? SliderShadowSoftness.Value : Options.ShadowSoftnessPx;
+            Options.DefaultTokenVisionRange = SliderVisionRange != null ? (int)SliderVisionRange.Value : Options.DefaultTokenVisionRange;
             UpdateLabels();
         }
 
