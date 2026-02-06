@@ -907,7 +907,7 @@ namespace DnDBattle
                 cy = Math.Floor(world.Y / BattleGrid.GridCellSize);
             }
 
-            var light = new LightSource { CenterGrid = new System.Windows.Point(cx, cy), RadiusSquares = 8, Intensity = 1.0 };
+            var light = new LightSource { CenterGrid = new System.Windows.Point(cx, cy), BrightRadius = 4, DimRadius = 8, Intensity = 1.0 };
             BattleGrid.AddLight(light);
         }
 

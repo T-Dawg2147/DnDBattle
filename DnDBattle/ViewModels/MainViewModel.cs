@@ -563,7 +563,7 @@ namespace DnDBattle.ViewModels
 
         private void AddSampleLight()
         {
-            var l = new LightSource { CenterGrid = new System.Windows.Point(5, 5), RadiusSquares = 6, Intensity = 1.0 };
+            var l = new LightSource { CenterGrid = new System.Windows.Point(5, 5), BrightRadius = 4, DimRadius = 6, Intensity = 1.0 };
             Lights.Add(l);
             Log("System", "Added sample light at (5,5)");
         }

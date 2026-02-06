@@ -267,9 +267,10 @@ namespace DnDBattle.Controls
             AddVisualOverlay(_wallVisual, 70);
             AddVisualOverlay(_measureVisual, 80);
             AddVisualOverlay(_areaEffectVisual, 85);
+            AddVisualOverlay(_visionVisual, 90);
             AddVisualOverlay(_fogVisual, 2500);
 
-            _wallService.WallsChanged += () => RedrawWalls();
+            _wallService.WallsChanged += () => { InvalidateShadowCache(); RedrawWalls(); };
 
             // Wire up metadata services
             SetupMetadataServices();

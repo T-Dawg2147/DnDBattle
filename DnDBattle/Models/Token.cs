@@ -159,6 +159,16 @@ namespace DnDBattle.Models
         private string _senses;
         public string Senses { get => _senses; set => SetProperty(ref _senses, value); }
 
+        /// <summary>
+        /// Vision properties for this token (darkvision, blindsight, etc.).
+        /// </summary>
+        private TokenVision _vision;
+        public TokenVision Vision
+        {
+            get => _vision ??= new TokenVision();
+            set => SetProperty(ref _vision, value);
+        }
+
         private string _languages;
         public string Languages { get => _languages; set => SetProperty(ref _languages, value); }
 

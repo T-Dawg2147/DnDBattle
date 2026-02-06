@@ -329,6 +329,111 @@ namespace DnDBattle.Controls
             var menu = new ContextMenu();
             var tile = GetTileAt(gridX, gridY);
 
+            // ── Add Light Source ──
+            var addLightMenu = new MenuItem { Header = "💡 Add Light Source" };
+
+            var addPointLight = new MenuItem { Header = "🔆 Point Light (Torch/Lantern)" };
+            addPointLight.Click += (s, e) =>
+            {
+                var light = new LightSource
+                {
+                    CenterGrid = new Point(gridX, gridY),
+                    BrightRadius = Options.DefaultBrightLightRadius,
+                    DimRadius = Options.DefaultDimLightRadius,
+                    Intensity = 1.0,
+                    LightColor = Color.FromRgb(255, 255, 200),
+                    Type = LightType.Point,
+                    Label = $"Light ({gridX},{gridY})"
+                };
+                AddLight(light);
+                AddToActionLog("Light", $"💡 Point light added at ({gridX}, {gridY})");
+            };
+            addLightMenu.Items.Add(addPointLight);
+
+            if (Options.EnableDirectionalLights)
+            {
+                var addDirLight = new MenuItem { Header = "🔦 Directional Light (Spotlight)" };
+                addDirLight.Click += (s, e) =>
+                {
+                    var light = new LightSource
+                    {
+                        CenterGrid = new Point(gridX, gridY),
+                        BrightRadius = Options.DefaultBrightLightRadius,
+                        DimRadius = Options.DefaultDimLightRadius,
+                        Intensity = 1.0,
+                        LightColor = Color.FromRgb(255, 255, 200),
+                        Type = LightType.Directional,
+                        Direction = 0,
+                        ConeWidth = 60,
+                        Label = $"Spotlight ({gridX},{gridY})"
+                    };
+                    AddLight(light);
+                    AddToActionLog("Light", $"🔦 Directional light added at ({gridX}, {gridY})");
+                };
+                addLightMenu.Items.Add(addDirLight);
+            }
+
+            addLightMenu.Items.Add(new Separator());
+
+            // Color presets
+            var colorPresets = new (string name, Color color)[]
+            {
+                ("🟡 Warm Yellow (Torch)", Color.FromRgb(255, 220, 150)),
+                ("🔵 Cool Blue (Moonlight)", Color.FromRgb(150, 180, 255)),
+                ("🔴 Red (Danger)", Color.FromRgb(255, 100, 80)),
+                ("🟢 Green (Nature)", Color.FromRgb(120, 255, 120)),
+                ("⚪ White (Daylight)", Color.FromRgb(255, 255, 255)),
+                ("🟣 Purple (Arcane)", Color.FromRgb(180, 120, 255))
+            };
+
+            var colorMenu = new MenuItem { Header = "🎨 Colored Light" };
+            foreach (var (name, color) in colorPresets)
+            {
+                var colorItem = new MenuItem { Header = name };
+                var capturedColor = color;
+                colorItem.Click += (s, e) =>
+                {
+                    var light = new LightSource
+                    {
+                        CenterGrid = new Point(gridX, gridY),
+                        BrightRadius = Options.DefaultBrightLightRadius,
+                        DimRadius = Options.DefaultDimLightRadius,
+                        Intensity = 1.0,
+                        LightColor = capturedColor,
+                        Type = LightType.Point,
+                        Label = $"{name} ({gridX},{gridY})"
+                    };
+                    AddLight(light);
+                    AddToActionLog("Light", $"💡 {name} added at ({gridX}, {gridY})");
+                };
+                colorMenu.Items.Add(colorItem);
+            }
+            addLightMenu.Items.Add(colorMenu);
+
+            menu.Items.Add(addLightMenu);
+
+            // ── Remove nearby lights ──
+            var nearbyLights = _lights.Where(l =>
+                Math.Abs(l.CenterGrid.X - gridX) < 1 && Math.Abs(l.CenterGrid.Y - gridY) < 1).ToList();
+            if (nearbyLights.Count > 0)
+            {
+                var removeMenu = new MenuItem { Header = $"🗑️ Remove Light ({nearbyLights.Count})" };
+                foreach (var light in nearbyLights)
+                {
+                    var item = new MenuItem { Header = $"Remove: {light.Label ?? light.Type.ToString()}" };
+                    var capturedLight = light;
+                    item.Click += (s, e) =>
+                    {
+                        RemoveLightPublic(capturedLight);
+                        AddToActionLog("Light", $"🗑️ Light removed at ({gridX}, {gridY})");
+                    };
+                    removeMenu.Items.Add(item);
+                }
+                menu.Items.Add(removeMenu);
+            }
+
+            menu.Items.Add(new Separator());
+
             if (tile != null && tile.HasMetadataType(TileMetadataType.Spawn))
             {
                 var spawns = tile.GetMetadata(TileMetadataType.Spawn).OfType<SpawnMetadata>().ToList();

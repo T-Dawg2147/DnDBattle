@@ -36,6 +36,16 @@ namespace DnDBattle.Models
         public double Y { get; set; }
         public double RadiusSquares { get; set; }
         public double Intensity { get; set; }
+        public double BrightRadius { get; set; } = 4;
+        public double DimRadius { get; set; } = 8;
+        public byte ColorR { get; set; } = 255;
+        public byte ColorG { get; set; } = 255;
+        public byte ColorB { get; set; } = 200;
+        public bool IsEnabled { get; set; } = true;
+        public string LightType { get; set; } = "Point";
+        public double Direction { get; set; }
+        public double ConeWidth { get; set; } = 60;
+        public string Label { get; set; }
     }
 
     /// <summary>

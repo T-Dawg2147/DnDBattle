@@ -71,5 +71,68 @@ namespace DnDBattle
 
         // Dice History
         public static int DiceHistoryMaxSize { get; set; } = 500;
+
+        // ── Lighting & Vision System ──
+
+        /// <summary>
+        /// Enable the lighting system (light sources on the map).
+        /// </summary>
+        public static bool EnableLighting { get; set; } = true;
+
+        /// <summary>
+        /// Enable shadow casting from walls for light sources.
+        /// </summary>
+        public static bool EnableShadowCasting { get; set; } = true;
+
+        /// <summary>
+        /// Enable the per-token vision system.
+        /// </summary>
+        public static bool EnableTokenVision { get; set; } = true;
+
+        /// <summary>
+        /// Enable vision-mode rendering (darkvision grayscale, blindsight silhouettes).
+        /// </summary>
+        public static bool EnableVisionModeRendering { get; set; } = true;
+
+        /// <summary>
+        /// Automatically reveal fog of war based on token vision.
+        /// </summary>
+        public static bool EnableAutoFogReveal { get; set; } = true;
+
+        /// <summary>
+        /// Enable directional / cone lights on the map.
+        /// </summary>
+        public static bool EnableDirectionalLights { get; set; } = true;
+
+        /// <summary>
+        /// Default bright light radius for new lights (in grid squares).
+        /// </summary>
+        public static double DefaultBrightLightRadius { get; set; } = 4.0;
+
+        /// <summary>
+        /// Default dim light radius for new lights (in grid squares).
+        /// </summary>
+        public static double DefaultDimLightRadius { get; set; } = 8.0;
+
+        /// <summary>
+        /// Number of rays used for shadow casting per light. Higher = smoother but slower.
+        /// </summary>
+        public static int ShadowCastRayCount { get; set; } = 180;
+
+        /// <summary>
+        /// Shadow quality tier: 0 = Low (no blur), 1 = Medium, 2 = High, 3 = Ultra.
+        /// </summary>
+        public static int ShadowQualityTier { get; set; } = 1;
+
+        /// <summary>
+        /// Fog reveal mode: 0 = Exploration (once revealed, stays), 1 = Dynamic (only current vision),
+        /// 2 = Hybrid (revealed areas shown dimmer).
+        /// </summary>
+        public static int FogRevealMode { get; set; } = 0;
+
+        /// <summary>
+        /// Default vision range for tokens without explicit vision settings (in grid squares).
+        /// </summary>
+        public static int DefaultTokenVisionRange { get; set; } = 12;
     }
 }
