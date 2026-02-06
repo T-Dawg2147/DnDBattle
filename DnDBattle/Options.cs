@@ -259,5 +259,16 @@ namespace DnDBattle
 
         /// <summary>Show DM-only notes in the map view (true = visible to DM, false = hidden entirely).</summary>
         public static bool ShowDMOnlyNotes { get; set; } = true;
+
+        // ── Dynamic Weather & Environment ──
+
+        /// <summary>Enable dynamic weather particle effects on the map.</summary>
+        public static bool EnableWeatherEffects { get; set; } = true;
+
+        /// <summary>Enable the day/night cycle lighting overlay.</summary>
+        public static bool EnableDayNightCycle { get; set; } = true;
+
+        /// <summary>Maximum weather particles allowed (performance tuning).</summary>
+        public static int WeatherMaxParticles { get; set; } = 500;
     }
 }
