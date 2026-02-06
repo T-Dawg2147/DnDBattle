@@ -182,14 +182,19 @@ namespace DnDBattle.Services
 
         /// <summary>
         /// Checks whether a cell is lit by any active light source.
+        /// If no lights exist on the map, assumes ambient lighting (lit).
         /// </summary>
         public static bool IsCellLit(int x, int y, IReadOnlyList<LightSource> lights)
         {
-            if (lights == null || lights.Count == 0) return true; // No lights = assume lit
+            if (lights == null || lights.Count == 0)
+                return true; // No lights placed = ambient lighting assumed
 
+            // If all lights are disabled, still assume ambient
+            bool anyEnabled = false;
             foreach (var light in lights)
             {
                 if (!light.IsEnabled) continue;
+                anyEnabled = true;
 
                 double dx = x + 0.5 - light.CenterGrid.X;
                 double dy = y + 0.5 - light.CenterGrid.Y;
@@ -205,6 +210,10 @@ namespace DnDBattle.Services
                     return true;
                 }
             }
+
+            // No enabled lights = ambient lighting
+            if (!anyEnabled) return true;
+
             return false;
         }
 

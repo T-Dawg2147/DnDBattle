@@ -90,7 +90,8 @@ namespace DnDBattle.Controls
                 int cacheKey = HashCode.Combine(
                     light.CenterGrid.X.GetHashCode(),
                     light.CenterGrid.Y.GetHashCode(),
-                    light.RadiusSquares.GetHashCode());
+                    light.RadiusSquares.GetHashCode(),
+                    Options.ShadowCastRayCount);
 
                 if (!_shadowCache.TryGetValue(cacheKey, out litPolygonGrid))
                 {

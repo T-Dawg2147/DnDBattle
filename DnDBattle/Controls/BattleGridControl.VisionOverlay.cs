@@ -153,8 +153,18 @@ namespace DnDBattle.Controls
 
             if (Options.FogRevealMode == 1)
             {
-                // Dynamic mode: reset and only show currently visible
-                // We don't fully reset here to avoid flicker; just reveal visible cells
+                // Dynamic mode: hide cells that are no longer visible
+                for (int x = 0; x < _fogService.GridWidth; x++)
+                {
+                    for (int y = 0; y < _fogService.GridHeight; y++)
+                    {
+                        if (_fogService.IsCellRevealed(x, y) && !allVisible.Contains((x, y)))
+                        {
+                            _fogService.HideCell(x, y);
+                            changed = true;
+                        }
+                    }
+                }
             }
 
             foreach (var (x, y) in allVisible)

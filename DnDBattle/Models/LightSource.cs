@@ -28,12 +28,8 @@ namespace DnDBattle.Models
         /// <summary>Dim light radius in grid squares (extends beyond bright).</summary>
         public double DimRadius { get; set; } = 8;
 
-        /// <summary>Overall radius used for rendering (max of bright and dim).</summary>
-        public double RadiusSquares
-        {
-            get => Math.Max(BrightRadius, DimRadius);
-            set => DimRadius = value;
-        }
+        /// <summary>Overall radius used for rendering (max of bright and dim). Read-only.</summary>
+        public double RadiusSquares => Math.Max(BrightRadius, DimRadius);
 
         /// <summary>Light intensity from 0.0 to 1.0.</summary>
         public double Intensity { get; set; } = 1.0;
