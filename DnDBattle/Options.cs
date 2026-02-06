@@ -320,5 +320,34 @@ namespace DnDBattle
 
         /// <summary>Enable full keyboard navigation mode.</summary>
         public static bool EnableKeyboardNavigation { get; set; } = false;
+
+        // ── Phase 9: Multiplayer / Networking ──
+
+        /// <summary>Enable multiplayer networking system (host/join game sessions).</summary>
+        public static bool EnableNetworking { get; set; } = false;
+
+        /// <summary>Default TCP port for the multiplayer game server.</summary>
+        public static int NetworkDefaultPort { get; set; } = 7777;
+
+        /// <summary>Timeout in seconds for network connection attempts.</summary>
+        public static int NetworkConnectionTimeoutSeconds { get; set; } = 10;
+
+        /// <summary>Enable real-time fog of war synchronization across clients.</summary>
+        public static bool EnableFogSync { get; set; } = false;
+
+        /// <summary>Enable the multiplayer chat system (text messages and dice rolls).</summary>
+        public static bool EnableMultiplayerChat { get; set; } = false;
+
+        /// <summary>Enable client-side prediction for token movement (reduces perceived lag).</summary>
+        public static bool EnableClientPrediction { get; set; } = true;
+
+        /// <summary>Enable voice chat integration (Discord link sharing).</summary>
+        public static bool EnableVoiceChat { get; set; } = false;
+
+        /// <summary>Enable cloud save and sync for encounters.</summary>
+        public static bool EnableCloudSave { get; set; } = false;
+
+        /// <summary>URL of the self-hosted cloud save server (e.g. "https://my-server.example.com").</summary>
+        public static string CloudSaveServerUrl { get; set; } = string.Empty;
     }
 }

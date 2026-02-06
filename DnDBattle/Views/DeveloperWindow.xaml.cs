@@ -109,6 +109,16 @@ namespace DnDBattle.Views
             ChkEnableKeyboardNav.IsChecked = Options.EnableKeyboardNavigation;
             SliderUIScale.Value = Options.AccessibilityUIScale;
 
+            // Phase 9
+            ChkEnableNetworking.IsChecked = Options.EnableNetworking;
+            SliderNetworkPort.Value = Options.NetworkDefaultPort;
+            SliderNetworkTimeout.Value = Options.NetworkConnectionTimeoutSeconds;
+            ChkEnableClientPrediction.IsChecked = Options.EnableClientPrediction;
+            ChkEnableMultiplayerChat.IsChecked = Options.EnableMultiplayerChat;
+            ChkEnableFogSync.IsChecked = Options.EnableFogSync;
+            ChkEnableVoiceChat.IsChecked = Options.EnableVoiceChat;
+            ChkEnableCloudSave.IsChecked = Options.EnableCloudSave;
+
             UpdateLabels();
         }
 
@@ -127,6 +137,8 @@ namespace DnDBattle.Views
             TxtMapNoteFontSize.Text = $"{SliderMapNoteFontSize.Value:F0} pt";
             TxtWeatherMaxParticles.Text = $"{SliderWeatherMaxParticles.Value:F0}";
             TxtUIScale.Text = $"{SliderUIScale.Value:F0}%";
+            TxtNetworkPort.Text = $"{SliderNetworkPort.Value:F0}";
+            TxtNetworkTimeout.Text = $"{SliderNetworkTimeout.Value:F0}s";
         }
 
         private void OnFeatureToggled(object sender, RoutedEventArgs e)
@@ -195,6 +207,14 @@ namespace DnDBattle.Views
             Options.EnableColorblindMode = ChkEnableColorblindMode.IsChecked == true;
             Options.EnableDyslexiaFont = ChkEnableDyslexiaFont.IsChecked == true;
             Options.EnableKeyboardNavigation = ChkEnableKeyboardNav.IsChecked == true;
+
+            // Phase 9
+            Options.EnableNetworking = ChkEnableNetworking.IsChecked == true;
+            Options.EnableClientPrediction = ChkEnableClientPrediction.IsChecked == true;
+            Options.EnableMultiplayerChat = ChkEnableMultiplayerChat.IsChecked == true;
+            Options.EnableFogSync = ChkEnableFogSync.IsChecked == true;
+            Options.EnableVoiceChat = ChkEnableVoiceChat.IsChecked == true;
+            Options.EnableCloudSave = ChkEnableCloudSave.IsChecked == true;
         }
 
         private void OnSliderChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -222,6 +242,10 @@ namespace DnDBattle.Views
             // Undecided Features
             Options.WeatherMaxParticles = (int)SliderWeatherMaxParticles.Value;
             Options.AccessibilityUIScale = (int)SliderUIScale.Value;
+
+            // Phase 9
+            Options.NetworkDefaultPort = (int)SliderNetworkPort.Value;
+            Options.NetworkConnectionTimeoutSeconds = (int)SliderNetworkTimeout.Value;
 
             UpdateLabels();
         }
@@ -317,6 +341,17 @@ namespace DnDBattle.Views
             Options.AccessibilityUIScale = 100;
             Options.EnableDyslexiaFont = false;
             Options.EnableKeyboardNavigation = false;
+
+            // Phase 9
+            Options.EnableNetworking = false;
+            Options.NetworkDefaultPort = 7777;
+            Options.NetworkConnectionTimeoutSeconds = 10;
+            Options.EnableClientPrediction = true;
+            Options.EnableMultiplayerChat = false;
+            Options.EnableFogSync = false;
+            Options.EnableVoiceChat = false;
+            Options.EnableCloudSave = false;
+            Options.CloudSaveServerUrl = string.Empty;
 
             _initializing = true;
             LoadCurrentValues();
