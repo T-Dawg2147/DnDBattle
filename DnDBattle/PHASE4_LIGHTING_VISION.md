@@ -121,18 +121,16 @@ All settings write directly to `Options.cs` static properties. A "Reset All to D
 
 ### Test 1: Add a Point Light
 1. Launch the application and open/create an encounter
-2. Right-click an empty cell on the battle grid
-3. Select **"💡 Add Light Source" → "🔆 Point Light (Torch/Lantern)"**
+2. Use **💡 Phase 4 → Quick: Add Point Light** from the top menu
 4. ✅ **Expected:** A warm yellow radial glow appears at the cell with an orange indicator dot
 
 ### Test 2: Add a Colored Light
-1. Right-click another empty cell
-2. Select **"💡 Add Light Source" → "🎨 Colored Light" → "🔵 Cool Blue (Moonlight)"**
+1. Open **💡 Phase 4 → Lighting & Vision Panel...**
+2. Add a **🎨 Colored Light → 🔵 Cool Blue (Moonlight)** from the panel
 3. ✅ **Expected:** A blue-tinted radial glow appears
 
 ### Test 3: Add a Directional Light
-1. Right-click another empty cell
-2. Select **"💡 Add Light Source" → "🔦 Directional Light (Spotlight)"**
+1. Use **💡 Phase 4 → Quick: Add Directional Light** from the top menu
 3. ✅ **Expected:** A 60° cone of light appears pointing to the right (0°)
 
 ### Test 4: Remove a Light
@@ -144,8 +142,8 @@ All settings write directly to `Options.cs` static properties. A "Reset All to D
 1. Draw a wall segment near a light source
 2. ✅ **Expected:** The light is clipped by the wall, creating a shadow on the other side
 
-### Test 6: Developer Window
-1. Open the Developer Window (wire to your menu/toolbar)
+### Test 6: Phase 4 Panel / Developer Settings
+1. Open **💡 Phase 4 → Lighting & Vision Panel...** (or Tools → Developer Settings → Phase 4)
 2. Uncheck "Enable Lighting System"
 3. ✅ **Expected:** All lights disappear from the map
 4. Re-check "Enable Lighting System"
@@ -154,7 +152,7 @@ All settings write directly to `Options.cs` static properties. A "Reset All to D
 ### Test 7: Token Vision
 1. Place a player token on the map
 2. Set its Senses to "Darkvision 60 ft"
-3. Toggle vision overlay on
+3. Toggle vision overlay on via **💡 Phase 4 → Toggle Vision Overlay**
 4. ✅ **Expected:** Cells within 12 squares are visible; cells in darkness seen through darkvision have a slight blue tint
 
 ### Test 8: Save/Load

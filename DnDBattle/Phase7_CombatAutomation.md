@@ -1,8 +1,7 @@
 # Phase 7: Combat Automation – Feature Documentation
 
 This document describes the **Phase 7 Combat Automation** features added to DnDBattle.
-All features can be individually toggled on/off via the **Developer Settings** window
-(`🔧 Developer Settings - Features` → Phase 7 section).
+Use the top menu **⚔️ Phase 7** → **Combat Automation Panel...** (or `🔧 Developer Settings → Phase 7`) to toggle features and trigger quick actions (Quick Attack, Quick Save, Short/Long Rest, Check Concentration).
 
 ---
 
@@ -27,10 +26,9 @@ All features can be individually toggled on/off via the **Developer Settings** w
 | `AutoApplyDamage` | `true` | Auto-apply damage to targets on a successful hit |
 
 ### Simple Test
-1. Create two tokens: "Fighter" (AttackBonus=5) and "Goblin" (AC=15, HP=7).
-2. Give Fighter an action with `DamageExpression = "1d8+3"` and `AttackBonus = 5`.
-3. Call `AttackRollSystem.RollAttack(fighter, goblin, action)`.
-4. Verify: `result.TotalAttack == result.D20Roll + 5` and damage is applied on hit.
+1. Place two tokens on the map: "Fighter" (AttackBonus=5) and "Goblin" (AC=15, HP=7).
+2. Select Fighter, then use **⚔️ Phase 7 → Quick: Roll Attack on Target**.
+3. Verify the combat log shows the d20 roll +5 vs AC 15 and applies damage on hit.
 
 ---
 
@@ -55,9 +53,9 @@ All features can be individually toggled on/off via the **Developer Settings** w
 | `AutoRollMonsterSaves` | `true` | Auto-roll saves for monster tokens (no manual prompt) |
 
 ### Simple Test
-1. Create a token "Wizard" with WIS=16 (modifier +3).
-2. Call `SavingThrowSystem.RollSave(wizard, Ability.Wisdom, DC: 15)`.
-3. Verify: `result.Total == result.D20Roll + 3` and `result.Success == (result.Total >= 15 || result.IsNaturalTwenty)`.
+1. Select a token "Wizard" with WIS=16 (modifier +3).
+2. Use **⚔️ Phase 7 → Quick: Roll Saving Throw** and choose Wisdom, DC 15.
+3. Verify the result equals d20+3 and the success flag matches the DC check.
 
 ---
 
@@ -79,9 +77,9 @@ All features can be individually toggled on/off via the **Developer Settings** w
 | `EnableSpellSlotTracking` | `true` | Enable spell slot consumption on cast |
 
 ### Simple Test
-1. Create a token and set `SpellSlots = SpellSlots.GetForCasterLevel(5)` (level 5 wizard: 4/3/2 slots).
-2. Call `SpellCastingService.CastSpell(token, "Fireball", 3, false)`.
-3. Verify: Level 3 slots changed from 2 to 1.
+1. Open **⚔️ Phase 7 → Combat Automation Panel...** and set a caster token to level 5 (4/3/2 slots).
+2. Cast a level 3 spell from the panel.
+3. Verify level 3 slots decrement from 2 to 1; use **Spell Slots → Short Rest/Long Rest** menu items to restore.
 
 ---
 
@@ -103,11 +101,10 @@ All features can be individually toggled on/off via the **Developer Settings** w
 | `AutoPromptConcentrationCheck` | `true` | Auto-prompt concentration check when damaged |
 
 ### Simple Test
-1. Create a token with CON=14 (modifier +2).
-2. Call `ConcentrationService.StartConcentration(token, "Hold Person")`.
-3. Verify: `token.IsConcentrating == true`.
-4. Call `ConcentrationService.CheckConcentration(token, 22)` → DC=11.
-5. Check `result.Success` based on d20+2 vs DC 11.
+1. Select a token with CON=14 (modifier +2).
+2. In the Combat Automation Panel, start concentration on "Hold Person".
+3. Use **⚔️ Phase 7 → Check Concentration** after taking 22 damage (DC 11).
+4. Verify the save uses d20+2 vs DC 11 and breaks concentration on failure.
 
 ---
 
@@ -141,10 +138,9 @@ Applies D&D 5e mechanical effects based on active conditions:
 | `EnableConditionAutomation` | `true` | Enable condition mechanical effects |
 
 ### Simple Test
-1. Create a token and call `token.AddCondition(Condition.Stunned)`.
-2. Verify: `CombatConditionHelper.CanMove(token) == false`.
-3. Verify: `CombatConditionHelper.AutoFailSave(token, Ability.Dexterity) == true`.
-4. Verify: `CombatConditionHelper.GetDefenseModifier(token) == AttackMode.Advantage`.
+1. In the Combat Automation Panel, apply the **Stunned** condition to a token.
+2. Verify the token cannot move and attackers roll with advantage (see log/overlay).
+3. Trigger a Dexterity save via **Quick: Roll Saving Throw** to confirm auto-fail.
 
 ---
 

@@ -51,11 +51,10 @@ and must be explicitly enabled before use.
 - **Cached lighting** — overlay opacity recalculated at most once every 2 seconds.
 
 #### Simple Test
-1. Open Developer Settings → Undecided Features and ensure *Enable Weather Effects* is checked.
-2. In code, create a `WeatherService` and call `SetWeather(WeatherType.Rain, 0.8)`.
-3. Call `Update(0.016)` each frame (60 fps) and verify `GetActiveParticles()` returns particles with changing positions.
-4. Call `SetTimeOfDay(TimeOfDay.Night)` and verify `GetLightingOverlayOpacity()` returns `0.55`.
-5. Set `WindAngleDegrees = 45` and `WindStrength = 2.0`, verify particles drift diagonally.
+1. Open **🧪 Experimental → Experimental Features Panel...** and ensure *Enable Weather Effects* is checked.
+2. Trigger **🧪 Experimental → 🌧️ Weather → Rain** from the top menu; verify particles render.
+3. In the panel, set **Time of Day** to **Night** and verify the lighting overlay opacity matches the darker setting.
+4. Adjust wind angle/strength sliders in the panel and verify particles drift diagonally.
 
 ---
 
@@ -85,13 +84,10 @@ and must be explicitly enabled before use.
 - **No allocations** — raise/lower operations modify the array in-place.
 
 #### Simple Test
-1. Enable *2.5D Terrain Elevation Layers* in Developer Settings.
-2. Create an `ElevationService` and call `Initialize(20, 20)`.
-3. Call `SetTerrainElevation(5, 5, 30)` and verify `GetTerrainElevation(5, 5)` returns `30`.
-4. Call `SetTokenElevation("token1", 20)` and verify `GetTotalHeight("token1", 5, 5)` returns `50`.
-5. Call `CalculateFallingDamageDice(60)` — should return `6` (6d6).
-6. Call `CalculateFallingDamageDice(250)` — should return `20` (capped at 20d6).
-7. Verify `Calculate3DDistance(0, 0, 0, 3, 4, 25, 5)` returns the Pythagorean distance with elevation factored in.
+1. Enable *2.5D Terrain Elevation Layers* in the **Experimental Features Panel...**.
+2. Raise terrain at a cell from the panel (or the experimental elevation tool) and verify the elevation badge updates.
+3. Set a token's elevation to 20 ft and confirm `GetTotalHeight` shows the combined terrain + token height.
+4. Use the panel's falling-damage helper to check that 60 ft ⇒ 6d6 and 250 ft is capped at 20d6.
 
 ---
 
@@ -138,12 +134,10 @@ and must be explicitly enabled before use.
 - **Pre-allocated state** — `TileAnimState` objects are created once per grid cell and reused via `Reset()`.
 
 #### Simple Test
-1. Enable *Animated Tiles* in Developer Settings.
-2. Create an `AnimatedTileService`, register a built-in definition: `service.RegisterDefinition(AnimatedTileService.GetBuiltInDefinitions()[0])`.
-3. Place a tile: `service.PlaceAnimatedTile("water_flow", 5, 5)`.
-4. Call `service.Update(0.016)` repeatedly and verify `GetCurrentFrameRect(5, 5)` returns changing frame coordinates.
-5. Set `service.ZoomLevel = 0.2` and call `Update()` — verify no frames advance (LOD cutoff).
-6. Place 60 tiles and verify `GetPerformanceStats()` shows effective FPS ≤ 15.
+1. Enable *Animated Tiles* in the **Experimental Features Panel...**.
+2. From the panel, place the built-in **water_flow** animated tile at (5,5).
+3. Pan/zoom the map and verify frames advance; drop zoom below 0.3× and confirm animation pauses (LOD cutoff).
+4. Place many animated tiles and verify the panel's performance stats show FPS reduction around 15 when 50+ are visible.
 
 ---
 
@@ -182,13 +176,11 @@ and must be explicitly enabled before use.
 - **O(1) cell lookup** — `ProceduralMapResult.GetCell(x, y)` uses direct array indexing.
 
 #### Simple Test
-1. Enable *Procedural Map Generation* in Developer Settings.
-2. Create a `ProceduralMapService` and a config: `new ProceduralMapConfig { Type = MapGenerationType.Dungeon, Width = 50, Height = 50, Seed = 12345 }`.
-3. Call `Generate(config)` and verify `result.Grid` is non-null and length = 2500.
-4. Verify `result.Rooms.Count > 0` and each room has valid position/size.
-5. Generate again with the same seed and verify the grids are identical.
-6. Change `Type` to `MapGenerationType.Cave` and verify the output is a cave (no rooms, organic shapes).
-7. Change `Type` to `MapGenerationType.Arena` and verify a single room spanning the map.
+1. From the top menu, choose **🧪 Experimental → 🎲 Generate Procedural Map...** and enable *Procedural Map Generation*.
+2. Generate a Dungeon with width/height 50 and seed 12345 — verify a map appears with multiple rooms and corridors.
+3. Generate again with the same seed and confirm the map layout is identical.
+4. Switch the type to **Cave** and confirm the layout is organic with no rooms.
+5. Switch the type to **Arena** and verify a single large room fills the map.
 
 ---
 
@@ -227,12 +219,10 @@ and must be explicitly enabled before use.
 - **Frozen brushes** — `CreateFrozenBrush()` creates and freezes `SolidColorBrush` instances for reuse.
 
 #### Simple Test
-1. Enable *Token Customization* in Developer Settings.
-2. Create a `TokenCustomizationService` and call `GetCustomization("token1")` — verify default values.
-3. Modify the customization: set `Shape = TokenShape.Hexagon`, `BorderColorHex = "#FF0000"`, `ShowGlow = true`.
-4. Call `SetCustomization(custom)` and verify `GetCustomization("token1")` returns the updated values.
-5. Call `TokenCustomizationService.GetClipGeometry(TokenShape.Star, 48)` and verify a non-null `Geometry` is returned.
-6. Verify `GetNamePlateOffset(NamePlatePosition.Above, 48, 60, 16)` returns a position above the token.
+1. Enable *Token Customization* in the **Experimental Features Panel...**.
+2. Select a token, open the customization panel, and change the shape to **Hexagon** with a red border and glow.
+3. Apply the changes and verify the token renders with the new shape, border, and glow.
+4. Switch the shape to **Star** and confirm the clip geometry updates; adjust name plate position to **Above** and verify the label moves.
 
 ---
 
@@ -271,13 +261,11 @@ and must be explicitly enabled before use.
 - **Lazy rendering** — `GetVisibleMeasurements()` filters with LINQ only when called.
 
 #### Simple Test
-1. Enable *Persistent Measurement Templates* in Developer Settings.
-2. Create a `MeasurementService` and call `AddDistanceMeasurement("Range", 0, 0, 3, 4)`.
-3. Call `CalculateDistanceFeet(measurement)` — verify D&D diagonal distance is returned (not Euclidean).
-4. Add a radius measurement: `AddRadiusMeasurement("Fireball", 10, 10, 4)`.
-5. Call `CalculateAreaSqFeet()` on the radius measurement — verify area = π × (4 × 5)² ≈ 1257 sq ft.
-6. Toggle visibility: `ToggleVisibility(id)` — verify `GetVisibleMeasurements()` excludes it.
-7. Verify `GetPurposeColor(MeasurementPurpose.Danger)` returns `"#F44336"`.
+1. Enable *Persistent Measurement Templates* in the **Experimental Features Panel...**.
+2. Use **🧪 Experimental → 📏 Add Distance Measurement...** to drop a measurement from (0,0) to (3,4).
+3. Verify the label shows the D&D diagonal distance (not Euclidean).
+4. Add a radius measurement for "Fireball" and confirm the area label matches the expected size.
+5. Toggle visibility in the panel and verify hidden measurements disappear; switch purpose to **Danger** and confirm the color is red `#F44336`.
 
 ---
 
@@ -325,15 +313,10 @@ and must be explicitly enabled before use.
 - **Max dice cap** — hard limit of 20 dice per roll prevents runaway simulation.
 
 #### Simple Test
-1. Enable *3D Dice Roller* and *Dice Roll Statistics* in Developer Settings.
-2. Create a `DicePhysicsService` and call `Roll(DiceType.D20, 2)`.
-3. Verify `IsRolling == true` and `GetDice().Count == 2`.
-4. Call `Update(0.016)` repeatedly until `IsRolling == false` — verify all dice have `IsSettled == true`.
-5. Verify `GetTotal()` returns a value between 2 and 40.
-6. Create a `DiceStatisticsService` and call `RecordRoll(20, 20)` — verify `CriticalHitCount == 1`.
-7. Call `RecordRoll(1, 20)` — verify `CriticalFailCount == 1`.
-8. Call `GetAverageRoll(20)` — verify it returns `10.5` (average of 20 and 1).
-9. Verify `LuckScore` is calculated as average / 10.5.
+1. Enable *3D Dice Roller* and *Dice Roll Statistics* in the **Experimental Features Panel...**.
+2. Use **🧪 Experimental → 🎲 Quick Dice Roll → Roll d20** twice to roll 2 dice.
+3. Verify the dice animate, settle, and the total falls within the valid range.
+4. Open the Dice History/Statistics view and confirm critical hits/fails are counted; check the average roll and luck score update after the rolls.
 
 ---
 
@@ -374,14 +357,10 @@ and must be explicitly enabled before use.
 - **Luminance-based contrast** — high contrast calculation uses a simple weighted sum (0.299R + 0.587G + 0.114B), no color space conversion.
 
 #### Simple Test
-1. Enable *High Contrast Mode*, *Colorblind-Friendly Palettes*, and *Dyslexia-Friendly Font* in Developer Settings.
-2. Create an `AccessibilityService` and call `SetColorblindMode(ColorblindMode.Protanopia)`.
-3. Verify `GetCurrentPalette().Danger` returns `"#D4A017"` (yellow-orange instead of red).
-4. Verify `GetHighContrastForeground()` returns `Colors.White` when high contrast is enabled.
-5. Set `AccessibilityUIScale = 200` in Options and verify `UIScaleFactor == 2.0`.
-6. Verify `GetAccessibleFontFamily().Source` contains `"OpenDyslexic"`.
-7. Call `DescribeToken("Goblin", 7, 7, 3, 4, new[] { "Frightened" })` and verify it returns a readable string.
-8. Adjust the UI Scale slider in Developer Settings from 100% to 200% and verify the UI visually scales.
+1. Open **🧪 Experimental → ♿ Accessibility Settings...** and enable *High Contrast*, a *Colorblind Palette* (e.g., Protanopia), and *Dyslexia-Friendly Font*.
+2. Verify the palette preview shows Danger as `#D4A017` and UI text uses the dyslexia-friendly font.
+3. Move the UI Scale slider to 200% and confirm the interface scales up.
+4. Trigger the screen reader preview (Describe Token/Roll) from the dialog and confirm readable output.
 
 ---
 

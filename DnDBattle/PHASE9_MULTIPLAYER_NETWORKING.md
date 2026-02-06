@@ -125,24 +125,22 @@ DM (GameServer) ←→ Player 1 (GameClient)
 ## Simple Test Procedure
 
 ### ✅ Test 1: Server Start/Stop
-1. Open the Developer Window
-2. Enable "Enable Multiplayer Networking" checkbox
-3. Verify the default port shows 7777
-4. Verify the connection timeout shows 10s
-5. Confirm that toggling the checkbox updates `Options.EnableNetworking`
+1. Open **🌐 Multiplayer → Host Game (DM)...**
+2. Verify the default port shows 7777 and timeout shows 10s
+3. Start hosting, then stop hosting — ensure the status updates in the window
+4. Confirm the **Enable Networking** toggle in the host dialog matches `Options.EnableNetworking`
 
 ### ✅ Test 2: Developer Window Toggles
-1. Open the Developer Window
-2. Scroll to "Phase 9: Multiplayer / Networking" section
-3. Toggle each checkbox on and off
-4. Adjust the port slider (range: 1024–65535)
-5. Adjust the timeout slider (range: 5–60)
-6. Click "Reset All to Defaults" — verify Phase 9 options reset to defaults
-7. Verify all Phase 9 options are `false` (except `EnableClientPrediction` which defaults to `true`)
+1. Open **Tools → Developer Settings** and scroll to "Phase 9: Multiplayer / Networking"
+2. Toggle each checkbox on and off (Client Prediction, Fog Sync, Voice Chat)
+3. Adjust the port slider (range: 1024–65535)
+4. Adjust the timeout slider (range: 5–60)
+5. Click **Reset All to Defaults** — verify Phase 9 options reset to defaults
+6. Verify all Phase 9 options are `false` (except `EnableClientPrediction` which defaults to `true`)
 
 ### ✅ Test 3: Options Persistence
-1. Enable networking features in the Developer Window
-2. Close and reopen the Developer Window
+1. Enable networking features in **Developer Settings** or **🌐 Multiplayer → Host Game (DM)...**
+2. Close and reopen the Developer Settings window
 3. Verify the toggles reflect the current `Options` state (runtime-only, not persisted to disk)
 
 ### ✅ Test 4: Fog Compression

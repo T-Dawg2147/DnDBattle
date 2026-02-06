@@ -130,9 +130,9 @@ Visual animations for active area effects to make the battle grid more dynamic a
 
 ---
 
-## 🔧 Developer Window
+## 🔧 UI Access
 
-All Phase 6 features have been added to the **Developer Settings** window with individual toggles and configuration options. Open it from the Developer menu to enable/disable features at runtime.
+Use the main menu **🔥 Phase 6** to open the **Area Effects Panel...** or launch quick actions (Fireball, Darkness, Fog Cloud, Advance Round, Clear Effects). The same toggles live in **Tools → Developer Settings → Phase 6**.
 
 ### Phase 6 Controls
 | Control | Option |
@@ -151,40 +151,38 @@ All Phase 6 features have been added to the **Developer Settings** window with i
 ## 🧪 Simple Test Procedure
 
 ### Test 1: Spell Library
-1. Open the Spell Library (menu or Ctrl+L)
+1. Open **🔥 Phase 6 → Open Spell Library...** (or press Ctrl+L)
 2. Type "fire" in the search box → verify Fireball and other fire spells appear
 3. Click on Fireball → verify details show "3rd Evocation · Sphere · 20ft · 8d6 Fire"
 4. Star a spell as favorite, check "Favorites Only" → verify only starred spells show
 5. Double-click Fireball → verify placement cursor appears on the grid
 
 ### Test 2: Duration Tracking
-1. Place Spirit Guardians (has 100-round duration) on the grid
+1. From **🔥 Phase 6**, choose **Quick: Place Spirit Guardians** (or place from the Spell Library)
 2. Verify a blue badge with "100" appears on the effect
 3. Advance rounds in the initiative tracker
 4. Verify the badge number decrements each round
 5. When it reaches 1, verify the badge turns red and a warning appears in the log
 
 ### Test 3: Damage Over Time
-1. Place Cloud of Daggers (StartOfTurn, 4d4 slashing) on the grid
+1. From **🔥 Phase 6**, choose **Quick: Place Cloud of Daggers** (or place from the Spell Library)
 2. Place a token inside the effect area
 3. Start the token's turn in initiative
 4. Verify damage is rolled and logged: "{Name} takes X slashing damage from Cloud of Daggers"
 5. Verify the token's HP is reduced
 
 ### Test 4: Polygon Effects
-1. Verify `PolygonAreaEffect` can be instantiated with vertices
-2. Add 4 vertices forming a square and verify `ContainsGridPoint` returns true for interior points
-3. Verify `ContainsGridPoint` returns false for exterior points
+1. Open **🔥 Phase 6 → Area Effects Panel...**
+2. Draw a custom polygon effect with 4 vertices forming a square
+3. Verify a token inside the polygon is highlighted; one outside is not
 
 ### Test 5: Effect Animations
-1. Enable effect animations in Developer Window
-2. Set Default Animation to "Pulse"
-3. Place a Fireball on the grid
-4. Verify the border thickness oscillates (pulsing effect)
-5. Change animation to "Rotate" and verify the effect rotates
+1. In **Area Effects Panel...**, enable **Effect Animations** and set Default Animation to "Pulse"
+2. Place a Fireball via **Quick: Place Fireball (20ft)**
+3. Verify the border thickness oscillates (pulsing effect)
+4. Change animation to "Rotate" and verify the effect rotates
 
-### Test 6: Developer Window
-1. Open Developer Window
-2. Scroll to Phase 6 section
-3. Toggle each checkbox and verify the corresponding `Options` property changes
-4. Click "Reset All to Defaults" and verify all Phase 6 options reset
+### Test 6: Phase 6 Panel / Developer Settings
+1. Open **🔥 Phase 6 → Area Effects Panel...** (or Developer Settings → Phase 6)
+2. Toggle each checkbox and verify the corresponding `Options` property changes
+3. Click **Reset All to Defaults** and verify all Phase 6 options reset
