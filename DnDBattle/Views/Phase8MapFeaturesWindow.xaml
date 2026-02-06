@@ -195,7 +195,6 @@
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="{Binding Category}" Foreground="#FF88AAFF" Width="60"/>
                                     <TextBlock Text="{Binding Text}" Foreground="White" MaxWidth="350" TextTrimming="CharacterEllipsis"/>
-                                    <TextBlock Text=" (DM)" Foreground="#FFFF8888" Visibility="{Binding IsPlayerVisible, Converter={StaticResource InverseBoolToVisibility}}"/>
                                 </StackPanel>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
