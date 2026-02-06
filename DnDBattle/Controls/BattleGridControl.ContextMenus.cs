@@ -1,12 +1,32 @@
 using DnDBattle.Models;
+using DnDBattle.Models.Combat;
+using DnDBattle.Models.Combat.Actions;
+using DnDBattle.Models.Creatures;
+using DnDBattle.Models.Effects;
+using DnDBattle.Models.Encounters;
+using DnDBattle.Models.Environment;
+using DnDBattle.Models.Networking;
+using DnDBattle.Models.Spells;
 using DnDBattle.Models.Tiles;
 using DnDBattle.Services;
+using DnDBattle.Services.Combat;
+using DnDBattle.Services.Creatures;
+using DnDBattle.Services.Dice;
+using DnDBattle.Services.Effects;
+using DnDBattle.Services.Encounters;
+using DnDBattle.Services.Grid;
+using DnDBattle.Services.Networking;
+using DnDBattle.Services.Persistence;
+using DnDBattle.Services.UI;
+using DnDBattle.Services.Vision;
 using DnDBattle.ViewModels;
 using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using DnDBattle.Services.TileService;
+using Condition = DnDBattle.Models.Effects.Condition;
 
 namespace DnDBattle.Controls
 {
@@ -179,10 +199,10 @@ namespace DnDBattle.Controls
 
             // Common conditions
             var commonConditions = new[] {
-                Models.Condition.Blinded, Models.Condition.Charmed, Models.Condition.Deafened, Models.Condition.Frightened,
-                Models.Condition.Grappled, Models.Condition.Incapacitated, Models.Condition.Invisible, Models.Condition.Paralyzed,
-                Models.Condition.Petrified, Models.Condition.Poisoned, Models.Condition.Prone, Models.Condition.Restrained,
-                Models.Condition.Stunned, Models.Condition.Unconscious
+                Models.Effects.Condition.Blinded, Models.Effects.Condition.Charmed, Models.Effects.Condition.Deafened, Models.Effects.Condition.Frightened,
+                Models.Effects.Condition.Grappled, Models.Effects.Condition.Incapacitated, Models.Effects.Condition.Invisible, Models.Effects.Condition.Paralyzed,
+                Models.Effects.Condition.Petrified, Models.Effects.Condition.Poisoned, Models.Effects.Condition.Prone, Models.Effects.Condition.Restrained,
+                Models.Effects.Condition.Stunned, Models.Effects.Condition.Unconscious
             };
 
             foreach (var condition in commonConditions)
@@ -196,10 +216,10 @@ namespace DnDBattle.Controls
                 };
                 condItem.Click += (s, e) =>
                 {
-                    token.ToggleCondition((Models.Condition)((MenuItem)s).Tag);
-                    ((MenuItem)s).IsChecked = token.HasCondition((Models.Condition)((MenuItem)s).Tag);
+                    token.ToggleCondition((Models.Effects.Condition)((MenuItem)s).Tag);
+                    ((MenuItem)s).IsChecked = token.HasCondition((Models.Effects.Condition)((MenuItem)s).Tag);
                     RebuildTokenVisuals();
-                    AddToActionLog("Condition", $"{token.Name}: {(token.HasCondition((Models.Condition)((MenuItem)s).Tag) ? "+" : "-")}{ConditionExtensions.GetConditionName((Models.Condition)((MenuItem)s).Tag)}");
+                    AddToActionLog("Condition", $"{token.Name}: {(token.HasCondition((Models.Effects.Condition)((MenuItem)s).Tag) ? "+" : "-")}{ConditionExtensions.GetConditionName((Models.Effects.Condition)((MenuItem)s).Tag)}");
                 };
                 conditionsMenu.Items.Add(condItem);
             }
@@ -231,9 +251,9 @@ namespace DnDBattle.Controls
 
             // Special conditions
             var specialConditions = new[] {
-                Models.Condition.Concentrating, Models.Condition.Dodging, Models.Condition.Hidden,
-                Models.Condition.Blessed, Models.Condition.Cursed, Models.Condition.Hasted, Models.Condition.Slowed,
-                Models.Condition.Flying, Models.Condition.Raging, Models.Condition.Marked, Models.Condition.HuntersMark
+                Models.Effects.Condition.Concentrating, Models.Effects.Condition.Dodging, Models.Effects.Condition.Hidden,
+                Models.Effects.Condition.Blessed, Models.Effects.Condition.Cursed, Models.Effects.Condition.Hasted, Models.Effects.Condition.Slowed,
+                Models.Effects.Condition.Flying, Models.Effects.Condition.Raging, Models.Effects.Condition.Marked, Models.Effects.Condition.HuntersMark
             };
 
             foreach (var condition in specialConditions)
@@ -247,10 +267,10 @@ namespace DnDBattle.Controls
                 };
                 condItem.Click += (s, e) =>
                 {
-                    token.ToggleCondition((Models.Condition)((MenuItem)s).Tag);
-                    ((MenuItem)s).IsChecked = token.HasCondition((Models.Condition)((MenuItem)s).Tag);
+                    token.ToggleCondition((Models.Effects.Condition)((MenuItem)s).Tag);
+                    ((MenuItem)s).IsChecked = token.HasCondition((Models.Effects.Condition)((MenuItem)s).Tag);
                     RebuildTokenVisuals();
-                    AddToActionLog("Condition", $"{token.Name}: {(token.HasCondition((Models.Condition)((MenuItem)s).Tag) ? "+" : "-")}{ConditionExtensions.GetConditionName((Models.Condition)((MenuItem)s).Tag)}");
+                    AddToActionLog("Condition", $"{token.Name}: {(token.HasCondition((Models.Effects.Condition)((MenuItem)s).Tag) ? "+" : "-")}{ConditionExtensions.GetConditionName((Models.Effects.Condition)((MenuItem)s).Tag)}");
                 };
                 conditionsMenu.Items.Add(condItem);
             }
@@ -261,7 +281,7 @@ namespace DnDBattle.Controls
             var clearAllItem = new MenuItem { Header = "❌ Clear All Conditions" };
             clearAllItem.Click += (s, e) =>
             {
-                token.Conditions = Models.Condition.None;
+                token.Conditions = Models.Effects.Condition.None;
                 RebuildTokenVisuals();
                 AddToActionLog("Condition", $"{token.Name}: All conditions cleared");
             };
@@ -277,19 +297,19 @@ namespace DnDBattle.Controls
                 // Pre-built auras
                 var prebuiltMenu = new MenuItem { Header = "➕ Add Pre-built Aura" };
                 var paladinAura = new MenuItem { Header = "🛡️ Paladin Aura (10ft, Gold)" };
-                paladinAura.Click += (s, e) => { token.Auras.Add(Models.TokenAura.PaladinAura()); RedrawAuras(); };
+                paladinAura.Click += (s, e) => { token.Auras.Add(Models.Creatures.TokenAura.PaladinAura()); RedrawAuras(); };
                 prebuiltMenu.Items.Add(paladinAura);
 
                 var spiritGuardians = new MenuItem { Header = "✨ Spirit Guardians (15ft, Blue)" };
-                spiritGuardians.Click += (s, e) => { token.Auras.Add(Models.TokenAura.SpiritGuardians()); RedrawAuras(); };
+                spiritGuardians.Click += (s, e) => { token.Auras.Add(Models.Creatures.TokenAura.SpiritGuardians()); RedrawAuras(); };
                 prebuiltMenu.Items.Add(spiritGuardians);
 
                 var rageAura = new MenuItem { Header = "💢 Rage (5ft, Red)" };
-                rageAura.Click += (s, e) => { token.Auras.Add(Models.TokenAura.Rage()); RedrawAuras(); };
+                rageAura.Click += (s, e) => { token.Auras.Add(Models.Creatures.TokenAura.Rage()); RedrawAuras(); };
                 prebuiltMenu.Items.Add(rageAura);
 
                 var blessAura = new MenuItem { Header = "🙏 Bless (30ft, Green)" };
-                blessAura.Click += (s, e) => { token.Auras.Add(Models.TokenAura.Bless()); RedrawAuras(); };
+                blessAura.Click += (s, e) => { token.Auras.Add(Models.Creatures.TokenAura.Bless()); RedrawAuras(); };
                 prebuiltMenu.Items.Add(blessAura);
 
                 aurasMenu.Items.Add(prebuiltMenu);

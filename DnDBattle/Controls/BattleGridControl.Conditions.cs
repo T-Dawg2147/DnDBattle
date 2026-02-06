@@ -1,10 +1,20 @@
 using DnDBattle.Models;
+using DnDBattle.Models.Combat;
+using DnDBattle.Models.Combat.Actions;
+using DnDBattle.Models.Creatures;
+using DnDBattle.Models.Effects;
+using DnDBattle.Models.Encounters;
+using DnDBattle.Models.Environment;
+using DnDBattle.Models.Networking;
+using DnDBattle.Models.Spells;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using DnDBattle.Models.Tiles;
+using Condition = DnDBattle.Models.Effects.Condition;
 
 namespace DnDBattle.Controls
 {
@@ -20,7 +30,7 @@ namespace DnDBattle.Controls
         /// </summary>
         private FrameworkElement CreateConditionBadges(Token token)
         {
-            if (token.Conditions == Models.Condition.None)
+            if (token.Conditions == Models.Effects.Condition.None)
                 return null;
 
             var activeConditions = token.Conditions.GetActiveConditions().ToList();
@@ -91,7 +101,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Creates a tooltip for a condition badge
         /// </summary>
-        private ToolTip CreateConditionTooltip(Models.Condition condition)
+        private ToolTip CreateConditionTooltip(Models.Effects.Condition condition)
         {
             var tooltip = new ToolTip
             {
@@ -133,13 +143,13 @@ namespace DnDBattle.Controls
         private void ApplyConditionVisualEffects(Image img, Token token)
         {
             // Invisible - make semi-transparent
-            if (token.HasCondition(Models.Condition.Invisible))
+            if (token.HasCondition(Models.Effects.Condition.Invisible))
             {
                 img.Opacity = 0.4;
             }
 
             // Petrified - grayscale effect
-            if (token.HasCondition(Models.Condition.Petrified))
+            if (token.HasCondition(Models.Effects.Condition.Petrified))
             {
                 var grayscaleEffect = new System.Windows.Media.Effects.DropShadowEffect
                 {
@@ -152,10 +162,10 @@ namespace DnDBattle.Controls
             }
 
             // Unconscious/Prone - rotate slightly
-            if (token.HasCondition(Models.Condition.Unconscious) || token.HasCondition(Models.Condition.Prone))
+            if (token.HasCondition(Models.Effects.Condition.Unconscious) || token.HasCondition(Models.Effects.Condition.Prone))
             {
                 img.RenderTransformOrigin = new Point(0.5, 0.5);
-                img.RenderTransform = new RotateTransform(token.HasCondition(Models.Condition.Unconscious) ? 90 : 15);
+                img.RenderTransform = new RotateTransform(token.HasCondition(Models.Effects.Condition.Unconscious) ? 90 : 15);
             }
 
             // Dead (HP <= -MaxHP) - very faded

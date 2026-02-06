@@ -2,6 +2,18 @@
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using DnDBattle.Views;
+using DnDBattle.Views.Combat;
+using DnDBattle.Views.Creatures;
+using DnDBattle.Views.Dice;
+using DnDBattle.Views.Editors;
+using DnDBattle.Views.Effects;
+using DnDBattle.Views.Encounters;
+using DnDBattle.Views.Features;
+using DnDBattle.Views.Multiplayer;
+using DnDBattle.Views.Settings;
+using DnDBattle.Views.Spells;
+using DnDBattle.Views.TileMap;
 
 namespace DnDBattle.Views.TileMap
 {

@@ -1,5 +1,23 @@
 using DnDBattle.Models;
+using DnDBattle.Models.Combat;
+using DnDBattle.Models.Combat.Actions;
+using DnDBattle.Models.Creatures;
+using DnDBattle.Models.Effects;
+using DnDBattle.Models.Encounters;
+using DnDBattle.Models.Environment;
+using DnDBattle.Models.Networking;
+using DnDBattle.Models.Spells;
 using DnDBattle.Services;
+using DnDBattle.Services.Combat;
+using DnDBattle.Services.Creatures;
+using DnDBattle.Services.Dice;
+using DnDBattle.Services.Effects;
+using DnDBattle.Services.Encounters;
+using DnDBattle.Services.Grid;
+using DnDBattle.Services.Networking;
+using DnDBattle.Services.Persistence;
+using DnDBattle.Services.UI;
+using DnDBattle.Services.Vision;
 using DnDBattle.ViewModels;
 using System;
 using System.Linq;
@@ -7,6 +25,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
+using DnDBattle.Models.Tiles;
+using DnDBattle.Services.TileService;
+using Action = DnDBattle.Models.Combat.Action;
 
 namespace DnDBattle.Controls
 {
@@ -651,41 +672,41 @@ namespace DnDBattle.Controls
                             Notes = proto.Notes,
 
                             // ACTIONS
-                            Actions = proto.Actions?.Select(a => new Models.Action
+                            Actions = proto.Actions?.Select(a => new Models.Combat.Action
                             {
                                 Name = a.Name,
                                 AttackBonus = a.AttackBonus,
                                 DamageExpression = a.DamageExpression,
                                 Range = a.Range,
                                 Description = a.Description
-                            }).ToList() ?? new System.Collections.Generic.List<Models.Action>(),
+                            }).ToList() ?? new System.Collections.Generic.List<Models.Combat.Action>(),
 
-                            BonusActions = proto.BonusActions?.Select(a => new Models.Action
+                            BonusActions = proto.BonusActions?.Select(a => new Models.Combat.Action
                             {
                                 Name = a.Name,
                                 AttackBonus = a.AttackBonus,
                                 DamageExpression = a.DamageExpression,
                                 Range = a.Range,
                                 Description = a.Description
-                            }).ToList() ?? new System.Collections.Generic.List<Models.Action>(),
+                            }).ToList() ?? new System.Collections.Generic.List<Models.Combat.Action>(),
 
-                            Reactions = proto.Reactions?.Select(a => new Models.Action
+                            Reactions = proto.Reactions?.Select(a => new Models.Combat.Action
                             {
                                 Name = a.Name,
                                 AttackBonus = a.AttackBonus,
                                 DamageExpression = a.DamageExpression,
                                 Range = a.Range,
                                 Description = a.Description
-                            }).ToList() ?? new System.Collections.Generic.List<Models.Action>(),
+                            }).ToList() ?? new System.Collections.Generic.List<Models.Combat.Action>(),
 
-                            LegendaryActions = proto.LegendaryActions?.Select(a => new Models.Action
+                            LegendaryActions = proto.LegendaryActions?.Select(a => new Models.Combat.Action
                             {
                                 Name = a.Name,
                                 AttackBonus = a.AttackBonus,
                                 DamageExpression = a.DamageExpression,
                                 Range = a.Range,
                                 Description = a.Description
-                            }).ToList() ?? new System.Collections.Generic.List<Models.Action>(),
+                            }).ToList() ?? new System.Collections.Generic.List<Models.Combat.Action>(),
 
                             Tags = proto.Tags?.ToList() ?? new System.Collections.Generic.List<string>()
                         };

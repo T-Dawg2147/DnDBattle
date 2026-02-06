@@ -1,8 +1,18 @@
 ﻿using DnDBattle.Models;
-using DnDBattle.Models.Actions;
+using DnDBattle.Models.Combat.Actions;
 using DnDBattle.Models.Tiles;
 using DnDBattle.Services;
-using DnDBattle.Services.FogOfWar;
+using DnDBattle.Services.Combat;
+using DnDBattle.Services.Creatures;
+using DnDBattle.Services.Dice;
+using DnDBattle.Services.Effects;
+using DnDBattle.Services.Encounters;
+using DnDBattle.Services.Grid;
+using DnDBattle.Services.Networking;
+using DnDBattle.Services.Persistence;
+using DnDBattle.Services.UI;
+using DnDBattle.Services.Vision;
+using DnDBattle.Services.Vision;
 using DnDBattle.Services.TileService;
 using System;
 using System.Collections.Generic;
@@ -13,6 +23,14 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using DnDBattle.Models;
+using DnDBattle.Models.Combat;
+using DnDBattle.Models.Creatures;
+using DnDBattle.Models.Effects;
+using DnDBattle.Models.Encounters;
+using DnDBattle.Models.Environment;
+using DnDBattle.Models.Networking;
+using DnDBattle.Models.Spells;
 
 namespace DnDBattle.Controls
 {
