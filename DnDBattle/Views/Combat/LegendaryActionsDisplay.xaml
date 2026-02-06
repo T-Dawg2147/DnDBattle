@@ -4,13 +4,13 @@
              Background="Transparent">
 
     <Border x:Name="MainBorder" 
-            Background="#252526" 
+            Background="{StaticResource Brush_Background_Dark}" 
             CornerRadius="4" 
             Padding="10"
             Visibility="Collapsed">
         <StackPanel>
             <TextBlock Text="⭐ Legendary Actions" 
-                       Foreground="#FFD700" 
+                       Foreground="{StaticResource Brush_Warning}" 
                        FontWeight="Bold" 
                        FontSize="11"
                        Margin="0,0,0,8"/>
@@ -23,7 +23,7 @@
             <!-- Display -->
             <TextBlock x:Name="TxtRemaining" 
                        HorizontalAlignment="Center"
-                       Foreground="#888"
+                       Foreground="{StaticResource Brush_Text_Hint}"
                        FontSize="10"/>
 
             <!-- Reset Button -->
@@ -32,8 +32,8 @@
                     Padding="8,4"
                     Margin="0,8,0,0"
                     Click="BtnReset_Click"
-                    Background="#3E3E42"
-                    Foreground="White"
+                    Background="{StaticResource Brush_Background_Hover}"
+                    Foreground="{StaticResource Brush_Text_Primary}"
                     BorderThickness="0"
                     HorizontalAlignment="Center"
                     Cursor="Hand"

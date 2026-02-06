@@ -4,42 +4,42 @@
         Title="⚔️ Phase 7: Combat Automation"
         Width="640" Height="1060"
         WindowStartupLocation="CenterOwner"
-        Background="#FF1E1E2E" Foreground="White"
+        Background="{StaticResource Brush_Background_Medium}" Foreground="{StaticResource Brush_Text_Primary}"
         ResizeMode="CanResizeWithGrip">
     <Window.Resources>
         <Style TargetType="CheckBox">
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
             <Setter Property="Margin" Value="0,4"/>
             <Setter Property="FontSize" Value="13"/>
         </Style>
         <Style TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#FFCCCCDD"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Secondary}"/>
             <Setter Property="Margin" Value="0,2"/>
         </Style>
         <Style TargetType="GroupBox">
-            <Setter Property="Foreground" Value="#FF88AAFF"/>
-            <Setter Property="BorderBrush" Value="#FF444466"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Info}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brush_Border_Normal}"/>
             <Setter Property="Margin" Value="0,6"/>
             <Setter Property="Padding" Value="8"/>
         </Style>
         <Style x:Key="ActionButton" TargetType="Button">
-            <Setter Property="Background" Value="#FF2A2A3E"/>
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Background" Value="{StaticResource Brush_Background_Control}"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
             <Setter Property="Padding" Value="10,5"/>
             <Setter Property="Margin" Value="0,4"/>
-            <Setter Property="BorderBrush" Value="#FF444466"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brush_Border_Normal}"/>
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
         <Style x:Key="FieldLabel" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#FFCCCCDD"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Secondary}"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Width" Value="110"/>
             <Setter Property="Margin" Value="0,2"/>
         </Style>
         <Style x:Key="FieldInput" TargetType="TextBox">
-            <Setter Property="Background" Value="#FF2A2A3E"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderBrush" Value="#FF444466"/>
+            <Setter Property="Background" Value="{StaticResource Brush_Background_Control}"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brush_Border_Normal}"/>
             <Setter Property="Padding" Value="4,2"/>
             <Setter Property="Width" Value="120"/>
             <Setter Property="HorizontalAlignment" Value="Left"/>
@@ -53,8 +53,8 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16">
         <StackPanel>
 
-            <TextBlock Text="⚔️ Phase 7: Combat Automation" FontSize="18" FontWeight="Bold" Foreground="#FF88AAFF" Margin="0,0,0,4"/>
-            <TextBlock x:Name="TxtSelectedToken" Text="Selected Token: (none)" Foreground="#FFFFCC66" FontSize="13" Margin="0,0,0,12"/>
+            <TextBlock Text="⚔️ Phase 7: Combat Automation" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Brush_Info}" Margin="0,0,0,4"/>
+            <TextBlock x:Name="TxtSelectedToken" Text="Selected Token: (none)" Foreground="{StaticResource Brush_Warning}" FontSize="13" Margin="0,0,0,12"/>
 
             <!-- 7.1 Attack Roll System -->
             <GroupBox Header="🎯 7.1 Attack Roll System">
@@ -84,7 +84,7 @@
                         </ComboBox>
                     </StackPanel>
                     <Button Content="🎲 Roll Attack" Click="RollAttack_Click" Style="{StaticResource ActionButton}" HorizontalAlignment="Left"/>
-                    <TextBlock x:Name="TxtAttackResult" Text="" Foreground="#FF66FF88" TextWrapping="Wrap" FontSize="12" Margin="0,4"/>
+                    <TextBlock x:Name="TxtAttackResult" Text="" Foreground="{StaticResource Brush_Success}" TextWrapping="Wrap" FontSize="12" Margin="0,4"/>
                 </StackPanel>
             </GroupBox>
 
@@ -115,7 +115,7 @@
                         <TextBox x:Name="TxtSaveDamage" Style="{StaticResource FieldInput}" Text=""/>
                     </StackPanel>
                     <Button Content="🎲 Roll Saving Throw" Click="RollSave_Click" Style="{StaticResource ActionButton}" HorizontalAlignment="Left"/>
-                    <TextBlock x:Name="TxtSaveResult" Text="" Foreground="#FF66FF88" TextWrapping="Wrap" FontSize="12" Margin="0,4"/>
+                    <TextBlock x:Name="TxtSaveResult" Text="" Foreground="{StaticResource Brush_Success}" TextWrapping="Wrap" FontSize="12" Margin="0,4"/>
                 </StackPanel>
             </GroupBox>
 
@@ -146,7 +146,7 @@
                     <Button Content="📖 Initialize Slots for Selected Token" Click="InitializeSlots_Click" Style="{StaticResource ActionButton}" HorizontalAlignment="Left"/>
 
                     <TextBlock Text="Current Slots:" FontWeight="SemiBold" Margin="0,8,0,4"/>
-                    <TextBlock x:Name="TxtSlotDisplay" Text="No slots initialized." Foreground="#FF88CCFF" TextWrapping="Wrap" FontSize="12"/>
+                    <TextBlock x:Name="TxtSlotDisplay" Text="No slots initialized." Foreground="{StaticResource Brush_Info}" TextWrapping="Wrap" FontSize="12"/>
 
                     <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
                         <TextBlock Text="Slot Level:" Style="{StaticResource FieldLabel}" Width="70"/>
@@ -171,7 +171,7 @@
                     <CheckBox x:Name="ChkEnableConcentration" Content="Enable Concentration Tracking" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
                     <CheckBox x:Name="ChkAutoPromptConcentration" Content="Auto-Prompt Concentration Check on Damage" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
 
-                    <TextBlock x:Name="TxtConcentrationStatus" Text="Not concentrating." Foreground="#FFFFCC66" Margin="0,6,0,4" TextWrapping="Wrap"/>
+                    <TextBlock x:Name="TxtConcentrationStatus" Text="Not concentrating." Foreground="{StaticResource Brush_Warning}" Margin="0,6,0,4" TextWrapping="Wrap"/>
 
                     <StackPanel Orientation="Horizontal" Margin="0,2">
                         <TextBlock Text="Spell Name:" Style="{StaticResource FieldLabel}"/>
@@ -184,7 +184,7 @@
                         <TextBox x:Name="TxtConcentrationDamage" Style="{StaticResource FieldInput}" Text="10" Width="60"/>
                     </StackPanel>
                     <Button Content="⚡ Check Concentration" Click="CheckConcentration_Click" Style="{StaticResource ActionButton}" HorizontalAlignment="Left"/>
-                    <TextBlock x:Name="TxtConcentrationResult" Text="" Foreground="#FF66FF88" TextWrapping="Wrap" FontSize="12" Margin="0,4"/>
+                    <TextBlock x:Name="TxtConcentrationResult" Text="" Foreground="{StaticResource Brush_Success}" TextWrapping="Wrap" FontSize="12" Margin="0,4"/>
                 </StackPanel>
             </GroupBox>
 
@@ -192,12 +192,12 @@
             <GroupBox Header="⚠️ 7.5 Condition Automation">
                 <StackPanel>
                     <CheckBox x:Name="ChkEnableConditions" Content="Enable Condition Automation" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
-                    <TextBlock Text="💡 When enabled, conditions automatically affect combat:" Foreground="#FF888899" TextWrapping="Wrap" FontSize="11" Margin="0,4"/>
-                    <TextBlock Text="• Paralyzed/Unconscious: Auto-fail STR/DEX saves, attacks within 5ft auto-crit" Foreground="#FF888899" TextWrapping="Wrap" FontSize="11"/>
-                    <TextBlock Text="• Stunned: Auto-fail STR/DEX saves, attacks have advantage" Foreground="#FF888899" TextWrapping="Wrap" FontSize="11"/>
-                    <TextBlock Text="• Blinded/Invisible: Affect attack advantage/disadvantage" Foreground="#FF888899" TextWrapping="Wrap" FontSize="11"/>
-                    <TextBlock Text="• Frightened/Poisoned/Restrained: Attack roll disadvantage" Foreground="#FF888899" TextWrapping="Wrap" FontSize="11"/>
-                    <TextBlock Text="• Prone: Melee attacks have advantage, ranged have disadvantage" Foreground="#FF888899" TextWrapping="Wrap" FontSize="11"/>
+                    <TextBlock Text="💡 When enabled, conditions automatically affect combat:" Foreground="{StaticResource Brush_Text_Hint}" TextWrapping="Wrap" FontSize="11" Margin="0,4"/>
+                    <TextBlock Text="• Paralyzed/Unconscious: Auto-fail STR/DEX saves, attacks within 5ft auto-crit" Foreground="{StaticResource Brush_Text_Hint}" TextWrapping="Wrap" FontSize="11"/>
+                    <TextBlock Text="• Stunned: Auto-fail STR/DEX saves, attacks have advantage" Foreground="{StaticResource Brush_Text_Hint}" TextWrapping="Wrap" FontSize="11"/>
+                    <TextBlock Text="• Blinded/Invisible: Affect attack advantage/disadvantage" Foreground="{StaticResource Brush_Text_Hint}" TextWrapping="Wrap" FontSize="11"/>
+                    <TextBlock Text="• Frightened/Poisoned/Restrained: Attack roll disadvantage" Foreground="{StaticResource Brush_Text_Hint}" TextWrapping="Wrap" FontSize="11"/>
+                    <TextBlock Text="• Prone: Melee attacks have advantage, ranged have disadvantage" Foreground="{StaticResource Brush_Text_Hint}" TextWrapping="Wrap" FontSize="11"/>
                 </StackPanel>
             </GroupBox>
 
@@ -219,8 +219,8 @@
                         <TextBox x:Name="TxtDefenderY" Style="{StaticResource FieldInput}" Text="5" Width="40"/>
                     </StackPanel>
                     <Button Content="🧱 Calculate Cover" Click="CalculateCover_Click" Style="{StaticResource ActionButton}" HorizontalAlignment="Left"/>
-                    <TextBlock x:Name="TxtCoverResult" Text="" Foreground="#FF66FF88" TextWrapping="Wrap" FontSize="12" Margin="0,4"/>
-                    <TextBlock Text="💡 Cover bonuses: Half (+2 AC), Three-Quarters (+5 AC), Full (cannot be targeted)." Foreground="#FF888899" TextWrapping="Wrap" FontSize="11" Margin="0,4"/>
+                    <TextBlock x:Name="TxtCoverResult" Text="" Foreground="{StaticResource Brush_Success}" TextWrapping="Wrap" FontSize="12" Margin="0,4"/>
+                    <TextBlock Text="💡 Cover bonuses: Half (+2 AC), Three-Quarters (+5 AC), Full (cannot be targeted)." Foreground="{StaticResource Brush_Text_Hint}" TextWrapping="Wrap" FontSize="11" Margin="0,4"/>
                 </StackPanel>
             </GroupBox>
 

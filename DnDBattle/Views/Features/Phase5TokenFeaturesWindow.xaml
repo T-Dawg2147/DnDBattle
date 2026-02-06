@@ -4,16 +4,16 @@
         Title="🎭 Phase 5: Advanced Token Features"
         Width="580" Height="950"
         WindowStartupLocation="CenterOwner"
-        Background="#FF1E1E2E" Foreground="White"
+        Background="{StaticResource Brush_Background_Medium}" Foreground="{StaticResource Brush_Text_Primary}"
         ResizeMode="CanResizeWithGrip">
     <Window.Resources>
         <Style TargetType="CheckBox">
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
             <Setter Property="Margin" Value="0,4"/>
             <Setter Property="FontSize" Value="13"/>
         </Style>
         <Style TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#FFCCCCDD"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Secondary}"/>
             <Setter Property="Margin" Value="0,2"/>
         </Style>
         <Style TargetType="Slider">
@@ -22,17 +22,17 @@
             <Setter Property="HorizontalAlignment" Value="Left"/>
         </Style>
         <Style TargetType="GroupBox">
-            <Setter Property="Foreground" Value="#FF88AAFF"/>
-            <Setter Property="BorderBrush" Value="#FF444466"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Info}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brush_Border_Normal}"/>
             <Setter Property="Margin" Value="0,6"/>
             <Setter Property="Padding" Value="8"/>
         </Style>
         <Style x:Key="ActionButton" TargetType="Button">
-            <Setter Property="Background" Value="#FF2A2A3E"/>
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Background" Value="{StaticResource Brush_Background_Control}"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
             <Setter Property="Padding" Value="10,5"/>
             <Setter Property="Margin" Value="0,4"/>
-            <Setter Property="BorderBrush" Value="#FF444466"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brush_Border_Normal}"/>
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
     </Window.Resources>
@@ -40,13 +40,13 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16">
         <StackPanel>
 
-            <TextBlock Text="🎭 Phase 5: Advanced Token Features" FontSize="18" FontWeight="Bold" Foreground="#FF88AAFF" Margin="0,0,0,12"/>
-            <TextBlock Text="Manage pathfinding, movement preview, auras, elevation, and facing." Foreground="#FF888899" Margin="0,0,0,4"/>
+            <TextBlock Text="🎭 Phase 5: Advanced Token Features" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Brush_Info}" Margin="0,0,0,12"/>
+            <TextBlock Text="Manage pathfinding, movement preview, auras, elevation, and facing." Foreground="{StaticResource Brush_Text_Hint}" Margin="0,0,0,4"/>
 
             <!-- Selected token indicator -->
             <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                <TextBlock Text="Selected Token: " FontWeight="SemiBold" Foreground="#FFCCCCDD"/>
-                <TextBlock x:Name="TxtSelectedToken" Text="(none)" FontWeight="Bold" Foreground="#FFFFCC66"/>
+                <TextBlock Text="Selected Token: " FontWeight="SemiBold" Foreground="{StaticResource Brush_Text_Secondary}"/>
+                <TextBlock x:Name="TxtSelectedToken" Text="(none)" FontWeight="Bold" Foreground="{StaticResource Brush_Warning}"/>
             </StackPanel>
 
             <!-- 5.1 A* Pathfinding -->
@@ -59,7 +59,7 @@
                         <Slider x:Name="SliderMaxDepth" Minimum="10" Maximum="200" TickFrequency="10" IsSnapToTickEnabled="True" ValueChanged="OnSliderChanged"/>
                         <TextBlock x:Name="TxtMaxDepth" VerticalAlignment="Center" Margin="4,0"/>
                     </StackPanel>
-                    <TextBlock Text="💡 A* pathfinding calculates optimal movement paths around obstacles." Foreground="#FF888899" TextWrapping="Wrap" FontSize="11" Margin="0,4"/>
+                    <TextBlock Text="💡 A* pathfinding calculates optimal movement paths around obstacles." Foreground="{StaticResource Brush_Text_Hint}" TextWrapping="Wrap" FontSize="11" Margin="0,4"/>
                 </StackPanel>
             </GroupBox>
 
@@ -67,7 +67,7 @@
             <GroupBox Header="👣 5.2 Movement Cost Preview">
                 <StackPanel>
                     <CheckBox x:Name="ChkEnableMovementPreview" Content="Enable Movement Cost Preview" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
-                    <TextBlock Text="💡 Hover over grid squares to see movement cost from the selected token. Difficult terrain costs double." Foreground="#FF888899" TextWrapping="Wrap" FontSize="11" Margin="0,4"/>
+                    <TextBlock Text="💡 Hover over grid squares to see movement cost from the selected token. Difficult terrain costs double." Foreground="{StaticResource Brush_Text_Hint}" TextWrapping="Wrap" FontSize="11" Margin="0,4"/>
                 </StackPanel>
             </GroupBox>
 
@@ -80,7 +80,7 @@
                         <Slider x:Name="SliderAnimationSpeed" Minimum="0.1" Maximum="2.0" TickFrequency="0.1" IsSnapToTickEnabled="True" ValueChanged="OnSliderChanged"/>
                         <TextBlock x:Name="TxtAnimationSpeed" VerticalAlignment="Center" Margin="4,0"/>
                     </StackPanel>
-                    <TextBlock Text="💡 Tokens animate smoothly along the calculated path instead of snapping." Foreground="#FF888899" TextWrapping="Wrap" FontSize="11" Margin="0,4"/>
+                    <TextBlock Text="💡 Tokens animate smoothly along the calculated path instead of snapping." Foreground="{StaticResource Brush_Text_Hint}" TextWrapping="Wrap" FontSize="11" Margin="0,4"/>
                 </StackPanel>
             </GroupBox>
 
@@ -88,7 +88,7 @@
             <GroupBox Header="⚔️ 5.4 Attacks of Opportunity Detection">
                 <StackPanel>
                     <CheckBox x:Name="ChkEnableAOO" Content="Enable AOO Detection" Checked="OnFeatureToggled" Unchecked="OnFeatureToggled"/>
-                    <TextBlock Text="💡 Detects when a moving token leaves an enemy's threatened area and warns about attacks of opportunity." Foreground="#FF888899" TextWrapping="Wrap" FontSize="11" Margin="0,4"/>
+                    <TextBlock Text="💡 Detects when a moving token leaves an enemy's threatened area and warns about attacks of opportunity." Foreground="{StaticResource Brush_Text_Hint}" TextWrapping="Wrap" FontSize="11" Margin="0,4"/>
                 </StackPanel>
             </GroupBox>
 
@@ -106,13 +106,13 @@
                     </WrapPanel>
 
                     <TextBlock Text="Auras on Selected Token:" Margin="0,8,0,4" FontWeight="SemiBold"/>
-                    <ListBox x:Name="AurasList" Height="100" Background="#FF1A1A2E" Foreground="White" BorderBrush="#FF444466">
+                    <ListBox x:Name="AurasList" Height="100" Background="{StaticResource Brush_Background_Dark}" Foreground="{StaticResource Brush_Text_Primary}" BorderBrush="{StaticResource Brush_Border_Normal}">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{Binding Name}" Width="160" Foreground="White"/>
-                                    <TextBlock Text="{Binding RadiusSquares, StringFormat='{}{0} sq'}" Width="60" Foreground="#FF88AAFF"/>
-                                    <TextBlock Text="{Binding IsVisible}" Foreground="#FFAAAAAA"/>
+                                    <TextBlock Text="{Binding Name}" Width="160" Foreground="{StaticResource Brush_Text_Primary}"/>
+                                    <TextBlock Text="{Binding RadiusSquares, StringFormat='{}{0} sq'}" Width="60" Foreground="{StaticResource Brush_Info}"/>
+                                    <TextBlock Text="{Binding IsVisible}" Foreground="{StaticResource Brush_Text_Hint}"/>
                                 </StackPanel>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
@@ -139,7 +139,7 @@
                         </ComboBox>
                     </StackPanel>
                     <Button Content="📌 Apply Elevation to Selected Token" Click="ApplyElevation_Click" Style="{StaticResource ActionButton}" HorizontalAlignment="Left"/>
-                    <TextBlock Text="💡 Elevation affects distance calculations and displays a badge on the token." Foreground="#FF888899" TextWrapping="Wrap" FontSize="11" Margin="0,4"/>
+                    <TextBlock Text="💡 Elevation affects distance calculations and displays a badge on the token." Foreground="{StaticResource Brush_Text_Hint}" TextWrapping="Wrap" FontSize="11" Margin="0,4"/>
                 </StackPanel>
             </GroupBox>
 
@@ -155,7 +155,7 @@
                         <TextBlock x:Name="TxtFacingAngle" VerticalAlignment="Center" Margin="4,0"/>
                     </StackPanel>
                     <Button Content="🧭 Apply Facing to Selected Token" Click="ApplyFacing_Click" Style="{StaticResource ActionButton}" HorizontalAlignment="Left"/>
-                    <TextBlock Text="💡 Facing determines the direction a token looks. Flanking detection uses facing to determine advantage." Foreground="#FF888899" TextWrapping="Wrap" FontSize="11" Margin="0,4"/>
+                    <TextBlock Text="💡 Facing determines the direction a token looks. Flanking detection uses facing to determine advantage." Foreground="{StaticResource Brush_Text_Hint}" TextWrapping="Wrap" FontSize="11" Margin="0,4"/>
                 </StackPanel>
             </GroupBox>
 

@@ -4,17 +4,17 @@
         Title="📖 Spell Templates Library"
         Width="460" Height="680"
         WindowStartupLocation="CenterOwner"
-        Background="#FF1E1E2E" Foreground="White"
+        Background="{StaticResource Brush_Background_Medium}" Foreground="{StaticResource Brush_Text_Primary}"
         ResizeMode="CanResizeWithGrip"
         KeyDown="Window_KeyDown">
     <Window.Resources>
         <Style TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#FFCCCCDD"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Secondary}"/>
         </Style>
         <Style TargetType="Button" x:Key="SpellButton">
-            <Setter Property="Background" Value="#FF2A2A3E"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderBrush" Value="#FF444466"/>
+            <Setter Property="Background" Value="{StaticResource Brush_Background_Control}"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brush_Border_Normal}"/>
             <Setter Property="Padding" Value="8,4"/>
             <Setter Property="Margin" Value="0,1"/>
             <Setter Property="HorizontalContentAlignment" Value="Left"/>
@@ -31,7 +31,7 @@
         </Grid.RowDefinitions>
 
         <!-- Search Bar -->
-        <Border Grid.Row="0" Background="#FF2A2A3E" Padding="8" Margin="8,8,8,0" CornerRadius="4">
+        <Border Grid.Row="0" Background="{StaticResource Brush_Background_Control}" Padding="8" Margin="8,8,8,0" CornerRadius="4">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -39,11 +39,11 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Column="0" Text="🔍 " VerticalAlignment="Center" FontSize="16"/>
-                <TextBox Grid.Column="1" x:Name="TxtSearch" Background="#FF1A1A2E" Foreground="White"
-                         BorderBrush="#FF444466" Padding="4" FontSize="14"
+                <TextBox Grid.Column="1" x:Name="TxtSearch" Background="{StaticResource Brush_Background_Dark}" Foreground="{StaticResource Brush_Text_Primary}"
+                         BorderBrush="{StaticResource Brush_Border_Normal}" Padding="4" FontSize="14"
                          TextChanged="TxtSearch_TextChanged"/>
                 <Button Grid.Column="2" Content="✕" Width="28" Background="Transparent"
-                        Foreground="#FF888899" BorderThickness="0" Click="ClearSearch_Click"
+                        Foreground="{StaticResource Brush_Text_Hint}" BorderThickness="0" Click="ClearSearch_Click"
                         VerticalAlignment="Center" FontSize="14"/>
             </Grid>
         </Border>
@@ -52,7 +52,7 @@
         <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="8,4" HorizontalAlignment="Center">
             <TextBlock Text="Level: " VerticalAlignment="Center" Margin="0,0,4,0"/>
             <ComboBox x:Name="CmbLevelFilter" Width="120" SelectionChanged="CmbLevelFilter_SelectionChanged"
-                      Background="#FF2A2A3E" Foreground="White" BorderBrush="#FF444466">
+                      Background="{StaticResource Brush_Background_Control}" Foreground="{StaticResource Brush_Text_Primary}" BorderBrush="{StaticResource Brush_Border_Normal}">
                 <ComboBoxItem Content="All Levels" IsSelected="True"/>
                 <ComboBoxItem Content="Cantrips"/>
                 <ComboBoxItem Content="1st Level"/>
@@ -65,14 +65,14 @@
                 <ComboBoxItem Content="8th Level"/>
                 <ComboBoxItem Content="9th Level"/>
             </ComboBox>
-            <CheckBox x:Name="ChkFavoritesOnly" Content="⭐ Favorites Only" Foreground="White"
+            <CheckBox x:Name="ChkFavoritesOnly" Content="⭐ Favorites Only" Foreground="{StaticResource Brush_Text_Primary}"
                       Margin="12,0,0,0" VerticalAlignment="Center"
                       Checked="ChkFavoritesOnly_Changed" Unchecked="ChkFavoritesOnly_Changed"/>
         </StackPanel>
 
         <!-- Spell List -->
         <ListBox Grid.Row="2" x:Name="LstSpells" Margin="8"
-                 Background="#FF1A1A2E" BorderBrush="#FF444466"
+                 Background="{StaticResource Brush_Background_Dark}" BorderBrush="{StaticResource Brush_Border_Normal}"
                  SelectionChanged="LstSpells_SelectionChanged"
                  MouseDoubleClick="LstSpells_MouseDoubleClick">
             <ListBox.ItemTemplate>
@@ -90,8 +90,8 @@
                                        VerticalAlignment="Center" Margin="0,0,6,0"/>
                             <!-- Spell info -->
                             <StackPanel Grid.Column="1">
-                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="13" Foreground="White"/>
-                                <TextBlock FontSize="11" Foreground="#FF888899">
+                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="13" Foreground="{StaticResource Brush_Text_Primary}"/>
+                                <TextBlock FontSize="11" Foreground="{StaticResource Brush_Text_Hint}">
                                     <Run Text="{Binding LevelDisplay, Mode=OneWay}"/>
                                     <Run Text=" · "/>
                                     <Run Text="{Binding ShapeText, Mode=OneWay}"/>
@@ -101,11 +101,11 @@
                             </StackPanel>
                             <!-- Concentration -->
                             <TextBlock Grid.Column="2" Text="C" FontWeight="Bold" FontSize="12"
-                                       Foreground="#FFFFAA00" VerticalAlignment="Center" Margin="4,0"
+                                       Foreground="{StaticResource Brush_Warning}" VerticalAlignment="Center" Margin="4,0"
                                        Visibility="{Binding ConcentrationVisibility}"/>
                             <!-- Favorite -->
                             <Button Grid.Column="3" Content="{Binding FavoriteStar}" Background="Transparent"
-                                    BorderThickness="0" Foreground="#FFFFDD00" FontSize="16"
+                                    BorderThickness="0" Foreground="{StaticResource Brush_Warning}" FontSize="16"
                                     VerticalAlignment="Center" Cursor="Hand" Tag="{Binding}"
                                     Click="ToggleFavorite_Click"/>
                         </Grid>
@@ -115,17 +115,17 @@
         </ListBox>
 
         <!-- Bottom Bar -->
-        <Border Grid.Row="3" Background="#FF2A2A3E" Padding="8" Margin="8,0,8,8" CornerRadius="4">
+        <Border Grid.Row="3" Background="{StaticResource Brush_Background_Control}" Padding="8" Margin="8,0,8,8" CornerRadius="4">
             <StackPanel>
                 <!-- Selected spell details -->
                 <TextBlock x:Name="TxtSelectedInfo" TextWrapping="Wrap" FontSize="12"
-                           Foreground="#FFAAAACC" Margin="0,0,0,6"/>
+                           Foreground="{StaticResource Brush_Text_Secondary}" Margin="0,0,0,6"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                     <Button Content="📌 Place Spell" Click="PlaceSpell_Click" Padding="12,6"
-                            Background="#FF3A6EA5" Foreground="White" BorderThickness="0"
+                            Background="{StaticResource Brush_Accent_Primary}" Foreground="{StaticResource Brush_Text_Primary}" BorderThickness="0"
                             FontSize="13" Margin="0,0,6,0" x:Name="BtnPlace" IsEnabled="False"/>
                     <Button Content="Cancel" Click="Cancel_Click" Padding="12,6"
-                            Background="#FF553333" Foreground="White" BorderThickness="0" FontSize="13"/>
+                            Background="{StaticResource Brush_Error}" Foreground="{StaticResource Brush_Text_Primary}" BorderThickness="0" FontSize="13"/>
                 </StackPanel>
             </StackPanel>
         </Border>

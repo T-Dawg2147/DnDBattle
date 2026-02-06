@@ -4,7 +4,7 @@
              Background="Transparent">
 
     <Border x:Name="TimerBorder" 
-            Background="#252526" 
+            Background="{StaticResource Brush_Background_Dark}" 
             CornerRadius="4" 
             Padding="10,6"
             Visibility="Collapsed">
@@ -28,13 +28,13 @@
                            Text="2:00" 
                            FontSize="20" 
                            FontWeight="Bold" 
-                           Foreground="White"/>
+                           Foreground="{StaticResource Brush_Text_Primary}"/>
 
                 <!-- Progress Bar -->
                 <Grid Height="4" Margin="0,4,0,0">
-                    <Border Background="#1E1E1E" CornerRadius="2"/>
+                    <Border Background="{StaticResource Brush_Background_Medium}" CornerRadius="2"/>
                     <Border x:Name="TimerProgressBar" 
-                            Background="#4CAF50" 
+                            Background="{StaticResource Brush_Success}" 
                             CornerRadius="2" 
                             HorizontalAlignment="Left"/>
                 </Grid>
@@ -46,7 +46,7 @@
                     Width="28" Height="28"
                     Background="Transparent"
                     BorderThickness="0"
-                    Foreground="White"
+                    Foreground="{StaticResource Brush_Text_Primary}"
                     Cursor="Hand"
                     Click="BtnSettings_Click"
                     ToolTip="Timer Settings"

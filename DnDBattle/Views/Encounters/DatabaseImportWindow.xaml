@@ -4,7 +4,7 @@
         Title="Import Creatures to Database"
         Width="500" Height="400"
         WindowStartupLocation="CenterOwner"
-        Background="#2D2D30">
+        Background="{StaticResource Brush_Background_Control}">
     <Grid Margin="15">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -15,10 +15,10 @@
         </Grid.RowDefinitions>
 
         <TextBlock Grid.Row="0" Text="Import JSON Creature Files" 
-                   FontSize="18" FontWeight="Bold" Foreground="White"
+                   FontSize="18" FontWeight="Bold" Foreground="{StaticResource Brush_Text_Primary}"
                    Margin="0,0,0,15"/>
 
-        <GroupBox Grid.Row="1" Header="Select JSON Folder" Foreground="White" Margin="0,0,0,15">
+        <GroupBox Grid.Row="1" Header="Select JSON Folder" Foreground="{StaticResource Brush_Text_Primary}" Margin="0,0,0,15">
             <Grid Margin="5">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -32,10 +32,10 @@
             </Grid>
         </GroupBox>
 
-        <GroupBox Grid.Row="2" Header="Import Progress" Foreground="White">
+        <GroupBox Grid.Row="2" Header="Import Progress" Foreground="{StaticResource Brush_Text_Primary}">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <TextBox x:Name="TxtLog" IsReadOnly="True"
-                         Background="#1E1E1E" Foreground="#CCC"
+                         Background="{StaticResource Brush_Background_Medium}" Foreground="{StaticResource Brush_Text_Secondary}"
                          TextWrapping="Wrap" BorderThickness="0"
                          VerticalScrollBarVisibility="Auto"/>
             </ScrollViewer>
@@ -45,7 +45,7 @@
                      Minimum="0" Maximum="100" Value="0"/>
 
         <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
-            <TextBlock x:Name="TxtStatus" Foreground="#999" VerticalAlignment="Center"
+            <TextBlock x:Name="TxtStatus" Foreground="{StaticResource Brush_Text_Hint}" VerticalAlignment="Center"
                        Margin="0,0,15,0"/>
             <Button x:Name="BtnClear" Content="Clear Database" Width="110"
                     Margin="0,0,10,0" Click="BtnClear_Click"

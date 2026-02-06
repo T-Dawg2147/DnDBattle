@@ -4,7 +4,7 @@
         Title="Concentration Check"
         Width="380" Height="340"
         WindowStartupLocation="CenterOwner"
-        Background="#1E1E1E"
+        Background="{StaticResource Brush_Background_Medium}"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
         WindowStyle="ToolWindow"
@@ -24,19 +24,19 @@
             <TextBlock Text="🎯 Concentration Check!" 
                        FontSize="18" 
                        FontWeight="Bold" 
-                       Foreground="#FF9800"/>
+                       Foreground="{StaticResource Brush_Warning}"/>
             <TextBlock x:Name="TxtCreatureName" 
-                       Foreground="#888" 
+                       Foreground="{StaticResource Brush_Text_Hint}" 
                        FontSize="12"
                        Margin="0,5,0,0"/>
             <TextBlock x:Name="TxtSpellName" 
-                       Foreground="#4FC3F7" 
+                       Foreground="{StaticResource Brush_Info}" 
                        FontSize="12"
                        FontStyle="Italic"/>
         </StackPanel>
 
         <!-- DC Info -->
-        <Border Grid.Row="1" Background="#252526" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+        <Border Grid.Row="1" Background="{StaticResource Brush_Background_Dark}" CornerRadius="8" Padding="15" Margin="0,0,0,15">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -44,34 +44,34 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel>
-                    <TextBlock Text="Constitution Saving Throw" Foreground="#888" FontSize="11"/>
+                    <TextBlock Text="Constitution Saving Throw" Foreground="{StaticResource Brush_Text_Hint}" FontSize="11"/>
                     <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
-                        <TextBlock Text="Modifier: " Foreground="#888"/>
-                        <TextBlock x:Name="TxtConMod" Foreground="#4CAF50" FontWeight="Bold"/>
+                        <TextBlock Text="Modifier: " Foreground="{StaticResource Brush_Text_Hint}"/>
+                        <TextBlock x:Name="TxtConMod" Foreground="{StaticResource Brush_Success}" FontWeight="Bold"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
-                        <TextBlock Text="Damage Taken: " Foreground="#888"/>
-                        <TextBlock x:Name="TxtDamageTaken" Foreground="#F44336" FontWeight="Bold"/>
+                        <TextBlock Text="Damage Taken: " Foreground="{StaticResource Brush_Text_Hint}"/>
+                        <TextBlock x:Name="TxtDamageTaken" Foreground="{StaticResource Brush_Error}" FontWeight="Bold"/>
                     </StackPanel>
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" HorizontalAlignment="Right">
-                    <TextBlock Text="DC" Foreground="#888" FontSize="10" HorizontalAlignment="Center"/>
+                    <TextBlock Text="DC" Foreground="{StaticResource Brush_Text_Hint}" FontSize="10" HorizontalAlignment="Center"/>
                     <TextBlock x:Name="TxtDC" 
                                FontSize="36" 
                                FontWeight="Bold" 
-                               Foreground="#FF9800"
+                               Foreground="{StaticResource Brush_Warning}"
                                HorizontalAlignment="Center"/>
                 </StackPanel>
             </Grid>
         </Border>
 
         <!-- Roll Input -->
-        <Border Grid.Row="2" Background="#252526" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+        <Border Grid.Row="2" Background="{StaticResource Brush_Background_Dark}" CornerRadius="8" Padding="15" Margin="0,0,0,15">
             <StackPanel>
                 <!-- Manual Roll -->
                 <StackPanel x:Name="ManualRollPanel">
-                    <TextBlock Text="Enter your d20 roll:" Foreground="#888" FontSize="11"/>
+                    <TextBlock Text="Enter your d20 roll:" Foreground="{StaticResource Brush_Text_Hint}" FontSize="11"/>
                     <Grid Margin="0,8,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -83,9 +83,9 @@
                         <TextBox x:Name="TxtRoll" 
                                  Width="70" 
                                  FontSize="20"
-                                 Background="#1E1E1E"
-                                 Foreground="White"
-                                 BorderBrush="#444"
+                                 Background="{StaticResource Brush_Background_Medium}"
+                                 Foreground="{StaticResource Brush_Text_Primary}"
+                                 BorderBrush="{StaticResource Brush_Border_Normal}"
                                  Padding="8,5"
                                  TextAlignment="Center"
                                  VerticalContentAlignment="Center"/>
@@ -93,33 +93,33 @@
                         <TextBlock Grid.Column="1" 
                                    x:Name="TxtModifierDisplay"
                                    FontSize="20" 
-                                   Foreground="#888" 
+                                   Foreground="{StaticResource Brush_Text_Hint}" 
                                    VerticalAlignment="Center"
                                    Margin="10,0,0,0"/>
 
                         <TextBlock Grid.Column="2" 
                                    Text=" = " 
                                    FontSize="20" 
-                                   Foreground="#888" 
+                                   Foreground="{StaticResource Brush_Text_Hint}" 
                                    VerticalAlignment="Center"/>
 
                         <TextBlock Grid.Column="3" 
                                    x:Name="TxtTotal"
                                    FontSize="24" 
                                    FontWeight="Bold"
-                                   Foreground="White" 
+                                   Foreground="{StaticResource Brush_Text_Primary}" 
                                    VerticalAlignment="Center"/>
                     </Grid>
                 </StackPanel>
 
                 <!-- Auto Roll -->
                 <StackPanel x:Name="AutoRollPanel" Visibility="Collapsed">
-                    <TextBlock Text="Roll Result:" Foreground="#888" FontSize="11"/>
+                    <TextBlock Text="Roll Result:" Foreground="{StaticResource Brush_Text_Hint}" FontSize="11"/>
                     <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                        <TextBlock x:Name="TxtAutoRoll" FontSize="24" Foreground="#4CAF50" FontWeight="Bold"/>
-                        <TextBlock x:Name="TxtAutoModifier" FontSize="16" Foreground="#888" VerticalAlignment="Bottom" Margin="5,0,0,4"/>
-                        <TextBlock Text=" = " FontSize="16" Foreground="#888" VerticalAlignment="Bottom" Margin="0,0,0,4"/>
-                        <TextBlock x:Name="TxtAutoTotal" FontSize="24" Foreground="White" FontWeight="Bold"/>
+                        <TextBlock x:Name="TxtAutoRoll" FontSize="24" Foreground="{StaticResource Brush_Success}" FontWeight="Bold"/>
+                        <TextBlock x:Name="TxtAutoModifier" FontSize="16" Foreground="{StaticResource Brush_Text_Hint}" VerticalAlignment="Bottom" Margin="5,0,0,4"/>
+                        <TextBlock Text=" = " FontSize="16" Foreground="{StaticResource Brush_Text_Hint}" VerticalAlignment="Bottom" Margin="0,0,0,4"/>
+                        <TextBlock x:Name="TxtAutoTotal" FontSize="24" Foreground="{StaticResource Brush_Text_Primary}" FontWeight="Bold"/>
                     </StackPanel>
                 </StackPanel>
             </StackPanel>
@@ -141,15 +141,15 @@
                     Padding="15,10" 
                     Margin="0,0,10,0"
                     Click="BtnAutoFail_Click"
-                    Background="#F44336"
-                    Foreground="White"
+                    Background="{StaticResource Brush_Error}"
+                    Foreground="{StaticResource Brush_Text_Primary}"
                     BorderThickness="0"
                     ToolTip="Automatically fail the save (e.g., incapacitated)"/>
             <Button Content="Confirm (Enter)" 
                     Padding="20,10"
                     Click="BtnConfirm_Click"
-                    Background="#4CAF50"
-                    Foreground="White"
+                    Background="{StaticResource Brush_Success}"
+                    Foreground="{StaticResource Brush_Text_Primary}"
                     BorderThickness="0"
                     FontWeight="Bold"
                     IsDefault="True"/>

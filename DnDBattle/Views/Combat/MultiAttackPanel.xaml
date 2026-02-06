@@ -4,19 +4,19 @@
              Background="Transparent">
 
     <Border x:Name="MainBorder" 
-            Background="#252526" 
+            Background="{StaticResource Brush_Background_Dark}" 
             CornerRadius="4" 
             Padding="10"
             Visibility="Collapsed">
         <StackPanel>
             <TextBlock Text="⚔️ Multi-Attack" 
-                       Foreground="#F44336" 
+                       Foreground="{StaticResource Brush_Error}" 
                        FontWeight="Bold" 
                        FontSize="11"
                        Margin="0,0,0,8"/>
 
             <TextBlock x:Name="TxtMultiattackDescription" 
-                       Foreground="#888" 
+                       Foreground="{StaticResource Brush_Text_Hint}" 
                        FontSize="10"
                        TextWrapping="Wrap"
                        Margin="0,0,0,10"/>
@@ -30,8 +30,8 @@
                     Padding="10,8"
                     Margin="0,10,0,0"
                     Click="BtnRollAll_Click"
-                    Background="#F44336"
-                    Foreground="White"
+                    Background="{StaticResource Brush_Error}"
+                    Foreground="{StaticResource Brush_Text_Primary}"
                     BorderThickness="0"
                     FontWeight="Bold"
                     Cursor="Hand"/>

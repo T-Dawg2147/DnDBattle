@@ -4,34 +4,34 @@
         Title="🧪 Experimental / Undecided Features"
         Width="680" Height="1100"
         WindowStartupLocation="CenterOwner"
-        Background="#FF1E1E2E" Foreground="White"
+        Background="{StaticResource Brush_Background_Medium}" Foreground="{StaticResource Brush_Text_Primary}"
         ResizeMode="CanResizeWithGrip">
     <Window.Resources>
         <Style TargetType="CheckBox">
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
             <Setter Property="Margin" Value="0,4"/>
             <Setter Property="FontSize" Value="13"/>
         </Style>
         <Style TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#FFCCCCDD"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Secondary}"/>
             <Setter Property="Margin" Value="0,2"/>
         </Style>
         <Style TargetType="GroupBox">
-            <Setter Property="Foreground" Value="#FFFF8844"/>
-            <Setter Property="BorderBrush" Value="#FF444466"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Warning}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brush_Border_Normal}"/>
             <Setter Property="Margin" Value="0,6"/>
             <Setter Property="Padding" Value="8"/>
         </Style>
         <Style x:Key="ActionButton" TargetType="Button">
-            <Setter Property="Background" Value="#FF2A2A3E"/>
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Background" Value="{StaticResource Brush_Background_Control}"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
             <Setter Property="Padding" Value="10,5"/>
             <Setter Property="Margin" Value="0,4"/>
-            <Setter Property="BorderBrush" Value="#FF444466"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brush_Border_Normal}"/>
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
         <Style x:Key="FieldLabel" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#FFCCCCDD"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Secondary}"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Width" Value="130"/>
             <Setter Property="Margin" Value="0,2"/>
@@ -46,9 +46,9 @@
         <StackPanel>
 
             <!-- Header -->
-            <TextBlock Text="🧪 Experimental / Undecided Features" FontSize="18" FontWeight="Bold" Foreground="#FFFF8844" Margin="0,0,0,4"/>
+            <TextBlock Text="🧪 Experimental / Undecided Features" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Brush_Warning}" Margin="0,0,0,4"/>
             <TextBlock Text="These features are experimental and may change or be removed. Enable them individually to test."
-                       TextWrapping="Wrap" Foreground="#FF999999" Margin="0,0,0,12"/>
+                       TextWrapping="Wrap" Foreground="{StaticResource Brush_Text_Hint}" Margin="0,0,0,12"/>
 
             <!-- UD.1 Weather & Environment -->
             <GroupBox Header="🌧️ UD.1 Weather &amp; Environment">
@@ -62,7 +62,7 @@
                         <Slider x:Name="SliderMaxParticles" Minimum="50" Maximum="1000" Width="150"
                                 Value="300" TickFrequency="50" IsSnapToTickEnabled="True"
                                 ValueChanged="SliderMaxParticles_ValueChanged"/>
-                        <TextBlock x:Name="TxtMaxParticles" Text="300" Margin="8,0,0,0" Foreground="#FFFFCC66"/>
+                        <TextBlock x:Name="TxtMaxParticles" Text="300" Margin="8,0,0,0" Foreground="{StaticResource Brush_Warning}"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,4">
                         <TextBlock Text="Weather Type:" Style="{StaticResource FieldLabel}"/>
@@ -80,7 +80,7 @@
                         <Slider x:Name="SliderIntensity" Minimum="0" Maximum="1" Width="150"
                                 Value="0.5" TickFrequency="0.1" IsSnapToTickEnabled="True"
                                 ValueChanged="SliderIntensity_ValueChanged"/>
-                        <TextBlock x:Name="TxtIntensity" Text="0.5" Margin="8,0,0,0" Foreground="#FFFFCC66"/>
+                        <TextBlock x:Name="TxtIntensity" Text="0.5" Margin="8,0,0,0" Foreground="{StaticResource Brush_Warning}"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,4">
                         <TextBlock Text="Time of Day:" Style="{StaticResource FieldLabel}"/>
@@ -105,14 +105,14 @@
                         <Slider x:Name="SliderWindAngle" Minimum="0" Maximum="360" Width="150"
                                 Value="0" TickFrequency="15" IsSnapToTickEnabled="True"
                                 ValueChanged="SliderWindAngle_ValueChanged"/>
-                        <TextBlock x:Name="TxtWindAngle" Text="0" Margin="8,0,0,0" Foreground="#FFFFCC66"/>
+                        <TextBlock x:Name="TxtWindAngle" Text="0" Margin="8,0,0,0" Foreground="{StaticResource Brush_Warning}"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,4">
                         <TextBlock Text="Wind Strength:" Style="{StaticResource FieldLabel}"/>
                         <Slider x:Name="SliderWindStrength" Minimum="0" Maximum="1" Width="150"
                                 Value="0.3" TickFrequency="0.1" IsSnapToTickEnabled="True"
                                 ValueChanged="SliderWindStrength_ValueChanged"/>
-                        <TextBlock x:Name="TxtWindStrength" Text="0.3" Margin="8,0,0,0" Foreground="#FFFFCC66"/>
+                        <TextBlock x:Name="TxtWindStrength" Text="0.3" Margin="8,0,0,0" Foreground="{StaticResource Brush_Warning}"/>
                     </StackPanel>
                     <Button Content="Apply Weather" Style="{StaticResource ActionButton}" Click="ApplyWeather_Click"/>
                 </StackPanel>
@@ -125,19 +125,19 @@
                               Checked="ChkEnableElevation_Changed" Unchecked="ChkEnableElevation_Changed"/>
                     <StackPanel Orientation="Horizontal" Margin="0,4">
                         <TextBlock Text="Grid Width:" Style="{StaticResource FieldLabel}"/>
-                        <TextBox x:Name="TxtElevGridWidth" Width="60" Text="50" Background="#FF2A2A3E" Foreground="White" BorderBrush="#FF444466"/>
+                        <TextBox x:Name="TxtElevGridWidth" Width="60" Text="50" Background="{StaticResource Brush_Background_Control}" Foreground="{StaticResource Brush_Text_Primary}" BorderBrush="{StaticResource Brush_Border_Normal}"/>
                         <TextBlock Text="Height:" Margin="12,2,0,2" VerticalAlignment="Center" Width="50"/>
-                        <TextBox x:Name="TxtElevGridHeight" Width="60" Text="50" Background="#FF2A2A3E" Foreground="White" BorderBrush="#FF444466"/>
+                        <TextBox x:Name="TxtElevGridHeight" Width="60" Text="50" Background="{StaticResource Brush_Background_Control}" Foreground="{StaticResource Brush_Text_Primary}" BorderBrush="{StaticResource Brush_Border_Normal}"/>
                     </StackPanel>
                     <Button Content="Initialize Elevation Grid" Style="{StaticResource ActionButton}" Click="InitializeElevation_Click"/>
                     <TextBlock Text="Terrain Manipulation:" FontWeight="Bold" Margin="0,8,0,4"/>
                     <StackPanel Orientation="Horizontal" Margin="0,4">
                         <TextBlock Text="X:" VerticalAlignment="Center" Width="20"/>
-                        <TextBox x:Name="TxtElevX" Width="50" Text="0" Background="#FF2A2A3E" Foreground="White" BorderBrush="#FF444466"/>
+                        <TextBox x:Name="TxtElevX" Width="50" Text="0" Background="{StaticResource Brush_Background_Control}" Foreground="{StaticResource Brush_Text_Primary}" BorderBrush="{StaticResource Brush_Border_Normal}"/>
                         <TextBlock Text="Y:" Margin="8,0,0,0" VerticalAlignment="Center" Width="20"/>
-                        <TextBox x:Name="TxtElevY" Width="50" Text="0" Background="#FF2A2A3E" Foreground="White" BorderBrush="#FF444466"/>
+                        <TextBox x:Name="TxtElevY" Width="50" Text="0" Background="{StaticResource Brush_Background_Control}" Foreground="{StaticResource Brush_Text_Primary}" BorderBrush="{StaticResource Brush_Border_Normal}"/>
                         <TextBlock Text="Elev (ft):" Margin="8,0,0,0" VerticalAlignment="Center" Width="60"/>
-                        <TextBox x:Name="TxtElevValue" Width="50" Text="0" Background="#FF2A2A3E" Foreground="White" BorderBrush="#FF444466"/>
+                        <TextBox x:Name="TxtElevValue" Width="50" Text="0" Background="{StaticResource Brush_Background_Control}" Foreground="{StaticResource Brush_Text_Primary}" BorderBrush="{StaticResource Brush_Border_Normal}"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,4">
                         <Button Content="Set" Style="{StaticResource ActionButton}" Click="SetTerrainElevation_Click" Width="60"/>
@@ -147,10 +147,10 @@
                     <TextBlock Text="Falling Damage Calculator:" FontWeight="Bold" Margin="0,8,0,4"/>
                     <StackPanel Orientation="Horizontal" Margin="0,4">
                         <TextBlock Text="Height (ft):" Style="{StaticResource FieldLabel}"/>
-                        <TextBox x:Name="TxtFallingHeight" Width="60" Text="10" Background="#FF2A2A3E" Foreground="White" BorderBrush="#FF444466"/>
+                        <TextBox x:Name="TxtFallingHeight" Width="60" Text="10" Background="{StaticResource Brush_Background_Control}" Foreground="{StaticResource Brush_Text_Primary}" BorderBrush="{StaticResource Brush_Border_Normal}"/>
                         <Button Content="Calculate" Style="{StaticResource ActionButton}" Click="CalculateFallingDamage_Click" Margin="8,4,0,4"/>
                     </StackPanel>
-                    <TextBlock x:Name="TxtFallingResult" Text="" Foreground="#FFFFCC66" Margin="0,4"/>
+                    <TextBlock x:Name="TxtFallingResult" Text="" Foreground="{StaticResource Brush_Warning}" Margin="0,4"/>
                     <Button Content="Reset Elevation Grid" Style="{StaticResource ActionButton}" Click="ResetElevation_Click"/>
                 </StackPanel>
             </GroupBox>
@@ -162,12 +162,12 @@
                               Checked="ChkEnableAnimatedTiles_Changed" Unchecked="ChkEnableAnimatedTiles_Changed"/>
                     <TextBlock Text="Built-in Definitions:" FontWeight="Bold" Margin="0,8,0,4"/>
                     <ListBox x:Name="LstAnimatedTiles" Height="100"
-                             Background="#FF2A2A3E" Foreground="White" BorderBrush="#FF444466"/>
+                             Background="{StaticResource Brush_Background_Control}" Foreground="{StaticResource Brush_Text_Primary}" BorderBrush="{StaticResource Brush_Border_Normal}"/>
                     <StackPanel Orientation="Horizontal" Margin="0,4">
                         <TextBlock Text="X:" VerticalAlignment="Center" Width="20"/>
-                        <TextBox x:Name="TxtAnimX" Width="50" Text="0" Background="#FF2A2A3E" Foreground="White" BorderBrush="#FF444466"/>
+                        <TextBox x:Name="TxtAnimX" Width="50" Text="0" Background="{StaticResource Brush_Background_Control}" Foreground="{StaticResource Brush_Text_Primary}" BorderBrush="{StaticResource Brush_Border_Normal}"/>
                         <TextBlock Text="Y:" Margin="8,0,0,0" VerticalAlignment="Center" Width="20"/>
-                        <TextBox x:Name="TxtAnimY" Width="50" Text="0" Background="#FF2A2A3E" Foreground="White" BorderBrush="#FF444466"/>
+                        <TextBox x:Name="TxtAnimY" Width="50" Text="0" Background="{StaticResource Brush_Background_Control}" Foreground="{StaticResource Brush_Text_Primary}" BorderBrush="{StaticResource Brush_Border_Normal}"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,4">
                         <Button Content="Place Tile" Style="{StaticResource ActionButton}" Click="PlaceAnimatedTile_Click"/>
@@ -195,38 +195,38 @@
                         <Slider x:Name="SliderMapWidth" Minimum="20" Maximum="100" Width="150"
                                 Value="50" TickFrequency="5" IsSnapToTickEnabled="True"
                                 ValueChanged="SliderMapWidth_ValueChanged"/>
-                        <TextBlock x:Name="TxtMapWidth" Text="50" Margin="8,0,0,0" Foreground="#FFFFCC66"/>
+                        <TextBlock x:Name="TxtMapWidth" Text="50" Margin="8,0,0,0" Foreground="{StaticResource Brush_Warning}"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,4">
                         <TextBlock Text="Height:" Style="{StaticResource FieldLabel}"/>
                         <Slider x:Name="SliderMapHeight" Minimum="20" Maximum="100" Width="150"
                                 Value="50" TickFrequency="5" IsSnapToTickEnabled="True"
                                 ValueChanged="SliderMapHeight_ValueChanged"/>
-                        <TextBlock x:Name="TxtMapHeight" Text="50" Margin="8,0,0,0" Foreground="#FFFFCC66"/>
+                        <TextBlock x:Name="TxtMapHeight" Text="50" Margin="8,0,0,0" Foreground="{StaticResource Brush_Warning}"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,4">
                         <TextBlock Text="Room Count:" Style="{StaticResource FieldLabel}"/>
                         <Slider x:Name="SliderRoomCount" Minimum="1" Maximum="30" Width="150"
                                 Value="15" TickFrequency="1" IsSnapToTickEnabled="True"
                                 ValueChanged="SliderRoomCount_ValueChanged"/>
-                        <TextBlock x:Name="TxtRoomCount" Text="15" Margin="8,0,0,0" Foreground="#FFFFCC66"/>
+                        <TextBlock x:Name="TxtRoomCount" Text="15" Margin="8,0,0,0" Foreground="{StaticResource Brush_Warning}"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,4">
                         <TextBlock Text="Min Room Size:" Style="{StaticResource FieldLabel}"/>
                         <Slider x:Name="SliderMinRoom" Minimum="3" Maximum="15" Width="150"
                                 Value="5" TickFrequency="1" IsSnapToTickEnabled="True"
                                 ValueChanged="SliderMinRoom_ValueChanged"/>
-                        <TextBlock x:Name="TxtMinRoom" Text="5" Margin="8,0,0,0" Foreground="#FFFFCC66"/>
+                        <TextBlock x:Name="TxtMinRoom" Text="5" Margin="8,0,0,0" Foreground="{StaticResource Brush_Warning}"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,4">
                         <TextBlock Text="Max Room Size:" Style="{StaticResource FieldLabel}"/>
                         <Slider x:Name="SliderMaxRoom" Minimum="5" Maximum="25" Width="150"
                                 Value="12" TickFrequency="1" IsSnapToTickEnabled="True"
                                 ValueChanged="SliderMaxRoom_ValueChanged"/>
-                        <TextBlock x:Name="TxtMaxRoom" Text="12" Margin="8,0,0,0" Foreground="#FFFFCC66"/>
+                        <TextBlock x:Name="TxtMaxRoom" Text="12" Margin="8,0,0,0" Foreground="{StaticResource Brush_Warning}"/>
                     </StackPanel>
                     <Button Content="Generate Map" Style="{StaticResource ActionButton}" Click="GenerateMap_Click"/>
-                    <TextBlock x:Name="TxtMapResult" Text="" TextWrapping="Wrap" Foreground="#FFFFCC66" Margin="0,4"/>
+                    <TextBlock x:Name="TxtMapResult" Text="" TextWrapping="Wrap" Foreground="{StaticResource Brush_Warning}" Margin="0,4"/>
                 </StackPanel>
             </GroupBox>
 
@@ -248,14 +248,14 @@
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,4">
                         <TextBlock Text="Border Color:" Style="{StaticResource FieldLabel}"/>
-                        <TextBox x:Name="TxtBorderColor" Width="100" Text="#FFFFFF" Background="#FF2A2A3E" Foreground="White" BorderBrush="#FF444466"/>
+                        <TextBox x:Name="TxtBorderColor" Width="100" Text="#FFFFFF" Background="{StaticResource Brush_Background_Control}" Foreground="{StaticResource Brush_Text_Primary}" BorderBrush="{StaticResource Brush_Border_Normal}"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,4">
                         <TextBlock Text="Border Thickness:" Style="{StaticResource FieldLabel}"/>
                         <Slider x:Name="SliderBorderThickness" Minimum="0" Maximum="8" Width="150"
                                 Value="2" TickFrequency="0.5" IsSnapToTickEnabled="True"
                                 ValueChanged="SliderBorderThickness_ValueChanged"/>
-                        <TextBlock x:Name="TxtBorderThickness" Text="2" Margin="8,0,0,0" Foreground="#FFFFCC66"/>
+                        <TextBlock x:Name="TxtBorderThickness" Text="2" Margin="8,0,0,0" Foreground="{StaticResource Brush_Warning}"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,4">
                         <TextBlock Text="Border Style:" Style="{StaticResource FieldLabel}"/>
@@ -270,7 +270,7 @@
                     <CheckBox x:Name="ChkShowGlow" Content="Show Glow Effect"/>
                     <StackPanel Orientation="Horizontal" Margin="0,4">
                         <TextBlock Text="Glow Color:" Style="{StaticResource FieldLabel}"/>
-                        <TextBox x:Name="TxtGlowColor" Width="100" Text="#FFFFFF" Background="#FF2A2A3E" Foreground="White" BorderBrush="#FF444466"/>
+                        <TextBox x:Name="TxtGlowColor" Width="100" Text="#FFFFFF" Background="{StaticResource Brush_Background_Control}" Foreground="{StaticResource Brush_Text_Primary}" BorderBrush="{StaticResource Brush_Border_Normal}"/>
                     </StackPanel>
                     <TextBlock Text="Name Plate:" FontWeight="Bold" Margin="0,8,0,4"/>
                     <CheckBox x:Name="ChkNamePlateVisible" Content="Always Visible"/>
@@ -289,7 +289,7 @@
                         <Slider x:Name="SliderNamePlateFontSize" Minimum="6" Maximum="24" Width="150"
                                 Value="10" TickFrequency="1" IsSnapToTickEnabled="True"
                                 ValueChanged="SliderNamePlateFontSize_ValueChanged"/>
-                        <TextBlock x:Name="TxtNamePlateFontSize" Text="10" Margin="8,0,0,0" Foreground="#FFFFCC66"/>
+                        <TextBlock x:Name="TxtNamePlateFontSize" Text="10" Margin="8,0,0,0" Foreground="{StaticResource Brush_Warning}"/>
                     </StackPanel>
                     <Button Content="Apply to Selected Token" Style="{StaticResource ActionButton}" Click="ApplyTokenCustomization_Click"/>
                 </StackPanel>
@@ -309,17 +309,17 @@
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,4">
                         <TextBlock Text="Label:" Style="{StaticResource FieldLabel}"/>
-                        <TextBox x:Name="TxtMeasurementLabel" Width="200" Text="Measurement" Background="#FF2A2A3E" Foreground="White" BorderBrush="#FF444466"/>
+                        <TextBox x:Name="TxtMeasurementLabel" Width="200" Text="Measurement" Background="{StaticResource Brush_Background_Control}" Foreground="{StaticResource Brush_Text_Primary}" BorderBrush="{StaticResource Brush_Border_Normal}"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,4">
                         <TextBlock Text="X1:" VerticalAlignment="Center" Width="25"/>
-                        <TextBox x:Name="TxtMeasX1" Width="40" Text="0" Background="#FF2A2A3E" Foreground="White" BorderBrush="#FF444466"/>
+                        <TextBox x:Name="TxtMeasX1" Width="40" Text="0" Background="{StaticResource Brush_Background_Control}" Foreground="{StaticResource Brush_Text_Primary}" BorderBrush="{StaticResource Brush_Border_Normal}"/>
                         <TextBlock Text="Y1:" Margin="8,0,0,0" VerticalAlignment="Center" Width="25"/>
-                        <TextBox x:Name="TxtMeasY1" Width="40" Text="0" Background="#FF2A2A3E" Foreground="White" BorderBrush="#FF444466"/>
+                        <TextBox x:Name="TxtMeasY1" Width="40" Text="0" Background="{StaticResource Brush_Background_Control}" Foreground="{StaticResource Brush_Text_Primary}" BorderBrush="{StaticResource Brush_Border_Normal}"/>
                         <TextBlock Text="X2:" Margin="8,0,0,0" VerticalAlignment="Center" Width="25"/>
-                        <TextBox x:Name="TxtMeasX2" Width="40" Text="5" Background="#FF2A2A3E" Foreground="White" BorderBrush="#FF444466"/>
+                        <TextBox x:Name="TxtMeasX2" Width="40" Text="5" Background="{StaticResource Brush_Background_Control}" Foreground="{StaticResource Brush_Text_Primary}" BorderBrush="{StaticResource Brush_Border_Normal}"/>
                         <TextBlock Text="Y2:" Margin="8,0,0,0" VerticalAlignment="Center" Width="25"/>
-                        <TextBox x:Name="TxtMeasY2" Width="40" Text="5" Background="#FF2A2A3E" Foreground="White" BorderBrush="#FF444466"/>
+                        <TextBox x:Name="TxtMeasY2" Width="40" Text="5" Background="{StaticResource Brush_Background_Control}" Foreground="{StaticResource Brush_Text_Primary}" BorderBrush="{StaticResource Brush_Border_Normal}"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,4">
                         <TextBlock Text="Color:" Style="{StaticResource FieldLabel}"/>
@@ -334,7 +334,7 @@
                     <Button Content="Add Measurement" Style="{StaticResource ActionButton}" Click="AddMeasurement_Click"/>
                     <TextBlock Text="Active Measurements:" FontWeight="Bold" Margin="0,8,0,4"/>
                     <ListBox x:Name="LstMeasurements" Height="100"
-                             Background="#FF2A2A3E" Foreground="White" BorderBrush="#FF444466"/>
+                             Background="{StaticResource Brush_Background_Control}" Foreground="{StaticResource Brush_Text_Primary}" BorderBrush="{StaticResource Brush_Border_Normal}"/>
                     <StackPanel Orientation="Horizontal" Margin="0,4">
                         <Button Content="Remove Selected" Style="{StaticResource ActionButton}" Click="RemoveMeasurement_Click"/>
                         <Button Content="Toggle Visibility" Style="{StaticResource ActionButton}" Click="ToggleMeasurement_Click" Margin="8,4,0,4"/>
@@ -364,18 +364,18 @@
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,4">
                         <TextBlock Text="Count:" Style="{StaticResource FieldLabel}"/>
-                        <TextBox x:Name="TxtDiceCount" Width="50" Text="1" Background="#FF2A2A3E" Foreground="White" BorderBrush="#FF444466"/>
+                        <TextBox x:Name="TxtDiceCount" Width="50" Text="1" Background="{StaticResource Brush_Background_Control}" Foreground="{StaticResource Brush_Text_Primary}" BorderBrush="{StaticResource Brush_Border_Normal}"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,4">
                         <Button Content="Roll!" Style="{StaticResource ActionButton}" Click="RollDice_Click" Width="80"/>
                         <Button Content="Skip Animation" Style="{StaticResource ActionButton}" Click="SkipDiceAnimation_Click" Margin="8,4,0,4"/>
                     </StackPanel>
-                    <TextBlock x:Name="TxtDiceResult" Text="No roll yet." FontSize="14" FontWeight="Bold" Foreground="#FFFFCC66" Margin="0,4"/>
+                    <TextBlock x:Name="TxtDiceResult" Text="No roll yet." FontSize="14" FontWeight="Bold" Foreground="{StaticResource Brush_Warning}" Margin="0,4"/>
                     <TextBlock Text="Statistics:" FontWeight="Bold" Margin="0,8,0,4"/>
-                    <TextBlock x:Name="TxtDiceAverage" Text="Average: —" Foreground="#FFCCCCDD"/>
-                    <TextBlock x:Name="TxtDiceLuckScore" Text="Luck Score: —" Foreground="#FFCCCCDD"/>
-                    <TextBlock x:Name="TxtDiceCrits" Text="Crits: 0 hits, 0 fails" Foreground="#FFCCCCDD"/>
-                    <TextBlock x:Name="TxtDiceTotalRolls" Text="Total Rolls: 0" Foreground="#FFCCCCDD"/>
+                    <TextBlock x:Name="TxtDiceAverage" Text="Average: —" Foreground="{StaticResource Brush_Text_Secondary}"/>
+                    <TextBlock x:Name="TxtDiceLuckScore" Text="Luck Score: —" Foreground="{StaticResource Brush_Text_Secondary}"/>
+                    <TextBlock x:Name="TxtDiceCrits" Text="Crits: 0 hits, 0 fails" Foreground="{StaticResource Brush_Text_Secondary}"/>
+                    <TextBlock x:Name="TxtDiceTotalRolls" Text="Total Rolls: 0" Foreground="{StaticResource Brush_Text_Secondary}"/>
                 </StackPanel>
             </GroupBox>
 
@@ -405,11 +405,11 @@
                         <Slider x:Name="SliderUIScale" Minimum="50" Maximum="300" Width="150"
                                 Value="100" TickFrequency="25" IsSnapToTickEnabled="True"
                                 ValueChanged="SliderUIScale_ValueChanged"/>
-                        <TextBlock x:Name="TxtUIScale" Text="100%" Margin="8,0,0,0" Foreground="#FFFFCC66"/>
+                        <TextBlock x:Name="TxtUIScale" Text="100%" Margin="8,0,0,0" Foreground="{StaticResource Brush_Warning}"/>
                     </StackPanel>
                     <TextBlock Text="Preview:" FontWeight="Bold" Margin="0,8,0,4"/>
-                    <TextBlock x:Name="TxtAccessibilityFontFamily" Text="Font: Segoe UI" Foreground="#FFCCCCDD"/>
-                    <TextBlock x:Name="TxtAccessibilityFontSize" Text="Scaled Font Size (base 14): 14.0" Foreground="#FFCCCCDD"/>
+                    <TextBlock x:Name="TxtAccessibilityFontFamily" Text="Font: Segoe UI" Foreground="{StaticResource Brush_Text_Secondary}"/>
+                    <TextBlock x:Name="TxtAccessibilityFontSize" Text="Scaled Font Size (base 14): 14.0" Foreground="{StaticResource Brush_Text_Secondary}"/>
                 </StackPanel>
             </GroupBox>
 

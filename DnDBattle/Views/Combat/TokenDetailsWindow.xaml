@@ -3,18 +3,18 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="{Binding Name, StringFormat='{}{0} - Stats'}"
         Height="600" Width="450"
-        Background="#1E1E1E"
+        Background="{StaticResource Brush_Background_Medium}"
         WindowStyle="ToolWindow"
         ShowInTaskbar="False">
 
     <Window.Resources>
         <Style x:Key="StatLabel" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#888"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Hint}"/>
             <Setter Property="FontSize" Value="10"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
         </Style>
         <Style x:Key="StatValue" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
             <Setter Property="FontSize" Value="18"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -26,12 +26,12 @@
             <StackPanel>
 
                 <!-- Header -->
-                <Border Background="#252526" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+                <Border Background="{StaticResource Brush_Background_Dark}" CornerRadius="8" Padding="15" Margin="0,0,0,15">
                     <StackPanel>
                         <TextBlock Text="{Binding Name}" 
                                    FontSize="24" FontWeight="Bold" 
-                                   Foreground="White"/>
-                        <TextBlock Foreground="#888" FontStyle="Italic" Margin="0,5,0,0">
+                                   Foreground="{StaticResource Brush_Text_Primary}"/>
+                        <TextBlock Foreground="{StaticResource Brush_Text_Hint}" FontStyle="Italic" Margin="0,5,0,0">
                             <Run Text="{Binding Size}"/>
                             <Run Text=" "/>
                             <Run Text="{Binding Type}"/>
@@ -42,34 +42,34 @@
                 </Border>
 
                 <!-- HP Bar -->
-                <Border Background="#252526" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+                <Border Background="{StaticResource Brush_Background_Dark}" CornerRadius="8" Padding="15" Margin="0,0,0,15">
                     <StackPanel>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="Hit Points" Foreground="#888" FontSize="12"/>
+                                <TextBlock Text="Hit Points" Foreground="{StaticResource Brush_Text_Hint}" FontSize="12"/>
                                 <StackPanel Grid.Column="1" Orientation="Horizontal">
                                     <TextBox x:Name="TxtHP" 
                                          Text="{Binding HP, UpdateSourceTrigger=PropertyChanged}" 
                                          Width="50" 
-                                         Background="#1E1E1E" 
-                                         Foreground="#4CAF50" 
+                                         Background="{StaticResource Brush_Background_Medium}" 
+                                         Foreground="{StaticResource Brush_Success}" 
                                          FontWeight="Bold"
                                          FontSize="16"
                                          BorderThickness="0"
                                          TextAlignment="Right"
                                          KeyDown="TxtHP_KeyDown"/>
-                                    <TextBlock Text=" / " Foreground="#666" FontSize="16" VerticalAlignment="Center"/>
-                                    <TextBlock Text="{Binding MaxHP}" Foreground="#666" FontSize="16" VerticalAlignment="Center"/>
+                                    <TextBlock Text=" / " Foreground="{StaticResource Brush_Text_Disabled}" FontSize="16" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding MaxHP}" Foreground="{StaticResource Brush_Text_Disabled}" FontSize="16" VerticalAlignment="Center"/>
                                 </StackPanel>
                         </Grid>
 
                         <!-- HP Bar Visual -->
                         <Grid Height="8" Margin="0,10,0,0">
-                            <Border Background="#333" CornerRadius="4"/>
-                            <Border Background="#4CAF50" CornerRadius="4" HorizontalAlignment="Left">
+                            <Border Background="{StaticResource Brush_Border_Normal}" CornerRadius="4"/>
+                            <Border Background="{StaticResource Brush_Success}" CornerRadius="4" HorizontalAlignment="Left">
                                 <Border.Width>
                                     <MultiBinding Converter="{StaticResource HPBarWidthConverter}">
                                         <Binding Path="HP"/>
@@ -83,92 +83,92 @@
                 </Border>
 
                 <!-- Core Stats -->
-                <Border Background="#252526" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+                <Border Background="{StaticResource Brush_Background_Dark}" CornerRadius="8" Padding="15" Margin="0,0,0,15">
                     <UniformGrid Columns="3">
                         <StackPanel Margin="5">
                             <TextBlock Text="AC" Style="{StaticResource StatLabel}"/>
-                            <TextBlock Text="{Binding ArmorClass}" Style="{StaticResource StatValue}" Foreground="#4FC3F7"/>
+                            <TextBlock Text="{Binding ArmorClass}" Style="{StaticResource StatValue}" Foreground="{StaticResource Brush_Info}"/>
                         </StackPanel>
                         <StackPanel Margin="5">
                             <TextBlock Text="Initiative" Style="{StaticResource StatLabel}"/>
-                            <TextBlock Style="{StaticResource StatValue}" Foreground="#BA68C8">
+                            <TextBlock Style="{StaticResource StatValue}" Foreground="{StaticResource Brush_Accent_Hover}">
                                 <Run Text="+"/><Run Text="{Binding InitiativeModifier}"/>
                             </TextBlock>
                         </StackPanel>
                         <StackPanel Margin="5">
                             <TextBlock Text="CR" Style="{StaticResource StatLabel}"/>
-                            <TextBlock Text="{Binding ChallengeRating}" Style="{StaticResource StatValue}" Foreground="#FFB74D"/>
+                            <TextBlock Text="{Binding ChallengeRating}" Style="{StaticResource StatValue}" Foreground="{StaticResource Brush_Warning}"/>
                         </StackPanel>
                     </UniformGrid>
                 </Border>
 
                 <!-- Ability Scores -->
-                <Border Background="#252526" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+                <Border Background="{StaticResource Brush_Background_Dark}" CornerRadius="8" Padding="15" Margin="0,0,0,15">
                     <StackPanel>
-                        <TextBlock Text="Ability Scores" Foreground="#4FC3F7" FontWeight="Bold" Margin="0,0,0,10"/>
+                        <TextBlock Text="Ability Scores" Foreground="{StaticResource Brush_Info}" FontWeight="Bold" Margin="0,0,0,10"/>
                         <UniformGrid Columns="6">
                             <StackPanel Margin="3">
                                 <TextBlock Text="STR" Style="{StaticResource StatLabel}"/>
                                 <TextBlock Text="{Binding Str}" Style="{StaticResource StatValue}"/>
                                 <TextBlock Text="{Binding Str, Converter={StaticResource AbilityModConverter}}" 
-                                           Foreground="#888" FontSize="11" HorizontalAlignment="Center"/>
+                                           Foreground="{StaticResource Brush_Text_Hint}" FontSize="11" HorizontalAlignment="Center"/>
                             </StackPanel>
                             <StackPanel Margin="3">
                                 <TextBlock Text="DEX" Style="{StaticResource StatLabel}"/>
                                 <TextBlock Text="{Binding Dex}" Style="{StaticResource StatValue}"/>
                                 <TextBlock Text="{Binding Dex, Converter={StaticResource AbilityModConverter}}" 
-                                           Foreground="#888" FontSize="11" HorizontalAlignment="Center"/>
+                                           Foreground="{StaticResource Brush_Text_Hint}" FontSize="11" HorizontalAlignment="Center"/>
                             </StackPanel>
                             <StackPanel Margin="3">
                                 <TextBlock Text="CON" Style="{StaticResource StatLabel}"/>
                                 <TextBlock Text="{Binding Con}" Style="{StaticResource StatValue}"/>
                                 <TextBlock Text="{Binding Con, Converter={StaticResource AbilityModConverter}}" 
-                                           Foreground="#888" FontSize="11" HorizontalAlignment="Center"/>
+                                           Foreground="{StaticResource Brush_Text_Hint}" FontSize="11" HorizontalAlignment="Center"/>
                             </StackPanel>
                             <StackPanel Margin="3">
                                 <TextBlock Text="INT" Style="{StaticResource StatLabel}"/>
                                 <TextBlock Text="{Binding Int}" Style="{StaticResource StatValue}"/>
                                 <TextBlock Text="{Binding Int, Converter={StaticResource AbilityModConverter}}" 
-                                           Foreground="#888" FontSize="11" HorizontalAlignment="Center"/>
+                                           Foreground="{StaticResource Brush_Text_Hint}" FontSize="11" HorizontalAlignment="Center"/>
                             </StackPanel>
                             <StackPanel Margin="3">
                                 <TextBlock Text="WIS" Style="{StaticResource StatLabel}"/>
                                 <TextBlock Text="{Binding Wis}" Style="{StaticResource StatValue}"/>
                                 <TextBlock Text="{Binding Wis, Converter={StaticResource AbilityModConverter}}" 
-                                           Foreground="#888" FontSize="11" HorizontalAlignment="Center"/>
+                                           Foreground="{StaticResource Brush_Text_Hint}" FontSize="11" HorizontalAlignment="Center"/>
                             </StackPanel>
                             <StackPanel Margin="3">
                                 <TextBlock Text="CHA" Style="{StaticResource StatLabel}"/>
                                 <TextBlock Text="{Binding Cha}" Style="{StaticResource StatValue}"/>
                                 <TextBlock Text="{Binding Cha, Converter={StaticResource AbilityModConverter}}" 
-                                           Foreground="#888" FontSize="11" HorizontalAlignment="Center"/>
+                                           Foreground="{StaticResource Brush_Text_Hint}" FontSize="11" HorizontalAlignment="Center"/>
                             </StackPanel>
                         </UniformGrid>
                     </StackPanel>
                 </Border>
 
                 <!-- Speed -->
-                <Border Background="#252526" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+                <Border Background="{StaticResource Brush_Background_Dark}" CornerRadius="8" Padding="15" Margin="0,0,0,15">
                     <StackPanel>
-                        <TextBlock Text="Speed" Foreground="#4FC3F7" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <TextBlock Text="{Binding Speed}" Foreground="White"/>
+                        <TextBlock Text="Speed" Foreground="{StaticResource Brush_Info}" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <TextBlock Text="{Binding Speed}" Foreground="{StaticResource Brush_Text_Primary}"/>
                     </StackPanel>
                 </Border>
 
                 <!-- Traits -->
-                <Border Background="#252526" CornerRadius="8" Padding="15" Margin="0,0,0,15"
+                <Border Background="{StaticResource Brush_Background_Dark}" CornerRadius="8" Padding="15" Margin="0,0,0,15"
                         Visibility="{Binding Traits, Converter={StaticResource NullToVisibilityConverter}}">
                     <StackPanel>
-                        <TextBlock Text="Traits" Foreground="#4FC3F7" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <TextBlock Text="{Binding Traits}" Foreground="#CCC" TextWrapping="Wrap"/>
+                        <TextBlock Text="Traits" Foreground="{StaticResource Brush_Info}" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <TextBlock Text="{Binding Traits}" Foreground="{StaticResource Brush_Text_Secondary}" TextWrapping="Wrap"/>
                     </StackPanel>
                 </Border>
 
                 <!-- Actions -->
-                <Border Background="#252526" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+                <Border Background="{StaticResource Brush_Background_Dark}" CornerRadius="8" Padding="15" Margin="0,0,0,15">
                     <StackPanel>
                         <TextBlock Text="Actions" 
-                               Foreground="#4FC3F7" 
+                               Foreground="{StaticResource Brush_Info}" 
                                FontWeight="Bold" 
                                FontSize="12" 
                                Margin="0,0,0,10"/>

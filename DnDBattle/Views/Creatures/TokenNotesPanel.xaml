@@ -4,7 +4,7 @@
              Background="Transparent">
 
     <Border x:Name="MainBorder" 
-            Background="#252526" 
+            Background="{StaticResource Brush_Background_Dark}" 
             CornerRadius="4" 
             Padding="10"
             Visibility="Collapsed">
@@ -16,14 +16,14 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Text="📝 Notes" Foreground="#4FC3F7" FontWeight="Bold" FontSize="11"/>
+                <TextBlock Text="📝 Notes" Foreground="{StaticResource Brush_Info}" FontWeight="Bold" FontSize="11"/>
 
                 <Button Grid.Column="1" 
                         Content="+" 
                         Width="20" Height="20"
                         Click="BtnAddNote_Click"
-                        Background="#4CAF50"
-                        Foreground="White"
+                        Background="{StaticResource Brush_Success}"
+                        Foreground="{StaticResource Brush_Text_Primary}"
                         BorderThickness="0"
                         FontWeight="Bold"
                         Cursor="Hand"
@@ -41,9 +41,9 @@
                 </Grid.ColumnDefinitions>
 
                 <TextBox x:Name="TxtQuickNote" 
-                         Background="#1E1E1E"
-                         Foreground="White"
-                         BorderBrush="#444"
+                         Background="{StaticResource Brush_Background_Medium}"
+                         Foreground="{StaticResource Brush_Text_Primary}"
+                         BorderBrush="{StaticResource Brush_Border_Normal}"
                          Padding="8,6"
                          KeyDown="TxtQuickNote_KeyDown"/>
 
@@ -52,8 +52,8 @@
                         Width="28"
                         Margin="5,0,0,0"
                         Click="BtnConfirmNote_Click"
-                        Background="#4CAF50"
-                        Foreground="White"
+                        Background="{StaticResource Brush_Success}"
+                        Foreground="{StaticResource Brush_Text_Primary}"
                         BorderThickness="0"
                         FontWeight="Bold"/>
             </Grid>

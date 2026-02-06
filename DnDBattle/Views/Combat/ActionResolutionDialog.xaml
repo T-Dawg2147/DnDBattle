@@ -4,7 +4,7 @@
         Title="Resolve Action"
         Width="400" Height="520"
         WindowStartupLocation="CenterOwner"
-        Background="#1E1E1E"
+        Background="{StaticResource Brush_Background_Medium}"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
         WindowStyle="ToolWindow"
@@ -13,16 +13,16 @@
 
     <Window.Resources>
         <Style x:Key="HeaderText" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="FontWeight" Value="Bold"/>
         </Style>
         <Style x:Key="LabelText" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#888"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Hint}"/>
             <Setter Property="FontSize" Value="11"/>
         </Style>
         <Style x:Key="ValueText" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
             <Setter Property="FontSize" Value="14"/>
         </Style>
 
@@ -46,9 +46,9 @@
         </StackPanel>
 
         <!-- Attack Roll Section -->
-        <Border x:Name="AttackSection" Grid.Row="1" Background="#252526" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+        <Border x:Name="AttackSection" Grid.Row="1" Background="{StaticResource Brush_Background_Dark}" CornerRadius="8" Padding="15" Margin="0,0,0,15">
             <StackPanel>
-                <TextBlock Text="Attack Roll" Style="{StaticResource HeaderText}" Foreground="#4CAF50" Margin="0,0,0,10"/>
+                <TextBlock Text="Attack Roll" Style="{StaticResource HeaderText}" Foreground="{StaticResource Brush_Success}" Margin="0,0,0,10"/>
 
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -62,9 +62,9 @@
                                  Width="80" 
                                  HorizontalAlignment="Left"
                                  FontSize="18"
-                                 Background="#1E1E1E"
-                                 Foreground="White"
-                                 BorderBrush="#444"
+                                 Background="{StaticResource Brush_Background_Medium}"
+                                 Foreground="{StaticResource Brush_Text_Primary}"
+                                 BorderBrush="{StaticResource Brush_Border_Normal}"
                                  Padding="8,5"
                                  Margin="0,5,0,0"/>
                     </StackPanel>
@@ -72,26 +72,26 @@
                     <StackPanel x:Name="AutoAttackPanel" Visibility="Collapsed">
                         <TextBlock Text="Roll Result:" Style="{StaticResource LabelText}"/>
                         <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
-                            <TextBlock x:Name="TxtAutoAttackRoll" FontSize="24" Foreground="#4CAF50" FontWeight="Bold"/>
-                            <TextBlock x:Name="TxtAttackBonus" FontSize="14" Foreground="#888" VerticalAlignment="Bottom" Margin="5,0,0,4"/>
-                            <TextBlock Text=" = " FontSize="14" Foreground="#888" VerticalAlignment="Bottom" Margin="0,0,0,4"/>
-                            <TextBlock x:Name="TxtAttackTotal" FontSize="24" Foreground="White" FontWeight="Bold"/>
+                            <TextBlock x:Name="TxtAutoAttackRoll" FontSize="24" Foreground="{StaticResource Brush_Success}" FontWeight="Bold"/>
+                            <TextBlock x:Name="TxtAttackBonus" FontSize="14" Foreground="{StaticResource Brush_Text_Hint}" VerticalAlignment="Bottom" Margin="5,0,0,4"/>
+                            <TextBlock Text=" = " FontSize="14" Foreground="{StaticResource Brush_Text_Hint}" VerticalAlignment="Bottom" Margin="0,0,0,4"/>
+                            <TextBlock x:Name="TxtAttackTotal" FontSize="24" Foreground="{StaticResource Brush_Text_Primary}" FontWeight="Bold"/>
                         </StackPanel>
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right">
                         <TextBlock Text="vs AC" Style="{StaticResource LabelText}" HorizontalAlignment="Center"/>
-                        <TextBlock x:Name="TxtTargetAC" FontSize="24" Foreground="#4FC3F7" FontWeight="Bold" HorizontalAlignment="Center"/>
+                        <TextBlock x:Name="TxtTargetAC" FontSize="24" Foreground="{StaticResource Brush_Info}" FontWeight="Bold" HorizontalAlignment="Center"/>
                     </StackPanel>
                 </Grid>
             </StackPanel>
         </Border>
 
         <!-- Damage Roll Section -->
-        <Border x:Name="DamageSection" Grid.Row="2" Background="#252526" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+        <Border x:Name="DamageSection" Grid.Row="2" Background="{StaticResource Brush_Background_Dark}" CornerRadius="8" Padding="15" Margin="0,0,0,15">
             <StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                    <TextBlock Text="Damage" Style="{StaticResource HeaderText}" Foreground="#F44336"/>
+                    <TextBlock Text="Damage" Style="{StaticResource HeaderText}" Foreground="{StaticResource Brush_Error}"/>
                     <TextBlock x:Name="TxtDamageExpression" Style="{StaticResource LabelText}" Margin="10,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
 
@@ -101,28 +101,28 @@
                              Width="80" 
                              HorizontalAlignment="Left"
                              FontSize="18"
-                             Background="#1E1E1E"
-                             Foreground="White"
-                             BorderBrush="#444"
+                             Background="{StaticResource Brush_Background_Medium}"
+                             Foreground="{StaticResource Brush_Text_Primary}"
+                             BorderBrush="{StaticResource Brush_Border_Normal}"
                              Padding="8,5"
                              Margin="0,5,0,0"/>
                 </StackPanel>
 
                 <StackPanel x:Name="AutoDamagePanel" Visibility="Collapsed">
                     <TextBlock Text="Damage Roll:" Style="{StaticResource LabelText}"/>
-                    <TextBlock x:Name="TxtAutoDamageRoll" FontSize="24" Foreground="#F44336" FontWeight="Bold" Margin="0,5,0,0"/>
+                    <TextBlock x:Name="TxtAutoDamageRoll" FontSize="24" Foreground="{StaticResource Brush_Error}" FontWeight="Bold" Margin="0,5,0,0"/>
                 </StackPanel>
             </StackPanel>
         </Border>
 
         <!-- Damage Type Selection -->
-        <Border Grid.Row="3" Background="#252526" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+        <Border Grid.Row="3" Background="{StaticResource Brush_Background_Dark}" CornerRadius="8" Padding="15" Margin="0,0,0,15">
             <StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                     <TextBlock Text="Damage Type" Style="{StaticResource HeaderText}"/>
                     <TextBlock x:Name="TxtAutoDetected" 
                                Text="(auto-detected)" 
-                               Foreground="#4CAF50" 
+                               Foreground="{StaticResource Brush_Success}" 
                                FontSize="10" 
                                VerticalAlignment="Center"
                                Margin="10,0,0,0"
@@ -133,7 +133,7 @@
         </Border>
 
         <!-- Target Defenses Info -->
-        <Border x:Name="DefensesSection" Grid.Row="4" Background="#252526" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+        <Border x:Name="DefensesSection" Grid.Row="4" Background="{StaticResource Brush_Background_Dark}" CornerRadius="8" Padding="15" Margin="0,0,0,15">
             <StackPanel>
                 <TextBlock Text="Target Defenses" Style="{StaticResource HeaderText}" Margin="0,0,0,10"/>
                 <WrapPanel x:Name="DefensesBadges"/>
@@ -151,15 +151,15 @@
                     Padding="20,10" 
                     Margin="0,0,10,0"
                     Click="BtnCancel_Click"
-                    Background="#3E3E42"
-                    Foreground="White"
+                    Background="{StaticResource Brush_Background_Hover}"
+                    Foreground="{StaticResource Brush_Text_Primary}"
                     BorderThickness="0"/>
             <Button x:Name="BtnConfirm"
                     Content="⚔️ Confirm (Enter)" 
                     Padding="20,10"
                     Click="BtnConfirm_Click"
-                    Background="#4CAF50"
-                    Foreground="White"
+                    Background="{StaticResource Brush_Success}"
+                    Foreground="{StaticResource Brush_Text_Primary}"
                     BorderThickness="0"
                     FontWeight="Bold"
                     IsDefault="True"/>
