@@ -324,6 +324,9 @@ namespace DnDBattle
         /// <summary>Enable multiplayer networking (Phase 9).</summary>
         public static bool EnableNetworking { get; set; } = false;
 
+        /// <summary>Default TCP port for the multiplayer game server.</summary>
+        public static int NetworkDefaultPort { get; set; } = 7777;
+
         /// <summary>Timeout in seconds for network connection attempts.</summary>
         public static int NetworkConnectionTimeoutSeconds { get; set; } = 10;
 
