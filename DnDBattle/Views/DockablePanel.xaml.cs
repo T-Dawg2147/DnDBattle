@@ -16,6 +16,9 @@ namespace DnDBattle.Views
         private GridLength _previousHeight;
         private GridLength _previousWidth;
 
+        private const double MinFloatingWidth = 300;
+        private const double MinFloatingHeight = 400;
+
         /// <summary>
         /// The title displayed in the panel header.
         /// </summary>
@@ -188,8 +191,8 @@ namespace DnDBattle.Views
             _floatingWindow = new Window
             {
                 Title = PanelTitle,
-                Width = Math.Max(this.ActualWidth, 300),
-                Height = Math.Max(this.ActualHeight, 400),
+                Width = Math.Max(this.ActualWidth, MinFloatingWidth),
+                Height = Math.Max(this.ActualHeight, MinFloatingHeight),
                 Background = System.Windows.Media.Brushes.Transparent,
                 AllowsTransparency = false,
                 WindowStyle = WindowStyle.ToolWindow,
@@ -223,44 +226,36 @@ namespace DnDBattle.Views
         {
             if (!_isFloating || _floatingWindow == null) return;
 
-            // Get child back from the floating window
-            if (_floatingWindow.Content is Border wrapper)
-            {
-                wrapper.Child = null;
-                PanelChild = _child;
-            }
-
             _floatingWindow.Closed -= FloatingWindow_Closed;
             _floatingWindow.Close();
-            _floatingWindow = null;
 
-            _isFloating = false;
-            BtnFloat.Content = "⧉";
-            BtnFloat.ToolTip = "Float Panel";
-            this.Visibility = Visibility.Visible;
-
-            PanelDocked?.Invoke(this);
+            RestoreDockedState();
         }
 
         private void FloatingWindow_Closed(object? sender, EventArgs e)
         {
             if (_isFloating)
             {
-                // Window was closed externally, dock it back
-                if (_floatingWindow?.Content is Border wrapper)
-                {
-                    wrapper.Child = null;
-                    PanelChild = _child;
-                }
-
-                _floatingWindow = null;
-                _isFloating = false;
-                BtnFloat.Content = "⧉";
-                BtnFloat.ToolTip = "Float Panel";
-                this.Visibility = Visibility.Visible;
-
-                PanelDocked?.Invoke(this);
+                RestoreDockedState();
             }
+        }
+
+        private void RestoreDockedState()
+        {
+            // Get child back from the floating window
+            if (_floatingWindow?.Content is Border wrapper)
+            {
+                wrapper.Child = null;
+                PanelChild = _child;
+            }
+
+            _floatingWindow = null;
+            _isFloating = false;
+            BtnFloat.Content = "⧉";
+            BtnFloat.ToolTip = "Float Panel";
+            this.Visibility = Visibility.Visible;
+
+            PanelDocked?.Invoke(this);
         }
     }
 }
