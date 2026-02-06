@@ -239,6 +239,15 @@
                 <MenuItem Header="Open Map Library..." Click="Phase8_OpenMapLibrary_Click"/>
             </MenuItem>
 
+            <!-- Phase 9: Multiplayer / Networking -->
+            <MenuItem Header="🌐 Multiplayer" Foreground="White">
+                <MenuItem Header="Host Game (DM)..." Click="Multiplayer_HostGame_Click"/>
+                <MenuItem Header="Join Game (Player)..." Click="Multiplayer_JoinGame_Click"/>
+                <Separator/>
+                <MenuItem Header="Voice Chat (Discord)..." Click="Multiplayer_VoiceChat_Click"/>
+                <MenuItem Header="Cloud Save &amp; Sync..." Click="Multiplayer_CloudSave_Click"/>
+            </MenuItem>
+
             <!-- Undecided Features (Experimental) - Top level menu for testing experimental features -->
             <MenuItem Header="🧪 Experimental" Foreground="#FFFF8844">
                 <MenuItem Header="Experimental Features Panel..." Click="OpenExperimentalWindow_Click"/>
