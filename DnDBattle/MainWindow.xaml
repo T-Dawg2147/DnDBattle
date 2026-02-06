@@ -238,6 +238,39 @@
                 <MenuItem Header="Add Map Note at Center..." Click="Phase8_AddMapNote_Click"/>
                 <MenuItem Header="Open Map Library..." Click="Phase8_OpenMapLibrary_Click"/>
             </MenuItem>
+
+            <!-- Undecided Features (Experimental) - Top level menu for testing experimental features -->
+            <MenuItem Header="🧪 Experimental" Foreground="#FFFF8844">
+                <MenuItem Header="Experimental Features Panel..." Click="OpenExperimentalWindow_Click"/>
+                <Separator/>
+                <MenuItem Header="🌧️ Weather">
+                    <MenuItem Header="Rain" Click="Experimental_SetWeather_Click" Tag="Rain"/>
+                    <MenuItem Header="Snow" Click="Experimental_SetWeather_Click" Tag="Snow"/>
+                    <MenuItem Header="Fog" Click="Experimental_SetWeather_Click" Tag="Fog"/>
+                    <MenuItem Header="Storm" Click="Experimental_SetWeather_Click" Tag="Storm"/>
+                    <MenuItem Header="Clear Weather" Click="Experimental_SetWeather_Click" Tag="None"/>
+                </MenuItem>
+                <MenuItem Header="🕐 Time of Day">
+                    <MenuItem Header="Dawn" Click="Experimental_SetTimeOfDay_Click" Tag="Dawn"/>
+                    <MenuItem Header="Day" Click="Experimental_SetTimeOfDay_Click" Tag="Day"/>
+                    <MenuItem Header="Dusk" Click="Experimental_SetTimeOfDay_Click" Tag="Dusk"/>
+                    <MenuItem Header="Night" Click="Experimental_SetTimeOfDay_Click" Tag="Night"/>
+                </MenuItem>
+                <Separator/>
+                <MenuItem Header="🎲 Quick Dice Roll">
+                    <MenuItem Header="Roll d20" Click="Experimental_RollDice_Click" Tag="D20"/>
+                    <MenuItem Header="Roll d12" Click="Experimental_RollDice_Click" Tag="D12"/>
+                    <MenuItem Header="Roll d10" Click="Experimental_RollDice_Click" Tag="D10"/>
+                    <MenuItem Header="Roll d8" Click="Experimental_RollDice_Click" Tag="D8"/>
+                    <MenuItem Header="Roll d6" Click="Experimental_RollDice_Click" Tag="D6"/>
+                    <MenuItem Header="Roll d4" Click="Experimental_RollDice_Click" Tag="D4"/>
+                    <MenuItem Header="Roll d100" Click="Experimental_RollDice_Click" Tag="D100"/>
+                </MenuItem>
+                <Separator/>
+                <MenuItem Header="🎲 Generate Procedural Map..." Click="Experimental_GenerateMap_Click"/>
+                <MenuItem Header="📏 Add Distance Measurement..." Click="Experimental_AddMeasurement_Click"/>
+                <MenuItem Header="♿ Accessibility Settings..." Click="Experimental_AccessibilitySettings_Click"/>
+            </MenuItem>
         </Menu>
         
 

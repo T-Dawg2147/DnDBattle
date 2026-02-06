@@ -1,4 +1,5 @@
-﻿using DnDBattle.Models;
+﻿using System;
+using DnDBattle.Models;
 using DnDBattle.Services;
 using DnDBattle.Services.FogOfWar;
 using DnDBattle.ViewModels;
@@ -983,6 +984,156 @@ namespace DnDBattle
         private void Phase8_OpenMapLibrary_Click(object sender, RoutedEventArgs e)
         {
             var window = new Phase8MapFeaturesWindow(BattleGrid);
+            window.Owner = this;
+            window.Show();
+        }
+
+        #endregion
+
+        #region Experimental / Undecided Features Menu Handlers
+
+        /// <summary>
+        /// Opens the Undecided/Experimental Features management window.
+        /// </summary>
+        private void OpenExperimentalWindow_Click(object sender, RoutedEventArgs e)
+        {
+            var window = new UndecidedFeaturesWindow();
+            window.Owner = this;
+            window.Show();
+        }
+
+        /// <summary>
+        /// Quick-sets weather type from the Experimental menu Tag.
+        /// Creates a WeatherService instance, applies the weather, and logs the action.
+        /// </summary>
+        private void Experimental_SetWeather_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not MenuItem item || item.Tag is not string tag) return;
+
+            if (!Enum.TryParse<Models.WeatherType>(tag, out var weatherType))
+                weatherType = Models.WeatherType.None;
+
+            var weatherService = new WeatherService(Options.WeatherMaxParticles);
+            weatherService.SetWeather(weatherType, 0.5);
+
+            if (DataContext is MainViewModel vm)
+            {
+                vm.ActionLog.Insert(0, new ActionLogEntry
+                {
+                    Source = "Experimental",
+                    Message = $"Weather set to {weatherType}."
+                });
+            }
+        }
+
+        /// <summary>
+        /// Quick-sets time of day from the Experimental menu Tag.
+        /// </summary>
+        private void Experimental_SetTimeOfDay_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not MenuItem item || item.Tag is not string tag) return;
+
+            if (!Enum.TryParse<Models.TimeOfDay>(tag, out var tod))
+                tod = Models.TimeOfDay.Day;
+
+            var weatherService = new WeatherService(Options.WeatherMaxParticles);
+            weatherService.SetTimeOfDay(tod);
+
+            if (DataContext is MainViewModel vm)
+            {
+                vm.ActionLog.Insert(0, new ActionLogEntry
+                {
+                    Source = "Experimental",
+                    Message = $"Time of day set to {tod}."
+                });
+            }
+        }
+
+        /// <summary>
+        /// Quick dice roll from the Experimental menu. Rolls the dice type specified
+        /// in the Tag, skips animation, and shows the result in a MessageBox.
+        /// </summary>
+        private void Experimental_RollDice_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not MenuItem item || item.Tag is not string tag) return;
+
+            if (!Enum.TryParse<Models.DiceType>(tag, out var diceType))
+                diceType = Models.DiceType.D20;
+
+            var diceService = new DicePhysicsService();
+            diceService.Roll(diceType, 1);
+            diceService.SkipAnimation();
+
+            int total = diceService.GetTotal();
+            MessageBox.Show($"🎲 {tag} result: {total}", "Quick Dice Roll",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+
+            if (DataContext is MainViewModel vm)
+            {
+                vm.ActionLog.Insert(0, new ActionLogEntry
+                {
+                    Source = "Experimental",
+                    Message = $"Quick roll {tag}: {total}."
+                });
+            }
+        }
+
+        /// <summary>
+        /// Generates a procedural dungeon map with default settings and logs the result.
+        /// </summary>
+        private void Experimental_GenerateMap_Click(object sender, RoutedEventArgs e)
+        {
+            var service = new ProceduralMapService();
+            var config = new Models.ProceduralMapConfig
+            {
+                Type = Models.MapGenerationType.Dungeon,
+                Width = 50,
+                Height = 50,
+                TargetRoomCount = 15
+            };
+
+            var result = service.Generate(config);
+            MessageBox.Show(
+                $"Generated Dungeon map ({result.Width}×{result.Height}) with {result.Rooms.Count} rooms.",
+                "Procedural Map Generated", MessageBoxButton.OK, MessageBoxImage.Information);
+
+            if (DataContext is MainViewModel vm)
+            {
+                vm.ActionLog.Insert(0, new ActionLogEntry
+                {
+                    Source = "Experimental",
+                    Message = $"Generated procedural dungeon ({result.Width}×{result.Height}, {result.Rooms.Count} rooms)."
+                });
+            }
+        }
+
+        /// <summary>
+        /// Adds a distance measurement from (0,0) to (5,5) as a quick demo.
+        /// </summary>
+        private void Experimental_AddMeasurement_Click(object sender, RoutedEventArgs e)
+        {
+            var service = new MeasurementService();
+            service.AddDistanceMeasurement("Quick Measurement", 0, 0, 5, 5);
+
+            MessageBox.Show("Added distance measurement from (0,0) to (5,5).",
+                "Measurement Added", MessageBoxButton.OK, MessageBoxImage.Information);
+
+            if (DataContext is MainViewModel vm)
+            {
+                vm.ActionLog.Insert(0, new ActionLogEntry
+                {
+                    Source = "Experimental",
+                    Message = "Added quick distance measurement (0,0)→(5,5)."
+                });
+            }
+        }
+
+        /// <summary>
+        /// Opens the Experimental Features window focused on accessibility settings.
+        /// </summary>
+        private void Experimental_AccessibilitySettings_Click(object sender, RoutedEventArgs e)
+        {
+            var window = new UndecidedFeaturesWindow();
             window.Owner = this;
             window.Show();
         }
