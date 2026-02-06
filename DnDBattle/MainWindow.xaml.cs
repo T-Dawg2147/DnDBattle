@@ -27,11 +27,26 @@ namespace DnDBattle
         private SoundEffectsService _soundService;
         private DiceHistoryService _diceHistoryService;
 
+        // Dockable panel child controls
+        private readonly InitiativeTrackerPanel InitiativeTracker;
+        private readonly ActionLogPanel ActionLogPanel;
+        private readonly SelectedTokenPanel SelectedTokenPanel;
+
         public MainWindow()
         {
             InitializeComponent();
             var vm = new MainViewModel();
             DataContext = vm;
+
+            // Create panel child controls and assign to dockable panels
+            InitiativeTracker = new InitiativeTrackerPanel();
+            InitiativeTrackerDock.PanelChild = InitiativeTracker;
+
+            ActionLogPanel = new ActionLogPanel();
+            ActionLogDock.PanelChild = ActionLogPanel;
+
+            SelectedTokenPanel = new SelectedTokenPanel();
+            SelectedTokenDock.PanelChild = SelectedTokenPanel;
 
             Services.OptionsService.LoadOptions();
             UndoManager.Limit = Options.UndoStackLimit;
@@ -70,6 +85,8 @@ namespace DnDBattle
             SetupSelectedTokenPanel();
 
             SetupAreaEffectToolbar();
+
+            SetupActionLogPanel();
 
             BattleGrid.TokenAddedToMap += (token) =>
             {
@@ -282,6 +299,14 @@ namespace DnDBattle
                 BattleGrid?.RebuildTokenVisuals();
                 SelectedTokenPanel?.UpdateDisplay();
             };
+        }
+
+        private void SetupActionLogPanel()
+        {
+            if (DataContext is MainViewModel vm)
+            {
+                ActionLogPanel.SetActionLog(vm.ActionLog);
+            }
         }
 
         private void SetupFogOfWar()
