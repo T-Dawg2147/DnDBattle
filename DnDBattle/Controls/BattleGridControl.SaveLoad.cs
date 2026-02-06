@@ -76,7 +76,17 @@ namespace DnDBattle.Controls
                 X = l.CenterGrid.X,
                 Y = l.CenterGrid.Y,
                 RadiusSquares = l.RadiusSquares,
-                Intensity = l.Intensity
+                Intensity = l.Intensity,
+                BrightRadius = l.BrightRadius,
+                DimRadius = l.DimRadius,
+                ColorR = l.LightColor.R,
+                ColorG = l.LightColor.G,
+                ColorB = l.LightColor.B,
+                IsEnabled = l.IsEnabled,
+                LightType = l.Type.ToString(),
+                Direction = l.Direction,
+                ConeWidth = l.ConeWidth,
+                Label = l.Label
             }).ToList();
 
             return dto;
@@ -150,12 +160,23 @@ namespace DnDBattle.Controls
             {
                 foreach (var ld in dto.Lights)
                 {
-                    _lights.Add(new LightSource
+                    var light = new LightSource
                     {
                         CenterGrid = new Point(ld.X, ld.Y),
-                        RadiusSquares = ld.RadiusSquares,
-                        Intensity = ld.Intensity
-                    });
+                        BrightRadius = ld.BrightRadius,
+                        DimRadius = ld.DimRadius,
+                        Intensity = ld.Intensity,
+                        LightColor = Color.FromRgb(ld.ColorR, ld.ColorG, ld.ColorB),
+                        IsEnabled = ld.IsEnabled,
+                        Direction = ld.Direction,
+                        ConeWidth = ld.ConeWidth,
+                        Label = ld.Label
+                    };
+
+                    if (Enum.TryParse<LightType>(ld.LightType, out var lt))
+                        light.Type = lt;
+
+                    _lights.Add(light);
                 }
             }
 
