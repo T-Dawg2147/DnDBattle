@@ -1,4 +1,5 @@
-﻿using DnDBattle.Models;
+﻿using System;
+using DnDBattle.Models;
 using DnDBattle.Services;
 using DnDBattle.Services.FogOfWar;
 using DnDBattle.ViewModels;
@@ -478,6 +479,666 @@ namespace DnDBattle
             var win = new DeveloperWindow();
             win.Show();
         }
+
+        #region Phase 4: Lighting & Vision Menu Handlers
+
+        /// <summary>
+        /// Opens the Phase 4 Lighting & Vision management window
+        /// </summary>
+        private void OpenPhase4Window_Click(object sender, RoutedEventArgs e)
+        {
+            var window = new Phase4LightingWindow(BattleGrid);
+            window.Owner = this;
+            window.Show();
+        }
+
+        /// <summary>
+        /// Quick-add a default point light at the center of the current view
+        /// </summary>
+        private void Phase4_QuickAddPointLight_Click(object sender, RoutedEventArgs e)
+        {
+            if (!Options.EnableLighting)
+            {
+                MessageBox.Show("Enable the lighting system first (Phase 4 menu or Developer Settings).", "Lighting Disabled");
+                return;
+            }
+            var light = new LightSource
+            {
+                CenterGrid = new System.Windows.Point(10, 10),
+                BrightRadius = Options.DefaultBrightLightRadius,
+                DimRadius = Options.DefaultDimLightRadius,
+                Intensity = 1.0,
+                LightColor = Colors.LightYellow,
+                IsEnabled = true,
+                Type = LightType.Point,
+                Label = "Quick Point Light"
+            };
+            BattleGrid.AddLight(light);
+        }
+
+        /// <summary>
+        /// Quick-add a directional light at the center of the current view
+        /// </summary>
+        private void Phase4_QuickAddDirectionalLight_Click(object sender, RoutedEventArgs e)
+        {
+            if (!Options.EnableLighting || !Options.EnableDirectionalLights)
+            {
+                MessageBox.Show("Enable both the lighting system and directional lights first.", "Feature Disabled");
+                return;
+            }
+            var light = new LightSource
+            {
+                CenterGrid = new System.Windows.Point(10, 10),
+                BrightRadius = Options.DefaultBrightLightRadius,
+                DimRadius = Options.DefaultDimLightRadius,
+                Intensity = 1.0,
+                LightColor = Colors.LightBlue,
+                IsEnabled = true,
+                Type = LightType.Directional,
+                Direction = 0,
+                ConeWidth = 60,
+                Label = "Quick Directional Light"
+            };
+            BattleGrid.AddLight(light);
+        }
+
+        /// <summary>
+        /// Toggle the vision overlay showing what player tokens can see
+        /// </summary>
+        private void Phase4_ToggleVisionOverlay_Click(object sender, RoutedEventArgs e)
+        {
+            BattleGrid.ToggleVisionOverlay(MenuPhase4VisionOverlay.IsChecked);
+        }
+
+        /// <summary>
+        /// Manually update fog of war based on current token vision ranges
+        /// </summary>
+        private void Phase4_UpdateFogFromVision_Click(object sender, RoutedEventArgs e)
+        {
+            BattleGrid.UpdateFogFromTokenVision();
+        }
+
+        /// <summary>
+        /// Clear the shadow cache forcing a full recalculation
+        /// </summary>
+        private void Phase4_ClearShadowCache_Click(object sender, RoutedEventArgs e)
+        {
+            BattleGrid.InvalidateShadowCache();
+        }
+
+        #endregion
+
+        #region Phase 5: Advanced Token Features Menu Handlers
+
+        /// <summary>
+        /// Opens the Phase 5 Advanced Token Features management window
+        /// </summary>
+        private void OpenPhase5Window_Click(object sender, RoutedEventArgs e)
+        {
+            var window = new Phase5TokenFeaturesWindow(BattleGrid, DataContext as ViewModels.MainViewModel);
+            window.Owner = this;
+            window.Show();
+        }
+
+        /// <summary>
+        /// Quick-add a Paladin Aura (10 sq radius) to the selected token
+        /// </summary>
+        private void Phase5_AddPaladinAura_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is ViewModels.MainViewModel vm && vm.SelectedToken != null)
+            {
+                vm.SelectedToken.Auras.Add(Models.TokenAura.PaladinAura());
+                BattleGrid.RedrawAuras();
+            }
+            else
+            {
+                MessageBox.Show("Please select a token first.", "No Token Selected");
+            }
+        }
+
+        /// <summary>
+        /// Quick-add Spirit Guardians aura to the selected token
+        /// </summary>
+        private void Phase5_AddSpiritGuardians_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is ViewModels.MainViewModel vm && vm.SelectedToken != null)
+            {
+                vm.SelectedToken.Auras.Add(Models.TokenAura.SpiritGuardians());
+                BattleGrid.RedrawAuras();
+            }
+            else
+            {
+                MessageBox.Show("Please select a token first.", "No Token Selected");
+            }
+        }
+
+        /// <summary>
+        /// Set elevation of selected token from menu Tag value
+        /// </summary>
+        private void Phase5_SetElevation_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is ViewModels.MainViewModel vm && vm.SelectedToken != null)
+            {
+                if (sender is MenuItem mi && int.TryParse(mi.Tag?.ToString(), out int elev))
+                {
+                    vm.SelectedToken.Elevation = elev;
+                    BattleGrid.InitializePhase5Visuals();
+                }
+            }
+            else
+            {
+                MessageBox.Show("Please select a token first.", "No Token Selected");
+            }
+        }
+
+        /// <summary>
+        /// Force refresh of all Phase 5 token visuals (auras, elevation badges, facing arrows)
+        /// </summary>
+        private void Phase5_RefreshVisuals_Click(object sender, RoutedEventArgs e)
+        {
+            BattleGrid.InitializePhase5Visuals();
+        }
+
+        #endregion
+
+        #region Phase 6: Area Effects Expansion Menu Handlers
+
+        /// <summary>
+        /// Opens the Phase 6 Area Effects Expansion management window
+        /// </summary>
+        private void OpenPhase6Window_Click(object sender, RoutedEventArgs e)
+        {
+            var window = new Phase6AreaEffectsWindow(BattleGrid);
+            window.Owner = this;
+            window.Show();
+        }
+
+        /// <summary>
+        /// Opens the Spell Library window for browsing and placing spells
+        /// </summary>
+        private void Phase6_OpenSpellLibrary_Click(object sender, RoutedEventArgs e)
+        {
+            var spellWindow = new SpellLibraryWindow();
+            spellWindow.Owner = this;
+
+            // When a spell is selected, start placement on the battle grid
+            spellWindow.SpellSelected += (AreaEffect effect) =>
+            {
+                BattleGrid.StartAreaEffectPlacement(effect);
+            };
+
+            spellWindow.ShowDialog();
+        }
+
+        /// <summary>
+        /// Quick-place a Fireball (20ft sphere) on the battle grid
+        /// </summary>
+        private void Phase6_PlaceFireball_Click(object sender, RoutedEventArgs e)
+        {
+            BattleGrid.StartAreaEffectPlacement(AreaEffectPresets.Fireball);
+        }
+
+        /// <summary>
+        /// Quick-place Darkness (15ft sphere) on the battle grid
+        /// </summary>
+        private void Phase6_PlaceDarkness_Click(object sender, RoutedEventArgs e)
+        {
+            BattleGrid.StartAreaEffectPlacement(AreaEffectPresets.Darkness);
+        }
+
+        /// <summary>
+        /// Quick-place Fog Cloud (20ft sphere) on the battle grid
+        /// </summary>
+        private void Phase6_PlaceFogCloud_Click(object sender, RoutedEventArgs e)
+        {
+            BattleGrid.StartAreaEffectPlacement(AreaEffectPresets.FogCloud);
+        }
+
+        /// <summary>
+        /// Advance one combat round, ticking down all effect durations and logging expired effects
+        /// </summary>
+        private void Phase6_AdvanceRound_Click(object sender, RoutedEventArgs e)
+        {
+            var durationService = new EffectDurationService(BattleGrid.AreaEffectService);
+            var expired = durationService.OnRoundEnd();
+
+            if (expired.Count > 0)
+            {
+                string msg = $"Round advanced. Expired: {string.Join(", ", expired)}";
+                if (DataContext is ViewModels.MainViewModel vm)
+                {
+                    vm.ActionLog.Insert(0, new ActionLogEntry { Source = "Phase6", Message = msg });
+                }
+                MessageBox.Show(msg, "Duration Tick", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            else
+            {
+                if (DataContext is ViewModels.MainViewModel vm)
+                {
+                    vm.ActionLog.Insert(0, new ActionLogEntry { Source = "Phase6", Message = "Round advanced. No effects expired." });
+                }
+            }
+        }
+
+        /// <summary>
+        /// Clear all active area effects from the battle grid
+        /// </summary>
+        private void Phase6_ClearAllEffects_Click(object sender, RoutedEventArgs e)
+        {
+            BattleGrid.AreaEffectService.ClearAllEffects();
+        }
+
+        #endregion
+
+        #region Phase 7: Combat Automation Menu Handlers
+
+        /// <summary>
+        /// Opens the Phase 7 Combat Automation management window for attack rolls,
+        /// saving throws, spell slots, concentration, conditions, and cover.
+        /// </summary>
+        private void OpenPhase7Window_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is ViewModels.MainViewModel vm)
+            {
+                var window = new Phase7CombatWindow(BattleGrid, vm);
+                window.Owner = this;
+                window.Show();
+            }
+        }
+
+        /// <summary>
+        /// Quick attack: rolls an attack from the selected token against the first other token.
+        /// Uses the selected token's first action if available, otherwise a default melee attack.
+        /// </summary>
+        private void Phase7_QuickAttack_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is not ViewModels.MainViewModel vm || vm.SelectedToken == null)
+            {
+                MessageBox.Show("Select an attacker token first.", "Quick Attack", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var attacker = vm.SelectedToken;
+            var defender = vm.Tokens.FirstOrDefault(t => t != attacker);
+            if (defender == null)
+            {
+                MessageBox.Show("No target token available.", "Quick Attack", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // Use the attacker's first action or create a default melee attack
+            var attack = attacker.Actions?.FirstOrDefault() ?? new Models.Action
+            {
+                Name = "Melee Attack",
+                AttackBonus = 5,
+                DamageExpression = "1d8+3"
+            };
+
+            var system = new AttackRollSystem();
+            var result = system.RollAttack(attacker, defender, attack);
+
+            string msg = $"{attacker.Name} attacks {defender.Name}: " +
+                         $"d20({result.D20Roll})+{result.AttackBonus}={result.TotalAttack} vs AC {result.TargetAC} → " +
+                         (result.Hit ? $"HIT for {result.ActualDamage} damage" : "MISS") +
+                         (result.IsCriticalHit ? " (CRIT!)" : "");
+
+            vm.ActionLog.Insert(0, new ActionLogEntry { Source = "Phase7", Message = msg });
+            MessageBox.Show(msg, "Quick Attack", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        /// <summary>
+        /// Quick save: prompts for a DC and rolls a Dexterity save for the selected token.
+        /// Uses DEX as the default ability for quick saves (most common for area effects).
+        /// </summary>
+        private void Phase7_QuickSave_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is not ViewModels.MainViewModel vm || vm.SelectedToken == null)
+            {
+                MessageBox.Show("Select a token first.", "Quick Save", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var token = vm.SelectedToken;
+            var system = new SavingThrowSystem();
+            var result = system.RollSave(token, Ability.Dexterity, 15);
+
+            string msg = $"{token.Name} DEX Save (DC 15): " +
+                         $"d20({result.D20Roll})+{result.Modifier}={result.Total} → " +
+                         (result.Success ? "SUCCESS" : "FAIL");
+
+            vm.ActionLog.Insert(0, new ActionLogEntry { Source = "Phase7", Message = msg });
+            MessageBox.Show(msg, "Quick Save", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        /// <summary>
+        /// Performs a long rest for the selected token, restoring all spell slots to maximum
+        /// </summary>
+        private void Phase7_LongRest_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is not ViewModels.MainViewModel vm || vm.SelectedToken == null)
+            {
+                MessageBox.Show("Select a token first.", "Long Rest", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var token = vm.SelectedToken;
+            token.SpellSlots.LongRest();
+            vm.ActionLog.Insert(0, new ActionLogEntry
+            {
+                Source = "Phase7",
+                Message = $"{token.Name} completed a long rest. All spell slots restored."
+            });
+        }
+
+        /// <summary>
+        /// Performs a short rest for the selected token (restores Warlock pact slots)
+        /// </summary>
+        private void Phase7_ShortRest_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is not ViewModels.MainViewModel vm || vm.SelectedToken == null)
+            {
+                MessageBox.Show("Select a token first.", "Short Rest", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var token = vm.SelectedToken;
+            token.SpellSlots.ShortRest();
+            vm.ActionLog.Insert(0, new ActionLogEntry
+            {
+                Source = "Phase7",
+                Message = $"{token.Name} completed a short rest."
+            });
+        }
+
+        /// <summary>
+        /// Checks concentration for the selected token, prompting for damage amount.
+        /// DC = max(10, damage/2). Automatically breaks concentration on failure.
+        /// </summary>
+        private void Phase7_CheckConcentration_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is not ViewModels.MainViewModel vm || vm.SelectedToken == null)
+            {
+                MessageBox.Show("Select a token first.", "Concentration", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var token = vm.SelectedToken;
+            if (!token.IsConcentrating)
+            {
+                MessageBox.Show($"{token.Name} is not concentrating on any spell.", "Concentration", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            // Use a default damage of 10 for the quick check
+            var service = new ConcentrationService();
+            var result = service.CheckConcentration(token, 10);
+
+            string msg = result.ToString();
+            vm.ActionLog.Insert(0, new ActionLogEntry { Source = "Phase7", Message = msg });
+            MessageBox.Show(msg, "Concentration Check", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        #endregion
+
+        #region Phase 8: Advanced Map Features Menu Handlers
+
+        /// <summary>
+        /// Opens the Phase 8 Advanced Map Features management window.
+        /// </summary>
+        private void OpenPhase8Window_Click(object sender, RoutedEventArgs e)
+        {
+            var window = new Phase8MapFeaturesWindow(BattleGrid);
+            window.Owner = this;
+            window.Show();
+        }
+
+        /// <summary>
+        /// Sets the grid type on the current tile map from the menu Tag.
+        /// </summary>
+        private void Phase8_SetGridType_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not MenuItem item || item.Tag is not string tag) return;
+
+            var map = BattleGrid?.TileMap;
+            if (map == null) return;
+
+            map.GridType = tag switch
+            {
+                "HexFlatTop" => Models.Tiles.GridType.HexFlatTop,
+                "HexPointyTop" => Models.Tiles.GridType.HexPointyTop,
+                _ => Models.Tiles.GridType.Square
+            };
+
+            if (DataContext is MainViewModel vm)
+            {
+                vm.ActionLog.Insert(0, new ActionLogEntry
+                {
+                    Source = "Phase8",
+                    Message = $"Grid type set to {map.GridType}."
+                });
+            }
+        }
+
+        /// <summary>
+        /// Toggles gridless mode on the current tile map.
+        /// </summary>
+        private void Phase8_ToggleGridless_Click(object sender, RoutedEventArgs e)
+        {
+            var map = BattleGrid?.TileMap;
+            if (map == null) return;
+
+            map.GridlessMode = MenuGridlessMode.IsChecked;
+            Options.EnableGridlessMode = map.GridlessMode;
+
+            if (DataContext is MainViewModel vm)
+            {
+                vm.ActionLog.Insert(0, new ActionLogEntry
+                {
+                    Source = "Phase8",
+                    Message = $"Gridless mode: {(map.GridlessMode ? "ON" : "OFF")}."
+                });
+            }
+        }
+
+        /// <summary>
+        /// Adds a map note at the center of the current map, prompting for text.
+        /// </summary>
+        private void Phase8_AddMapNote_Click(object sender, RoutedEventArgs e)
+        {
+            var map = BattleGrid?.TileMap;
+            if (map == null)
+            {
+                MessageBox.Show("No map loaded.", "Map Note", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var text = Microsoft.VisualBasic.Interaction.InputBox(
+                "Enter note text:", "Add Map Note", "New note");
+
+            if (string.IsNullOrWhiteSpace(text)) return;
+
+            var note = new Models.Tiles.MapNote
+            {
+                Text = text,
+                GridX = map.Width / 2,
+                GridY = map.Height / 2,
+                FontSize = Options.MapNoteDefaultFontSize,
+                IsPlayerVisible = true
+            };
+
+            map.AddNote(note);
+
+            if (DataContext is MainViewModel vm)
+            {
+                vm.ActionLog.Insert(0, new ActionLogEntry
+                {
+                    Source = "Phase8",
+                    Message = $"Added note '{text}' at ({note.GridX},{note.GridY})."
+                });
+            }
+        }
+
+        /// <summary>
+        /// Opens the Phase 8 map features window focused on the map library tab.
+        /// </summary>
+        private void Phase8_OpenMapLibrary_Click(object sender, RoutedEventArgs e)
+        {
+            var window = new Phase8MapFeaturesWindow(BattleGrid);
+            window.Owner = this;
+            window.Show();
+        }
+
+        #endregion
+
+        #region Experimental / Undecided Features Menu Handlers
+
+        /// <summary>
+        /// Opens the Undecided/Experimental Features management window.
+        /// </summary>
+        private void OpenExperimentalWindow_Click(object sender, RoutedEventArgs e)
+        {
+            var window = new UndecidedFeaturesWindow();
+            window.Owner = this;
+            window.Show();
+        }
+
+        /// <summary>
+        /// Quick-sets weather type from the Experimental menu Tag.
+        /// Creates a WeatherService instance, applies the weather, and logs the action.
+        /// </summary>
+        private void Experimental_SetWeather_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not MenuItem item || item.Tag is not string tag) return;
+
+            if (!Enum.TryParse<Models.WeatherType>(tag, out var weatherType))
+                weatherType = Models.WeatherType.None;
+
+            var weatherService = new WeatherService(Options.WeatherMaxParticles);
+            weatherService.SetWeather(weatherType, 0.5);
+
+            if (DataContext is MainViewModel vm)
+            {
+                vm.ActionLog.Insert(0, new ActionLogEntry
+                {
+                    Source = "Experimental",
+                    Message = $"Weather set to {weatherType}."
+                });
+            }
+        }
+
+        /// <summary>
+        /// Quick-sets time of day from the Experimental menu Tag.
+        /// </summary>
+        private void Experimental_SetTimeOfDay_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not MenuItem item || item.Tag is not string tag) return;
+
+            if (!Enum.TryParse<Models.TimeOfDay>(tag, out var tod))
+                tod = Models.TimeOfDay.Day;
+
+            var weatherService = new WeatherService(Options.WeatherMaxParticles);
+            weatherService.SetTimeOfDay(tod);
+
+            if (DataContext is MainViewModel vm)
+            {
+                vm.ActionLog.Insert(0, new ActionLogEntry
+                {
+                    Source = "Experimental",
+                    Message = $"Time of day set to {tod}."
+                });
+            }
+        }
+
+        /// <summary>
+        /// Quick dice roll from the Experimental menu. Rolls the dice type specified
+        /// in the Tag, skips animation, and shows the result in a MessageBox.
+        /// </summary>
+        private void Experimental_RollDice_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not MenuItem item || item.Tag is not string tag) return;
+
+            if (!Enum.TryParse<Models.DiceType>(tag, out var diceType))
+                diceType = Models.DiceType.D20;
+
+            var diceService = new DicePhysicsService();
+            diceService.Roll(diceType, 1);
+            diceService.SkipAnimation();
+
+            int total = diceService.GetTotal();
+            MessageBox.Show($"🎲 {tag} result: {total}", "Quick Dice Roll",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+
+            if (DataContext is MainViewModel vm)
+            {
+                vm.ActionLog.Insert(0, new ActionLogEntry
+                {
+                    Source = "Experimental",
+                    Message = $"Quick roll {tag}: {total}."
+                });
+            }
+        }
+
+        /// <summary>
+        /// Generates a procedural dungeon map with default settings and logs the result.
+        /// </summary>
+        private void Experimental_GenerateMap_Click(object sender, RoutedEventArgs e)
+        {
+            var service = new ProceduralMapService();
+            var config = new Models.ProceduralMapConfig
+            {
+                Type = Models.MapGenerationType.Dungeon,
+                Width = 50,
+                Height = 50,
+                TargetRoomCount = 15
+            };
+
+            var result = service.Generate(config);
+            MessageBox.Show(
+                $"Generated Dungeon map ({result.Width}×{result.Height}) with {result.Rooms.Count} rooms.",
+                "Procedural Map Generated", MessageBoxButton.OK, MessageBoxImage.Information);
+
+            if (DataContext is MainViewModel vm)
+            {
+                vm.ActionLog.Insert(0, new ActionLogEntry
+                {
+                    Source = "Experimental",
+                    Message = $"Generated procedural dungeon ({result.Width}×{result.Height}, {result.Rooms.Count} rooms)."
+                });
+            }
+        }
+
+        /// <summary>
+        /// Adds a distance measurement from (0,0) to (5,5) as a quick demo.
+        /// </summary>
+        private void Experimental_AddMeasurement_Click(object sender, RoutedEventArgs e)
+        {
+            var service = new MeasurementService();
+            service.AddDistanceMeasurement("Quick Measurement", 0, 0, 5, 5);
+
+            MessageBox.Show("Added distance measurement from (0,0) to (5,5).",
+                "Measurement Added", MessageBoxButton.OK, MessageBoxImage.Information);
+
+            if (DataContext is MainViewModel vm)
+            {
+                vm.ActionLog.Insert(0, new ActionLogEntry
+                {
+                    Source = "Experimental",
+                    Message = "Added quick distance measurement (0,0)→(5,5)."
+                });
+            }
+        }
+
+        /// <summary>
+        /// Opens the Experimental Features window focused on accessibility settings.
+        /// </summary>
+        private void Experimental_AccessibilitySettings_Click(object sender, RoutedEventArgs e)
+        {
+            var window = new UndecidedFeaturesWindow();
+            window.Owner = this;
+            window.Show();
+        }
+
+        #endregion
 
         private void ToggleLeftSidebar_Click(object seder, RoutedEventArgs e)
         {

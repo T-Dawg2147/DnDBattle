@@ -163,6 +163,114 @@
                 <MenuItem Header="Tile Map Builder" Click="OpenTileMapBuilder_Click"/>
                 <MenuItem Header="Developer Window..." Click="OpenDeveloperWindow_Click"/>
             </MenuItem>
+
+            <!-- Phase 4: Lighting & Vision - Top level menu for testing Phase 4 features -->
+            <MenuItem Header="💡 Phase 4" Foreground="White">
+                <MenuItem Header="Lighting &amp; Vision Panel..." Click="OpenPhase4Window_Click"/>
+                <Separator/>
+                <MenuItem Header="Quick: Add Point Light" Click="Phase4_QuickAddPointLight_Click"/>
+                <MenuItem Header="Quick: Add Directional Light" Click="Phase4_QuickAddDirectionalLight_Click"/>
+                <Separator/>
+                <MenuItem Header="Toggle Vision Overlay" Click="Phase4_ToggleVisionOverlay_Click" IsCheckable="True" x:Name="MenuPhase4VisionOverlay"/>
+                <MenuItem Header="Update Fog from Vision" Click="Phase4_UpdateFogFromVision_Click"/>
+                <MenuItem Header="Clear Shadow Cache" Click="Phase4_ClearShadowCache_Click"/>
+            </MenuItem>
+
+            <!-- Phase 5: Advanced Token Features - Top level menu for testing Phase 5 features -->
+            <MenuItem Header="🎭 Phase 5" Foreground="White">
+                <MenuItem Header="Advanced Token Features Panel..." Click="OpenPhase5Window_Click"/>
+                <Separator/>
+                <MenuItem Header="Quick: Add Paladin Aura to Selected" Click="Phase5_AddPaladinAura_Click"/>
+                <MenuItem Header="Quick: Add Spirit Guardians to Selected" Click="Phase5_AddSpiritGuardians_Click"/>
+                <Separator/>
+                <MenuItem Header="Set Elevation...">
+                    <MenuItem Header="Ground (0 ft)" Click="Phase5_SetElevation_Click" Tag="0"/>
+                    <MenuItem Header="5 ft" Click="Phase5_SetElevation_Click" Tag="5"/>
+                    <MenuItem Header="10 ft" Click="Phase5_SetElevation_Click" Tag="10"/>
+                    <MenuItem Header="20 ft" Click="Phase5_SetElevation_Click" Tag="20"/>
+                    <MenuItem Header="30 ft" Click="Phase5_SetElevation_Click" Tag="30"/>
+                    <MenuItem Header="50 ft" Click="Phase5_SetElevation_Click" Tag="50"/>
+                    <MenuItem Header="100 ft" Click="Phase5_SetElevation_Click" Tag="100"/>
+                </MenuItem>
+                <Separator/>
+                <MenuItem Header="Refresh Token Visuals" Click="Phase5_RefreshVisuals_Click"/>
+            </MenuItem>
+
+            <!-- Phase 6: Area Effects Expansion - Top level menu for testing Phase 6 features -->
+            <MenuItem Header="🔥 Phase 6" Foreground="White">
+                <MenuItem Header="Area Effects Panel..." Click="OpenPhase6Window_Click"/>
+                <Separator/>
+                <MenuItem Header="Open Spell Library..." Click="Phase6_OpenSpellLibrary_Click"/>
+                <Separator/>
+                <MenuItem Header="Quick: Place Fireball (20ft)" Click="Phase6_PlaceFireball_Click"/>
+                <MenuItem Header="Quick: Place Darkness (15ft)" Click="Phase6_PlaceDarkness_Click"/>
+                <MenuItem Header="Quick: Place Fog Cloud (20ft)" Click="Phase6_PlaceFogCloud_Click"/>
+                <Separator/>
+                <MenuItem Header="Advance Round (Tick Durations)" Click="Phase6_AdvanceRound_Click"/>
+                <MenuItem Header="Clear All Effects" Click="Phase6_ClearAllEffects_Click"/>
+            </MenuItem>
+
+            <!-- Phase 7: Combat Automation - Top level menu for testing Phase 7 features -->
+            <MenuItem Header="⚔️ Phase 7" Foreground="White">
+                <MenuItem Header="Combat Automation Panel..." Click="OpenPhase7Window_Click"/>
+                <Separator/>
+                <MenuItem Header="Quick: Roll Attack on Target" Click="Phase7_QuickAttack_Click"/>
+                <MenuItem Header="Quick: Roll Saving Throw" Click="Phase7_QuickSave_Click"/>
+                <Separator/>
+                <MenuItem Header="Spell Slots">
+                    <MenuItem Header="Long Rest (Restore All)" Click="Phase7_LongRest_Click"/>
+                    <MenuItem Header="Short Rest" Click="Phase7_ShortRest_Click"/>
+                </MenuItem>
+                <MenuItem Header="Check Concentration" Click="Phase7_CheckConcentration_Click"/>
+            </MenuItem>
+
+            <!-- Phase 8: Advanced Map Features - Top level menu for testing Phase 8 features -->
+            <MenuItem Header="🗺️ Phase 8" Foreground="White">
+                <MenuItem Header="Map Features Panel..." Click="OpenPhase8Window_Click"/>
+                <Separator/>
+                <MenuItem Header="Grid Type">
+                    <MenuItem Header="Square Grid (Default)" Click="Phase8_SetGridType_Click" Tag="Square"/>
+                    <MenuItem Header="Hex Grid (Flat Top)" Click="Phase8_SetGridType_Click" Tag="HexFlatTop"/>
+                    <MenuItem Header="Hex Grid (Pointy Top)" Click="Phase8_SetGridType_Click" Tag="HexPointyTop"/>
+                </MenuItem>
+                <MenuItem Header="Toggle Gridless Mode" Click="Phase8_ToggleGridless_Click" IsCheckable="True" x:Name="MenuGridlessMode"/>
+                <Separator/>
+                <MenuItem Header="Add Map Note at Center..." Click="Phase8_AddMapNote_Click"/>
+                <MenuItem Header="Open Map Library..." Click="Phase8_OpenMapLibrary_Click"/>
+            </MenuItem>
+
+            <!-- Undecided Features (Experimental) - Top level menu for testing experimental features -->
+            <MenuItem Header="🧪 Experimental" Foreground="#FFFF8844">
+                <MenuItem Header="Experimental Features Panel..." Click="OpenExperimentalWindow_Click"/>
+                <Separator/>
+                <MenuItem Header="🌧️ Weather">
+                    <MenuItem Header="Rain" Click="Experimental_SetWeather_Click" Tag="Rain"/>
+                    <MenuItem Header="Snow" Click="Experimental_SetWeather_Click" Tag="Snow"/>
+                    <MenuItem Header="Fog" Click="Experimental_SetWeather_Click" Tag="Fog"/>
+                    <MenuItem Header="Storm" Click="Experimental_SetWeather_Click" Tag="Storm"/>
+                    <MenuItem Header="Clear Weather" Click="Experimental_SetWeather_Click" Tag="None"/>
+                </MenuItem>
+                <MenuItem Header="🕐 Time of Day">
+                    <MenuItem Header="Dawn" Click="Experimental_SetTimeOfDay_Click" Tag="Dawn"/>
+                    <MenuItem Header="Day" Click="Experimental_SetTimeOfDay_Click" Tag="Day"/>
+                    <MenuItem Header="Dusk" Click="Experimental_SetTimeOfDay_Click" Tag="Dusk"/>
+                    <MenuItem Header="Night" Click="Experimental_SetTimeOfDay_Click" Tag="Night"/>
+                </MenuItem>
+                <Separator/>
+                <MenuItem Header="🎲 Quick Dice Roll">
+                    <MenuItem Header="Roll d20" Click="Experimental_RollDice_Click" Tag="D20"/>
+                    <MenuItem Header="Roll d12" Click="Experimental_RollDice_Click" Tag="D12"/>
+                    <MenuItem Header="Roll d10" Click="Experimental_RollDice_Click" Tag="D10"/>
+                    <MenuItem Header="Roll d8" Click="Experimental_RollDice_Click" Tag="D8"/>
+                    <MenuItem Header="Roll d6" Click="Experimental_RollDice_Click" Tag="D6"/>
+                    <MenuItem Header="Roll d4" Click="Experimental_RollDice_Click" Tag="D4"/>
+                    <MenuItem Header="Roll d100" Click="Experimental_RollDice_Click" Tag="D100"/>
+                </MenuItem>
+                <Separator/>
+                <MenuItem Header="🎲 Generate Procedural Map..." Click="Experimental_GenerateMap_Click"/>
+                <MenuItem Header="📏 Add Distance Measurement..." Click="Experimental_AddMeasurement_Click"/>
+                <MenuItem Header="♿ Accessibility Settings..." Click="Experimental_AccessibilitySettings_Click"/>
+            </MenuItem>
         </Menu>
         
 
