@@ -386,12 +386,6 @@
                       Background="#333"
                       Cursor="SizeNS"/>
 
-                    <StackPanel Orientation="Horizontal" Margin="10,0" Grid.Row="1">
-                        <TextBlock Text="⏳ Pending Spawns:" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                        <TextBlock x:Name="TxtPendingSpawns" Text="0" FontWeight="Bold" 
-                                   VerticalAlignment="Center" Foreground="{StaticResource Brush_Warning}"/>
-                    </StackPanel>
-
                     <!-- Action Log at Bottom -->
                     <Border Grid.Row="2" Background="#1E1E1E" Padding="10,5">
                         <Grid>
