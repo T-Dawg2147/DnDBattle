@@ -285,5 +285,10 @@ namespace DnDBattle
 
         /// <summary>Enable procedural map generation (BSP dungeons, cellular automata caves).</summary>
         public static bool EnableProceduralMapGeneration { get; set; } = false;
+
+        // ── Undecided Features: Advanced Token Customization ──
+
+        /// <summary>Enable advanced token customization (borders, shapes, name plates, overlays).</summary>
+        public static bool EnableTokenCustomization { get; set; } = false;
     }
 }
