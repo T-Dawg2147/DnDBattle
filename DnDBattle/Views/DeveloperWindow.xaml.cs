@@ -92,6 +92,23 @@ namespace DnDBattle.Views
             ChkShowDMOnlyNotes.IsChecked = Options.ShowDMOnlyNotes;
             SliderMapNoteFontSize.Value = Options.MapNoteDefaultFontSize;
 
+            // Undecided Features
+            ChkEnableWeatherEffects.IsChecked = Options.EnableWeatherEffects;
+            ChkEnableDayNightCycle.IsChecked = Options.EnableDayNightCycle;
+            SliderWeatherMaxParticles.Value = Options.WeatherMaxParticles;
+            ChkEnableElevationSystem.IsChecked = Options.EnableElevationSystem;
+            ChkEnableAnimatedTiles.IsChecked = Options.EnableAnimatedTiles;
+            ChkEnableProceduralMapGen.IsChecked = Options.EnableProceduralMapGeneration;
+            ChkEnableTokenCustomization.IsChecked = Options.EnableTokenCustomization;
+            ChkEnableMeasurements.IsChecked = Options.EnableMeasurements;
+            ChkEnableDiceRoller3D.IsChecked = Options.EnableDiceRoller3D;
+            ChkEnableDiceStatistics.IsChecked = Options.EnableDiceStatistics;
+            ChkEnableHighContrast.IsChecked = Options.EnableHighContrast;
+            ChkEnableColorblindMode.IsChecked = Options.EnableColorblindMode;
+            ChkEnableDyslexiaFont.IsChecked = Options.EnableDyslexiaFont;
+            ChkEnableKeyboardNav.IsChecked = Options.EnableKeyboardNavigation;
+            SliderUIScale.Value = Options.AccessibilityUIScale;
+
             UpdateLabels();
         }
 
@@ -108,6 +125,8 @@ namespace DnDBattle.Views
             TxtMaxRecentMaps.Text = $"{SliderMaxRecentMaps.Value:F0}";
             TxtDefaultFeetPerSquare.Text = $"{SliderDefaultFeetPerSquare.Value:F0} ft";
             TxtMapNoteFontSize.Text = $"{SliderMapNoteFontSize.Value:F0} pt";
+            TxtWeatherMaxParticles.Text = $"{SliderWeatherMaxParticles.Value:F0}";
+            TxtUIScale.Text = $"{SliderUIScale.Value:F0}%";
         }
 
         private void OnFeatureToggled(object sender, RoutedEventArgs e)
@@ -161,6 +180,21 @@ namespace DnDBattle.Views
             Options.EnableCustomGridSizes = ChkEnableCustomGridSizes.IsChecked == true;
             Options.EnableMapNotes = ChkEnableMapNotes.IsChecked == true;
             Options.ShowDMOnlyNotes = ChkShowDMOnlyNotes.IsChecked == true;
+
+            // Undecided Features
+            Options.EnableWeatherEffects = ChkEnableWeatherEffects.IsChecked == true;
+            Options.EnableDayNightCycle = ChkEnableDayNightCycle.IsChecked == true;
+            Options.EnableElevationSystem = ChkEnableElevationSystem.IsChecked == true;
+            Options.EnableAnimatedTiles = ChkEnableAnimatedTiles.IsChecked == true;
+            Options.EnableProceduralMapGeneration = ChkEnableProceduralMapGen.IsChecked == true;
+            Options.EnableTokenCustomization = ChkEnableTokenCustomization.IsChecked == true;
+            Options.EnableMeasurements = ChkEnableMeasurements.IsChecked == true;
+            Options.EnableDiceRoller3D = ChkEnableDiceRoller3D.IsChecked == true;
+            Options.EnableDiceStatistics = ChkEnableDiceStatistics.IsChecked == true;
+            Options.EnableHighContrast = ChkEnableHighContrast.IsChecked == true;
+            Options.EnableColorblindMode = ChkEnableColorblindMode.IsChecked == true;
+            Options.EnableDyslexiaFont = ChkEnableDyslexiaFont.IsChecked == true;
+            Options.EnableKeyboardNavigation = ChkEnableKeyboardNav.IsChecked == true;
         }
 
         private void OnSliderChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -184,6 +218,10 @@ namespace DnDBattle.Views
             Options.MapLibraryMaxRecent = (int)SliderMaxRecentMaps.Value;
             Options.DefaultFeetPerSquare = (int)SliderDefaultFeetPerSquare.Value;
             Options.MapNoteDefaultFontSize = SliderMapNoteFontSize.Value;
+
+            // Undecided Features
+            Options.WeatherMaxParticles = (int)SliderWeatherMaxParticles.Value;
+            Options.AccessibilityUIScale = (int)SliderUIScale.Value;
 
             UpdateLabels();
         }
@@ -262,6 +300,23 @@ namespace DnDBattle.Views
             Options.EnableMapNotes = true;
             Options.ShowDMOnlyNotes = true;
             Options.MapNoteDefaultFontSize = 12;
+
+            // Undecided Features
+            Options.EnableWeatherEffects = false;
+            Options.EnableDayNightCycle = false;
+            Options.WeatherMaxParticles = 300;
+            Options.EnableElevationSystem = false;
+            Options.EnableAnimatedTiles = false;
+            Options.EnableProceduralMapGeneration = false;
+            Options.EnableTokenCustomization = false;
+            Options.EnableMeasurements = false;
+            Options.EnableDiceRoller3D = false;
+            Options.EnableDiceStatistics = false;
+            Options.EnableHighContrast = false;
+            Options.EnableColorblindMode = false;
+            Options.AccessibilityUIScale = 100;
+            Options.EnableDyslexiaFont = false;
+            Options.EnableKeyboardNavigation = false;
 
             _initializing = true;
             LoadCurrentValues();
