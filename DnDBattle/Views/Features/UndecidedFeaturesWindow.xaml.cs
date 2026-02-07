@@ -680,7 +680,7 @@ namespace DnDBattle.Views.Features
         private void CmbColorblindMode_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var modeText = (CmbColorblindMode.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "None";
-            if (Enum.TryParse<ColorblindMode>(modeText, out var mode))
+            if (_accessibilityService != null && Enum.TryParse<ColorblindMode>(modeText, out var mode))
             {
                 _accessibilityService.SetColorblindMode(mode);
             }

@@ -72,7 +72,7 @@
         <converter:HPBarWidthConverter x:Key="HPBarWidthConverter"/>
         <converter:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
         <converter:FavoriteColorConverter x:Key="FavoriteColorConverter"/>
-        <converter:StringToVisibilityConverter x:Key="StringToVisibilityConverter" xmlns:views="clr-namespace:DnDBattle.Views"/>
+        <converter:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
         <converter:TileImageConverter x:Key="TileImageConverter"/>
         <converter:MetadataIconConverter x:Key="MetadataIconConverter"/>
         <converter:MetadataTypeNameConverter x:Key="MetadataTypeNameConverter"/>

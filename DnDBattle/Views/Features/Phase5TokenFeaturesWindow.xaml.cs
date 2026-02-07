@@ -288,10 +288,10 @@ namespace DnDBattle.Views.Features
         private void OnSliderChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             // 5.1 Pathfinding max depth
-            Options.PathfindingMaxDepth = (int)SliderMaxDepth.Value;
+            Options.PathfindingMaxDepth = SliderMaxDepth != null ? (int)SliderMaxDepth.Value : Options.PathfindingMaxDepth;
 
             // 5.3 Path animation speed
-            Options.PathAnimationSecondsPerSquare = SliderAnimationSpeed.Value;
+            Options.PathAnimationSecondsPerSquare = SliderAnimationSpeed != null ? SliderAnimationSpeed.Value : Options.PathAnimationSecondsPerSquare;
 
             UpdateLabels();
         }

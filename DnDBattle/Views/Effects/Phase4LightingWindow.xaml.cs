@@ -219,7 +219,7 @@ namespace DnDBattle.Views.Effects
         // Handle slider value changes - sync to Options
         private void OnSliderChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            Options.DefaultBrightLightRadius = SliderBrightRadius.Value;
+            Options.DefaultBrightLightRadius = SliderBrightRadius != null ? SliderBrightRadius.Value : Options.DefaultBrightLightRadius;
             Options.DefaultDimLightRadius = SliderDimRadius != null ? SliderDimRadius.Value : Options.DefaultDimLightRadius;
             Options.ShadowCastRayCount = SliderRayCount != null ? (int)SliderRayCount.Value : Options.ShadowCastRayCount;
             Options.ShadowSoftnessPx = SliderShadowSoftness != null ? SliderShadowSoftness.Value : Options.ShadowSoftnessPx;

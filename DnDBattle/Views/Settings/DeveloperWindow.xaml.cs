@@ -232,31 +232,31 @@ namespace DnDBattle.Views.Settings
         {
             if (_initializing) return;
 
-            Options.DefaultBrightLightRadius = SliderBrightRadius.Value;
-            Options.DefaultDimLightRadius = SliderDimRadius.Value;
-            Options.ShadowCastRayCount = (int)SliderRayCount.Value;
-            Options.ShadowSoftnessPx = SliderShadowSoftness.Value;
-            Options.DefaultTokenVisionRange = (int)SliderVisionRange.Value;
+            Options.DefaultBrightLightRadius = SliderBrightRadius != null ? SliderBrightRadius.Value : Options.DefaultBrightLightRadius;
+            Options.DefaultDimLightRadius = SliderDimRadius != null ? SliderDimRadius.Value : Options.DefaultDimLightRadius;
+            Options.ShadowCastRayCount = SliderRayCount != null ? (int)SliderRayCount.Value : Options.ShadowCastRayCount;
+            Options.ShadowSoftnessPx = SliderShadowSoftness != null ? SliderShadowSoftness.Value : Options.ShadowSoftnessPx;
+            Options.DefaultTokenVisionRange = SliderVisionRange != null ? (int)SliderVisionRange.Value : Options.DefaultTokenVisionRange;
 
             // Phase 5
-            Options.PathfindingMaxDepth = (int)SliderPathDepth.Value;
-            Options.PathAnimationSecondsPerSquare = SliderAnimSpeed.Value;
+            Options.PathfindingMaxDepth = SliderPathDepth != null ? (int)SliderPathDepth.Value : Options.PathfindingMaxDepth;
+            Options.PathAnimationSecondsPerSquare = SliderAnimSpeed != null ? SliderAnimSpeed.Value : Options.PathAnimationSecondsPerSquare;
 
             // Phase 6
-            Options.MaxParticlesPerEffect = (int)SliderMaxParticles.Value;
+            Options.MaxParticlesPerEffect = SliderMaxParticles != null ? (int)SliderMaxParticles.Value : Options.MaxParticlesPerEffect;
 
             // Phase 8
-            Options.MapLibraryMaxRecent = (int)SliderMaxRecentMaps.Value;
-            Options.DefaultFeetPerSquare = (int)SliderDefaultFeetPerSquare.Value;
-            Options.MapNoteDefaultFontSize = SliderMapNoteFontSize.Value;
+            Options.MapLibraryMaxRecent = SliderMaxRecentMaps != null ? (int)SliderMaxRecentMaps.Value : Options.MapLibraryMaxRecent;
+            Options.DefaultFeetPerSquare = SliderDefaultFeetPerSquare != null ? (int)SliderDefaultFeetPerSquare.Value : Options.DefaultFeetPerSquare;
+            Options.MapNoteDefaultFontSize = SliderMapNoteFontSize != null ? SliderMapNoteFontSize.Value : Options.MapNoteDefaultFontSize;
 
             // Undecided Features
-            Options.WeatherMaxParticles = (int)SliderWeatherMaxParticles.Value;
-            Options.AccessibilityUIScale = (int)SliderUIScale.Value;
+            Options.WeatherMaxParticles = SliderWeatherMaxParticles != null ? (int)SliderWeatherMaxParticles.Value : Options.WeatherMaxParticles;
+            Options.AccessibilityUIScale = SliderUIScale != null ? (int)SliderUIScale.Value : Options.AccessibilityUIScale;
 
             // Phase 9
-            Options.NetworkDefaultPort = (int)SliderNetworkPort.Value;
-            Options.NetworkConnectionTimeoutSeconds = (int)SliderNetworkTimeout.Value;
+            Options.NetworkDefaultPort = SliderNetworkPort != null ? (int)SliderNetworkPort.Value : Options.NetworkDefaultPort;
+            Options.NetworkConnectionTimeoutSeconds = SliderNetworkTimeout != null ? (int)SliderNetworkTimeout.Value : Options.NetworkConnectionTimeoutSeconds;
 
             UpdateLabels();
         }

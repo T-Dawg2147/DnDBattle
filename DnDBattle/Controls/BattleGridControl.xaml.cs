@@ -376,6 +376,7 @@ namespace DnDBattle.Controls
                 _visual = visual;
                 AddVisualChild(visual);
                 AddLogicalChild(visual);
+                                
             }
             protected override int VisualChildrenCount => 1;
             protected override Visual GetVisualChild(int index) => _visual;

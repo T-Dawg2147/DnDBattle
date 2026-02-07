@@ -255,7 +255,7 @@ namespace DnDBattle.Views.Effects
         /// </summary>
         private void OnSliderChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            Options.MaxParticlesPerEffect = (int)SliderMaxParticles.Value;
+            Options.MaxParticlesPerEffect = SliderMaxParticles != null ? (int)SliderMaxParticles.Value : Options.MaxParticlesPerEffect;
             UpdateLabels();
         }
 
