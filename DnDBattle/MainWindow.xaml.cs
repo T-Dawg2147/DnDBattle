@@ -421,8 +421,8 @@ namespace DnDBattle
             // Pass key to battle grid
             BattleGrid.HandleKeyDown(e.Key);
 
-            double step = BattleGrid.GridCellSize * 3;
-            if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift)) step *= 2;
+            double step = BattleGrid.GridCellSize * 2;
+            if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift)) step *= 3;
 
             if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
             {
