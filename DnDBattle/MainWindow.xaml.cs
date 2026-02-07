@@ -47,6 +47,7 @@ using Action = DnDBattle.Models.Combat.Action;
 
 namespace DnDBattle
 {
+    //
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
