@@ -230,7 +230,7 @@ namespace DnDBattle.Tests.Services.Grid
         }
 
         [Fact]
-        public void CalculateAreaSqFeet_Polygon_UsesShoelacd()
+        public void CalculateAreaSqFeet_Polygon_UsesShoelace()
         {
             var service = CreateService();
             var m = new Measurement
