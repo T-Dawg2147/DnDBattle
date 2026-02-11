@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="DnDBattle/DnDBattle.csproj" />
+  <Project Path="DnDBattle.Tests/DnDBattle.Tests.csproj" />
 </Solution>
