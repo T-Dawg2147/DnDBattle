@@ -98,7 +98,7 @@ namespace DnDBattle.Views.Combat
                    name.Contains("fist") || name.Contains("tail") || name.Contains("gore");
         }
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - COMBAT_AUTOMATION
         private void UpdateDisplay()
         {
             AttackButtonsContainer.Children.Clear();

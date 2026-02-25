@@ -552,7 +552,7 @@ namespace DnDBattle.Views.Features
         /// <summary>
         /// Refreshes the measurements ListBox with current measurements and their distances.
         /// </summary>
-        // VISUAL REFRESH
+        // VISUAL REFRESH - UI_LIST
         private void RefreshMeasurementsList()
         {
             LstMeasurements.Items.Clear();

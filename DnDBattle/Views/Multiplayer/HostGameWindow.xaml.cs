@@ -155,7 +155,7 @@ namespace DnDBattle.Views.Multiplayer
             });
         }
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - STATUS_BAR
         private void AppendLog(string message)
         {
             ServerLogBox.AppendText($"[{DateTime.Now:HH:mm:ss}] {message}\n");
