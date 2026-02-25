@@ -632,6 +632,21 @@ namespace DnDBattle.Controls
                     RebuildTokenVisuals();
                     return;
                 }
+
+                // Elevation or Facing changes require full rebuild (for badges/arrows)
+                if (e.PropertyName == nameof(Token.Elevation) ||
+                    e.PropertyName == nameof(Token.FacingAngle))
+                {
+                    RebuildTokenVisuals();
+                    return;
+                }
+
+                // Aura changes - redraw auras only
+                if (e.PropertyName == nameof(Token.Auras))
+                {
+                    RedrawAuras();
+                    return;
+                }
             }
         }
 

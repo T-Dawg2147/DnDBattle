@@ -78,6 +78,12 @@ namespace DnDBattle.Views.Combat
 
         public void SetToken(Token token)
         {
+            // Unsubscribe from previous token's PropertyChanged
+            if (_token != null)
+            {
+                _token.PropertyChanged -= SelectedToken_PropertyChanged;
+            }
+
             _token = token;
 
             if (token == null)
@@ -87,10 +93,43 @@ namespace DnDBattle.Views.Combat
                 return;
             }
 
+            // Subscribe to new token's PropertyChanged for auto-updates
+            _token.PropertyChanged += SelectedToken_PropertyChanged;
+
             NoSelectionMessage.Visibility = Visibility.Collapsed;
             TokenDetailsScroller.Visibility = Visibility.Visible;
 
             UpdateDisplay();
+        }
+
+        private void SelectedToken_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (_token == null) return;
+
+            switch (e.PropertyName)
+            {
+                case nameof(Token.HP):
+                case nameof(Token.MaxHP):
+                case nameof(Token.TempHP):
+                    UpdateHPColor();
+                    UpdateHPBar();
+                    UpdateDeathSavesDisplay();
+                    break;
+                case nameof(Token.Conditions):
+                    UpdateConditionsDisplay();
+                    break;
+                case nameof(Token.IsConcentrating):
+                case nameof(Token.ConcentrationSpell):
+                    UpdateConcentrationDisplay();
+                    break;
+                case nameof(Token.DeathSaveSuccesses):
+                case nameof(Token.DeathSaveFailures):
+                    UpdateDeathSavesDisplay();
+                    break;
+                case nameof(Token.LegendaryActionsRemaining):
+                    UpdateLegendaryActionsDisplay();
+                    break;
+            }
         }
 
         // VISUAL REFRESH - SELECTED_TOKEN_PANEL

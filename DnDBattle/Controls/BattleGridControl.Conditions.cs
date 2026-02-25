@@ -183,13 +183,13 @@ namespace DnDBattle.Controls
 
         /// <summary>
         /// Refreshes condition badges and visual effects for a specific token
-        /// by triggering a full token visual rebuild.
+        /// using a lightweight single-token update instead of a full rebuild.
         /// </summary>
         // VISUAL REFRESH - CONDITIONS
         public void RefreshConditionVisuals(Token token)
         {
             if (token == null) return;
-            RebuildTokenVisuals();
+            UpdateSingleTokenVisual(token);
         }
 
         #endregion
