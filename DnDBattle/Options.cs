@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OptionsLib.Core.Attributes;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -17,6 +18,7 @@ namespace DnDBattle
         /// <summary>
         /// Default images path, used for both Images and Icons.
         /// </summary>
+        [Option]
         public static string DefaultTokenImagePath { get; set; } = Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Entites", "Tokens");
 
         /// <summary>
