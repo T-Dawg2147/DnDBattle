@@ -27,6 +27,7 @@ namespace DnDBattle.Controls
     {
         #region Token Visual Rebuilding
 
+        // VISUAL REFRESH
         public void RebuildTokenVisuals()
         {
             System.Diagnostics.Debug.WriteLine($"=== RebuildTokenVisuals called ===");
@@ -568,6 +569,7 @@ namespace DnDBattle.Controls
 
         #region Token Layout
 
+        // VISUAL REFRESH
         private void LayoutTokens()
         {
             var tokenVisuals = RenderCanvas.Children.OfType<FrameworkElement>().Where(c => c.Tag is Token);
@@ -585,6 +587,7 @@ namespace DnDBattle.Controls
 
         #region Token Property Change Handling
 
+        // VISUAL REFRESH
         private void Token_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             if (sender is Token token)
@@ -632,6 +635,7 @@ namespace DnDBattle.Controls
             }
         }
 
+        // VISUAL REFRESH
         private void UpdateSingleTokenVisual(Token token)
         {
             // Find the token's container
@@ -689,6 +693,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Updates just the HP bar for a specific token without rebuilding all visuals
         /// </summary>
+        // VISUAL REFRESH
         private void UpdateTokenHPBar(Token token)
         {
             if (token == null) return;
@@ -744,6 +749,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Creates a small HP bar under the token
         /// </summary>
+        // VISUAL REFRESH
         private FrameworkElement CreateTokenHPBar(Token token)
         {
             double hpPercent = token.MaxHP > 0 ? (double)Math.Max(0, token.HP) / token.MaxHP : 0;

@@ -75,6 +75,7 @@ namespace DnDBattle.Views.TileMap
             if (MetadataList != null) MetadataList.Items.Clear();
         }
 
+        // VISUAL REFRESH
         private void RefreshMetadataList()
         {
             if (_currentTile == null || MetadataList == null) return;

@@ -100,6 +100,7 @@ namespace DnDBattle.Views.Features
         }
 
         // Update the selected token name label and refresh aura list
+        // VISUAL REFRESH
         private void RefreshSelectedTokenDisplay()
         {
             var token = _viewModel?.SelectedToken;

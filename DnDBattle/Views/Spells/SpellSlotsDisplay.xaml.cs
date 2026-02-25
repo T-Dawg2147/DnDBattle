@@ -44,6 +44,7 @@ namespace DnDBattle.Views.Spells
             UpdateDisplay();
         }
 
+        // VISUAL REFRESH
         public void UpdateDisplay()
         {
             SlotsContainer.Children.Clear();

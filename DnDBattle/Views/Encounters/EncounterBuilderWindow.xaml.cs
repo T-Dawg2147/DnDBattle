@@ -194,6 +194,7 @@ namespace DnDBattle.Views.Encounters
             }
         }
 
+        // VISUAL REFRESH
         private void RefreshEncounterList(EncounterCreature ec)
         {
             var index = _encounterCreatures.IndexOf(ec);
@@ -209,6 +210,7 @@ namespace DnDBattle.Views.Encounters
 
         #region Calculate Encounter
 
+        // VISUAL REFRESH
         private void RecalculateEncounter()
         {
             if (_encounterService == null || TxtTotalXP == null) return;

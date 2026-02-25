@@ -93,6 +93,7 @@ namespace DnDBattle.Views.Combat
             UpdateDisplay();
         }
 
+        // VISUAL REFRESH
         public void UpdateDisplay()
         {
             if (_token == null) return;
@@ -160,6 +161,7 @@ namespace DnDBattle.Views.Combat
 
         #region HP Management
 
+        // VISUAL REFRESH
         private void UpdateHPColor()
         {
             double percent = _token.MaxHP > 0 ? (double)_token.HP / _token.MaxHP : 0;
@@ -172,6 +174,7 @@ namespace DnDBattle.Views.Combat
                 TxtCurrentHP.Foreground = new SolidColorBrush(Color.FromRgb(244, 67, 54));
         }
 
+        // VISUAL REFRESH
         private void UpdateHPBar()
         {
             double percent = _token.MaxHP > 0 ? (double)Math.Max(0, _token.HP) / _token.MaxHP : 0;
@@ -230,6 +233,7 @@ namespace DnDBattle.Views.Combat
 
         #region Ability Scores
 
+        // VISUAL REFRESH
         private void UpdateAbilityScores()
         {
             TxtStr.Text = _token.Str.ToString();
@@ -260,6 +264,7 @@ namespace DnDBattle.Views.Combat
 
         #region Conditions Display
 
+        // VISUAL REFRESH
         private void UpdateConditionsDisplay()
         {
             ConditionIconsPanel.Children.Clear();
@@ -306,6 +311,7 @@ namespace DnDBattle.Views.Combat
 
         #region Concentration Tracking
 
+        // VISUAL REFRESH
         private void UpdateConcentrationDisplay()
         {
             if (_token == null || !_token.IsConcentrating)
@@ -351,6 +357,7 @@ namespace DnDBattle.Views.Combat
 
         #region Death Saves Tracking
 
+        // VISUAL REFRESH
         private void UpdateDeathSavesDisplay()
         {
             if (_token == null || _token.HP > 0)
@@ -426,6 +433,7 @@ namespace DnDBattle.Views.Combat
 
         #region Legendary Actions
 
+        // VISUAL REFRESH
         private void UpdateLegendaryActionsDisplay()
         {
             LegendaryPointsContainer.Children.Clear();
@@ -510,6 +518,7 @@ namespace DnDBattle.Views.Combat
 
         #region Spell Slots
 
+        // VISUAL REFRESH
         private void UpdateSpellSlotsDisplay()
         {
             SpellSlotsContainer.Children.Clear();
@@ -611,6 +620,7 @@ namespace DnDBattle.Views.Combat
 
         #region Notes
 
+        // VISUAL REFRESH
         private void UpdateNotesDisplay()
         {
             NotesContainer.Children.Clear();

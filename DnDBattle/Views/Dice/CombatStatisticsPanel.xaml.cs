@@ -45,6 +45,7 @@ namespace DnDBattle.Views.Dice
             RefreshDisplay();
         }
 
+        // VISUAL REFRESH
         public void RefreshDisplay()
         {
             if (_statsService == null) return;

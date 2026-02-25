@@ -28,6 +28,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Creates condition badge icons that appear around the token
         /// </summary>
+        // VISUAL REFRESH
         private FrameworkElement CreateConditionBadges(Token token)
         {
             if (token.Conditions == Models.Effects.Condition.None)
@@ -140,6 +141,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Applies visual effects to the token image based on conditions
         /// </summary>
+        // VISUAL REFRESH
         private void ApplyConditionVisualEffects(Image img, Token token)
         {
             // Invisible - make semi-transparent
@@ -173,6 +175,21 @@ namespace DnDBattle.Controls
             {
                 img.Opacity = 0.3;
             }
+        }
+
+        #endregion
+
+        #region Condition Visual Refresh
+
+        /// <summary>
+        /// Refreshes condition badges and visual effects for a specific token
+        /// by triggering a full token visual rebuild.
+        /// </summary>
+        // VISUAL REFRESH
+        public void RefreshConditionVisuals(Token token)
+        {
+            if (token == null) return;
+            RebuildTokenVisuals();
         }
 
         #endregion

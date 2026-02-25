@@ -105,6 +105,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Loads an encounter from a DTO
         /// </summary>
+        // VISUAL REFRESH
         public void LoadEncounterDto(EncounterDto dto)
         {
             // Map image

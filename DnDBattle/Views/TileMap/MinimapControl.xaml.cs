@@ -60,12 +60,14 @@ namespace DnDBattle.Views.TileMap
             InitializeComponent();
         }
 
+        // VISUAL REFRESH
         public void SetTileMap(Models.Tiles.TileMap tileMap)
         {
             _tileMap = tileMap;
             RenderMinimap();
         }
 
+        // VISUAL REFRESH
         public void UpdateViewport(double viewportX, double viewportY, double viewportWidth, double viewportHeight)
         {
             if (_tileMap == null) return;
@@ -80,6 +82,7 @@ namespace DnDBattle.Views.TileMap
             ViewportRect.Height = viewportHeight * scaleY;
         }
 
+        // VISUAL REFRESH
         private void RenderMinimap()
         {
             if (_tileMap == null) return;

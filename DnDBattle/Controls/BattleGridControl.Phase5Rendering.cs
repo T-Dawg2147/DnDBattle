@@ -45,6 +45,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Call this once during initialization to add Phase 5 visual overlays.
         /// </summary>
+        // VISUAL REFRESH
         public void InitializePhase5Visuals()
         {
             AddVisualOverlay(_auraVisual, 55);        // Below movement overlay (60)
@@ -56,6 +57,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Redraws all token auras on the map.
         /// </summary>
+        // VISUAL REFRESH
         public void RedrawAuras()
         {
             using var dc = _auraVisual.RenderOpen();
@@ -72,6 +74,7 @@ namespace DnDBattle.Controls
             }
         }
 
+        // VISUAL REFRESH
         private void RenderAura(DrawingContext dc, Token token, TokenAura aura)
         {
             var center = new Point(
@@ -118,6 +121,7 @@ namespace DnDBattle.Controls
         /// Draws an elevation badge on a token container during RebuildTokenVisuals.
         /// Call this when building token visuals if EnableTokenElevation is true.
         /// </summary>
+        // VISUAL REFRESH
         public FrameworkElement? CreateElevationBadge(Token token)
         {
             if (!Options.EnableTokenElevation || token.Elevation == 0) return null;
@@ -156,6 +160,7 @@ namespace DnDBattle.Controls
         /// Creates a facing direction arrow overlay for a token.
         /// Call this during RebuildTokenVisuals if EnableTokenFacing is true.
         /// </summary>
+        // VISUAL REFRESH
         public FrameworkElement? CreateFacingArrow(Token token)
         {
             if (!Options.EnableTokenFacing) return null;
@@ -222,6 +227,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Updates the movement cost preview at the hovered cell.
         /// </summary>
+        // VISUAL REFRESH
         public void UpdateMovementCostPreview(int cellX, int cellY)
         {
             if (!Options.EnableMovementCostPreview)
@@ -235,12 +241,14 @@ namespace DnDBattle.Controls
             RedrawMovementCostPreview();
         }
 
+        // VISUAL REFRESH
         public void ClearMovementCostPreview()
         {
             _hoverCell = null;
             using var dc = _movementCostVisual.RenderOpen();
         }
 
+        // VISUAL REFRESH
         private void RedrawMovementCostPreview()
         {
             using var dc = _movementCostVisual.RenderOpen();
@@ -326,6 +334,7 @@ namespace DnDBattle.Controls
         /// Draws AOO warning indicators around enemies that would get AOO during path preview.
         /// This is called during RedrawPathVisual when AOO detection is enabled.
         /// </summary>
+        // VISUAL REFRESH
         public void DrawAOOWarnings(DrawingContext dc, List<(int x, int y)> aooEnemyPositions)
         {
             if (!Options.EnableAOODetection || aooEnemyPositions == null) return;
