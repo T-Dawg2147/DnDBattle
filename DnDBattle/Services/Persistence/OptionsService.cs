@@ -20,6 +20,7 @@ namespace DnDBattle.Services.Persistence
 {
     public static class OptionsService
     {
+
         private static readonly string AppFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "DnDBattle");
         private static readonly string ConfigFile = Path.Combine(AppFolder, "config.json");
 
