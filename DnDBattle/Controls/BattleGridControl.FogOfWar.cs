@@ -78,7 +78,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Redraws the fog overlay
         /// </summary>
-        // VISUAL REFRESH
+        // VISUAL REFRESH - FOG_OF_WAR
         public void RedrawFog()
         {
             if (_fogService == null) return;
@@ -98,7 +98,7 @@ namespace DnDBattle.Controls
 
         #region Fog Layer Rendering
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - FOG_OF_WAR
         private void RenderFogLayer()
         {
             // Find or create the fog canvas
@@ -152,7 +152,7 @@ namespace DnDBattle.Controls
             }
         }
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - FOG_OF_WAR
         private void RenderFogOfWar()
         {
             using (var dc = _fogVisual.RenderOpen())
@@ -196,7 +196,7 @@ namespace DnDBattle.Controls
             }
         }
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - FOG_OF_WAR
         private void UpdateFogVisibility()
         {
             if (!_fogOfWar.IsEnabled || _loadedTileMap == null) return;
@@ -237,7 +237,7 @@ namespace DnDBattle.Controls
             AddToActionLog("Fog", enabled ? "🌫️ Fog of War enabled" : "☀️ Fog of War disabled");
         }
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - FOG_OF_WAR
         public void RevealAllFog()
         {
             if (_loadedTileMap == null) return;
@@ -256,7 +256,7 @@ namespace DnDBattle.Controls
         }
 
         // Add method to reset fog
-        // VISUAL REFRESH
+        // VISUAL REFRESH - FOG_OF_WAR
         public void ResetFog()
         {
             _fogOfWar.Reset();
@@ -292,7 +292,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Sets fog enabled state
         /// </summary>
-        // VISUAL REFRESH
+        // VISUAL REFRESH - FOG_OF_WAR
         public void SetFogEnabled(bool enabled)
         {
             _fogService.IsEnabled = enabled;
@@ -302,7 +302,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Sets player view mode
         /// </summary>
-        // VISUAL REFRESH
+        // VISUAL REFRESH - FOG_OF_WAR
         public void SetPlayerView(bool isPlayerView)
         {
             _fogService.ShowPlayerView = isPlayerView;
@@ -319,7 +319,7 @@ namespace DnDBattle.Controls
             }
         }
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - FOG_OF_WAR
         private void UpdateTokenVisibilityForPlayerView()
         {
             // Hide tokens that are in fog
@@ -333,7 +333,7 @@ namespace DnDBattle.Controls
             }
         }
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - FOG_OF_WAR
         private void ShowAllTokens()
         {
             foreach (var child in RenderCanvas.Children.OfType<FrameworkElement>())

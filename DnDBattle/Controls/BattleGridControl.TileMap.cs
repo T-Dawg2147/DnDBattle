@@ -40,7 +40,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Load a tile map as the battle grid background
         /// </summary>
-        // VISUAL REFRESH
+        // VISUAL REFRESH - TILE_MAP
         public void LoadTileMap(TileMap tileMap)
         {
             try
@@ -159,7 +159,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Render the tile map to the background visual layer
         /// </summary>
-        // VISUAL REFRESH
+        // VISUAL REFRESH - TILE_MAP
         private void RenderTileMapToVisual()
         {
             try
@@ -243,7 +243,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Draw a single tile to the drawing context
         /// </summary>
-        // VISUAL REFRESH
+        // VISUAL REFRESH - TILE_MAP
         private void DrawTileToVisual(DrawingContext dc, Tile tile)
         {
             try

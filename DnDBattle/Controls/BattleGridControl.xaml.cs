@@ -432,7 +432,7 @@ namespace DnDBattle.Controls
 
         #region Grid Visual Updates
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - GRID
         private void UpdateGridVisual()
         {
             var screenRect = new Rect(0, 0, ActualWidth, ActualHeight);
@@ -454,7 +454,7 @@ namespace DnDBattle.Controls
 
         #region Options Getters
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - GRID
         public void SetGridMaxSize(int maxWidth, int maxHeight)
         {
             _gridWidth = Math.Max(1, maxWidth);
@@ -464,7 +464,7 @@ namespace DnDBattle.Controls
             RedrawLighting();
         }
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - SHADOW
         public void UpdateShadowSoftness()
         {
             var wrapper = RenderCanvas.Children.OfType<FrameworkElement>().FirstOrDefault(w => Panel.GetZIndex(w) == 50);
@@ -580,7 +580,7 @@ namespace DnDBattle.Controls
 
         #region Visual Refresh
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - ALL
         private void RefreshAllVisuals()
         {
             UpdateGridVisual();
@@ -592,7 +592,7 @@ namespace DnDBattle.Controls
             DrawCoordinateRulers();
         }
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - GRID
         private void UpdateCurrentCellDisplay(Point gridPoint)
         {
             int cellX = (int)Math.Floor(gridPoint.X);
@@ -613,7 +613,7 @@ namespace DnDBattle.Controls
 
         #region Pan and Zoom
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - PAN_ZOOM
         public void PanBy(double dx, double dy)
         {
             _pan.X = dx;

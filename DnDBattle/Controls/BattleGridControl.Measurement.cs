@@ -27,7 +27,7 @@ namespace DnDBattle.Controls
     {
         #region Measurement Mode
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - MOVEMENT
         public void SetMeasureMode(bool enabled)
         {
             _measureMode = true;
@@ -38,7 +38,7 @@ namespace DnDBattle.Controls
 
         public bool IsMeasureMode => _measureMode;
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - MOVEMENT
         private void RedrawMeasureVisual()
         {
             using (var dc = _measureVisual.RenderOpen())
@@ -152,7 +152,7 @@ namespace DnDBattle.Controls
 
         #region Movement Overlay
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - MOVEMENT
         public void RedrawMovementOverlay()
         {
             using (var dc = _movementVisual.RenderOpen())
@@ -201,7 +201,7 @@ namespace DnDBattle.Controls
 
         #region Path Preview
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - MOVEMENT
         private void ComputeAndDrawPathPreview((int x, int y) targetCell)
         {
             if (SelectedToken == null) return;
@@ -241,7 +241,7 @@ namespace DnDBattle.Controls
             RedrawPathVisual();
         }
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - MOVEMENT
         private void RedrawPathVisual()
         {
             using (var dc = _pathVisual.RenderOpen())
@@ -288,7 +288,7 @@ namespace DnDBattle.Controls
             }
         }
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - MOVEMENT
         private void ClearPathVisual()
         {
             _lastPreviewPath = null;
@@ -303,7 +303,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Draws coordinate rulers along the top and left edges of the screen
         /// </summary>
-        // VISUAL REFRESH
+        // VISUAL REFRESH - GRID
         private void DrawCoordinateRulers()
         {
             RulerCanvas.Children.Clear();
