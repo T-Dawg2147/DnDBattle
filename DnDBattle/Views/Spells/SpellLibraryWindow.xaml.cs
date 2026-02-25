@@ -69,6 +69,7 @@ namespace DnDBattle.Views.Spells
             TxtSearch.Focus();
         }
 
+        // VISUAL REFRESH
         private void RefreshList()
         {
             var filtered = _allSpells.AsEnumerable();

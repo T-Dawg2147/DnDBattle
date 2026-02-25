@@ -139,6 +139,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Render the entire tile map
         /// </summary>
+        // VISUAL REFRESH
         private void RenderMap()
         {
             if (TileMap == null) return;
@@ -175,6 +176,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Draw grid lines
         /// </summary>
+        // VISUAL REFRESH
         private void DrawGrid()
         {
             if (TileMap == null) return;
@@ -216,6 +218,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Draw a single tile instance
         /// </summary>
+        // VISUAL REFRESH
         private void DrawTile(Tile tile)
         {
             var tileDef = TileLibraryService.Instance.GetTileById(tile.TileDefinitionId);
@@ -265,6 +268,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Draw DM-only metadata overlays on tiles
         /// </summary>
+        // VISUAL REFRESH
         private void DrawMetadataOverlays()
         {
             if (TileMap == null) return;
@@ -278,6 +282,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Draw a visual indicator for a tile with metadata
         /// </summary>
+        // VISUAL REFRESH
         private void DrawMetadataIndicator(Tile tile)
         {
             double cellSize = TileMap.CellSize;
@@ -530,6 +535,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Draw spawn point radius preview
         /// </summary>
+        // VISUAL REFRESH
         private void DrawSpawnPreview(Tile tile, SpawnMetadata spawn)
         {
             if (spawn.SpawnRadius == 0) return;
@@ -577,6 +583,7 @@ namespace DnDBattle.Controls
 
         #region For Of War
 
+        // VISUAL REFRESH
         private void RenderFogOfWar()
         {
             if (TileMap == null || !_fogOfWar.IsEnabled) return;
@@ -627,6 +634,7 @@ namespace DnDBattle.Controls
         }
 
         // Add method to toggle fog of war
+        // VISUAL REFRESH
         public void ToggleFogOfWar(bool enabled)
         {
             _fogOfWar.IsEnabled = enabled;
@@ -634,6 +642,7 @@ namespace DnDBattle.Controls
         }
 
         // Add method to reveal area (when players move)
+        // VISUAL REFRESH
         public void RevealFogAroundToken(Token token, int visionRange)
         {
             _fogOfWar.RevealArea(token.GridX, token.GridY, visionRange);
@@ -755,6 +764,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Place a tile at grid coordinates
         /// </summary>
+        // VISUAL REFRESH
         private void PlaceTileAt(int gridX, int gridY)
         {
             if (SelectedTileDefinition == null) return;
@@ -805,6 +815,7 @@ namespace DnDBattle.Controls
         }
 
         // Update RemoveTileAt method to record undo:
+        // VISUAL REFRESH
         private void RemoveTileAt(int gridX, int gridY)
         {
             var tilesToRemove = TileMap.GetTilesAt(gridX, gridY).ToList();

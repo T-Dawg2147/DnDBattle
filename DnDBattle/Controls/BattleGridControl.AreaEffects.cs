@@ -87,8 +87,18 @@ namespace DnDBattle.Controls
         }
 
         /// <summary>
+        /// Public entry point to refresh all area effect visuals on the map.
+        /// </summary>
+        // VISUAL REFRESH
+        public void RefreshAreaEffectsDisplay()
+        {
+            RedrawAreaEffects();
+        }
+
+        /// <summary>
         /// Cancels the current area effect placement
         /// </summary>
+        // VISUAL REFRESH
         public void CancelAreaEffectPlacement()
         {
             _isPlacingAreaEffect = false;
@@ -101,6 +111,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Updates the area effect size during placement
         /// </summary>
+        // VISUAL REFRESH
         public void UpdateAreaEffectSize(int sizeInFeet)
         {
             _currentAoeSize = sizeInFeet;
@@ -114,6 +125,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Updates the area effect color during placement
         /// </summary>
+        // VISUAL REFRESH
         public void UpdateAreaEffectColor(Color color)
         {
             _currentAoeColor = color;
@@ -131,6 +143,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Redraws all area effects
         /// </summary>
+        // VISUAL REFRESH
         private void RedrawAreaEffects()
         {
             using var dc = _areaEffectVisual.RenderOpen();
@@ -281,6 +294,7 @@ namespace DnDBattle.Controls
             return Math.Atan2(dy, dx) * 180.0 / Math.PI;
         }
 
+        // VISUAL REFRESH
         private void PlaceAreaEffect()
         {
             if (_previewEffect == null) return;

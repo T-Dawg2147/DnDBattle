@@ -111,6 +111,7 @@ namespace DnDBattle.Views.Dice
             });
         }
 
+        // VISUAL REFRESH
         private void UpdateDisplay(TimeSpan remaining)
         {
             // Update time text
@@ -148,6 +149,7 @@ namespace DnDBattle.Views.Dice
             }
         }
 
+        // VISUAL REFRESH
         private void OnTimerExpired()
         {
             Dispatcher.Invoke(() =>

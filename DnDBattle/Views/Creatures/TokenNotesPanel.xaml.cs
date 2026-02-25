@@ -43,6 +43,7 @@ namespace DnDBattle.Views.Creatures
             UpdateDisplay();
         }
 
+        // VISUAL REFRESH
         public void UpdateDisplay()
         {
             NotesContainer.Children.Clear();

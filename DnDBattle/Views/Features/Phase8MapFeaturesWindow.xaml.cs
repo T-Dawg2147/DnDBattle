@@ -178,6 +178,7 @@ namespace DnDBattle.Views.Features
             Log($"Loaded map '{selected.Name}'.");
         }
 
+        // VISUAL REFRESH
         private void RefreshRecentMaps()
         {
             LstRecentMaps.ItemsSource = null;
@@ -253,6 +254,7 @@ namespace DnDBattle.Views.Features
             }
         }
 
+        // VISUAL REFRESH
         private void RefreshBackgroundLayersFromGrid()
         {
             var map = _battleGrid?.TileMap;
@@ -404,6 +406,7 @@ namespace DnDBattle.Views.Features
             }
         }
 
+        // VISUAL REFRESH
         private void RefreshNotesListFromGrid()
         {
             var map = _battleGrid?.TileMap;

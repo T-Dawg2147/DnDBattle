@@ -43,6 +43,7 @@ namespace DnDBattle.Views.Combat
             UpdateDisplay();
         }
 
+        // VISUAL REFRESH
         public void UpdateDisplay()
         {
             ActionPointsContainer.Children.Clear();

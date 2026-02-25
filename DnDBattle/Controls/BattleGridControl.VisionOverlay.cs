@@ -50,6 +50,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Toggles the vision overlay display on the map.
         /// </summary>
+        // VISUAL REFRESH
         public void ToggleVisionOverlay(bool show)
         {
             _showVisionOverlay = show;
@@ -59,6 +60,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Redraws the vision overlay for the selected token or all player tokens.
         /// </summary>
+        // VISUAL REFRESH
         public void RedrawVisionOverlay()
         {
             if (_visionService == null) InitializeVisionService();
@@ -117,6 +119,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Renders a subtle grayscale tint over cells seen only through darkvision.
         /// </summary>
+        // VISUAL REFRESH
         private void RenderDarkvisionHint(DrawingContext dc, Token token, HashSet<(int x, int y)> allVisible)
         {
             var vision = token.Vision;
@@ -149,6 +152,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Updates fog of war automatically based on player token vision (Feature 4.5).
         /// </summary>
+        // VISUAL REFRESH
         public void UpdateFogFromTokenVision()
         {
             if (!Options.EnableAutoFogReveal || _fogService == null || !_fogService.IsEnabled)

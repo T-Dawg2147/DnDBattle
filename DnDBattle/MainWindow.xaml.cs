@@ -398,6 +398,7 @@ namespace DnDBattle
             UpdateStatus();
         }
 
+        // VISUAL REFRESH
         private void UpdateStatus()
         {
             Status_Undo.Text = $"Undo: {(UndoManager.CanUndo ? "Yes" : "No")} Redo: {(UndoManager.CanRedo ? "Yes" : "No")}";
@@ -1792,6 +1793,7 @@ namespace DnDBattle
             host.Show();
         }
 
+        // VISUAL REFRESH
         public void UpdatePendingSpawnsDisplay(int count)
         {
             TxtPendingSpawns.Text = count.ToString();
