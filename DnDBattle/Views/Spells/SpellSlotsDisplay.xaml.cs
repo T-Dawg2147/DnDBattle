@@ -44,7 +44,7 @@ namespace DnDBattle.Views.Spells
             UpdateDisplay();
         }
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - SELECTED_TOKEN_PANEL
         public void UpdateDisplay()
         {
             SlotsContainer.Children.Clear();

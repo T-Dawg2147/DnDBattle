@@ -38,7 +38,7 @@ namespace DnDBattle.Controls
 
         #region Light Management
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - LIGHTING
         public void AddLight(LightSource light)
         {
             _lights.Add(light);
@@ -50,7 +50,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Updates an existing light's properties and redraws.
         /// </summary>
-        // VISUAL REFRESH
+        // VISUAL REFRESH - LIGHTING
         public void UpdateLight(LightSource light)
         {
             InvalidateShadowCache();
@@ -66,7 +66,7 @@ namespace DnDBattle.Controls
 
         #region Light Rendering
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - LIGHTING
         private void RedrawLighting()
         {
             using (var dc = _lightingVisual.RenderOpen())
@@ -104,7 +104,7 @@ namespace DnDBattle.Controls
             }
         }
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - LIGHTING
         private void RenderPointLight(DrawingContext dc, LightSource light, Point centerPixel, double radiusPx)
         {
             List<Point> litPolygonGrid = null;
@@ -166,7 +166,7 @@ namespace DnDBattle.Controls
             }
         }
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - LIGHTING
         private void RenderDirectionalLight(DrawingContext dc, LightSource light, Point centerPixel, double radiusPx)
         {
             // Build a cone geometry
@@ -238,7 +238,7 @@ namespace DnDBattle.Controls
 
         #region Undo / Redo API for obstacles
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - LIGHTING
         public void RemoveLightPublic(LightSource light)
         {
             if (light == null) return;

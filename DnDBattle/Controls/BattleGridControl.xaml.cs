@@ -432,7 +432,7 @@ namespace DnDBattle.Controls
 
         #region Grid Visual Updates
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - GRID
         private void UpdateGridVisual()
         {
             var screenRect = new Rect(0, 0, ActualWidth, ActualHeight);
@@ -454,7 +454,7 @@ namespace DnDBattle.Controls
 
         #region Options Getters
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - GRID
         public void SetGridMaxSize(int maxWidth, int maxHeight)
         {
             _gridWidth = Math.Max(1, maxWidth);
@@ -464,7 +464,7 @@ namespace DnDBattle.Controls
             RedrawLighting();
         }
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - SHADOW
         public void UpdateShadowSoftness()
         {
             var wrapper = RenderCanvas.Children.OfType<FrameworkElement>().FirstOrDefault(w => Panel.GetZIndex(w) == 50);
@@ -578,21 +578,59 @@ namespace DnDBattle.Controls
 
         #endregion
 
-        #region Visual Refresh
+        #region Visual Refresh Orchestration
 
-        // VISUAL REFRESH
-        private void RefreshAllVisuals()
+        /// <summary>
+        /// Refreshes ALL visuals on the battle grid. Use sparingly — this is expensive.
+        /// Calls every category-level refresh method.
+        /// </summary>
+        // VISUAL REFRESH - ALL
+        public void RefreshAllVisuals()
         {
             UpdateGridVisual();
-            LayoutTokens();
-            RedrawLighting();
+            DrawCoordinateRulers();
+            RebuildTokenVisuals();    // This internally calls LayoutTokens(), RedrawLighting(), RedrawAuras()
+            RedrawWalls();
             RedrawMovementOverlay();
             RedrawPathVisual();
-            RedrawWalls();
-            DrawCoordinateRulers();
+            RedrawMovementCostPreview();
+            RedrawFog();
+            RedrawVisionOverlay();
+            RefreshAreaEffectsDisplay();
         }
 
-        // VISUAL REFRESH
+        /// <summary>
+        /// Refreshes only token-related visuals (tokens, HP bars, conditions, auras).
+        /// Lighter than RefreshAllVisuals but still rebuilds all tokens.
+        /// </summary>
+        // VISUAL REFRESH - TOKEN_RENDERING
+        public void RefreshTokenVisuals()
+        {
+            RebuildTokenVisuals(); // This already calls LayoutTokens(), UpdateGridVisual(), RedrawLighting(), RedrawAuras()
+        }
+
+        /// <summary>
+        /// Refreshes all map overlay layers WITHOUT rebuilding tokens.
+        /// Use after wall/lighting/fog changes that don't affect tokens.
+        /// </summary>
+        // VISUAL REFRESH - GRID
+        public void RefreshMapOverlays()
+        {
+            UpdateGridVisual();
+            RedrawLighting();
+            RedrawWalls();
+            RedrawMovementOverlay();
+            RedrawPathVisual();
+            RedrawFog();
+            RedrawVisionOverlay();
+            RefreshAreaEffectsDisplay();
+        }
+
+        #endregion
+
+        #region Grid Cell Display
+
+        // VISUAL REFRESH - GRID
         private void UpdateCurrentCellDisplay(Point gridPoint)
         {
             int cellX = (int)Math.Floor(gridPoint.X);
@@ -613,7 +651,7 @@ namespace DnDBattle.Controls
 
         #region Pan and Zoom
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - PAN_ZOOM
         public void PanBy(double dx, double dy)
         {
             _pan.X = dx;

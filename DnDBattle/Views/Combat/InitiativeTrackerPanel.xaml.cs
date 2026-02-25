@@ -163,7 +163,7 @@ namespace DnDBattle.Views.Combat
             }
         }
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - INITIATIVE_TRACKER
         private void UpdateDisplay()
         {
             TxtRound.Text = _currentRound.ToString();
@@ -171,7 +171,7 @@ namespace DnDBattle.Views.Combat
             UpdateCombatButton();
         }
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - INITIATIVE_TRACKER
         private void UpdateCombatButton()
         {
             if (IsInCombat)
@@ -339,7 +339,7 @@ namespace DnDBattle.Views.Combat
             UpdateDisplay();
         }
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - INITIATIVE_TRACKER
         private void SetCurrentTurn(int index)
         {
             if (index < 0 || index >= Entries.Count) return;
@@ -417,7 +417,7 @@ namespace DnDBattle.Views.Combat
             UpdateDisplay();
         }
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - INITIATIVE_TRACKER
         private void SortByInitiative()
         {
             var sorted = Entries.OrderByDescending(e => e.InitiativeTotal)

@@ -43,7 +43,7 @@ namespace DnDBattle.Views.Combat
             UpdateDisplay();
         }
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - SELECTED_TOKEN_PANEL
         public void UpdateDisplay()
         {
             ActionPointsContainer.Children.Clear();

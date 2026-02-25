@@ -66,7 +66,7 @@ namespace DnDBattle.Views.Settings
             RefreshList();
         }
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - UI_LIST
         private void RefreshList(string filter = null)
         {
             var filtered = _actions.AsEnumerable();

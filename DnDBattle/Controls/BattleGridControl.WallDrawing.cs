@@ -26,7 +26,7 @@ namespace DnDBattle.Controls
     {
         #region Wall Draw Mode
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - WALLS
         public void SetWallDrawMode(bool enabled, WallType wallType = WallType.Solid)
         {
             _wallDrawMode = enabled;
@@ -38,7 +38,7 @@ namespace DnDBattle.Controls
             RedrawWalls();
         }
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - WALLS
         public void SetRoomDrawMode(bool enabled, WallType wallType = WallType.Solid)
         {
             _roomDrawMode = enabled;
@@ -63,7 +63,7 @@ namespace DnDBattle.Controls
 
         #region Wall Rendering
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - WALLS
         public void RedrawWalls()
         {
             using (var dc = _wallVisual.RenderOpen())

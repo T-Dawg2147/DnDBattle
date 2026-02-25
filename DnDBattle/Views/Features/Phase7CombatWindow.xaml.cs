@@ -118,7 +118,7 @@ namespace DnDBattle.Views.Features
         /// <summary>
         /// Update the selected token display and concentration status
         /// </summary>
-        // VISUAL REFRESH
+        // VISUAL REFRESH - COMBAT_AUTOMATION
         private void RefreshSelectedToken()
         {
             var token = _viewModel.SelectedToken;
@@ -297,7 +297,7 @@ namespace DnDBattle.Views.Features
         /// <summary>
         /// Updates the slot display text showing current/max for each spell level
         /// </summary>
-        // VISUAL REFRESH
+        // VISUAL REFRESH - COMBAT_AUTOMATION
         private void UpdateSlotDisplay(Token token)
         {
             if (token?.SpellSlots == null || !token.SpellSlots.HasSpellSlots)
@@ -412,7 +412,7 @@ namespace DnDBattle.Views.Features
         /// <summary>
         /// Updates the concentration status display for a token
         /// </summary>
-        // VISUAL REFRESH
+        // VISUAL REFRESH - COMBAT_AUTOMATION
         private void UpdateConcentrationStatus(Token token)
         {
             if (token.IsConcentrating)

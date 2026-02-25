@@ -80,7 +80,7 @@ namespace DnDBattle.Views.TileMap
             }
         }
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - TILE_MAP_EDITOR
         private void ApplyFilter()
         {
             var allTiles = TileLibraryService.Instance.AvailableTiles;
