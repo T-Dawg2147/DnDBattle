@@ -24,9 +24,11 @@ public sealed class EffectService : IEffectService
 
     public void TickEffects(IEnumerable<Combatant> combatants)
     {
-        foreach (var effect in _activeEffects.ToList())
+        for (int i = 0; i < _activeEffects.Count; i++)
         {
-            if (string.IsNullOrWhiteSpace(effect.DamageDice)) continue;
+            var effect = _activeEffects[i];
+            // Decrement remaining rounds each tick
+            _activeEffects[i] = effect with { RemainingRounds = effect.RemainingRounds - 1 };
         }
     }
 

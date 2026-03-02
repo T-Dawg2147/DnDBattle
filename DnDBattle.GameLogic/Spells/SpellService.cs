@@ -30,9 +30,25 @@ public sealed class SpellService : ISpellService
             {
                 int roll = _dice.Roll(20) + target.GetAbilityModifier(spell.SaveAbility.Value);
                 bool saved = roll >= spell.SaveDC;
-                int damage = _dice.ParseAndRoll(spell.DamageDice);
-                if (saved) damage /= 2;
-                target.CurrentHitPoints = Math.Max(0, target.CurrentHitPoints - damage);
+                if (spell.DamageType == Core.Enums.DamageType.None)
+                {
+                    // Healing spell — restore HP on save or full on failure
+                    int healing = _dice.ParseAndRoll(spell.DamageDice);
+                    if (saved) healing = 0; // e.g. Hold Person — no HP component
+                    target.CurrentHitPoints = Math.Min(target.MaxHitPoints, target.CurrentHitPoints + healing);
+                }
+                else
+                {
+                    int damage = _dice.ParseAndRoll(spell.DamageDice);
+                    if (saved) damage /= 2;
+                    target.CurrentHitPoints = Math.Max(0, target.CurrentHitPoints - damage);
+                }
+            }
+            else if (spell.DamageType == Core.Enums.DamageType.None)
+            {
+                // Healing spell without save (e.g. Cure Wounds)
+                int healing = _dice.ParseAndRoll(spell.DamageDice);
+                target.CurrentHitPoints = Math.Min(target.MaxHitPoints, target.CurrentHitPoints + healing);
             }
             else
             {

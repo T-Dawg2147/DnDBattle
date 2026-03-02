@@ -50,9 +50,12 @@ public sealed class InitiativeManager : IEncounterService
             CurrentRound++;
         }
 
-        while (_order.Count > 0 && ActiveCombatant is { IsAlive: false })
+        // Skip dead combatants, but stop if all are dead to avoid infinite loop
+        int skipped = 0;
+        while (_order.Count > 0 && ActiveCombatant is { IsAlive: false } && skipped < _order.Count)
         {
             _currentIndex = (_currentIndex + 1) % _order.Count;
+            skipped++;
         }
 
         if (ActiveCombatant is { } active)

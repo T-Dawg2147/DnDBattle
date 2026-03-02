@@ -25,11 +25,12 @@ public static class CoverSystem
         };
     }
 
+    // Using int.MaxValue to represent that full cover makes a target unattackable
     public static int GetCoverBonus(CoverType cover) => cover switch
     {
         CoverType.Half => 2,
         CoverType.ThreeQuarters => 5,
-        CoverType.Full => 100,
+        CoverType.Full => int.MaxValue,
         _ => 0
     };
 

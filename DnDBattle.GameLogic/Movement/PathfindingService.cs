@@ -49,7 +49,7 @@ public sealed class PathfindingService
         Math.Sqrt(Math.Pow(a.Col - b.Col, 2) + Math.Pow(a.Row - b.Row, 2));
 
     private static double MoveCost((int Col, int Row) from, (int Col, int Row) to) =>
-        from.Col != to.Col && from.Row != to.Row ? 1.414 : 1.0;
+        from.Col != to.Col && from.Row != to.Row ? Math.Sqrt(2) : 1.0;
 
     private static IEnumerable<(int, int)> GetNeighbors(
         (int Col, int Row) cell, int w, int h, bool diagonals)
