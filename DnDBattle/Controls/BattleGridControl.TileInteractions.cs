@@ -348,7 +348,7 @@ namespace DnDBattle.Controls
         #region Visual Effects
 
         // Add visual effect methods
-        // VISUAL REFRESH
+        // VISUAL REFRESH - TILE_EFFECTS
         private void ShowHazardEffect(int gridX, int gridY, DamageType damageType)
         {
             var color = damageType switch
@@ -364,13 +364,13 @@ namespace DnDBattle.Controls
             ShowColoredEffect(gridX, gridY, color);
         }
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - TILE_EFFECTS
         private void ShowHealingEffect(int gridX, int gridY)
         {
             ShowColoredEffect(gridX, gridY, Colors.LightGreen);
         }
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - TILE_EFFECTS
         private void ShowColoredEffect(int gridX, int gridY, Color color)
         {
             var overlay = new System.Windows.Shapes.Rectangle
@@ -399,7 +399,7 @@ namespace DnDBattle.Controls
             overlay.BeginAnimation(UIElement.OpacityProperty, animation);
         }
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - TILE_EFFECTS
         private void ShowTrapTriggerEffect(int gridX, int gridY)
         {
             // Create a pulsing red overlay at the trap location
@@ -439,7 +439,7 @@ namespace DnDBattle.Controls
         /// Refreshes all tile-interaction-related visuals by rebuilding token displays
         /// and updating the movement overlay.
         /// </summary>
-        // VISUAL REFRESH
+        // VISUAL REFRESH - TOKEN_RENDERING
         public void RefreshTileInteractionVisuals()
         {
             RebuildTokenVisuals();

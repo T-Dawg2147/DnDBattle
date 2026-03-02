@@ -18,6 +18,9 @@
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="MessagePack" Version="3.1.4" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.1" />
+    <PackageReference Include="OptionsLib.Core" Version="1.0.0" />
+    <PackageReference Include="OptionsLib.Persistence" Version="1.0.0" />
+    <PackageReference Include="OptionsLib.UI.Wpf" Version="1.0.0" />
     <PackageReference Include="System.Data.SQLite" Version="2.0.2" />
     <PackageReference Include="System.Runtime.WindowsRuntime" Version="4.7.0" />
   </ItemGroup>

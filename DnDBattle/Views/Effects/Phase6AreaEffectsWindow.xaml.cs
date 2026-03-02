@@ -173,7 +173,7 @@ namespace DnDBattle.Views.Effects
         /// <summary>
         /// Refresh the active effects list from the AreaEffectService
         /// </summary>
-        // VISUAL REFRESH
+        // VISUAL REFRESH - AREA_EFFECTS
         private void RefreshActiveEffects()
         {
             var effects = _battleGrid.AreaEffectService.ActiveEffects.ToList();

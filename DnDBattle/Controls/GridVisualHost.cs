@@ -56,7 +56,7 @@ namespace DnDBattle.Controls
         /// <param name="extraPaddingPixels">Padding to draw slightly beyond viewport</param>
         /// <param name="showCoordinates">Whether to show A1, B2 style coordinates</param>
         /// <param name="showGrid">Whether to show the grid lines</param>
-        // VISUAL REFRESH
+        // VISUAL REFRESH - GRID
         public void DrawGridViewport(double cellSize, Rect viewWorldPixels, double extraPaddingPixels = 16,
             bool showCoordinates = true, bool showGrid = true)
         {

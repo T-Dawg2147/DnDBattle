@@ -27,7 +27,7 @@ namespace DnDBattle.Controls
     {
         #region Token Visual Rebuilding
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - TOKEN_RENDERING
         public void RebuildTokenVisuals()
         {
             System.Diagnostics.Debug.WriteLine($"=== RebuildTokenVisuals called ===");
@@ -569,7 +569,7 @@ namespace DnDBattle.Controls
 
         #region Token Layout
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - TOKEN_RENDERING
         private void LayoutTokens()
         {
             var tokenVisuals = RenderCanvas.Children.OfType<FrameworkElement>().Where(c => c.Tag is Token);
@@ -587,7 +587,7 @@ namespace DnDBattle.Controls
 
         #region Token Property Change Handling
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - TOKEN_RENDERING
         private void Token_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             if (sender is Token token)
@@ -632,10 +632,25 @@ namespace DnDBattle.Controls
                     RebuildTokenVisuals();
                     return;
                 }
+
+                // Elevation or Facing changes require full rebuild (for badges/arrows)
+                if (e.PropertyName == nameof(Token.Elevation) ||
+                    e.PropertyName == nameof(Token.FacingAngle))
+                {
+                    RebuildTokenVisuals();
+                    return;
+                }
+
+                // Aura changes - redraw auras only
+                if (e.PropertyName == nameof(Token.Auras))
+                {
+                    RedrawAuras();
+                    return;
+                }
             }
         }
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - TOKEN_RENDERING
         private void UpdateSingleTokenVisual(Token token)
         {
             // Find the token's container
@@ -693,7 +708,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Updates just the HP bar for a specific token without rebuilding all visuals
         /// </summary>
-        // VISUAL REFRESH
+        // VISUAL REFRESH - TOKEN_HP
         private void UpdateTokenHPBar(Token token)
         {
             if (token == null) return;
@@ -749,7 +764,7 @@ namespace DnDBattle.Controls
         /// <summary>
         /// Creates a small HP bar under the token
         /// </summary>
-        // VISUAL REFRESH
+        // VISUAL REFRESH - TOKEN_HP
         private FrameworkElement CreateTokenHPBar(Token token)
         {
             double hpPercent = token.MaxHP > 0 ? (double)Math.Max(0, token.HP) / token.MaxHP : 0;

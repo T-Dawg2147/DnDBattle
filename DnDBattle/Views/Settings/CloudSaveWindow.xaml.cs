@@ -61,7 +61,7 @@ namespace DnDBattle.Views.Settings
             StatusText.Text = success ? $"Saved encounter {encounterId}" : "Save failed";
         }
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - UI_LIST
         private async void RefreshList_Click(object sender, RoutedEventArgs e)
         {
             var campaignId = CampaignIdBox.Text?.Trim() ?? "default";

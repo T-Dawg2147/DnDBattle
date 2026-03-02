@@ -43,7 +43,7 @@ namespace DnDBattle.Views.Creatures
             UpdateDisplay();
         }
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - SELECTED_TOKEN_PANEL
         public void UpdateDisplay()
         {
             NotesContainer.Children.Clear();

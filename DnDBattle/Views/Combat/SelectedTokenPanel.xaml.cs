@@ -78,6 +78,12 @@ namespace DnDBattle.Views.Combat
 
         public void SetToken(Token token)
         {
+            // Unsubscribe from previous token's PropertyChanged
+            if (_token != null)
+            {
+                _token.PropertyChanged -= SelectedToken_PropertyChanged;
+            }
+
             _token = token;
 
             if (token == null)
@@ -87,13 +93,46 @@ namespace DnDBattle.Views.Combat
                 return;
             }
 
+            // Subscribe to new token's PropertyChanged for auto-updates
+            _token.PropertyChanged += SelectedToken_PropertyChanged;
+
             NoSelectionMessage.Visibility = Visibility.Collapsed;
             TokenDetailsScroller.Visibility = Visibility.Visible;
 
             UpdateDisplay();
         }
 
-        // VISUAL REFRESH
+        private void SelectedToken_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (_token == null) return;
+
+            switch (e.PropertyName)
+            {
+                case nameof(Token.HP):
+                case nameof(Token.MaxHP):
+                case nameof(Token.TempHP):
+                    UpdateHPColor();
+                    UpdateHPBar();
+                    UpdateDeathSavesDisplay();
+                    break;
+                case nameof(Token.Conditions):
+                    UpdateConditionsDisplay();
+                    break;
+                case nameof(Token.IsConcentrating):
+                case nameof(Token.ConcentrationSpell):
+                    UpdateConcentrationDisplay();
+                    break;
+                case nameof(Token.DeathSaveSuccesses):
+                case nameof(Token.DeathSaveFailures):
+                    UpdateDeathSavesDisplay();
+                    break;
+                case nameof(Token.LegendaryActionsRemaining):
+                    UpdateLegendaryActionsDisplay();
+                    break;
+            }
+        }
+
+        // VISUAL REFRESH - SELECTED_TOKEN_PANEL
         public void UpdateDisplay()
         {
             if (_token == null) return;
@@ -161,7 +200,7 @@ namespace DnDBattle.Views.Combat
 
         #region HP Management
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - SELECTED_TOKEN_PANEL
         private void UpdateHPColor()
         {
             double percent = _token.MaxHP > 0 ? (double)_token.HP / _token.MaxHP : 0;
@@ -174,7 +213,7 @@ namespace DnDBattle.Views.Combat
                 TxtCurrentHP.Foreground = new SolidColorBrush(Color.FromRgb(244, 67, 54));
         }
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - SELECTED_TOKEN_PANEL
         private void UpdateHPBar()
         {
             double percent = _token.MaxHP > 0 ? (double)Math.Max(0, _token.HP) / _token.MaxHP : 0;
@@ -233,7 +272,7 @@ namespace DnDBattle.Views.Combat
 
         #region Ability Scores
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - SELECTED_TOKEN_PANEL
         private void UpdateAbilityScores()
         {
             TxtStr.Text = _token.Str.ToString();
@@ -264,7 +303,7 @@ namespace DnDBattle.Views.Combat
 
         #region Conditions Display
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - SELECTED_TOKEN_PANEL
         private void UpdateConditionsDisplay()
         {
             ConditionIconsPanel.Children.Clear();
@@ -311,7 +350,7 @@ namespace DnDBattle.Views.Combat
 
         #region Concentration Tracking
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - SELECTED_TOKEN_PANEL
         private void UpdateConcentrationDisplay()
         {
             if (_token == null || !_token.IsConcentrating)
@@ -357,7 +396,7 @@ namespace DnDBattle.Views.Combat
 
         #region Death Saves Tracking
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - SELECTED_TOKEN_PANEL
         private void UpdateDeathSavesDisplay()
         {
             if (_token == null || _token.HP > 0)
@@ -433,7 +472,7 @@ namespace DnDBattle.Views.Combat
 
         #region Legendary Actions
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - SELECTED_TOKEN_PANEL
         private void UpdateLegendaryActionsDisplay()
         {
             LegendaryPointsContainer.Children.Clear();
@@ -518,7 +557,7 @@ namespace DnDBattle.Views.Combat
 
         #region Spell Slots
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - SELECTED_TOKEN_PANEL
         private void UpdateSpellSlotsDisplay()
         {
             SpellSlotsContainer.Children.Clear();
@@ -620,7 +659,7 @@ namespace DnDBattle.Views.Combat
 
         #region Notes
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - SELECTED_TOKEN_PANEL
         private void UpdateNotesDisplay()
         {
             NotesContainer.Children.Clear();

@@ -345,7 +345,7 @@ namespace DnDBattle.Views.TileMap
 
         #region Map Features Menu
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - TILE_MAP_EDITOR
         private void UpdateGridTypeChecks(Models.Tiles.GridType type)
         {
             MenuSquareGrid.IsChecked = type == Models.Tiles.GridType.Square;

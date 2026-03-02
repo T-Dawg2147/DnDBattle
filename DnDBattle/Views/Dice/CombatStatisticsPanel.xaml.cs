@@ -45,7 +45,7 @@ namespace DnDBattle.Views.Dice
             RefreshDisplay();
         }
 
-        // VISUAL REFRESH
+        // VISUAL REFRESH - COMBAT_AUTOMATION
         public void RefreshDisplay()
         {
             if (_statsService == null) return;

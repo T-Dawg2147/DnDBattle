@@ -93,7 +93,7 @@ namespace DnDBattle.Views.Effects
         }
 
         // Refresh the list of lights from the battle grid
-        // VISUAL REFRESH
+        // VISUAL REFRESH - LIGHTING
         private void RefreshLightList()
         {
             _lightDisplays.Clear();
