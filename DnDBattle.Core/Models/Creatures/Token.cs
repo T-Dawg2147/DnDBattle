@@ -1,15 +1,4 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using DnDBattle.Services;
-using DnDBattle.Services.Combat;
-using DnDBattle.Services.Creatures;
-using DnDBattle.Services.Dice;
-using DnDBattle.Services.Effects;
-using DnDBattle.Services.Encounters;
-using DnDBattle.Services.Grid;
-using DnDBattle.Services.Networking;
-using DnDBattle.Services.Persistence;
-using DnDBattle.Services.UI;
-using DnDBattle.Services.Vision;
 using System;
 using System.ComponentModel;
 using System.Data.SQLite;
@@ -26,12 +15,16 @@ using DnDBattle.Models.Spells;
 using DnDBattle.Models.Tiles;
 using Action = DnDBattle.Models.Combat.Action;
 using Condition = DnDBattle.Models.Effects.Condition;
-using DnDBattle.Services.TileService;
 
 namespace DnDBattle.Models.Creatures
 {
     public class Token : ObservableObject
     {
+        // Service delegates for decoupled image loading
+        public static Func<string, string, string, string, string, ImageSource?>? GetCreatureImageSyncFunc { get; set; }
+        public static Func<string, string, string, string, string, Task<ImageSource?>>? GetCreatureImageAsyncFunc { get; set; }
+        public static Action<string>? ClearImageCacheAction { get; set; }
+
         public Guid Id { get; set; } = Guid.NewGuid();
 
         // Desriptive fields
@@ -277,7 +270,7 @@ namespace DnDBattle.Models.Creatures
                 if (Image != null)
                     return null;
 
-                _displayImage = CreatureImageService.GetCreatureImageSync(
+                _displayImage = GetCreatureImageSyncFunc?.Invoke(
                     Name, Type, Size, ChallengeRating, IconPath);
                 return _displayImage;
             }
@@ -286,8 +279,12 @@ namespace DnDBattle.Models.Creatures
         
         public async Task RefreshImageAsync()
         {
-            var newImage = await CreatureImageService.GetCreatureImageAsync(
-                Name, Type, Size, ChallengeRating, IconPath);
+            ImageSource? newImage = null;
+            if (GetCreatureImageAsyncFunc != null)
+            {
+                newImage = await GetCreatureImageAsyncFunc(
+                    Name, Type, Size, ChallengeRating, IconPath);
+            }
 
             Application.Current.Dispatcher.Invoke(() =>
             {
@@ -298,7 +295,7 @@ namespace DnDBattle.Models.Creatures
 
         public void ClearImageCache()
         {
-            CreatureImageService.ClearCache(Name);
+            ClearImageCacheAction?.Invoke(Name);
             _displayImage = null;
             OnPropertyChanged(nameof(DisplayImage));
         }

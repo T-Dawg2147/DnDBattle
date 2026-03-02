@@ -10,8 +10,6 @@ using DnDBattle.Services.Dice;
 using DnDBattle.Services.Effects;
 using DnDBattle.Services.Encounters;
 using DnDBattle.Services.Grid;
-using DnDBattle.Services.Networking;
-using DnDBattle.Services.Persistence;
 using DnDBattle.Services.TileService;
 using DnDBattle.Services.Vision;
 
@@ -65,12 +63,5 @@ namespace DnDBattle.Services.UI
             _redo.Clear();
             StateChanged?.Invoke(null, EventArgs.Empty);
         }
-    }
-
-    public interface IUndoabaleAction
-    {
-        void Do();
-        void Undo();
-        string Description { get; }
     }
 }

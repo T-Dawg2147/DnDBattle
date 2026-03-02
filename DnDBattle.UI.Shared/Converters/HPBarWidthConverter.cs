@@ -8,7 +8,7 @@ using System.Windows.Data;
 
 namespace DnDBattle.Converters
 {
-    class HPBarWidthConverter : IMultiValueConverter
+    public class HPBarWidthConverter : IMultiValueConverter
     {
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
         {

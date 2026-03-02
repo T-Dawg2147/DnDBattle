@@ -1,7 +1,7 @@
 ﻿<UserControl x:Class="DnDBattle.Views.TileMap.TilePalettePanel"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:converters="clr-namespace:DnDBattle.Converters"
+             xmlns:converters="clr-namespace:DnDBattle.Converters;assembly=DnDBattle.UI.Shared"
              MinWidth="200" Background="{StaticResource Brush_Background_Dark}">
 
     <UserControl.Resources>
