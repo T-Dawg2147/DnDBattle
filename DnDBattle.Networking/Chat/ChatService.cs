@@ -7,7 +7,7 @@ public sealed class ChatMessage
     public Guid Id { get; init; } = Guid.NewGuid();
     public string SenderName { get; set; } = string.Empty;
     public string Text { get; set; } = string.Empty;
-    public DateTime SentAt { get; init; } = DateTime.Now;
+    public DateTime SentAt { get; init; } = DateTime.UtcNow;
     public bool IsSystemMessage { get; init; }
     public string? DiceRollResult { get; init; }
 }
