@@ -28,7 +28,7 @@ namespace DnDBattle
         [OptionUI]
         public static string DefaultTokenImagePath { get; set; } = Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Entites", "Tokens");
 
-        // ── Rendering / Lighting ──
+        #region Rendering / Lighting
 
         /// <summary>
         /// Lighting / shadow softness in pixels (applied via BlurEffect radius).
@@ -63,7 +63,9 @@ namespace DnDBattle
         [OptionUI]
         public static int MaxAStarNodes { get; set; } = 20000;
 
-        // ── Grid ──
+        #endregion
+
+        #region Grid
 
         // TODO: Load from settings (DefaultLockToGrid)
         [Option]
@@ -85,7 +87,9 @@ namespace DnDBattle
         [OptionUI]
         public static int GridMaxHeight { get; set; } = 100;
 
-        // ── Autosave ──
+        #endregion
+
+        #region Autosave
 
         // TODO: Load from settings (EnabledPeriodicAutosave)
         [Option]
@@ -97,7 +101,9 @@ namespace DnDBattle
         [OptionUI]
         public static int AutosaveIntervalSeconds { get; set; } = 300;
 
-        // ── Combat Rules ──
+        #endregion
+
+        #region Combat Rules
 
         // TODO: Load from settings (AutoResolveAOOs)
         [Option]
@@ -117,7 +123,9 @@ namespace DnDBattle
         [OptionUI]
         public static int UndoStackLimit { get; set; } = 200;
 
-        // ── Turn Timer ──
+        #endregion
+
+        #region Turn Timer
 
         // TODO: Load from settings (TurnTimerEnabled)
         [Option]
@@ -129,7 +137,9 @@ namespace DnDBattle
         [OptionUI]
         public static int TurnTimerSeconds { get; set; } = 120; // Default 2 minutes
 
-        // ── Sound Effects ──
+        #endregion
+
+        #region Sound Effects
 
         // TODO: Load from settings (SoundEffectsEnabled)
         [Option]
@@ -141,12 +151,16 @@ namespace DnDBattle
         [OptionUI]
         public static double SoundEffectsVolume { get; set; } = 0.5;
 
-        // ── Combat Statistics ──
+        #endregion
+
+        #region Combat Statistics
 
         // TODO: Load from settings (TrackCombatStatistics)
         [Option]
         [OptionUI]
         public static bool TrackCombatStatistics { get; set; } = true;
+
+        #endregion
 
         // ── Dice History ──
 
@@ -155,7 +169,7 @@ namespace DnDBattle
         [OptionUI]
         public static int DiceHistoryMaxSize { get; set; } = 500;
 
-        // ── Lighting & Vision System ──
+        #region Lighting & Vision System
 
         /// <summary>
         /// Enable the lighting system (light sources on the map).
@@ -254,7 +268,9 @@ namespace DnDBattle
         [OptionUI]
         public static int DefaultTokenVisionRange { get; set; } = 12;
 
-        // ── Phase 5: Advanced Token Features ──
+        #endregion
+
+        #region Phase 5: Advanced Token Features
 
         /// <summary>Enable A* pathfinding with diagonal support and difficult terrain.</summary>
         // TODO: Load from settings (EnablePathfinding)
@@ -328,7 +344,9 @@ namespace DnDBattle
         [OptionUI]
         public static bool EnableFlankingDetection { get; set; } = true;
 
-        // ── Phase 6: Area Effects Expansion ──
+        #endregion
+
+        #region Phase 6: Area Effects Expansion
 
         /// <summary>Enable the spell templates library (search/browse/favorites).</summary>
         // TODO: Load from settings (EnableSpellLibrary)
@@ -378,7 +396,9 @@ namespace DnDBattle
         [OptionUI]
         public static int DefaultAnimationType { get; set; } = 1; // 0=None, 1=Pulse, 2=Particle, 3=Rotate
 
-        // ── Phase 7: Combat Automation ──
+        #endregion
+
+        #region Phase 7: Combat Automation
 
         /// <summary>Enable the automated attack roll system (d20 + modifiers vs AC).</summary>
         // TODO: Load from settings (EnableAttackRollSystem)
@@ -434,7 +454,9 @@ namespace DnDBattle
         [OptionUI]
         public static bool AutoPromptConcentrationCheck { get; set; } = true;
 
-        // ── Phase 8: Advanced Map Features ──
+        #endregion
+
+        #region Phase 8: Advanced Map Features
 
         /// <summary>Enable the multi-map management system (map library, quick-switch, map linking).</summary>
         // TODO: Load from settings (EnableMultiMapManagement)
@@ -496,7 +518,11 @@ namespace DnDBattle
         [OptionUI]
         public static bool ShowDMOnlyNotes { get; set; } = true;
 
-        // ── Undecided Features: 2.5D Elevation System ──
+        #endregion
+
+        #region Undecided Features
+
+        // ── 2.5D Elevation System ──
 
         /// <summary>Enable the 2.5D terrain elevation system (height layers, 3D distance, falling damage).</summary>
         // TODO: Load from settings (EnableElevationSystem)
@@ -804,5 +830,7 @@ namespace DnDBattle
         [Option]
         [OptionUI]
         public static int ColorblindModeSelection { get; set; } = 0;
+
+        #endregion
     }
 }
