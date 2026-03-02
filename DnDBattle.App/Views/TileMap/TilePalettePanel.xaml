@@ -1,0 +1,125 @@
+﻿<UserControl x:Class="DnDBattle.Views.TileMap.TilePalettePanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:DnDBattle.Converters"
+             MinWidth="200" Background="{StaticResource Brush_Background_Dark}">
+
+    <UserControl.Resources>
+        <converters:TileImageConverter x:Key="TileImageConverter"/>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Background="{StaticResource Brush_Background_Control}" Margin="0,0,0,5">
+            <TextBlock Text="🎨 Tile Palette" FontSize="14" FontWeight="Bold" Margin="10,8"/>
+            <Button Content="🔄 Refresh Library" Click="RefreshLibrary_Click" 
+                    Margin="5" Padding="5" Style="{StaticResource ToolbarButton}" 
+                    HorizontalAlignment="Stretch"/>
+            <Button Content="➕ Import Tiles..." Click="ImportTiles_Click" 
+                    Margin="5,0,5,5" Padding="5" Style="{StaticResource ToolbarButton}" 
+                    HorizontalAlignment="Stretch"/>
+        </StackPanel>
+
+        <!-- Search Box -->
+        <Border Grid.Row="1" Background="{StaticResource Brush_Background_Control}" 
+                Padding="5" Margin="5,0,5,5">
+            <Grid>
+                <TextBox x:Name="TxtSearch" 
+                         Height="30"
+                         VerticalContentAlignment="Center"
+                         TextChanged="TxtSearch_TextChanged"
+                         Background="{StaticResource Brush_Background_Dark}"/>
+                <TextBlock Text="🔍 Search tiles..." 
+                           IsHitTestVisible="False"
+                           VerticalAlignment="Center"
+                           Margin="10,0,0,0"
+                           Foreground="{StaticResource Brush_Text_Hint}">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Text, ElementName=TxtSearch}" Value="">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </Grid>
+        </Border>
+
+        <!-- Tile List (Grouped by Category) -->
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+            <ItemsControl x:Name="TileList">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <!-- Category Group -->
+                        <StackPanel Margin="5">
+                            <!-- Category Header -->
+                            <TextBlock Text="{Binding Key}" 
+                                       FontWeight="Bold" 
+                                       FontSize="12"
+                                       Margin="5,10,5,5"
+                                       Foreground="{StaticResource Brush_Accent_Primary}"/>
+
+                            <!-- Tiles in Category -->
+                            <ItemsControl ItemsSource="{Binding}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Click="TileItem_Click" 
+                                                Tag="{Binding}"
+                                                Margin="2"
+                                                Padding="5"
+                                                Height="80"
+                                                HorizontalContentAlignment="Stretch">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="60"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <!-- Tile Preview -->
+                                                <Border Grid.Column="0" 
+                                                        Width="50" 
+                                                        Height="50"
+                                                        BorderBrush="{StaticResource Brush_Border_Normal}"
+                                                        BorderThickness="1"
+                                                        Background="{StaticResource Brush_Background_Dark}">
+                                                    <Image Source="{Binding Converter={StaticResource TileImageConverter}}" 
+                                                           Stretch="UniformToFill"/>
+                                                </Border>
+
+                                                <!-- Tile Info -->
+                                                <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding DisplayName}" 
+                                                               FontWeight="SemiBold"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Text="{Binding Category}" 
+                                                               FontSize="10"
+                                                               Foreground="{StaticResource Brush_Text_Secondary}"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <!-- Footer Info -->
+        <Border Grid.Row="3" Background="{StaticResource Brush_Background_Control}" Padding="10,5">
+            <TextBlock x:Name="StatusText" Text="No tiles available" 
+                       Style="{StaticResource HintText}"/>
+        </Border>
+    </Grid>
+</UserControl>

@@ -1,0 +1,131 @@
+﻿<UserControl x:Class="DnDBattle.Views.TileMap.TilePropertiesPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             MinWidth="250">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="10">
+
+            <!-- Header -->
+            <TextBlock Text="⚙️ Tile Properties" 
+                       FontSize="16" 
+                       FontWeight="Bold" 
+                       Margin="0,0,0,10"/>
+
+            <Separator Margin="0,0,0,10"/>
+
+            <!-- Basic Properties -->
+            <TextBlock Text="📍 Position" FontWeight="SemiBold" Margin="0,0,0,5"/>
+
+            <Grid Margin="0,0,0,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Grid X:"/>
+                    <TextBox x:Name="TxtGridX" IsReadOnly="True"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="Grid Y:"/>
+                    <TextBox x:Name="TxtGridY" IsReadOnly="True"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- Rotation & Flip -->
+            <TextBlock Text="🔄 Transform" FontWeight="SemiBold" Margin="0,0,0,5"/>
+
+            <TextBlock Text="Rotation:"/>
+            <TextBox x:Name="TxtRotation" IsReadOnly="True" Margin="0,0,0,5"/>
+
+            <CheckBox x:Name="ChkFlipH" Content="Flip Horizontal" IsEnabled="False" Margin="0,0,0,2"/>
+            <CheckBox x:Name="ChkFlipV" Content="Flip Vertical" IsEnabled="False" Margin="0,0,0,10"/>
+
+            <Separator Margin="0,0,0,10"/>
+
+            <!-- Notes -->
+            <TextBlock Text="📝 Notes" FontWeight="SemiBold" Margin="0,0,0,5"/>
+            <TextBox x:Name="TxtNotes" 
+                     Height="60" 
+                     TextWrapping="Wrap" 
+                     AcceptsReturn="True"
+                     VerticalScrollBarVisibility="Auto"
+                     Margin="0,0,0,10"/>
+
+            <Separator Margin="0,0,0,10"/>
+
+            <!-- Metadata Section -->
+            <TextBlock Text="🏷️ Metadata" FontWeight="SemiBold" Margin="0,0,0,5"/>
+
+            <!-- Metadata List -->
+            <Border BorderBrush="{StaticResource Brush_Border_Normal}" 
+                    BorderThickness="1" 
+                    Margin="0,0,0,5"
+                    Height="150">
+                <ListBox x:Name="MetadataList" 
+                         Background="{StaticResource Brush_Background_Dark}"
+                         BorderThickness="0">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Padding" Value="5"/>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                </ListBox>
+            </Border>
+
+            <!-- Metadata Buttons -->
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                <Button Content="✏️ Edit" 
+                        Width="70" 
+                        Height="30" 
+                        Margin="0,0,5,0"
+                        Click="EditMetadata_Click"/>
+                <Button Content="🗑️ Remove" 
+                        Width="70" 
+                        Height="30"
+                        Click="RemoveMetadata_Click"/>
+            </StackPanel>
+
+            <!-- Add Metadata Buttons -->
+            <TextBlock Text="Add Metadata:" Margin="0,0,0,5"/>
+            <WrapPanel>
+                <Button Content="⚠️ Trap" 
+                        Margin="2" 
+                        Padding="8,4" 
+                        Click="AddTrap_Click"/>
+                <Button Content="🔍 Secret" 
+                        Margin="2" 
+                        Padding="8,4" 
+                        Click="AddSecret_Click"/>
+                <Button Content="⚙️ Interactive" 
+                        Margin="2" 
+                        Padding="8,4" 
+                        Click="AddInteractive_Click"/>
+                <Button Content="⚡ Trigger" 
+                        Margin="2" 
+                        Padding="8,4" 
+                        Click="AddTrigger_Click"/>
+                <Button Content="☠️ Hazard" 
+                        Margin="2" 
+                        Padding="8,4" 
+                        Click="AddHazard_Click"/>
+                <Button Content="🌀 Teleporter" 
+                        Margin="2" 
+                        Padding="8,4" 
+                        Click="AddTeleporter_Click"/>
+                <Button Content="💚 Healing" 
+                        Margin="2" 
+                        Padding="8,4" 
+                        Click="AddHealing_Click"/>
+                <Button Content="👹 Spawn" 
+                        Margin="2" 
+                        Padding="8,4" 
+                        Click="AddSpawn_Click"/>
+            </WrapPanel>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

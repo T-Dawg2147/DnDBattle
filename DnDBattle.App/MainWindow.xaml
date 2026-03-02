@@ -1,0 +1,631 @@
+﻿<Window x:Class="DnDBattle.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:DnDBattle"
+        xmlns:controls="clr-namespace:DnDBattle.Controls"
+        xmlns:views="clr-namespace:DnDBattle.Views"
+        xmlns:viewsCombat="clr-namespace:DnDBattle.Views.Combat"
+        xmlns:viewsEffects="clr-namespace:DnDBattle.Views.Effects"
+        Title="DnD Battle Builder" 
+        Height="950" Width="1720"
+        MinHeight="700" MinWidth="1000"
+        Background="{StaticResource Brush_Background_Dark}"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+
+        <!-- Modern Button Style -->
+        <Style x:Key="ModernButton" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource Brush_Background_Control}"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="4" 
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{StaticResource Brush_Background_Hover}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="{StaticResource Brush_Accent_Primary}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Primary Action Button -->
+        <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource ModernButton}">
+            <Setter Property="Background" Value="{StaticResource Brush_Accent_Primary}"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{StaticResource Brush_Accent_Hover}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Danger Button -->
+        <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource ModernButton}">
+            <Setter Property="Background" Value="{StaticResource Brush_Error}"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{StaticResource Brush_Error}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Sidebar Header Style -->
+        <Style x:Key="SidebarHeader" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Hint}"/>
+            <Setter Property="Margin" Value="0,15,0,8"/>
+        </Style>
+
+        <!-- Panel Style -->
+        <Style x:Key="PanelStyle" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource Brush_Background_Dark}"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Menu -->
+            <RowDefinition Height="Auto"/>
+            <!-- Toolbar -->
+            <RowDefinition Height="*"/>
+            <!-- Main Content -->
+            <RowDefinition Height="Auto"/>
+            <!-- Initiative Bar -->
+            <RowDefinition Height="Auto"/>
+            <!-- Status Bar -->
+        </Grid.RowDefinitions>
+
+        <!-- ==================== MENU BAR ==================== -->
+        <Menu Grid.Row="0" Background="{StaticResource Brush_Background_Medium}" Foreground="{StaticResource Brush_Text_Primary}" Padding="5,3">
+            <MenuItem Header="_File" Foreground="{StaticResource Brush_Text_Primary}">
+                <MenuItem Header="Save Encounter..." Click="MenuSaveEncounter_Click" InputGestureText="Ctrl+S"/>
+                <MenuItem Header="Load Encounter..." Click="MenuLoadEncounter_Click" InputGestureText="Ctrl+O"/>
+                <Separator/>
+                <MenuItem Header="Import SRD Pack..." Click="MenuImportSrdPack_Click"/>
+                <Separator/>
+                <MenuItem Header="Settings..." Click="MenuOptions_Click"/>
+                <Separator/>
+                <MenuItem Header="Exit" Click="MenuExit_Click" InputGestureText="Alt+F4"/>
+            </MenuItem>
+            <MenuItem Header="_Edit" Foreground="{StaticResource Brush_Text_Primary}">
+                <MenuItem Header="Undo" Click="Undo_Click" InputGestureText="Ctrl+Z"/>
+                <MenuItem Header="Redo" Click="Redo_Click" InputGestureText="Ctrl+Y"/>
+            </MenuItem>
+            <MenuItem Header="_Map">
+                <MenuItem Header="Load Tile Map..." Click="LoadTileMap_Click"/>
+                <MenuItem Header="Clear Tile Map" Click="ClearTileMap_Click"/>
+                <Separator/>
+                <MenuItem Header="Open Tile Map Editor..." Click="OpenTileMapEditor_Click"/>
+            </MenuItem>
+            <MenuItem Header="_Encounter" Foreground="{StaticResource Brush_Text_Primary}">
+                <Button Content="📋 Encounter Builder" 
+                        Click="BtnEncounterBuilder_Click" />
+                <Separator/>
+                <MenuItem Header="Encounter Templates..." Click="MenuEncounterTemplates_Click"/>
+            </MenuItem>
+            <MenuItem Header="_Database" Foreground="{StaticResource Brush_Text_Primary}">
+                <MenuItem Header="Import JSON to Database..." Click="MenuImportDatabase_Click"/>
+                <MenuItem Header="Reload from Database" Click="MenuReloadDatabase_Click"/>
+                <Separator/>
+                <MenuItem Header="Database Statistics" Click="MenuDatabaseStats_Click"/>
+            </MenuItem>
+            <MenuItem Header="_View" Foreground="{StaticResource Brush_Text_Primary}">
+                <MenuItem Header="Toggle Left Sidebar" Click="ToggleLeftSidebar_Click" InputGestureText="F9"/>
+                <MenuItem Header="Toggle Right Sidebar" Click="ToggleRightSidebar_Click" InputGestureText="F10"/>
+                <Separator/>
+                <MenuItem Header="Grid Settings..." Click="MenuGridSettings_Click"/>
+                <Separator/>
+                <MenuItem Header="Fog of War">
+                    <MenuItem Header="Enable Fog of War" Click="EnableFog_Click" x:Name="MenuFogEnabled" IsCheckable="True"/>
+                    <MenuItem Header="Fog Mode">
+                        <MenuItem Header="Exploration (stays revealed)" Click="FogExploration_Click" x:Name="MenuFogExploration" IsCheckable="True" IsChecked="True"/>
+                        <MenuItem Header="Dynamic (reverts to fog)" Click="FogDynamic_Click" x:Name="MenuFogDynamic" IsCheckable="True"/>
+                    </MenuItem>
+                    <Separator/>
+                    <MenuItem Header="Reveal All (DM)" Click="RevealAllFog_Click"/>
+                    <MenuItem Header="Reset Fog" Click="ResetFog_Click"/>
+                </MenuItem>
+            </MenuItem>
+
+            <MenuItem Header="🧱 Walls" Foreground="{StaticResource Brush_Text_Primary}">
+                <MenuItem Header="Draw Solid Wall" Click="DrawSolidWall_Click"/>
+                <MenuItem Header="Draw Door" Click="DrawDoor_Click"/>
+                <MenuItem Header="Draw Window" Click="DrawWindow_Click"/>
+                <MenuItem Header="Draw Half Wall" Click="DrawHalfWall_Click"/>
+                <Separator/>
+                <MenuItem Header="🏠 Draw Room (Solid)" Click="DrawRoom_Click"/>
+                <MenuItem Header="🚪 Draw Room (with Doors)" Click="DrawRoomWithDoors_Click"/>
+                <Separator/>
+                <MenuItem Header="Stop Drawing" Click="StopWallDraw_Click"/>
+                <Separator/>
+                <MenuItem Header="Clear All Walls" Click="ClearAllWalls_Click"/>
+            </MenuItem>
+
+            <MenuItem Header="Tools" Foreground="{StaticResource Brush_Text_Primary}">
+                <MenuItem Header="Tile Map Builder" Click="OpenTileMapBuilder_Click"/>
+                <MenuItem Header="Developer Window..." Click="OpenDeveloperWindow_Click"/>
+            </MenuItem>
+
+            <!-- Phase 4: Lighting & Vision - Top level menu for testing Phase 4 features -->
+            <MenuItem Header="💡 Phase 4" Foreground="{StaticResource Brush_Text_Primary}">
+                <MenuItem Header="Lighting &amp; Vision Panel..." Click="OpenPhase4Window_Click"/>
+                <Separator/>
+                <MenuItem Header="Quick: Add Point Light" Click="Phase4_QuickAddPointLight_Click"/>
+                <MenuItem Header="Quick: Add Directional Light" Click="Phase4_QuickAddDirectionalLight_Click"/>
+                <Separator/>
+                <MenuItem Header="Toggle Vision Overlay" Click="Phase4_ToggleVisionOverlay_Click" IsCheckable="True" x:Name="MenuPhase4VisionOverlay"/>
+                <MenuItem Header="Update Fog from Vision" Click="Phase4_UpdateFogFromVision_Click"/>
+                <MenuItem Header="Clear Shadow Cache" Click="Phase4_ClearShadowCache_Click"/>
+            </MenuItem>
+
+            <!-- Phase 5: Advanced Token Features - Top level menu for testing Phase 5 features -->
+            <MenuItem Header="🎭 Phase 5" Foreground="{StaticResource Brush_Text_Primary}">
+                <MenuItem Header="Advanced Token Features Panel..." Click="OpenPhase5Window_Click"/>
+                <Separator/>
+                <MenuItem Header="Quick: Add Paladin Aura to Selected" Click="Phase5_AddPaladinAura_Click"/>
+                <MenuItem Header="Quick: Add Spirit Guardians to Selected" Click="Phase5_AddSpiritGuardians_Click"/>
+                <Separator/>
+                <MenuItem Header="Set Elevation...">
+                    <MenuItem Header="Ground (0 ft)" Click="Phase5_SetElevation_Click" Tag="0"/>
+                    <MenuItem Header="5 ft" Click="Phase5_SetElevation_Click" Tag="5"/>
+                    <MenuItem Header="10 ft" Click="Phase5_SetElevation_Click" Tag="10"/>
+                    <MenuItem Header="20 ft" Click="Phase5_SetElevation_Click" Tag="20"/>
+                    <MenuItem Header="30 ft" Click="Phase5_SetElevation_Click" Tag="30"/>
+                    <MenuItem Header="50 ft" Click="Phase5_SetElevation_Click" Tag="50"/>
+                    <MenuItem Header="100 ft" Click="Phase5_SetElevation_Click" Tag="100"/>
+                </MenuItem>
+                <Separator/>
+                <MenuItem Header="Refresh Token Visuals" Click="Phase5_RefreshVisuals_Click"/>
+            </MenuItem>
+
+            <!-- Phase 6: Area Effects Expansion - Top level menu for testing Phase 6 features -->
+            <MenuItem Header="🔥 Phase 6" Foreground="{StaticResource Brush_Text_Primary}">
+                <MenuItem Header="Area Effects Panel..." Click="OpenPhase6Window_Click"/>
+                <Separator/>
+                <MenuItem Header="Open Spell Library..." Click="Phase6_OpenSpellLibrary_Click"/>
+                <Separator/>
+                <MenuItem Header="Quick: Place Fireball (20ft)" Click="Phase6_PlaceFireball_Click"/>
+                <MenuItem Header="Quick: Place Darkness (15ft)" Click="Phase6_PlaceDarkness_Click"/>
+                <MenuItem Header="Quick: Place Fog Cloud (20ft)" Click="Phase6_PlaceFogCloud_Click"/>
+                <Separator/>
+                <MenuItem Header="Advance Round (Tick Durations)" Click="Phase6_AdvanceRound_Click"/>
+                <MenuItem Header="Clear All Effects" Click="Phase6_ClearAllEffects_Click"/>
+            </MenuItem>
+
+            <!-- Phase 7: Combat Automation - Top level menu for testing Phase 7 features -->
+            <MenuItem Header="⚔️ Phase 7" Foreground="{StaticResource Brush_Text_Primary}">
+                <MenuItem Header="Combat Automation Panel..." Click="OpenPhase7Window_Click"/>
+                <Separator/>
+                <MenuItem Header="Quick: Roll Attack on Target" Click="Phase7_QuickAttack_Click"/>
+                <MenuItem Header="Quick: Roll Saving Throw" Click="Phase7_QuickSave_Click"/>
+                <Separator/>
+                <MenuItem Header="Spell Slots">
+                    <MenuItem Header="Long Rest (Restore All)" Click="Phase7_LongRest_Click"/>
+                    <MenuItem Header="Short Rest" Click="Phase7_ShortRest_Click"/>
+                </MenuItem>
+                <MenuItem Header="Check Concentration" Click="Phase7_CheckConcentration_Click"/>
+            </MenuItem>
+
+            <!-- Phase 8: Advanced Map Features - Top level menu for testing Phase 8 features -->
+            <MenuItem Header="🗺️ Phase 8" Foreground="{StaticResource Brush_Text_Primary}">
+                <MenuItem Header="Map Features Panel..." Click="OpenPhase8Window_Click"/>
+                <Separator/>
+                <MenuItem Header="Grid Type">
+                    <MenuItem Header="Square Grid (Default)" Click="Phase8_SetGridType_Click" Tag="Square"/>
+                    <MenuItem Header="Hex Grid (Flat Top)" Click="Phase8_SetGridType_Click" Tag="HexFlatTop"/>
+                    <MenuItem Header="Hex Grid (Pointy Top)" Click="Phase8_SetGridType_Click" Tag="HexPointyTop"/>
+                </MenuItem>
+                <MenuItem Header="Toggle Gridless Mode" Click="Phase8_ToggleGridless_Click" IsCheckable="True" x:Name="MenuGridlessMode"/>
+                <Separator/>
+                <MenuItem Header="Add Map Note at Center..." Click="Phase8_AddMapNote_Click"/>
+                <MenuItem Header="Open Map Library..." Click="Phase8_OpenMapLibrary_Click"/>
+            </MenuItem>
+
+            <!-- Phase 9: Multiplayer / Networking -->
+            <MenuItem Header="🌐 Multiplayer" Foreground="{StaticResource Brush_Text_Primary}">
+                <MenuItem Header="Host Game (DM)..." Click="Multiplayer_HostGame_Click"/>
+                <MenuItem Header="Join Game (Player)..." Click="Multiplayer_JoinGame_Click"/>
+                <Separator/>
+                <MenuItem Header="Voice Chat (Discord)..." Click="Multiplayer_VoiceChat_Click"/>
+                <MenuItem Header="Cloud Save &amp; Sync..." Click="Multiplayer_CloudSave_Click"/>
+            </MenuItem>
+
+            <!-- Undecided Features (Experimental) - Top level menu for testing experimental features -->
+            <MenuItem Header="🧪 Experimental" Foreground="{StaticResource Brush_Warning}">
+                <MenuItem Header="Experimental Features Panel..." Click="OpenExperimentalWindow_Click"/>
+                <Separator/>
+                <MenuItem Header="🌧️ Weather">
+                    <MenuItem Header="Rain" Click="Experimental_SetWeather_Click" Tag="Rain"/>
+                    <MenuItem Header="Snow" Click="Experimental_SetWeather_Click" Tag="Snow"/>
+                    <MenuItem Header="Fog" Click="Experimental_SetWeather_Click" Tag="Fog"/>
+                    <MenuItem Header="Storm" Click="Experimental_SetWeather_Click" Tag="Storm"/>
+                    <MenuItem Header="Clear Weather" Click="Experimental_SetWeather_Click" Tag="None"/>
+                </MenuItem>
+                <MenuItem Header="🕐 Time of Day">
+                    <MenuItem Header="Dawn" Click="Experimental_SetTimeOfDay_Click" Tag="Dawn"/>
+                    <MenuItem Header="Day" Click="Experimental_SetTimeOfDay_Click" Tag="Day"/>
+                    <MenuItem Header="Dusk" Click="Experimental_SetTimeOfDay_Click" Tag="Dusk"/>
+                    <MenuItem Header="Night" Click="Experimental_SetTimeOfDay_Click" Tag="Night"/>
+                </MenuItem>
+                <Separator/>
+                <MenuItem Header="🎲 Quick Dice Roll">
+                    <MenuItem Header="Roll d20" Click="Experimental_RollDice_Click" Tag="D20"/>
+                    <MenuItem Header="Roll d12" Click="Experimental_RollDice_Click" Tag="D12"/>
+                    <MenuItem Header="Roll d10" Click="Experimental_RollDice_Click" Tag="D10"/>
+                    <MenuItem Header="Roll d8" Click="Experimental_RollDice_Click" Tag="D8"/>
+                    <MenuItem Header="Roll d6" Click="Experimental_RollDice_Click" Tag="D6"/>
+                    <MenuItem Header="Roll d4" Click="Experimental_RollDice_Click" Tag="D4"/>
+                    <MenuItem Header="Roll d100" Click="Experimental_RollDice_Click" Tag="D100"/>
+                </MenuItem>
+                <Separator/>
+                <MenuItem Header="🎲 Generate Procedural Map..." Click="Experimental_GenerateMap_Click"/>
+                <MenuItem Header="📏 Add Distance Measurement..." Click="Experimental_AddMeasurement_Click"/>
+                <MenuItem Header="♿ Accessibility Settings..." Click="Experimental_AccessibilitySettings_Click"/>
+            </MenuItem>
+        </Menu>
+        
+
+        <!-- ==================== TOOLBAR ==================== -->
+        <Border Grid.Row="1" Background="{StaticResource Brush_Background_Dark}" Padding="8,6">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Left Toolbar Items -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <Button Content="➕ Add Creature" 
+                            Command="{Binding OpenCreatureBrowserCommand}"
+                            Style="{StaticResource PrimaryButton}"
+                            Margin="0,0,8,0"/>
+                    <Button Content="🗺️ Load Map" 
+                            Command="{Binding LoadMapCommand}"
+                            Style="{StaticResource ModernButton}"
+                            Margin="0,0,8,0"/>
+
+                    <Rectangle Width="1" Fill="{StaticResource Brush_Border_Normal}" Margin="8,2"/>
+
+                    <Button Content="↩️" ToolTip="Undo (Ctrl+Z)" Click="Undo_Click"
+                            Style="{StaticResource ModernButton}" Width="36" Margin="0,0,4,0"/>
+                    <Button Content="↪️" ToolTip="Redo (Ctrl+Y)" Click="Redo_Click"
+                            Style="{StaticResource ModernButton}" Width="36"/>
+                </StackPanel>
+
+                <!-- Center - Combat Status -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center"
+                            Visibility="{Binding IsInCombat, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Border Background="{StaticResource Brush_Success}" CornerRadius="4" Padding="15,6">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="⚔️ COMBAT" Foreground="{StaticResource Brush_Text_Primary}" FontWeight="Bold" VerticalAlignment="Center"/>
+                            <TextBlock Text=" - Round " Foreground="{StaticResource Brush_Text_Hint}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding CurrentRound}" Foreground="{StaticResource Brush_Text_Primary}" FontWeight="Bold" FontSize="16" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Right Toolbar Items -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <Button Content="💡 Light" Click="AddLight_Click"
+                            Style="{StaticResource ModernButton}" Margin="0,0,8,0"/>
+                    <CheckBox Content="🔒 Snap to Grid" 
+                              IsChecked="{Binding ElementName=BattleGrid, Path=LockToGrid}" 
+                              Foreground="{StaticResource Brush_Text_Primary}" VerticalAlignment="Center"/>
+
+                    <Rectangle Width="1" Fill="{StaticResource Brush_Border_Normal}" Margin="8,2"/>
+
+                    <Button x:Name="BtnMeasure" Content="📏" ToolTip="Measure Distance"
+                        Click="ToggleMeasure_Click"
+                        Style="{StaticResource ModernButton}" Width="36" Margin="0,0,4,0"/>
+
+                    <CheckBox Content="Grid" 
+                        IsChecked="{Binding ElementName=BattleGrid, Path=ShowGrid}" 
+                        Foreground="{StaticResource Brush_Text_Primary}" VerticalAlignment="Center" Margin="0,0,8,0"
+                        ToolTip="Show/Hide Grid Lines"/>
+
+                    <CheckBox Content="Coords" 
+                      IsChecked="{Binding ElementName=BattleGrid, Path=ShowCoordinates}" 
+                      Foreground="{StaticResource Brush_Text_Primary}" VerticalAlignment="Center" Margin="0,0,8,0"
+                      ToolTip="Show/Hide Coordinate Labels"/>
+
+                    <Rectangle Width="1" Fill="{StaticResource Brush_Border_Normal}" Margin="8,2"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ==================== MAIN CONTENT ==================== -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="LeftSidebarColumn" Width="280" MinWidth="200" MaxWidth="400"/>
+                <ColumnDefinition Width="5"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="5"/>
+                <ColumnDefinition x:Name="RightSidebarColumn" Width="300" MinWidth="350" MaxWidth="450"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- ========== LEFT SIDEBAR ========== -->
+            <Border Grid.Column="0" Background="{StaticResource Brush_Background_Medium}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <!-- Initiative Tracker (takes remaining space) -->
+                        <RowDefinition Height="Auto"/>
+                        <!-- Splitter -->
+                        <RowDefinition Height="320" MinHeight="100" MaxHeight="400"/>
+                        <!-- Action Log -->
+                    </Grid.RowDefinitions>
+
+                    <!-- Initiative Tracker -->
+                    <viewsCombat:InitiativeTrackerPanel x:Name="InitiativeTracker" 
+                                       Grid.Row="0"
+                                       Margin="0"/>
+
+                    <!-- Horizontal Splitter -->
+                    <GridSplitter Grid.Row="1" 
+                      Height="5" 
+                      HorizontalAlignment="Stretch"
+                      Background="{StaticResource Brush_Border_Normal}"
+                      Cursor="SizeNS"/>
+
+                    <StackPanel Orientation="Horizontal" Margin="10,0" Grid.Row="1">
+                        <TextBlock Text="⏳ Pending Spawns:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                        <TextBlock x:Name="TxtPendingSpawns" Text="0" FontWeight="Bold" 
+                                   VerticalAlignment="Center" Foreground="{StaticResource Brush_Warning}"/>
+                    </StackPanel>
+
+
+                    <!-- Action Log at Bottom -->
+                    <Border Grid.Row="2" Background="{StaticResource Brush_Background_Medium}" Padding="10,5">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" 
+                           Text="ACTION LOG" 
+                           Style="{StaticResource SidebarHeader}"
+                           Margin="0,5,0,8"/>
+
+                            <Border Grid.Row="1" Background="{StaticResource Brush_Background_Dark}" CornerRadius="6">
+                                <ListBox ItemsSource="{Binding ActionLog}" 
+                             Background="Transparent" 
+                             BorderThickness="0"
+                             Foreground="{StaticResource Brush_Text_Secondary}"
+                             FontFamily="Consolas"
+                             FontSize="10"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             VirtualizingPanel.ScrollUnit="Pixel">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock TextWrapping="Wrap" Margin="8,3">
+                                    <Run Text="{Binding Timestamp, StringFormat='[{0:HH:mm:ss}]'}" Foreground="{StaticResource Brush_Text_Disabled}"/>
+                                    <Run Text=" "/>
+                                    <Run Text="{Binding Source}" Foreground="{StaticResource Brush_Info}"/>
+                                    <Run Text=": " Foreground="{StaticResource Brush_Text_Disabled}"/>
+                                    <Run Text="{Binding Message}" Foreground="{StaticResource Brush_Text_Hint}"/>
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                    <ListBox.ItemContainerStyle>
+                                        <Style TargetType="ListBoxItem">
+                                            <Setter Property="Padding" Value="0"/>
+                                            <Setter Property="Margin" Value="0"/>
+                                            <Setter Property="Background" Value="Transparent"/>
+                                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="ListBoxItem">
+                                                        <Border Background="{TemplateBinding Background}">
+                                                            <ContentPresenter/>
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="{StaticResource Brush_Background_Hover}"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ListBox.ItemContainerStyle>
+                                </ListBox>
+                            </Border>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Left Splitter -->
+            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" 
+                          Background="{StaticResource Brush_Background_Dark}" Cursor="SizeWE"/>
+
+            <!-- ========== BATTLE MAP (CENTER) ========== -->
+            <Border Grid.Column="2" Background="{StaticResource Brush_Background_Darkest}" CornerRadius="8" Margin="5">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Area Effect Toolbar -->
+                    <StackPanel>
+                        <viewsEffects:AreaEffectToolbar x:Name="AoeToolbar" 
+                        Grid.Row="0"
+                        Visibility="Visible"/>
+
+                        <viewsEffects:FogOfWarToolbar x:Name="FogToolbar" 
+                       Grid.Row="0"
+                       Visibility="Visible"/>
+                    </StackPanel>
+                    
+
+                    <!-- Battle Grid - NOTE: Grid.Row="1" is required! -->
+                    <controls:BattleGridControl x:Name="BattleGrid"
+                                    Grid.Row="1"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Stretch"
+                                    GridCellSize="{Binding GridCellSize}"
+                                    Tokens="{Binding Tokens}"
+                                    MapImageSource="{Binding MapImageSource}"
+                                    SelectedToken="{Binding SelectedToken, Mode=TwoWay}"/>
+                </Grid>
+            </Border>
+
+            <!-- Right Splitter -->
+            <GridSplitter Grid.Column="3" Width="5" HorizontalAlignment="Stretch" 
+                          Background="{StaticResource Brush_Background_Dark}" Cursor="SizeWE"/>
+
+            <!-- ========== RIGHT SIDEBAR ========== -->
+            <GridSplitter Grid.Column="3" 
+                          Width="3" 
+                          Background="{StaticResource Brush_Border_Normal}"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Stretch"
+                          ResizeBehavior="PreviousAndNext"/>
+
+            <Border Grid.Column="4" 
+                    Background="{StaticResource Brush_Background_Dark}" 
+                    MinWidth="380"
+                    MaxWidth="500">
+                <viewsCombat:SelectedTokenPanel x:Name="SelectedTokenPanel"/>
+            </Border>
+        </Grid>
+
+        <!-- ==================== INITIATIVE BAR (BOTTOM) ==================== -->
+        <Border Grid.Row="3" Background="{StaticResource Brush_Background_Dark}" Padding="10,8"
+                Visibility="{Binding IsInCombat, Converter={StaticResource BoolToVisibilityConverter}}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Round Counter -->
+                <Border Grid.Column="0" Background="{StaticResource Brush_Success}" CornerRadius="4" Padding="12,6" Margin="0,0,15,0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Round " Foreground="{StaticResource Brush_Text_Hint}" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding CurrentRound}" Foreground="{StaticResource Brush_Text_Primary}" FontWeight="Bold" FontSize="16" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Initiative Order (Horizontal Scroll) -->
+                <ScrollViewer Grid.Column="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                    <ItemsControl ItemsSource="{Binding InitiativeOrderList}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Margin="0,0,8,0" CornerRadius="6" Padding="12,8" MinWidth="120" Cursor="Hand">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="{StaticResource Brush_Background_Control}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsCurrentTurn}" Value="True">
+                                                    <Setter Property="Background" Value="{StaticResource Brush_Accent_Primary}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Name}" Foreground="{StaticResource Brush_Text_Primary}" FontWeight="SemiBold" 
+                                                   TextTrimming="CharacterEllipsis" MaxWidth="100"/>
+                                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                            <Border Background="{StaticResource Brush_Info}" CornerRadius="8" Padding="6,2" Margin="0,0,6,0">
+                                                <TextBlock Text="{Binding Initiative}" Foreground="{StaticResource Brush_Background_Darkest}" FontWeight="Bold" FontSize="11"/>
+                                            </Border>
+                                            <TextBlock Foreground="{StaticResource Brush_Text_Hint}" FontSize="11" VerticalAlignment="Center">
+                                                <Run Text="HP:  "/><Run Text="{Binding HP}" Foreground="{StaticResource Brush_Success}"/>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <!-- Turn Controls -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="15,0,0,0">
+                    <Button Content="◀ Prev" Command="{Binding PreviousTurnCommand}"
+                            Style="{StaticResource ModernButton}" Margin="0,0,8,0"/>
+                    <Button Content="Next ▶" Command="{Binding NextTurnCommand}"
+                            Padding="15,8" FontWeight="Bold">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource ModernButton}">
+                                <Setter Property="Background" Value="{StaticResource Brush_Success}"/>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ==================== STATUS BAR ==================== -->
+        <Border Grid.Row="4" Background="{StaticResource Brush_Accent_Primary}" Padding="10,4">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" x:Name="Status_Cursor" Text="Cell:  -,-" 
+                           Foreground="{StaticResource Brush_Text_Primary}" Margin="0,0,20,0"/>
+                <TextBlock Grid.Column="1" x:Name="Status_Mode" Text="Mode: Normal" 
+                           Foreground="{StaticResource Brush_Text_Primary}" Margin="0,0,20,0"/>
+                <TextBlock Grid.Column="3" x:Name="Status_Undo" Text="Undo:  0 | Redo: 0" 
+                           Foreground="{StaticResource Brush_Text_Primary}"/>
+            </Grid>
+        </Border>
+
+        <!-- ==================== LOADING OVERLAY ==================== -->
+        <Border Grid.RowSpan="5" 
+                Background="#DD1A1A1D"
+                Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}, FallbackValue=Collapsed}"
+                Panel.ZIndex="9999">
+            <Border Background="{StaticResource Brush_Background_Dark}" CornerRadius="12" Padding="40,30"
+                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                <StackPanel>
+                    <ProgressBar IsIndeterminate="True" Width="300" Height="6" 
+                                 Background="{StaticResource Brush_Background_Medium}" Foreground="{StaticResource Brush_Accent_Primary}"/>
+                    <TextBlock Text="{Binding LoadingMessage}" 
+                               Foreground="{StaticResource Brush_Text_Primary}" 
+                               FontSize="16" 
+                               HorizontalAlignment="Center"
+                               Margin="0,20,0,0"/>
+                    <TextBlock Text="Please wait..."
+                               Foreground="{StaticResource Brush_Text_Disabled}"
+                               FontSize="12"
+                               HorizontalAlignment="Center"
+                               Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
+        </Border>
+    </Grid>
+</Window>

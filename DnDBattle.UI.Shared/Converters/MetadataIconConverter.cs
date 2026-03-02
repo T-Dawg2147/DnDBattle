@@ -1,0 +1,36 @@
+﻿using DnDBattle.Models.Tiles;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Data;
+using DnDBattle.Models;
+using DnDBattle.Models.Combat;
+using DnDBattle.Models.Creatures;
+using DnDBattle.Models.Effects;
+using DnDBattle.Models.Encounters;
+using DnDBattle.Models.Environment;
+using DnDBattle.Models.Networking;
+using DnDBattle.Models.Spells;
+
+namespace DnDBattle.Converters
+{
+    public class MetadataIconConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is TileMetadataType type)
+            {
+                return type.GetIcon();
+            }
+            return "❓";
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+}

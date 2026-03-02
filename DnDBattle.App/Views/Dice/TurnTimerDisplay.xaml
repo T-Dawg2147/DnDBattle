@@ -1,0 +1,56 @@
+﻿<UserControl x:Class="DnDBattle.Views.Dice.TurnTimerDisplay"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="Transparent">
+
+    <Border x:Name="TimerBorder" 
+            Background="{StaticResource Brush_Background_Dark}" 
+            CornerRadius="4" 
+            Padding="10,6"
+            Visibility="Collapsed">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Timer Icon -->
+            <TextBlock x:Name="TxtTimerIcon" 
+                       Text="⏱️" 
+                       FontSize="16" 
+                       VerticalAlignment="Center"
+                       Margin="0,0,8,0"/>
+
+            <!-- Time Display -->
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <TextBlock x:Name="TxtTimeRemaining" 
+                           Text="2:00" 
+                           FontSize="20" 
+                           FontWeight="Bold" 
+                           Foreground="{StaticResource Brush_Text_Primary}"/>
+
+                <!-- Progress Bar -->
+                <Grid Height="4" Margin="0,4,0,0">
+                    <Border Background="{StaticResource Brush_Background_Medium}" CornerRadius="2"/>
+                    <Border x:Name="TimerProgressBar" 
+                            Background="{StaticResource Brush_Success}" 
+                            CornerRadius="2" 
+                            HorizontalAlignment="Left"/>
+                </Grid>
+            </StackPanel>
+
+            <!-- Settings Button -->
+            <Button Grid.Column="2" 
+                    Content="⚙️" 
+                    Width="28" Height="28"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Foreground="{StaticResource Brush_Text_Primary}"
+                    Cursor="Hand"
+                    Click="BtnSettings_Click"
+                    ToolTip="Timer Settings"
+                    Margin="8,0,0,0"/>
+        </Grid>
+    </Border>
+</UserControl>

@@ -1,0 +1,208 @@
+﻿<UserControl x:Class="DnDBattle.Views.Effects.AreaEffectToolbar"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{StaticResource Brush_Background_Control}"
+             Height="40">
+
+    <UserControl.Resources>
+        <Style x:Key="ToolbarButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="Margin" Value="2,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="4" 
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{StaticResource Brush_Background_Hover}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="{StaticResource Brush_Background_Hover}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ToolbarToggleStyle" TargetType="ToggleButton">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush_Text_Primary}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="Margin" Value="2,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="border" 
+                                Background="{TemplateBinding Background}" 
+                                CornerRadius="4" 
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource Brush_Background_Hover}"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource Brush_Success}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0">
+
+        <!-- Shape Buttons -->
+        <TextBlock Text="AoE:" Foreground="{StaticResource Brush_Text_Hint}" VerticalAlignment="Center" Margin="0,0,8,0" FontSize="11"/>
+
+        <ToggleButton x:Name="BtnSphere" 
+                      Style="{StaticResource ToolbarToggleStyle}"
+                      ToolTip="Sphere/Circle (e.g., Fireball)"
+                      Click="ShapeButton_Click"
+                      Tag="Sphere">
+            <StackPanel Orientation="Horizontal">
+                <Ellipse Width="14" Height="14" Stroke="{StaticResource Brush_Text_Primary}" StrokeThickness="2" Fill="Transparent"/>
+                <TextBlock Text=" Sphere" FontSize="11" VerticalAlignment="Center"/>
+            </StackPanel>
+        </ToggleButton>
+
+        <ToggleButton x:Name="BtnCube" 
+                      Style="{StaticResource ToolbarToggleStyle}"
+                      ToolTip="Cube/Square (e.g., Thunderwave)"
+                      Click="ShapeButton_Click"
+                      Tag="Cube">
+            <StackPanel Orientation="Horizontal">
+                <Rectangle Width="14" Height="14" Stroke="{StaticResource Brush_Text_Primary}" StrokeThickness="2" Fill="Transparent"/>
+                <TextBlock Text=" Cube" FontSize="11" VerticalAlignment="Center"/>
+            </StackPanel>
+        </ToggleButton>
+
+        <ToggleButton x:Name="BtnCone" 
+                      Style="{StaticResource ToolbarToggleStyle}"
+                      ToolTip="Cone (e.g., Burning Hands)"
+                      Click="ShapeButton_Click"
+                      Tag="Cone">
+            <StackPanel Orientation="Horizontal">
+                <Polygon Points="0,14 7,0 14,14" Stroke="{StaticResource Brush_Text_Primary}" StrokeThickness="2" Fill="Transparent"/>
+                <TextBlock Text=" Cone" FontSize="11" VerticalAlignment="Center"/>
+            </StackPanel>
+        </ToggleButton>
+
+        <ToggleButton x:Name="BtnLine" 
+                      Style="{StaticResource ToolbarToggleStyle}"
+                      ToolTip="Line (e.g., Lightning Bolt)"
+                      Click="ShapeButton_Click"
+                      Tag="Line">
+            <StackPanel Orientation="Horizontal">
+                <Rectangle Width="20" Height="6" Stroke="{StaticResource Brush_Text_Primary}" StrokeThickness="2" Fill="Transparent" VerticalAlignment="Center"/>
+                <TextBlock Text=" Line" FontSize="11" VerticalAlignment="Center"/>
+            </StackPanel>
+        </ToggleButton>
+
+        <Rectangle Width="1" Fill="{StaticResource Brush_Border_Normal}" Margin="10,5"/>
+
+        <!-- Size Input -->
+        <TextBlock Text="Size:" Foreground="{StaticResource Brush_Text_Hint}" VerticalAlignment="Center" Margin="0,0,5,0" FontSize="11"/>
+        <ComboBox x:Name="CmbSize" 
+                  Width="70"
+                  SelectedIndex="3"
+                  SelectionChanged="CmbSize_SelectionChanged">
+            <ComboBoxItem Content="5 ft"/>
+            <ComboBoxItem Content="10 ft"/>
+            <ComboBoxItem Content="15 ft"/>
+            <ComboBoxItem Content="20 ft"/>
+            <ComboBoxItem Content="30 ft"/>
+            <ComboBoxItem Content="40 ft"/>
+            <ComboBoxItem Content="60 ft"/>
+            <ComboBoxItem Content="100 ft"/>
+            <ComboBoxItem Content="120 ft"/>
+        </ComboBox>
+
+        <Rectangle Width="1" Fill="{StaticResource Brush_Border_Normal}" Margin="10,5"/>
+
+        <!-- Color Picker -->
+        <TextBlock Text="Color:" Foreground="{StaticResource Brush_Text_Hint}" VerticalAlignment="Center" Margin="0,0,5,0" FontSize="11"/>
+        <ComboBox x:Name="CmbColor" 
+                  Width="90" 
+                  SelectedIndex="0"
+                  SelectionChanged="CmbColor_SelectionChanged">
+            <ComboBoxItem>
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="14" Height="14" Fill="#FF4500" Margin="0,0,5,0"/>
+                    <TextBlock Text="Fire" Foreground="{StaticResource Brush_Text_Primary}"/>
+                </StackPanel>
+            </ComboBoxItem>
+            <ComboBoxItem>
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="14" Height="14" Fill="#87CEEB" Margin="0,0,5,0"/>
+                    <TextBlock Text="Ice" Foreground="{StaticResource Brush_Text_Primary}"/>
+                </StackPanel>
+            </ComboBoxItem>
+            <ComboBoxItem>
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="14" Height="14" Fill="#9370DB" Margin="0,0,5,0"/>
+                    <TextBlock Text="Arcane" Foreground="{StaticResource Brush_Text_Primary}"/>
+                </StackPanel>
+            </ComboBoxItem>
+            <ComboBoxItem>
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="14" Height="14" Fill="#32CD32" Margin="0,0,5,0"/>
+                    <TextBlock Text="Nature" Foreground="{StaticResource Brush_Text_Primary}"/>
+                </StackPanel>
+            </ComboBoxItem>
+            <ComboBoxItem>
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="14" Height="14" Fill="#FFD700" Margin="0,0,5,0"/>
+                    <TextBlock Text="Holy" Foreground="{StaticResource Brush_Text_Primary}"/>
+                </StackPanel>
+            </ComboBoxItem>
+            <ComboBoxItem>
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="14" Height="14" Fill="#2F4F4F" Margin="0,0,5,0"/>
+                    <TextBlock Text="Shadow" Foreground="{StaticResource Brush_Text_Primary}"/>
+                </StackPanel>
+            </ComboBoxItem>
+        </ComboBox>
+
+        <Rectangle Width="1" Fill="{StaticResource Brush_Border_Normal}" Margin="10,5"/>
+
+        <!-- Presets -->
+        <Button x:Name="BtnPresets"
+                Style="{StaticResource ToolbarButtonStyle}"
+                ToolTip="Spell Presets"
+                Click="BtnPresets_Click">
+            <TextBlock Text="📜 Presets" FontSize="11"/>
+        </Button>
+
+        <!-- Clear -->
+        <Button x:Name="BtnClearAll"
+                Style="{StaticResource ToolbarButtonStyle}"
+                ToolTip="Clear All Effects"
+                Click="BtnClearAll_Click">
+            <TextBlock Text="🗑️ Clear" FontSize="11"/>
+        </Button>
+
+        <!-- Cancel -->
+        <Button x:Name="BtnCancel"
+                Style="{StaticResource ToolbarButtonStyle}"
+                ToolTip="Cancel (Esc)"
+                Click="BtnCancel_Click"
+                Visibility="Collapsed">
+            <TextBlock Text="❌ Cancel" FontSize="11"/>
+        </Button>
+
+    </StackPanel>
+</UserControl>

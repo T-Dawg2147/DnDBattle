@@ -1,0 +1,115 @@
+﻿<Window x:Class="DnDBattle.Views.Editors.SpawnEditorDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Spawn Point Configuration" Height="600" Width="550" Background="{StaticResource Brush_Background_Dark}">
+
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0">
+            <TextBlock Text="👹 Configure Spawn Point" FontSize="16" FontWeight="Bold"/>
+            <Separator/>
+        </StackPanel>
+
+        <!-- Content -->
+        <ScrollViewer Grid.Row="1">
+            <StackPanel>
+
+                <!-- Basic Info -->
+                <TextBlock Text="Spawn Point Name:"/>
+                <TextBox x:Name="TxtName" Text="Goblin Ambush"/>
+
+                <TextBlock Text="Creature Name:"/>
+                <TextBox x:Name="TxtCreatureName" Text="Goblin"/>
+
+                <TextBlock Text="💡 Tip: This will create tokens from your Creature Bank" 
+                           Style="{StaticResource HintText}" TextWrapping="Wrap"/>
+
+                <Separator/>
+
+                <!-- Spawn Settings -->
+                <TextBlock Text="👹 Spawn Settings" Style="{StaticResource SectionHeader}"/>
+
+                <TextBlock Text="Number to Spawn:"/>
+                <TextBox x:Name="TxtSpawnCount" Text="3"/>
+
+                <TextBlock Text="Spawn Radius (squares):"/>
+                <TextBox x:Name="TxtSpawnRadius" Text="2"/>
+                <TextBlock Text="0 = spawn exactly here, 2+ = scatter within radius" 
+                           Style="{StaticResource HintText}"/>
+
+                <Separator/>
+
+                <!-- Trigger Conditions -->
+                <TextBlock Text="⚡ Trigger Conditions" Style="{StaticResource SectionHeader}"/>
+
+                <TextBlock Text="Spawn Trigger:"/>
+                <CheckBox x:Name="ChkSpawnOnLoad" 
+                          Content="🗺️ Spawn when map loads"
+                          Margin="0,5,0,5"
+                          ToolTip="Token(s) will appear immediately when the map is loaded into BattleGrid"/>   
+
+                <ComboBox x:Name="CmbTrigger" SelectedIndex="0">
+                    <ComboBoxItem Content="Manual (DM clicks to spawn)"/>
+                    <ComboBoxItem Content="Combat Start"/>
+                    <ComboBoxItem Content="Specific Round Number"/>
+                    <ComboBoxItem Content="Proximity (player gets close)"/>
+                    <ComboBoxItem Content="Event (script-triggered)"/>
+                </ComboBox>
+
+                <TextBlock Text="Spawn on Round (if Round Number trigger):"/>
+                <TextBox x:Name="TxtSpawnRound" Text="3"/>
+
+                <TextBlock Text="Trigger Distance (if Proximity):"/>
+                <TextBox x:Name="TxtTriggerDistance" Text="5"/>
+                <TextBlock Text="Spawns when any player is within this many squares" 
+                           Style="{StaticResource HintText}"/>
+
+                <TextBlock Text="Spawn Delay (rounds):"/>
+                <TextBox x:Name="TxtSpawnDelay" Text="0"/>
+                <TextBlock Text="Wait this many rounds after trigger before spawning" 
+                           Style="{StaticResource HintText}"/>
+
+                <Separator/>
+
+                <!-- Reusability -->
+                <TextBlock Text="♻️ Reusability" Style="{StaticResource SectionHeader}"/>
+
+                <CheckBox x:Name="ChkIsReusable" Content="This spawn point can spawn multiple times"/>
+
+                <Separator/>
+
+                <!-- Visual Aid -->
+                <Border Background="{StaticResource Brush_Background_Control}" 
+                        BorderBrush="{StaticResource Brush_Border_Normal}"
+                        BorderThickness="1" Padding="10" CornerRadius="4">
+                    <StackPanel>
+                        <TextBlock Text="📝 Notes:" FontWeight="SemiBold"/>
+                        <TextBlock TextWrapping="Wrap" Style="{StaticResource HintText}">
+                            • Creatures must exist in your Creature Bank
+                            <LineBreak/>
+                            • Right-click spawn point during combat to manually trigger
+                            <LineBreak/>
+                            • Proximity triggers check at end of each token's movement
+                            <LineBreak/>
+                            • Round Number triggers activate at start of that round
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button Content="💾 Save" Width="100" Height="35" Margin="5" 
+                    Click="Save_Click" Style="{StaticResource AccentButton}"/>
+            <Button Content="❌ Cancel" Width="100" Height="35" Margin="5" Click="Cancel_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

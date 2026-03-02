@@ -1,0 +1,33 @@
+<Window x:Class="DnDBattle.Views.Multiplayer.VoiceChatWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="🎤 Voice Chat (Discord)" Height="380" Width="480"
+        Background="{StaticResource Brush_Background_Dark}" FontFamily="Segoe UI"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize">
+    <Border Background="{StaticResource Brush_Background_Dark}" CornerRadius="8" Padding="12" Margin="12">
+        <StackPanel>
+            <TextBlock Text="Discord Voice Chat" FontSize="16" FontWeight="Bold" Foreground="{StaticResource Brush_Text_Primary}" Margin="0,0,0,12"/>
+
+            <TextBlock Text="Discord Invite Link:" Foreground="{StaticResource Brush_Text_Secondary}" Margin="0,0,0,4"/>
+            <TextBox x:Name="InviteLinkBox" Background="{StaticResource Brush_Background_Control}" Foreground="{StaticResource Brush_Text_Primary}" BorderBrush="{StaticResource Brush_Border_Hover}" Padding="4" Margin="0,0,0,8"/>
+
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                <Button Content="Set Link" Click="SetLink_Click"
+                        Background="{StaticResource Brush_Accent_Primary}" Foreground="{StaticResource Brush_Text_Primary}" Padding="12,6" BorderThickness="0" Cursor="Hand" Margin="0,0,6,0"/>
+                <Button Content="Open Discord" Click="OpenDiscord_Click"
+                        Background="{StaticResource Brush_Accent_Primary}" Foreground="{StaticResource Brush_Text_Primary}" Padding="12,6" BorderThickness="0" Cursor="Hand" Margin="0,0,6,0"/>
+                <Button Content="Copy Invite Message" Click="CopyInvite_Click"
+                        Background="{StaticResource Brush_Background_Hover}" Foreground="{StaticResource Brush_Text_Primary}" Padding="12,6" BorderThickness="0" Cursor="Hand"/>
+            </StackPanel>
+
+            <TextBlock Text="Session Name (for invite message):" Foreground="{StaticResource Brush_Text_Secondary}" Margin="0,0,0,4"/>
+            <TextBox x:Name="SessionNameBox" Background="{StaticResource Brush_Background_Control}" Foreground="{StaticResource Brush_Text_Primary}" BorderBrush="{StaticResource Brush_Border_Hover}" Padding="4" Margin="0,0,0,12"/>
+
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Status: " Foreground="{StaticResource Brush_Text_Secondary}"/>
+                <TextBlock x:Name="StatusText" Text="Not configured" Foreground="{StaticResource Brush_Accent_Primary}"/>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>

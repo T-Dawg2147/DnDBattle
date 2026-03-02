@@ -1,0 +1,63 @@
+<Window x:Class="DnDBattle.Views.Settings.CloudSaveWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="☁️ Cloud Save &amp; Sync" Height="520" Width="550"
+        Background="{StaticResource Brush_Background_Dark}" FontFamily="Segoe UI"
+        WindowStartupLocation="CenterOwner"
+        Closing="Window_Closing">
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Server Config -->
+        <Border Grid.Row="0" Background="{StaticResource Brush_Background_Dark}" CornerRadius="8" Padding="12" Margin="0,0,0,8">
+            <StackPanel>
+                <TextBlock Text="Cloud Server" FontSize="14" FontWeight="Bold" Foreground="{StaticResource Brush_Text_Primary}" Margin="0,0,0,8"/>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                    <TextBlock Text="Server URL:" Foreground="{StaticResource Brush_Text_Secondary}" VerticalAlignment="Center" Width="80"/>
+                    <TextBox x:Name="ServerUrlBox" Width="350"
+                             Background="{StaticResource Brush_Background_Control}" Foreground="{StaticResource Brush_Text_Primary}" BorderBrush="{StaticResource Brush_Border_Hover}" Padding="4"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Campaign:" Foreground="{StaticResource Brush_Text_Secondary}" VerticalAlignment="Center" Width="80"/>
+                    <TextBox x:Name="CampaignIdBox" Width="200" Text="default"
+                             Background="{StaticResource Brush_Background_Control}" Foreground="{StaticResource Brush_Text_Primary}" BorderBrush="{StaticResource Brush_Border_Hover}" Padding="4"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Save Section -->
+        <Border Grid.Row="1" Background="{StaticResource Brush_Background_Dark}" CornerRadius="8" Padding="12" Margin="0,0,0,8">
+            <StackPanel>
+                <TextBlock Text="Save" FontSize="14" FontWeight="Bold" Foreground="{StaticResource Brush_Text_Primary}" Margin="0,0,0,8"/>
+                <Button Content="Save Current Encounter" Click="SaveEncounter_Click"
+                        Background="{StaticResource Brush_Accent_Primary}" Foreground="{StaticResource Brush_Text_Primary}" Padding="12,6" BorderThickness="0" Cursor="Hand"
+                        HorizontalAlignment="Left"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Load Section -->
+        <Border Grid.Row="2" Background="{StaticResource Brush_Background_Dark}" CornerRadius="8" Padding="12" Margin="0,0,0,8">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
+                    <TextBlock Text="Available Encounters" FontSize="14" FontWeight="Bold" Foreground="{StaticResource Brush_Text_Primary}" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                    <Button Content="Refresh" Click="RefreshList_Click"
+                            Background="{StaticResource Brush_Background_Hover}" Foreground="{StaticResource Brush_Text_Primary}" Padding="8,4" BorderThickness="0" Cursor="Hand" Margin="0,0,6,0"/>
+                    <Button Content="Load Selected" Click="LoadEncounter_Click"
+                            Background="{StaticResource Brush_Accent_Primary}" Foreground="{StaticResource Brush_Text_Primary}" Padding="8,4" BorderThickness="0" Cursor="Hand"/>
+                </StackPanel>
+                <ListBox x:Name="EncounterList" Background="{StaticResource Brush_Background_Control}" Foreground="{StaticResource Brush_Text_Primary}" BorderThickness="0"
+                         DisplayMemberPath="Name"/>
+            </DockPanel>
+        </Border>
+
+        <!-- Status -->
+        <Border Grid.Row="3" Background="{StaticResource Brush_Background_Dark}" CornerRadius="8" Padding="12">
+            <TextBlock x:Name="StatusText" Text="Ready" Foreground="{StaticResource Brush_Accent_Primary}" TextWrapping="Wrap"/>
+        </Border>
+    </Grid>
+</Window>

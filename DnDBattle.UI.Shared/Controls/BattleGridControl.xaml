@@ -1,0 +1,62 @@
+﻿<UserControl x:Class="DnDBattle.Controls.BattleGridControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:DnDBattle.Controls"
+             Focusable="True">
+    <Grid>
+        <Grid.Resources>
+            <Storyboard x:Key="TurnPulseStoryboard" RepeatBehavior="Forever">
+                <DoubleAnimation Storyboard.TargetName="TurnHighlightScale" Storyboard.TargetProperty="ScaleX"
+                                 From="1.0" To="1.2" Duration="0:0:0.6" AutoReverse="True" />
+                <DoubleAnimation Storyboard.TargetName="TurnHighlightScale" Storyboard.TargetProperty="ScaleY"
+                                 From="1.0" To="1.2" Duration="0:0:0.6" AutoReverse="True" />
+                <DoubleAnimation Storyboard.TargetName="TurnHighlightEllipse" Storyboard.TargetProperty="Opacity"
+                                 From="0.6" To="1.0" Duration="0:0:0.6" AutoReverse="True" />
+            </Storyboard>
+        </Grid.Resources>
+
+        <!-- Background that captures all mouse events -->
+        <Border x:Name="GridBackground" 
+                Background="{StaticResource Brush_Background_Medium}" 
+                ClipToBounds="True"
+                MouseLeftButtonDown="GridBackground_MouseLeftButtonDown"
+                MouseLeftButtonUp="GridBackground_MouseLeftButtonUp"
+                MouseMove="GridBackground_MouseMove"
+                MouseWheel="GridBackground_MouseWheel"
+                MouseRightButtonDown="GridBackground_MouseRightButtonDown"
+                MouseDown="GridBackground_MouseDown"
+                MouseUp="GridBackground_MouseUp"
+                MouseLeave="GridBackground_MouseLeave"
+                AllowDrop="True"
+                Drop="RenderCanvas_Drop">
+
+            <!-- The canvas that holds all the visual elements -->
+            <Canvas x:Name="RenderCanvas" 
+                    Background="Transparent"
+                    ClipToBounds="False">
+
+                <!-- Map image -->
+                <Image x:Name="MapImage" Canvas.Left="0" Canvas.Top="0" />
+
+                <!-- Grid host -->
+                <local:GridVisualHost x:Name="GridHost" IsHitTestVisible="False" />
+
+                <!-- Turn highlight ellipse (Storyboard targets) -->
+                <Ellipse x:Name="TurnHighlightEllipse" Width="0" Height="0" Visibility="Collapsed"
+                         Fill="Transparent" Stroke="#FFD7B700" StrokeThickness="4" Opacity="0.8" IsHitTestVisible="False">
+                    <Ellipse.RenderTransform>
+                        <ScaleTransform x:Name="TurnHighlightScale" ScaleX="1" ScaleY="1" CenterX="0.5" CenterY="0.5" />
+                    </Ellipse.RenderTransform>
+                </Ellipse>
+            </Canvas>
+        </Border>
+
+        <!-- Coordinate Rulers (drawn in screen space, on top) -->
+        <Canvas x:Name="RulerCanvas" IsHitTestVisible="False" />
+
+        <!-- Top-left corner block (covers the intersection of rulers) -->
+        <Border Width="25" Height="20" 
+                HorizontalAlignment="Left" VerticalAlignment="Top"
+                Background="{StaticResource Brush_Background_Dark}" BorderBrush="{StaticResource Brush_Border_Normal}" BorderThickness="0,0,1,1"/>
+    </Grid>
+</UserControl>

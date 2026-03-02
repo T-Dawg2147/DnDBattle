@@ -1,0 +1,107 @@
+﻿<Window x:Class="DnDBattle.Views.Dice.TurnTimerSettingsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Turn Timer Settings"
+        Width="350" Height="280"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource Brush_Background_Medium}"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        WindowStyle="ToolWindow">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Enable Toggle -->
+        <Border Grid.Row="0" Background="{StaticResource Brush_Background_Dark}" CornerRadius="4" Padding="15" Margin="0,0,0,15">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel>
+                    <TextBlock Text="Enable Turn Timer" Foreground="{StaticResource Brush_Text_Primary}" FontWeight="SemiBold"/>
+                    <TextBlock Text="Show countdown timer during combat turns" Foreground="{StaticResource Brush_Text_Hint}" FontSize="11"/>
+                </StackPanel>
+
+                <CheckBox x:Name="ChkEnabled" 
+                          Grid.Column="1" 
+                          VerticalAlignment="Center"
+                          IsChecked="True"/>
+            </Grid>
+        </Border>
+
+        <!-- Time Limit -->
+        <Border Grid.Row="1" Background="{StaticResource Brush_Background_Dark}" CornerRadius="4" Padding="15" Margin="0,0,0,15">
+            <StackPanel>
+                <TextBlock Text="Time Per Turn" Foreground="{StaticResource Brush_Text_Primary}" FontWeight="SemiBold" Margin="0,0,0,10"/>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Slider x:Name="SliderTime" 
+                            Minimum="30" 
+                            Maximum="300" 
+                            Value="120"
+                            TickFrequency="30"
+                            IsSnapToTickEnabled="True"
+                            ValueChanged="SliderTime_ValueChanged"/>
+
+                    <TextBlock x:Name="TxtTimeValue" 
+                               Grid.Column="1" 
+                               Text="2:00" 
+                               Foreground="{StaticResource Brush_Info}" 
+                               FontWeight="Bold"
+                               Width="50"
+                               TextAlignment="Right"
+                               Margin="10,0,0,0"/>
+                </Grid>
+
+                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                    <Button Content="1 min" Padding="8,4" Margin="0,0,5,0" Click="BtnPreset_Click" Tag="60" Style="{StaticResource {x:Type Button}}"/>
+                    <Button Content="2 min" Padding="8,4" Margin="0,0,5,0" Click="BtnPreset_Click" Tag="120" Style="{StaticResource {x:Type Button}}"/>
+                    <Button Content="3 min" Padding="8,4" Margin="0,0,5,0" Click="BtnPreset_Click" Tag="180" Style="{StaticResource {x:Type Button}}"/>
+                    <Button Content="5 min" Padding="8,4" Click="BtnPreset_Click" Tag="300" Style="{StaticResource {x:Type Button}}"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Sound Option -->
+        <Border Grid.Row="2" Background="{StaticResource Brush_Background_Dark}" CornerRadius="4" Padding="15">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel>
+                    <TextBlock Text="Play Warning Sound" Foreground="{StaticResource Brush_Text_Primary}" FontWeight="SemiBold"/>
+                    <TextBlock Text="Beep when time is running low" Foreground="{StaticResource Brush_Text_Hint}" FontSize="11"/>
+                </StackPanel>
+
+                <CheckBox x:Name="ChkSound" 
+                          Grid.Column="1" 
+                          VerticalAlignment="Center"
+                          IsChecked="True"/>
+            </Grid>
+        </Border>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Cancel" Padding="20,10" Margin="0,0,10,0" Click="BtnCancel_Click"
+                    Background="{StaticResource Brush_Background_Hover}" Foreground="{StaticResource Brush_Text_Primary}" BorderThickness="0"/>
+            <Button Content="Save" Padding="20,10" Click="BtnSave_Click"
+                    Background="{StaticResource Brush_Success}" Foreground="{StaticResource Brush_Text_Primary}" BorderThickness="0" FontWeight="Bold"/>
+        </StackPanel>
+    </Grid>
+</Window>
