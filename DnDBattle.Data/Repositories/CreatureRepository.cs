@@ -36,8 +36,11 @@ public sealed class CreatureRepository : ICreatureRepository
     {
         using var cmd = _db.Connection.CreateCommand();
         cmd.CommandText = """
-            INSERT INTO Creatures VALUES (@id,@name,@type,@size,@align,@maxhp,@ac,@speed,
-                @str,@dex,@con,@int,@wis,@cha,@prof,@img)
+            INSERT INTO Creatures (Id, Name, CreatureType, Size, Alignment, MaxHitPoints,
+                ArmorClass, Speed, Strength, Dexterity, Constitution, Intelligence,
+                Wisdom, Charisma, ProficiencyBonus, ImagePath)
+            VALUES (@id, @name, @type, @size, @align, @maxhp, @ac, @speed,
+                @str, @dex, @con, @int, @wis, @cha, @prof, @img)
             ON CONFLICT(Id) DO UPDATE SET
                 Name=excluded.Name, CreatureType=excluded.CreatureType,
                 Size=excluded.Size, Alignment=excluded.Alignment,

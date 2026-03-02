@@ -9,5 +9,5 @@ public interface ITileService
     void PlaceTile(int col, int row, int layer, TileDefinition tile);
     void RemoveTile(int col, int row, int layer);
     TileDefinition? GetTile(int col, int row, int layer);
-    void SaveMapAsync(string filePath, CancellationToken ct = default);
+    Task SaveMapAsync(string filePath, CancellationToken ct = default);
 }

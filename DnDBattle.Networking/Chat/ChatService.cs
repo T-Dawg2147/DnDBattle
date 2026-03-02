@@ -52,8 +52,16 @@ public sealed class ChatService
         if (msg?.Type != MessageTypes.ChatMessage) return;
         var payload = msg.GetPayload<ChatPayload>();
         if (payload == null) return;
-        AddMessage(new ChatMessage { SenderName = payload.SenderName, Text = payload.Text });
+        // Sanitize untrusted network input to prevent injection
+        var safeSender = Truncate(payload.SenderName, 64);
+        var safeText = Truncate(payload.Text, 1000);
+        AddMessage(new ChatMessage { SenderName = safeSender, Text = safeText });
     }
+
+    private static string Truncate(string? value, int maxLength) =>
+        string.IsNullOrEmpty(value) ? string.Empty
+            : value.Length <= maxLength ? value
+            : value[..maxLength];
 
     private sealed record ChatPayload(string SenderName, string Text);
 }

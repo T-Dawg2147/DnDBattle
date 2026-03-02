@@ -23,8 +23,9 @@ public sealed class TileService : ITileService
     public TileDefinition? GetTile(int col, int row, int layer) =>
         CurrentMap?.Tiles.GetValueOrDefault((col, row, layer));
 
-    public void SaveMapAsync(string filePath, CancellationToken ct = default)
+    public Task SaveMapAsync(string filePath, CancellationToken ct = default)
     {
-        // Serialization delegated to PersistenceService
+        // Serialization is delegated to IPersistenceService in the App layer
+        return Task.CompletedTask;
     }
 }

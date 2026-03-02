@@ -139,10 +139,16 @@ public sealed partial class MainViewModel : ObservableRecipient
     {
         if (Combatants.Count == 0) return;
         var snapshot = BuildSnapshot();
-        var path = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-            "DnDBattle", $"{snapshot.Name}_{DateTime.Now:yyyyMMdd_HHmmss}.dnd");
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        // Sanitize name to prevent path traversal: keep only safe filename characters
+        var safeName = string.Concat(snapshot.Name
+            .Where(c => char.IsLetterOrDigit(c) || c is '_' or '-' or ' '))
+            .Trim().Replace(' ', '_');
+        if (string.IsNullOrEmpty(safeName)) safeName = "Encounter";
+        var fileName = $"{safeName}_{DateTime.Now:yyyyMMdd_HHmmss}.dnd";
+        var saveDir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "DnDBattle");
+        Directory.CreateDirectory(saveDir);
+        var path = Path.Combine(saveDir, fileName);
         await _persistence.SaveEncounterAsync(snapshot, path);
         StatusMessage = $"Saved to {path}";
     }

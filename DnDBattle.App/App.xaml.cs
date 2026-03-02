@@ -94,8 +94,8 @@ public partial class App : Application
         services.AddSingleton<MapRenderer>();
 
         // Networking — default to client; host switches at runtime
-        services.AddTransient<GameServer>();
-        services.AddTransient<GameClient>();
+        services.AddSingleton<GameServer>();
+        services.AddSingleton<GameClient>();
 
         // ViewModels
         services.AddSingleton<MainViewModel>();
