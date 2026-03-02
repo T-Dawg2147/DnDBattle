@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <StartupObject>DnDBattle.App.App</StartupObject>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="6.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DnDBattle.Core\DnDBattle.Core.csproj" />
+    <ProjectReference Include="..\DnDBattle.Data\DnDBattle.Data.csproj" />
+    <ProjectReference Include="..\DnDBattle.GameLogic\DnDBattle.GameLogic.csproj" />
+    <ProjectReference Include="..\DnDBattle.MapEngine\DnDBattle.MapEngine.csproj" />
+    <ProjectReference Include="..\DnDBattle.Networking\DnDBattle.Networking.csproj" />
+    <ProjectReference Include="..\DnDBattle.UI.Shared\DnDBattle.UI.Shared.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\Entities\Tokens\default-token.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Tiles\Floor\dungeon_floor_01.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Resources\Tiles\Door\" />
+    <Folder Include="Resources\Tiles\Wall\" />
+  </ItemGroup>
+</Project>

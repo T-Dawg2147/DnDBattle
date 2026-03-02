@@ -1,0 +1,52 @@
+<UserControl x:Class="DnDBattle.UI.Shared.Controls.CombatantStatPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Border Background="#16213E" CornerRadius="6" Padding="12">
+        <StackPanel>
+            <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="Bold"
+                       Foreground="#F5F5F5" Margin="0,0,0,8"/>
+            <Grid Margin="0,0,0,4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="Hit Points" Foreground="#B0B0C0" FontSize="11"/>
+                <TextBlock Grid.Column="1"
+                           Foreground="#4CAF50" FontWeight="SemiBold">
+                    <TextBlock.Text>
+                        <MultiBinding StringFormat="{}{0} / {1}">
+                            <Binding Path="CurrentHitPoints"/>
+                            <Binding Path="MaxHitPoints"/>
+                        </MultiBinding>
+                    </TextBlock.Text>
+                </TextBlock>
+            </Grid>
+            <!-- HP Bar -->
+            <Grid Height="8" Margin="0,0,0,8">
+                <Rectangle Fill="#4A0000" RadiusX="4" RadiusY="4"/>
+                <Rectangle Fill="#4CAF50" RadiusX="4" RadiusY="4"
+                           HorizontalAlignment="Left">
+                    <Rectangle.Width>
+                        <MultiBinding Converter="{StaticResource HpBarWidth}">
+                            <Binding Path="CurrentHitPoints"/>
+                            <Binding Path="MaxHitPoints"/>
+                            <Binding Path="ActualWidth" RelativeSource="{RelativeSource AncestorType=Grid}"/>
+                        </MultiBinding>
+                    </Rectangle.Width>
+                </Rectangle>
+            </Grid>
+            <!-- AC / Speed -->
+            <UniformGrid Columns="2" Margin="0,0,0,8">
+                <StackPanel>
+                    <TextBlock Text="Armor Class" Foreground="#B0B0C0" FontSize="11"/>
+                    <TextBlock Text="{Binding ArmorClass}" Foreground="#F5F5F5" FontWeight="Bold"/>
+                </StackPanel>
+                <StackPanel>
+                    <TextBlock Text="Speed" Foreground="#B0B0C0" FontSize="11"/>
+                    <TextBlock Text="{Binding Speed, StringFormat='{}{0} ft'}"
+                               Foreground="#F5F5F5" FontWeight="Bold"/>
+                </StackPanel>
+            </UniformGrid>
+        </StackPanel>
+    </Border>
+</UserControl>
