@@ -1,3 +1,9 @@
 <Solution>
-  <Project Path="DnDBattle/DnDBattle.csproj" />
+  <Project Path="DnDBattle.Core/DnDBattle.Core.csproj" />
+  <Project Path="DnDBattle.Data/DnDBattle.Data.csproj" />
+  <Project Path="DnDBattle.GameLogic/DnDBattle.GameLogic.csproj" />
+  <Project Path="DnDBattle.MapEngine/DnDBattle.MapEngine.csproj" />
+  <Project Path="DnDBattle.Networking/DnDBattle.Networking.csproj" />
+  <Project Path="DnDBattle.UI.Shared/DnDBattle.UI.Shared.csproj" />
+  <Project Path="DnDBattle.App/DnDBattle.App.csproj" />
 </Solution>
