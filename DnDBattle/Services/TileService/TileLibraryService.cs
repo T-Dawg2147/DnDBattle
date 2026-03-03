@@ -10,6 +10,7 @@ using System.Text;
 
 namespace DnDBattle.Services.TileService
 {
+    // The Library... Shh
     public class TileLibraryService
     {
         private static readonly Lazy<TileLibraryService> _instance =
